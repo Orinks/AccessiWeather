@@ -4,8 +4,9 @@
 //! check/download/apply flow (`ui/main_window_commands.py`,
 //! `ui/dialogs/settings_dialog_handlers.py`).
 //!
-//! Channels, tag parsing and version comparison are Python's. Asset selection
-//! targets the Rust edition's artifacts from `rust/packaging/package.sh`.
+//! Channels, tag parsing, version comparison and asset selection are
+//! Python's: releases carry the same asset names (`cargo xtask package`
+//! mirrors the Python build), so either edition updates into the other.
 
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
@@ -36,11 +37,9 @@ static FALLBACK_HASH: LazyLock<Regex> =
 static NIGHTLY_TAG: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(?i)nightly-(\d{8})").expect("valid regex"));
 
-/// The version compared against release tags: the workspace version without
-/// the `-rust.N` edition suffix, which PEP 440 would reject.
+/// The version compared against release tags (the workspace version).
 pub fn app_version() -> &'static str {
-    let full = env!("CARGO_PKG_VERSION");
-    full.split_once("-rust").map_or(full, |(base, _)| base)
+    env!("CARGO_PKG_VERSION")
 }
 
 /// `nightly-YYYYMMDD` for nightly builds, baked in at compile time from
@@ -175,24 +174,48 @@ pub fn select_latest_release<'a>(releases: &'a [Value], channel: &str) -> Option
     best.map(|(r, _)| r)
 }
 
-/// The artifact `package.sh` produces for `os`/`arch`
-/// (`std::env::consts` naming), if the Rust edition ships one.
-pub fn artifact_name(os: &str, arch: &str) -> Option<&'static str> {
-    match (os, arch) {
-        ("windows", "x86_64") => Some("accessiweather-windows-x86_64.zip"),
-        ("macos", "aarch64") => Some("accessiweather-macos-arm64.zip"),
-        ("linux", "x86_64") => Some("accessiweather-linux-x86_64.tar.gz"),
-        _ => None,
-    }
-}
-
-/// This platform's asset in `release`. Unlike Python there is no "first
-/// asset" fallback: every other asset belongs to the Python edition.
-pub fn select_asset<'a>(release: &'a Value, os: &str, arch: &str) -> Option<&'a Value> {
-    let wanted = artifact_name(os, arch)?;
-    assets(release)
+/// This platform's asset in `release` (`select_asset`; `os` in
+/// `std::env::consts::OS` naming): on Windows the portable zip for a
+/// portable run, else the installer; the disk image on macOS; the AppImage,
+/// else a package or tarball, on Linux. Unlike Python there is no "first
+/// asset" fallback, which hands a Mac the Linux AppImage when a release has
+/// no disk image.
+pub fn select_asset<'a>(release: &'a Value, portable: bool, os: &str) -> Option<&'a Value> {
+    const DENY_EXTENSIONS: [&str; 7] = [
+        ".sha256", ".sha512", ".md5", ".sig", ".asc", ".txt", ".json",
+    ];
+    let name = |asset: &Value| asset_name(asset).to_lowercase();
+    let filtered: Vec<&Value> = assets(release)
         .iter()
-        .find(|a| asset_name(a).eq_ignore_ascii_case(wanted))
+        .filter(|a| {
+            let n = name(a);
+            !DENY_EXTENSIONS.iter().any(|ext| n.ends_with(ext))
+                && !n.contains("signature")
+                && !n.contains("verify")
+        })
+        .collect();
+    let first = |pick: &dyn Fn(&str) -> bool| filtered.iter().copied().find(|a| pick(&name(a)));
+    let system = os.to_lowercase();
+    if system.contains("windows") {
+        if portable {
+            let zip = first(&|n| n.contains("portable") && n.ends_with(".zip"))
+                .or_else(|| first(&|n| n.ends_with(".zip")));
+            if zip.is_some() {
+                return zip;
+            }
+        }
+        [".exe", ".msi"]
+            .into_iter()
+            .find_map(|ext| first(&|n| n.ends_with(ext)))
+    } else if system.contains("darwin") || system.contains("mac") {
+        [".dmg", ".pkg"]
+            .into_iter()
+            .find_map(|ext| first(&|n| n.ends_with(ext)))
+    } else {
+        [".appimage", ".deb", ".rpm", ".tar.gz", ".zip"]
+            .into_iter()
+            .find_map(|ext| first(&|n| n.ends_with(ext) && (n.contains("linux") || ext != ".zip")))
+    }
 }
 
 /// The pure part of `check_for_updates`: pick the release and asset.
@@ -201,14 +224,14 @@ pub fn update_from_releases(
     current_version: &str,
     current_nightly_date: Option<&str>,
     channel: &str,
+    portable: bool,
     os: &str,
-    arch: &str,
 ) -> Option<UpdateInfo> {
     let latest = select_latest_release(releases, channel)?;
     if !is_update_available(latest, current_version, current_nightly_date) {
         return None;
     }
-    let asset = select_asset(latest, os, arch)?;
+    let asset = select_asset(latest, portable, os)?;
     let (version, is_nightly) = release_identifier(latest);
     let notes = str_field(latest, "body");
     Some(UpdateInfo {
@@ -258,12 +281,14 @@ impl UpdateService {
         })
     }
 
-    /// `Some(update)` when `channel` has a newer build for this platform.
+    /// `Some(update)` when `channel` has a newer build for this platform
+    /// (the portable zip instead of the installer when `portable`).
     pub fn check_for_updates(
         &self,
         current_version: &str,
         current_nightly_date: Option<&str>,
         channel: &str,
+        portable: bool,
     ) -> Result<Option<UpdateInfo>, UpdateError> {
         let releases = self.fetch_releases()?;
         Ok(update_from_releases(
@@ -271,8 +296,8 @@ impl UpdateService {
             current_version,
             current_nightly_date,
             channel,
+            portable,
             std::env::consts::OS,
-            std::env::consts::ARCH,
         ))
     }
 
@@ -591,36 +616,28 @@ mod tests {
     }
 
     #[test]
-    fn asset_selection_targets_the_rust_artifacts() {
+    fn asset_selection_follows_the_release_names() {
         let r = json!({"assets": [
-            {"name": "AccessiWeather-0.10.1-windows-portable.zip"},
-            {"name": "accessiweather-windows-x86_64.zip.sha256"},
-            {"name": "accessiweather-windows-x86_64.zip", "browser_download_url": "u"},
-            {"name": "accessiweather-macos-arm64.zip"},
-            {"name": "accessiweather-linux-x86_64.tar.gz"},
+            {"name": "AccessiWeather-0.11.0-linux-x86_64.AppImage"},
+            {"name": "AccessiWeather-0.11.0-linux.tar.gz"},
+            {"name": "AccessiWeather-0.11.0-macOS.dmg"},
+            {"name": "AccessiWeather-0.11.0-macOS.zip"},
+            {"name": "AccessiWeather-0.11.0-windows-portable.zip"},
+            {"name": "AccessiWeather-0.11.0-windows-setup.exe"},
+            {"name": "checksums.txt"},
         ]});
-        let pick = |os, arch| select_asset(&r, os, arch).map(|a| asset_name(a).to_string());
-        assert_eq!(
-            pick("windows", "x86_64").unwrap(),
-            "accessiweather-windows-x86_64.zip"
-        );
-        assert_eq!(
-            pick("macos", "aarch64").unwrap(),
-            "accessiweather-macos-arm64.zip"
-        );
-        assert_eq!(
-            pick("linux", "x86_64").unwrap(),
-            "accessiweather-linux-x86_64.tar.gz"
-        );
-        assert!(pick("macos", "x86_64").is_none());
-        assert!(
-            select_asset(&json!({"assets": [{"name": "x.zip"}]}), "windows", "x86_64").is_none()
-        );
+        let pick = |portable, os| select_asset(&r, portable, os).map(|a| asset_name(a).to_string());
+        let name = |suffix: &str| Some(format!("AccessiWeather-0.11.0-{suffix}"));
+        assert_eq!(pick(false, "windows"), name("windows-setup.exe"));
+        assert_eq!(pick(true, "windows"), name("windows-portable.zip"));
+        assert_eq!(pick(false, "macos"), name("macOS.dmg"));
+        assert_eq!(pick(true, "linux"), name("linux-x86_64.AppImage"));
+        let zip_only = json!({"assets": [{"name": "AccessiWeather-0.10.1-macOS.zip"}]});
+        assert!(select_asset(&zip_only, false, "macos").is_none());
     }
 
     #[test]
-    fn version_without_edition_suffix() {
-        assert!(!app_version().contains("rust"));
+    fn version_is_pep440() {
         assert!(Version::parse(app_version()).is_some());
         assert_eq!(default_update_channel(Some("Nightly-20260101")), "nightly");
         assert_eq!(default_update_channel(None), "stable");

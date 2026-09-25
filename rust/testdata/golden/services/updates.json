@@ -3491,7 +3491,9 @@
         "is_nightly": false,
         "is_prerelease": false,
         "commit_hash": null,
-        "release_notes": "## Changed\n- The show, hide and read-tray hotkeys now default to Ctrl+Alt+Shift+W, M and I, so they no longer steal Ctrl+Shift shortcuts from your browser or screen reader.\n- Edit Location is now F2, and NOAA Weather Radio opens with Ctrl+N.\n- AccessiWeather tells you when another program already owns a window or tray hotkey, instead of failing silently. Windows only.\n- A shortcut Settings won't accept now gets focus along with the message, so you can fix it right away.\n"
+        "release_notes": "## Changed\n- The show, hide and read-tray hotkeys now default to Ctrl+Alt+Shift+W, M and I, so they no longer steal Ctrl+Shift shortcuts from your browser or screen reader.\n- Edit Location is now F2, and NOAA Weather Radio opens with Ctrl+N.\n- AccessiWeather tells you when another program already owns a window or tray hotkey, instead of failing silently. Windows only.\n- A shortcut Settings won't accept now gets focus along with the message, so you can fix it right away.\n",
+        "artifact_name": "AccessiWeather-0.10.1-windows-setup.exe",
+        "download_url": "https://github.com/Orinks/AccessiWeather/releases/download/v0.10.1/AccessiWeather-0.10.1-windows-setup.exe"
       }
     },
     {
@@ -3504,7 +3506,9 @@
         "is_nightly": false,
         "is_prerelease": false,
         "commit_hash": null,
-        "release_notes": "## Changed\n- The show, hide and read-tray hotkeys now default to Ctrl+Alt+Shift+W, M and I, so they no longer steal Ctrl+Shift shortcuts from your browser or screen reader.\n- Edit Location is now F2, and NOAA Weather Radio opens with Ctrl+N.\n- AccessiWeather tells you when another program already owns a window or tray hotkey, instead of failing silently. Windows only.\n- A shortcut Settings won't accept now gets focus along with the message, so you can fix it right away.\n"
+        "release_notes": "## Changed\n- The show, hide and read-tray hotkeys now default to Ctrl+Alt+Shift+W, M and I, so they no longer steal Ctrl+Shift shortcuts from your browser or screen reader.\n- Edit Location is now F2, and NOAA Weather Radio opens with Ctrl+N.\n- AccessiWeather tells you when another program already owns a window or tray hotkey, instead of failing silently. Windows only.\n- A shortcut Settings won't accept now gets focus along with the message, so you can fix it right away.\n",
+        "artifact_name": "AccessiWeather-0.10.1-windows-setup.exe",
+        "download_url": "https://github.com/Orinks/AccessiWeather/releases/download/v0.10.1/AccessiWeather-0.10.1-windows-setup.exe"
       }
     },
     {
@@ -3538,7 +3542,9 @@
         "is_nightly": true,
         "is_prerelease": true,
         "commit_hash": null,
-        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n"
+        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n",
+        "artifact_name": "AccessiWeather-nightly-20260925-windows-setup.exe",
+        "download_url": "https://github.com/Orinks/AccessiWeather/releases/download/nightly-20260925/AccessiWeather-nightly-20260925-windows-setup.exe"
       }
     },
     {
@@ -3551,7 +3557,9 @@
         "is_nightly": true,
         "is_prerelease": true,
         "commit_hash": null,
-        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n"
+        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n",
+        "artifact_name": "AccessiWeather-nightly-20260925-windows-setup.exe",
+        "download_url": "https://github.com/Orinks/AccessiWeather/releases/download/nightly-20260925/AccessiWeather-nightly-20260925-windows-setup.exe"
       }
     },
     {
@@ -3564,7 +3572,9 @@
         "is_nightly": true,
         "is_prerelease": true,
         "commit_hash": null,
-        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n"
+        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n",
+        "artifact_name": "AccessiWeather-nightly-20260925-windows-setup.exe",
+        "download_url": "https://github.com/Orinks/AccessiWeather/releases/download/nightly-20260925/AccessiWeather-nightly-20260925-windows-setup.exe"
       }
     },
     {
@@ -3577,7 +3587,9 @@
         "is_nightly": true,
         "is_prerelease": true,
         "commit_hash": null,
-        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n"
+        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n",
+        "artifact_name": "AccessiWeather-nightly-20260925-windows-setup.exe",
+        "download_url": "https://github.com/Orinks/AccessiWeather/releases/download/nightly-20260925/AccessiWeather-nightly-20260925-windows-setup.exe"
       }
     },
     {
@@ -3597,7 +3609,9 @@
         "is_nightly": true,
         "is_prerelease": true,
         "commit_hash": null,
-        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n"
+        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n",
+        "artifact_name": "AccessiWeather-nightly-20260925-windows-setup.exe",
+        "download_url": "https://github.com/Orinks/AccessiWeather/releases/download/nightly-20260925/AccessiWeather-nightly-20260925-windows-setup.exe"
       }
     },
     {
@@ -3610,7 +3624,9 @@
         "is_nightly": true,
         "is_prerelease": true,
         "commit_hash": null,
-        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n"
+        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n",
+        "artifact_name": "AccessiWeather-nightly-20260925-windows-setup.exe",
+        "download_url": "https://github.com/Orinks/AccessiWeather/releases/download/nightly-20260925/AccessiWeather-nightly-20260925-windows-setup.exe"
       }
     },
     {
@@ -3623,7 +3639,9 @@
         "is_nightly": true,
         "is_prerelease": true,
         "commit_hash": null,
-        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n"
+        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n",
+        "artifact_name": "AccessiWeather-nightly-20260925-windows-setup.exe",
+        "download_url": "https://github.com/Orinks/AccessiWeather/releases/download/nightly-20260925/AccessiWeather-nightly-20260925-windows-setup.exe"
       }
     },
     {
@@ -3636,7 +3654,9 @@
         "is_nightly": true,
         "is_prerelease": true,
         "commit_hash": null,
-        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n"
+        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n",
+        "artifact_name": "AccessiWeather-nightly-20260925-windows-setup.exe",
+        "download_url": "https://github.com/Orinks/AccessiWeather/releases/download/nightly-20260925/AccessiWeather-nightly-20260925-windows-setup.exe"
       }
     },
     {
@@ -3649,7 +3669,9 @@
         "is_nightly": true,
         "is_prerelease": true,
         "commit_hash": null,
-        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n"
+        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n",
+        "artifact_name": "AccessiWeather-nightly-20260925-windows-setup.exe",
+        "download_url": "https://github.com/Orinks/AccessiWeather/releases/download/nightly-20260925/AccessiWeather-nightly-20260925-windows-setup.exe"
       }
     },
     {
@@ -3669,7 +3691,9 @@
         "is_nightly": true,
         "is_prerelease": true,
         "commit_hash": null,
-        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n"
+        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n",
+        "artifact_name": "AccessiWeather-nightly-20260925-windows-setup.exe",
+        "download_url": "https://github.com/Orinks/AccessiWeather/releases/download/nightly-20260925/AccessiWeather-nightly-20260925-windows-setup.exe"
       }
     },
     {
@@ -3689,7 +3713,9 @@
         "is_nightly": false,
         "is_prerelease": false,
         "commit_hash": null,
-        "release_notes": "## Changed\n- The show, hide and read-tray hotkeys now default to Ctrl+Alt+Shift+W, M and I, so they no longer steal Ctrl+Shift shortcuts from your browser or screen reader.\n- Edit Location is now F2, and NOAA Weather Radio opens with Ctrl+N.\n- AccessiWeather tells you when another program already owns a window or tray hotkey, instead of failing silently. Windows only.\n- A shortcut Settings won't accept now gets focus along with the message, so you can fix it right away.\n"
+        "release_notes": "## Changed\n- The show, hide and read-tray hotkeys now default to Ctrl+Alt+Shift+W, M and I, so they no longer steal Ctrl+Shift shortcuts from your browser or screen reader.\n- Edit Location is now F2, and NOAA Weather Radio opens with Ctrl+N.\n- AccessiWeather tells you when another program already owns a window or tray hotkey, instead of failing silently. Windows only.\n- A shortcut Settings won't accept now gets focus along with the message, so you can fix it right away.\n",
+        "artifact_name": "AccessiWeather-0.10.1-windows-setup.exe",
+        "download_url": "https://github.com/Orinks/AccessiWeather/releases/download/v0.10.1/AccessiWeather-0.10.1-windows-setup.exe"
       }
     },
     {
@@ -3702,7 +3728,9 @@
         "is_nightly": false,
         "is_prerelease": false,
         "commit_hash": null,
-        "release_notes": "## Changed\n- The show, hide and read-tray hotkeys now default to Ctrl+Alt+Shift+W, M and I, so they no longer steal Ctrl+Shift shortcuts from your browser or screen reader.\n- Edit Location is now F2, and NOAA Weather Radio opens with Ctrl+N.\n- AccessiWeather tells you when another program already owns a window or tray hotkey, instead of failing silently. Windows only.\n- A shortcut Settings won't accept now gets focus along with the message, so you can fix it right away.\n"
+        "release_notes": "## Changed\n- The show, hide and read-tray hotkeys now default to Ctrl+Alt+Shift+W, M and I, so they no longer steal Ctrl+Shift shortcuts from your browser or screen reader.\n- Edit Location is now F2, and NOAA Weather Radio opens with Ctrl+N.\n- AccessiWeather tells you when another program already owns a window or tray hotkey, instead of failing silently. Windows only.\n- A shortcut Settings won't accept now gets focus along with the message, so you can fix it right away.\n",
+        "artifact_name": "AccessiWeather-0.10.1-windows-setup.exe",
+        "download_url": "https://github.com/Orinks/AccessiWeather/releases/download/v0.10.1/AccessiWeather-0.10.1-windows-setup.exe"
       }
     },
     {
@@ -3736,7 +3764,9 @@
         "is_nightly": true,
         "is_prerelease": true,
         "commit_hash": null,
-        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n"
+        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n",
+        "artifact_name": "AccessiWeather-nightly-20260925-windows-setup.exe",
+        "download_url": "https://github.com/Orinks/AccessiWeather/releases/download/nightly-20260925/AccessiWeather-nightly-20260925-windows-setup.exe"
       }
     },
     {
@@ -3749,7 +3779,9 @@
         "is_nightly": true,
         "is_prerelease": true,
         "commit_hash": null,
-        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n"
+        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n",
+        "artifact_name": "AccessiWeather-nightly-20260925-windows-setup.exe",
+        "download_url": "https://github.com/Orinks/AccessiWeather/releases/download/nightly-20260925/AccessiWeather-nightly-20260925-windows-setup.exe"
       }
     },
     {
@@ -3762,7 +3794,9 @@
         "is_nightly": true,
         "is_prerelease": true,
         "commit_hash": null,
-        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n"
+        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n",
+        "artifact_name": "AccessiWeather-nightly-20260925-windows-setup.exe",
+        "download_url": "https://github.com/Orinks/AccessiWeather/releases/download/nightly-20260925/AccessiWeather-nightly-20260925-windows-setup.exe"
       }
     },
     {
@@ -3775,7 +3809,9 @@
         "is_nightly": true,
         "is_prerelease": true,
         "commit_hash": null,
-        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n"
+        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n",
+        "artifact_name": "AccessiWeather-nightly-20260925-windows-setup.exe",
+        "download_url": "https://github.com/Orinks/AccessiWeather/releases/download/nightly-20260925/AccessiWeather-nightly-20260925-windows-setup.exe"
       }
     },
     {
@@ -3795,7 +3831,9 @@
         "is_nightly": true,
         "is_prerelease": true,
         "commit_hash": null,
-        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n"
+        "release_notes": "## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n",
+        "artifact_name": "AccessiWeather-nightly-20260925-windows-setup.exe",
+        "download_url": "https://github.com/Orinks/AccessiWeather/releases/download/nightly-20260925/AccessiWeather-nightly-20260925-windows-setup.exe"
       }
     }
   ],
@@ -5376,22 +5414,1028 @@
     }
   ],
   "portable_script": {
-    "zip_path": "C:\\Users\\Test User\\AppData\\Local\\Temp\\accessiweather-windows-x86_64.zip",
+    "zip_path": "C:\\Users\\Test User\\AppData\\Local\\Temp\\AccessiWeather-0.11.0-windows-portable.zip",
     "target_dir": "D:\\Apps\\AccessiWeather",
     "exe_path": "D:\\Apps\\AccessiWeather\\AccessiWeather.exe",
     "pid": 4242,
-    "text": "@echo off\nset \"PID=4242\"\nset \"ZIP_PATH=C:\\Users\\Test User\\AppData\\Local\\Temp\\accessiweather-windows-x86_64.zip\"\nset \"TARGET_DIR=D:\\Apps\\AccessiWeather\"\nset \"EXE_PATH=D:\\Apps\\AccessiWeather\\AccessiWeather.exe\"\nset \"EXTRACT_DIR=D:\\Apps\\AccessiWeather\\update_tmp\"\n\n:WAIT_LOOP\ntasklist /FI \"PID eq %PID%\" 2>NUL | find /I /N \"%PID%\" >NUL\nif \"%ERRORLEVEL%\"==\"0\" (\n    timeout /t 1 /nobreak >NUL\n    goto WAIT_LOOP\n)\n\nif exist \"%EXTRACT_DIR%\" rd /s /q \"%EXTRACT_DIR%\"\npowershell -Command \"Expand-Archive -Path '%ZIP_PATH%' -DestinationPath '%EXTRACT_DIR%' -Force\"\n\nREM Find actual content dir (zip may have a subfolder)\nset \"COPY_SRC=%EXTRACT_DIR%\"\nif not exist \"%EXTRACT_DIR%\\AccessiWeather.exe\" (\n    for /d %%D in (\"%EXTRACT_DIR%\\*\") do (\n        if exist \"%%D\\AccessiWeather.exe\" set \"COPY_SRC=%%D\"\n    )\n)\n\nxcopy \"%COPY_SRC%\\*\" \"%TARGET_DIR%\\\" /E /H /Y /Q\nrd /s /q \"%EXTRACT_DIR%\"\ndel \"%ZIP_PATH%\"\ntimeout /t 2 /nobreak >NUL\nstart \"\" \"%EXE_PATH%\" --updated\n(goto) 2>nul & del \"%~f0\""
+    "text": "@echo off\nset \"PID=4242\"\nset \"ZIP_PATH=C:\\Users\\Test User\\AppData\\Local\\Temp\\AccessiWeather-0.11.0-windows-portable.zip\"\nset \"TARGET_DIR=D:\\Apps\\AccessiWeather\"\nset \"EXE_PATH=D:\\Apps\\AccessiWeather\\AccessiWeather.exe\"\nset \"EXTRACT_DIR=D:\\Apps\\AccessiWeather\\update_tmp\"\n\n:WAIT_LOOP\ntasklist /FI \"PID eq %PID%\" 2>NUL | find /I /N \"%PID%\" >NUL\nif \"%ERRORLEVEL%\"==\"0\" (\n    timeout /t 1 /nobreak >NUL\n    goto WAIT_LOOP\n)\n\nif exist \"%EXTRACT_DIR%\" rd /s /q \"%EXTRACT_DIR%\"\npowershell -Command \"Expand-Archive -Path '%ZIP_PATH%' -DestinationPath '%EXTRACT_DIR%' -Force\"\n\nREM Find actual content dir (zip may have a subfolder)\nset \"COPY_SRC=%EXTRACT_DIR%\"\nif not exist \"%EXTRACT_DIR%\\AccessiWeather.exe\" (\n    for /d %%D in (\"%EXTRACT_DIR%\\*\") do (\n        if exist \"%%D\\AccessiWeather.exe\" set \"COPY_SRC=%%D\"\n    )\n)\n\nxcopy \"%COPY_SRC%\\*\" \"%TARGET_DIR%\\\" /E /H /Y /Q\nrd /s /q \"%EXTRACT_DIR%\"\ndel \"%ZIP_PATH%\"\ntimeout /t 2 /nobreak >NUL\nstart \"\" \"%EXE_PATH%\" --updated\n(goto) 2>nul & del \"%~f0\""
   },
   "macos_scripts": [
     {
-      "update_path": "/tmp/accessiweather-macos-arm64.zip",
+      "update_path": "/tmp/AccessiWeather-0.11.0-macOS.zip",
       "app_path": "/Applications/AccessiWeather.app",
-      "text": "#!/bin/bash\nsleep 2\nUPDATE_PATH=/tmp/accessiweather-macos-arm64.zip\nAPP_DIR=/Applications\nAPP_PATH=/Applications/AccessiWeather.app\nif [[ \"$UPDATE_PATH\" == *.zip ]]; then\n    unzip -o \"$UPDATE_PATH\" -d \"$APP_DIR\"\nelif [[ \"$UPDATE_PATH\" == *.dmg ]]; then\n    MOUNT_DIR=$(hdiutil attach \"$UPDATE_PATH\" -nobrowse -quiet                 | grep -oE '/Volumes/[^[:cntrl:]]+' | tail -1)\n    if [[ -n \"$MOUNT_DIR\" ]]; then\n        cp -R \"$MOUNT_DIR\"/*.app \"$APP_DIR/\"\n        hdiutil detach \"$MOUNT_DIR\" -quiet\n    fi\nfi\nopen \"$APP_PATH\" --args --updated\nrm -f \"$0\" \"$UPDATE_PATH\""
+      "text": "#!/bin/bash\nsleep 2\nUPDATE_PATH=/tmp/AccessiWeather-0.11.0-macOS.zip\nAPP_DIR=/Applications\nAPP_PATH=/Applications/AccessiWeather.app\nif [[ \"$UPDATE_PATH\" == *.zip ]]; then\n    unzip -o \"$UPDATE_PATH\" -d \"$APP_DIR\"\nelif [[ \"$UPDATE_PATH\" == *.dmg ]]; then\n    MOUNT_DIR=$(hdiutil attach \"$UPDATE_PATH\" -nobrowse -quiet                 | grep -oE '/Volumes/[^[:cntrl:]]+' | tail -1)\n    if [[ -n \"$MOUNT_DIR\" ]]; then\n        cp -R \"$MOUNT_DIR\"/*.app \"$APP_DIR/\"\n        hdiutil detach \"$MOUNT_DIR\" -quiet\n    fi\nfi\nopen \"$APP_PATH\" --args --updated\nrm -f \"$0\" \"$UPDATE_PATH\""
     },
     {
       "update_path": "/Users/me/Down loads/it's.dmg",
       "app_path": "/Users/me/My Apps/AccessiWeather.app",
       "text": "#!/bin/bash\nsleep 2\nUPDATE_PATH='/Users/me/Down loads/it'\"'\"'s.dmg'\nAPP_DIR='/Users/me/My Apps'\nAPP_PATH='/Users/me/My Apps/AccessiWeather.app'\nif [[ \"$UPDATE_PATH\" == *.zip ]]; then\n    unzip -o \"$UPDATE_PATH\" -d \"$APP_DIR\"\nelif [[ \"$UPDATE_PATH\" == *.dmg ]]; then\n    MOUNT_DIR=$(hdiutil attach \"$UPDATE_PATH\" -nobrowse -quiet                 | grep -oE '/Volumes/[^[:cntrl:]]+' | tail -1)\n    if [[ -n \"$MOUNT_DIR\" ]]; then\n        cp -R \"$MOUNT_DIR\"/*.app \"$APP_DIR/\"\n        hdiutil detach \"$MOUNT_DIR\" -quiet\n    fi\nfi\nopen \"$APP_PATH\" --args --updated\nrm -f \"$0\" \"$UPDATE_PATH\""
     }
-  ]
+  ],
+  "asset_selection": [
+    {
+      "assets": [
+        "AccessiWeather-nightly-20260925-linux-x86_64.AppImage",
+        "AccessiWeather-nightly-20260925-linux.tar.gz",
+        "AccessiWeather-nightly-20260925-macOS.zip",
+        "AccessiWeather-nightly-20260925-windows-portable.zip",
+        "AccessiWeather-nightly-20260925-windows-setup.exe",
+        "checksums.txt"
+      ],
+      "system": "Windows",
+      "portable": false,
+      "selected": "AccessiWeather-nightly-20260925-windows-setup.exe",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "AccessiWeather-nightly-20260925-linux-x86_64.AppImage",
+        "AccessiWeather-nightly-20260925-linux.tar.gz",
+        "AccessiWeather-nightly-20260925-macOS.zip",
+        "AccessiWeather-nightly-20260925-windows-portable.zip",
+        "AccessiWeather-nightly-20260925-windows-setup.exe",
+        "checksums.txt"
+      ],
+      "system": "Windows",
+      "portable": true,
+      "selected": "AccessiWeather-nightly-20260925-windows-portable.zip",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "AccessiWeather-nightly-20260925-linux-x86_64.AppImage",
+        "AccessiWeather-nightly-20260925-linux.tar.gz",
+        "AccessiWeather-nightly-20260925-macOS.zip",
+        "AccessiWeather-nightly-20260925-windows-portable.zip",
+        "AccessiWeather-nightly-20260925-windows-setup.exe",
+        "checksums.txt"
+      ],
+      "system": "Darwin",
+      "portable": false,
+      "selected": "AccessiWeather-nightly-20260925-linux-x86_64.AppImage",
+      "fallback": true
+    },
+    {
+      "assets": [
+        "AccessiWeather-nightly-20260925-linux-x86_64.AppImage",
+        "AccessiWeather-nightly-20260925-linux.tar.gz",
+        "AccessiWeather-nightly-20260925-macOS.zip",
+        "AccessiWeather-nightly-20260925-windows-portable.zip",
+        "AccessiWeather-nightly-20260925-windows-setup.exe",
+        "checksums.txt"
+      ],
+      "system": "Darwin",
+      "portable": true,
+      "selected": "AccessiWeather-nightly-20260925-linux-x86_64.AppImage",
+      "fallback": true
+    },
+    {
+      "assets": [
+        "AccessiWeather-nightly-20260925-linux-x86_64.AppImage",
+        "AccessiWeather-nightly-20260925-linux.tar.gz",
+        "AccessiWeather-nightly-20260925-macOS.zip",
+        "AccessiWeather-nightly-20260925-windows-portable.zip",
+        "AccessiWeather-nightly-20260925-windows-setup.exe",
+        "checksums.txt"
+      ],
+      "system": "Linux",
+      "portable": false,
+      "selected": "AccessiWeather-nightly-20260925-linux-x86_64.AppImage",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "AccessiWeather-nightly-20260925-linux-x86_64.AppImage",
+        "AccessiWeather-nightly-20260925-linux.tar.gz",
+        "AccessiWeather-nightly-20260925-macOS.zip",
+        "AccessiWeather-nightly-20260925-windows-portable.zip",
+        "AccessiWeather-nightly-20260925-windows-setup.exe",
+        "checksums.txt"
+      ],
+      "system": "Linux",
+      "portable": true,
+      "selected": "AccessiWeather-nightly-20260925-linux-x86_64.AppImage",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "AccessiWeather-nightly-20260924-linux-x86_64.AppImage",
+        "AccessiWeather-nightly-20260924-linux.tar.gz",
+        "AccessiWeather-nightly-20260924-macOS.zip",
+        "AccessiWeather-nightly-20260924-windows-portable.zip",
+        "AccessiWeather-nightly-20260924-windows-setup.exe",
+        "checksums.txt"
+      ],
+      "system": "Windows",
+      "portable": false,
+      "selected": "AccessiWeather-nightly-20260924-windows-setup.exe",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "AccessiWeather-nightly-20260924-linux-x86_64.AppImage",
+        "AccessiWeather-nightly-20260924-linux.tar.gz",
+        "AccessiWeather-nightly-20260924-macOS.zip",
+        "AccessiWeather-nightly-20260924-windows-portable.zip",
+        "AccessiWeather-nightly-20260924-windows-setup.exe",
+        "checksums.txt"
+      ],
+      "system": "Windows",
+      "portable": true,
+      "selected": "AccessiWeather-nightly-20260924-windows-portable.zip",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "AccessiWeather-nightly-20260924-linux-x86_64.AppImage",
+        "AccessiWeather-nightly-20260924-linux.tar.gz",
+        "AccessiWeather-nightly-20260924-macOS.zip",
+        "AccessiWeather-nightly-20260924-windows-portable.zip",
+        "AccessiWeather-nightly-20260924-windows-setup.exe",
+        "checksums.txt"
+      ],
+      "system": "Darwin",
+      "portable": false,
+      "selected": "AccessiWeather-nightly-20260924-linux-x86_64.AppImage",
+      "fallback": true
+    },
+    {
+      "assets": [
+        "AccessiWeather-nightly-20260924-linux-x86_64.AppImage",
+        "AccessiWeather-nightly-20260924-linux.tar.gz",
+        "AccessiWeather-nightly-20260924-macOS.zip",
+        "AccessiWeather-nightly-20260924-windows-portable.zip",
+        "AccessiWeather-nightly-20260924-windows-setup.exe",
+        "checksums.txt"
+      ],
+      "system": "Darwin",
+      "portable": true,
+      "selected": "AccessiWeather-nightly-20260924-linux-x86_64.AppImage",
+      "fallback": true
+    },
+    {
+      "assets": [
+        "AccessiWeather-nightly-20260924-linux-x86_64.AppImage",
+        "AccessiWeather-nightly-20260924-linux.tar.gz",
+        "AccessiWeather-nightly-20260924-macOS.zip",
+        "AccessiWeather-nightly-20260924-windows-portable.zip",
+        "AccessiWeather-nightly-20260924-windows-setup.exe",
+        "checksums.txt"
+      ],
+      "system": "Linux",
+      "portable": false,
+      "selected": "AccessiWeather-nightly-20260924-linux-x86_64.AppImage",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "AccessiWeather-nightly-20260924-linux-x86_64.AppImage",
+        "AccessiWeather-nightly-20260924-linux.tar.gz",
+        "AccessiWeather-nightly-20260924-macOS.zip",
+        "AccessiWeather-nightly-20260924-windows-portable.zip",
+        "AccessiWeather-nightly-20260924-windows-setup.exe",
+        "checksums.txt"
+      ],
+      "system": "Linux",
+      "portable": true,
+      "selected": "AccessiWeather-nightly-20260924-linux-x86_64.AppImage",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "AccessiWeather-nightly-20260922-linux-x86_64.AppImage",
+        "AccessiWeather-nightly-20260922-linux.tar.gz",
+        "AccessiWeather-nightly-20260922-macOS.zip",
+        "AccessiWeather-nightly-20260922-windows-portable.zip",
+        "AccessiWeather-nightly-20260922-windows-setup.exe",
+        "checksums.txt"
+      ],
+      "system": "Windows",
+      "portable": false,
+      "selected": "AccessiWeather-nightly-20260922-windows-setup.exe",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "AccessiWeather-nightly-20260922-linux-x86_64.AppImage",
+        "AccessiWeather-nightly-20260922-linux.tar.gz",
+        "AccessiWeather-nightly-20260922-macOS.zip",
+        "AccessiWeather-nightly-20260922-windows-portable.zip",
+        "AccessiWeather-nightly-20260922-windows-setup.exe",
+        "checksums.txt"
+      ],
+      "system": "Windows",
+      "portable": true,
+      "selected": "AccessiWeather-nightly-20260922-windows-portable.zip",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "AccessiWeather-nightly-20260922-linux-x86_64.AppImage",
+        "AccessiWeather-nightly-20260922-linux.tar.gz",
+        "AccessiWeather-nightly-20260922-macOS.zip",
+        "AccessiWeather-nightly-20260922-windows-portable.zip",
+        "AccessiWeather-nightly-20260922-windows-setup.exe",
+        "checksums.txt"
+      ],
+      "system": "Darwin",
+      "portable": false,
+      "selected": "AccessiWeather-nightly-20260922-linux-x86_64.AppImage",
+      "fallback": true
+    },
+    {
+      "assets": [
+        "AccessiWeather-nightly-20260922-linux-x86_64.AppImage",
+        "AccessiWeather-nightly-20260922-linux.tar.gz",
+        "AccessiWeather-nightly-20260922-macOS.zip",
+        "AccessiWeather-nightly-20260922-windows-portable.zip",
+        "AccessiWeather-nightly-20260922-windows-setup.exe",
+        "checksums.txt"
+      ],
+      "system": "Darwin",
+      "portable": true,
+      "selected": "AccessiWeather-nightly-20260922-linux-x86_64.AppImage",
+      "fallback": true
+    },
+    {
+      "assets": [
+        "AccessiWeather-nightly-20260922-linux-x86_64.AppImage",
+        "AccessiWeather-nightly-20260922-linux.tar.gz",
+        "AccessiWeather-nightly-20260922-macOS.zip",
+        "AccessiWeather-nightly-20260922-windows-portable.zip",
+        "AccessiWeather-nightly-20260922-windows-setup.exe",
+        "checksums.txt"
+      ],
+      "system": "Linux",
+      "portable": false,
+      "selected": "AccessiWeather-nightly-20260922-linux-x86_64.AppImage",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "AccessiWeather-nightly-20260922-linux-x86_64.AppImage",
+        "AccessiWeather-nightly-20260922-linux.tar.gz",
+        "AccessiWeather-nightly-20260922-macOS.zip",
+        "AccessiWeather-nightly-20260922-windows-portable.zip",
+        "AccessiWeather-nightly-20260922-windows-setup.exe",
+        "checksums.txt"
+      ],
+      "system": "Linux",
+      "portable": true,
+      "selected": "AccessiWeather-nightly-20260922-linux-x86_64.AppImage",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "AccessiWeather-0.11.0-linux-x86_64.AppImage",
+        "AccessiWeather-0.11.0-linux.tar.gz",
+        "AccessiWeather-0.11.0-macOS.dmg",
+        "AccessiWeather-0.11.0-macOS.zip",
+        "AccessiWeather-0.11.0-windows-portable.zip",
+        "AccessiWeather-0.11.0-windows-setup.exe",
+        "checksums.txt"
+      ],
+      "system": "Windows",
+      "portable": false,
+      "selected": "AccessiWeather-0.11.0-windows-setup.exe",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "AccessiWeather-0.11.0-linux-x86_64.AppImage",
+        "AccessiWeather-0.11.0-linux.tar.gz",
+        "AccessiWeather-0.11.0-macOS.dmg",
+        "AccessiWeather-0.11.0-macOS.zip",
+        "AccessiWeather-0.11.0-windows-portable.zip",
+        "AccessiWeather-0.11.0-windows-setup.exe",
+        "checksums.txt"
+      ],
+      "system": "Windows",
+      "portable": true,
+      "selected": "AccessiWeather-0.11.0-windows-portable.zip",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "AccessiWeather-0.11.0-linux-x86_64.AppImage",
+        "AccessiWeather-0.11.0-linux.tar.gz",
+        "AccessiWeather-0.11.0-macOS.dmg",
+        "AccessiWeather-0.11.0-macOS.zip",
+        "AccessiWeather-0.11.0-windows-portable.zip",
+        "AccessiWeather-0.11.0-windows-setup.exe",
+        "checksums.txt"
+      ],
+      "system": "Darwin",
+      "portable": false,
+      "selected": "AccessiWeather-0.11.0-macOS.dmg",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "AccessiWeather-0.11.0-linux-x86_64.AppImage",
+        "AccessiWeather-0.11.0-linux.tar.gz",
+        "AccessiWeather-0.11.0-macOS.dmg",
+        "AccessiWeather-0.11.0-macOS.zip",
+        "AccessiWeather-0.11.0-windows-portable.zip",
+        "AccessiWeather-0.11.0-windows-setup.exe",
+        "checksums.txt"
+      ],
+      "system": "Darwin",
+      "portable": true,
+      "selected": "AccessiWeather-0.11.0-macOS.dmg",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "AccessiWeather-0.11.0-linux-x86_64.AppImage",
+        "AccessiWeather-0.11.0-linux.tar.gz",
+        "AccessiWeather-0.11.0-macOS.dmg",
+        "AccessiWeather-0.11.0-macOS.zip",
+        "AccessiWeather-0.11.0-windows-portable.zip",
+        "AccessiWeather-0.11.0-windows-setup.exe",
+        "checksums.txt"
+      ],
+      "system": "Linux",
+      "portable": false,
+      "selected": "AccessiWeather-0.11.0-linux-x86_64.AppImage",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "AccessiWeather-0.11.0-linux-x86_64.AppImage",
+        "AccessiWeather-0.11.0-linux.tar.gz",
+        "AccessiWeather-0.11.0-macOS.dmg",
+        "AccessiWeather-0.11.0-macOS.zip",
+        "AccessiWeather-0.11.0-windows-portable.zip",
+        "AccessiWeather-0.11.0-windows-setup.exe",
+        "checksums.txt"
+      ],
+      "system": "Linux",
+      "portable": true,
+      "selected": "AccessiWeather-0.11.0-linux-x86_64.AppImage",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "app.zip.sha256",
+        "App-Linux.ZIP",
+        "notes.txt",
+        "x.deb",
+        "y.rpm"
+      ],
+      "system": "Windows",
+      "portable": false,
+      "selected": "App-Linux.ZIP",
+      "fallback": true
+    },
+    {
+      "assets": [
+        "app.zip.sha256",
+        "App-Linux.ZIP",
+        "notes.txt",
+        "x.deb",
+        "y.rpm"
+      ],
+      "system": "Windows",
+      "portable": true,
+      "selected": "App-Linux.ZIP",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "app.zip.sha256",
+        "App-Linux.ZIP",
+        "notes.txt",
+        "x.deb",
+        "y.rpm"
+      ],
+      "system": "Darwin",
+      "portable": false,
+      "selected": "App-Linux.ZIP",
+      "fallback": true
+    },
+    {
+      "assets": [
+        "app.zip.sha256",
+        "App-Linux.ZIP",
+        "notes.txt",
+        "x.deb",
+        "y.rpm"
+      ],
+      "system": "Darwin",
+      "portable": true,
+      "selected": "App-Linux.ZIP",
+      "fallback": true
+    },
+    {
+      "assets": [
+        "app.zip.sha256",
+        "App-Linux.ZIP",
+        "notes.txt",
+        "x.deb",
+        "y.rpm"
+      ],
+      "system": "Linux",
+      "portable": false,
+      "selected": "x.deb",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "app.zip.sha256",
+        "App-Linux.ZIP",
+        "notes.txt",
+        "x.deb",
+        "y.rpm"
+      ],
+      "system": "Linux",
+      "portable": true,
+      "selected": "x.deb",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "signature.exe",
+        "tool-verify.msi",
+        "Setup.MSI",
+        "pack.zip",
+        "a.pkg"
+      ],
+      "system": "Windows",
+      "portable": false,
+      "selected": "Setup.MSI",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "signature.exe",
+        "tool-verify.msi",
+        "Setup.MSI",
+        "pack.zip",
+        "a.pkg"
+      ],
+      "system": "Windows",
+      "portable": true,
+      "selected": "pack.zip",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "signature.exe",
+        "tool-verify.msi",
+        "Setup.MSI",
+        "pack.zip",
+        "a.pkg"
+      ],
+      "system": "Darwin",
+      "portable": false,
+      "selected": "a.pkg",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "signature.exe",
+        "tool-verify.msi",
+        "Setup.MSI",
+        "pack.zip",
+        "a.pkg"
+      ],
+      "system": "Darwin",
+      "portable": true,
+      "selected": "a.pkg",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "signature.exe",
+        "tool-verify.msi",
+        "Setup.MSI",
+        "pack.zip",
+        "a.pkg"
+      ],
+      "system": "Linux",
+      "portable": false,
+      "selected": "Setup.MSI",
+      "fallback": true
+    },
+    {
+      "assets": [
+        "signature.exe",
+        "tool-verify.msi",
+        "Setup.MSI",
+        "pack.zip",
+        "a.pkg"
+      ],
+      "system": "Linux",
+      "portable": true,
+      "selected": "Setup.MSI",
+      "fallback": true
+    },
+    {
+      "assets": [
+        "other.zip",
+        "AccessiWeather.EXE"
+      ],
+      "system": "Windows",
+      "portable": false,
+      "selected": "AccessiWeather.EXE",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "other.zip",
+        "AccessiWeather.EXE"
+      ],
+      "system": "Windows",
+      "portable": true,
+      "selected": "other.zip",
+      "fallback": false
+    },
+    {
+      "assets": [
+        "other.zip",
+        "AccessiWeather.EXE"
+      ],
+      "system": "Darwin",
+      "portable": false,
+      "selected": "other.zip",
+      "fallback": true
+    },
+    {
+      "assets": [
+        "other.zip",
+        "AccessiWeather.EXE"
+      ],
+      "system": "Darwin",
+      "portable": true,
+      "selected": "other.zip",
+      "fallback": true
+    },
+    {
+      "assets": [
+        "other.zip",
+        "AccessiWeather.EXE"
+      ],
+      "system": "Linux",
+      "portable": false,
+      "selected": "other.zip",
+      "fallback": true
+    },
+    {
+      "assets": [
+        "other.zip",
+        "AccessiWeather.EXE"
+      ],
+      "system": "Linux",
+      "portable": true,
+      "selected": "other.zip",
+      "fallback": true
+    },
+    {
+      "assets": [
+        "readme.txt",
+        "sums.json"
+      ],
+      "system": "Windows",
+      "portable": false,
+      "selected": "readme.txt",
+      "fallback": true
+    },
+    {
+      "assets": [
+        "readme.txt",
+        "sums.json"
+      ],
+      "system": "Windows",
+      "portable": true,
+      "selected": "readme.txt",
+      "fallback": true
+    },
+    {
+      "assets": [
+        "readme.txt",
+        "sums.json"
+      ],
+      "system": "Darwin",
+      "portable": false,
+      "selected": "readme.txt",
+      "fallback": true
+    },
+    {
+      "assets": [
+        "readme.txt",
+        "sums.json"
+      ],
+      "system": "Darwin",
+      "portable": true,
+      "selected": "readme.txt",
+      "fallback": true
+    },
+    {
+      "assets": [
+        "readme.txt",
+        "sums.json"
+      ],
+      "system": "Linux",
+      "portable": false,
+      "selected": "readme.txt",
+      "fallback": true
+    },
+    {
+      "assets": [
+        "readme.txt",
+        "sums.json"
+      ],
+      "system": "Linux",
+      "portable": true,
+      "selected": "readme.txt",
+      "fallback": true
+    },
+    {
+      "assets": [],
+      "system": "Windows",
+      "portable": false,
+      "selected": null,
+      "fallback": true
+    },
+    {
+      "assets": [],
+      "system": "Windows",
+      "portable": true,
+      "selected": null,
+      "fallback": true
+    },
+    {
+      "assets": [],
+      "system": "Darwin",
+      "portable": false,
+      "selected": null,
+      "fallback": true
+    },
+    {
+      "assets": [],
+      "system": "Darwin",
+      "portable": true,
+      "selected": null,
+      "fallback": true
+    },
+    {
+      "assets": [],
+      "system": "Linux",
+      "portable": false,
+      "selected": null,
+      "fallback": true
+    },
+    {
+      "assets": [],
+      "system": "Linux",
+      "portable": true,
+      "selected": null,
+      "fallback": true
+    }
+  ],
+  "restart_plans": [
+    {
+      "system": "Windows",
+      "portable": false,
+      "update_path": "u.zip",
+      "appimage": false,
+      "kind": "windows_installer"
+    },
+    {
+      "system": "Windows",
+      "portable": false,
+      "update_path": "u.zip",
+      "appimage": true,
+      "kind": "windows_installer"
+    },
+    {
+      "system": "Windows",
+      "portable": false,
+      "update_path": "u.exe",
+      "appimage": false,
+      "kind": "windows_installer"
+    },
+    {
+      "system": "Windows",
+      "portable": false,
+      "update_path": "u.exe",
+      "appimage": true,
+      "kind": "windows_installer"
+    },
+    {
+      "system": "Windows",
+      "portable": false,
+      "update_path": "u.AppImage",
+      "appimage": false,
+      "kind": "windows_installer"
+    },
+    {
+      "system": "Windows",
+      "portable": false,
+      "update_path": "u.AppImage",
+      "appimage": true,
+      "kind": "windows_installer"
+    },
+    {
+      "system": "Windows",
+      "portable": false,
+      "update_path": "u.tar.gz",
+      "appimage": false,
+      "kind": "windows_installer"
+    },
+    {
+      "system": "Windows",
+      "portable": false,
+      "update_path": "u.tar.gz",
+      "appimage": true,
+      "kind": "windows_installer"
+    },
+    {
+      "system": "Windows",
+      "portable": true,
+      "update_path": "u.zip",
+      "appimage": false,
+      "kind": "portable"
+    },
+    {
+      "system": "Windows",
+      "portable": true,
+      "update_path": "u.zip",
+      "appimage": true,
+      "kind": "portable"
+    },
+    {
+      "system": "Windows",
+      "portable": true,
+      "update_path": "u.exe",
+      "appimage": false,
+      "kind": "portable"
+    },
+    {
+      "system": "Windows",
+      "portable": true,
+      "update_path": "u.exe",
+      "appimage": true,
+      "kind": "portable"
+    },
+    {
+      "system": "Windows",
+      "portable": true,
+      "update_path": "u.AppImage",
+      "appimage": false,
+      "kind": "portable"
+    },
+    {
+      "system": "Windows",
+      "portable": true,
+      "update_path": "u.AppImage",
+      "appimage": true,
+      "kind": "portable"
+    },
+    {
+      "system": "Windows",
+      "portable": true,
+      "update_path": "u.tar.gz",
+      "appimage": false,
+      "kind": "portable"
+    },
+    {
+      "system": "Windows",
+      "portable": true,
+      "update_path": "u.tar.gz",
+      "appimage": true,
+      "kind": "portable"
+    },
+    {
+      "system": "Darwin",
+      "portable": false,
+      "update_path": "u.zip",
+      "appimage": false,
+      "kind": "macos_script"
+    },
+    {
+      "system": "Darwin",
+      "portable": false,
+      "update_path": "u.zip",
+      "appimage": true,
+      "kind": "macos_script"
+    },
+    {
+      "system": "Darwin",
+      "portable": false,
+      "update_path": "u.exe",
+      "appimage": false,
+      "kind": "macos_script"
+    },
+    {
+      "system": "Darwin",
+      "portable": false,
+      "update_path": "u.exe",
+      "appimage": true,
+      "kind": "macos_script"
+    },
+    {
+      "system": "Darwin",
+      "portable": false,
+      "update_path": "u.AppImage",
+      "appimage": false,
+      "kind": "macos_script"
+    },
+    {
+      "system": "Darwin",
+      "portable": false,
+      "update_path": "u.AppImage",
+      "appimage": true,
+      "kind": "macos_script"
+    },
+    {
+      "system": "Darwin",
+      "portable": false,
+      "update_path": "u.tar.gz",
+      "appimage": false,
+      "kind": "macos_script"
+    },
+    {
+      "system": "Darwin",
+      "portable": false,
+      "update_path": "u.tar.gz",
+      "appimage": true,
+      "kind": "macos_script"
+    },
+    {
+      "system": "Darwin",
+      "portable": true,
+      "update_path": "u.zip",
+      "appimage": false,
+      "kind": "macos_script"
+    },
+    {
+      "system": "Darwin",
+      "portable": true,
+      "update_path": "u.zip",
+      "appimage": true,
+      "kind": "macos_script"
+    },
+    {
+      "system": "Darwin",
+      "portable": true,
+      "update_path": "u.exe",
+      "appimage": false,
+      "kind": "macos_script"
+    },
+    {
+      "system": "Darwin",
+      "portable": true,
+      "update_path": "u.exe",
+      "appimage": true,
+      "kind": "macos_script"
+    },
+    {
+      "system": "Darwin",
+      "portable": true,
+      "update_path": "u.AppImage",
+      "appimage": false,
+      "kind": "macos_script"
+    },
+    {
+      "system": "Darwin",
+      "portable": true,
+      "update_path": "u.AppImage",
+      "appimage": true,
+      "kind": "macos_script"
+    },
+    {
+      "system": "Darwin",
+      "portable": true,
+      "update_path": "u.tar.gz",
+      "appimage": false,
+      "kind": "macos_script"
+    },
+    {
+      "system": "Darwin",
+      "portable": true,
+      "update_path": "u.tar.gz",
+      "appimage": true,
+      "kind": "macos_script"
+    },
+    {
+      "system": "Linux",
+      "portable": false,
+      "update_path": "u.zip",
+      "appimage": false,
+      "kind": "unsupported"
+    },
+    {
+      "system": "Linux",
+      "portable": false,
+      "update_path": "u.zip",
+      "appimage": true,
+      "kind": "unsupported"
+    },
+    {
+      "system": "Linux",
+      "portable": false,
+      "update_path": "u.exe",
+      "appimage": false,
+      "kind": "unsupported"
+    },
+    {
+      "system": "Linux",
+      "portable": false,
+      "update_path": "u.exe",
+      "appimage": true,
+      "kind": "unsupported"
+    },
+    {
+      "system": "Linux",
+      "portable": false,
+      "update_path": "u.AppImage",
+      "appimage": false,
+      "kind": "unsupported"
+    },
+    {
+      "system": "Linux",
+      "portable": false,
+      "update_path": "u.AppImage",
+      "appimage": true,
+      "kind": "appimage_script"
+    },
+    {
+      "system": "Linux",
+      "portable": false,
+      "update_path": "u.tar.gz",
+      "appimage": false,
+      "kind": "unsupported"
+    },
+    {
+      "system": "Linux",
+      "portable": false,
+      "update_path": "u.tar.gz",
+      "appimage": true,
+      "kind": "unsupported"
+    },
+    {
+      "system": "Linux",
+      "portable": true,
+      "update_path": "u.zip",
+      "appimage": false,
+      "kind": "unsupported"
+    },
+    {
+      "system": "Linux",
+      "portable": true,
+      "update_path": "u.zip",
+      "appimage": true,
+      "kind": "unsupported"
+    },
+    {
+      "system": "Linux",
+      "portable": true,
+      "update_path": "u.exe",
+      "appimage": false,
+      "kind": "unsupported"
+    },
+    {
+      "system": "Linux",
+      "portable": true,
+      "update_path": "u.exe",
+      "appimage": true,
+      "kind": "unsupported"
+    },
+    {
+      "system": "Linux",
+      "portable": true,
+      "update_path": "u.AppImage",
+      "appimage": false,
+      "kind": "unsupported"
+    },
+    {
+      "system": "Linux",
+      "portable": true,
+      "update_path": "u.AppImage",
+      "appimage": true,
+      "kind": "appimage_script"
+    },
+    {
+      "system": "Linux",
+      "portable": true,
+      "update_path": "u.tar.gz",
+      "appimage": false,
+      "kind": "unsupported"
+    },
+    {
+      "system": "Linux",
+      "portable": true,
+      "update_path": "u.tar.gz",
+      "appimage": true,
+      "kind": "unsupported"
+    }
+  ],
+  "appimage_script": {
+    "update_path": "/tmp/accessiweather_update_x/AccessiWeather-0.11.0-linux-x86_64.AppImage",
+    "appimage_path": "/home/me/My Apps/AccessiWeather.AppImage",
+    "pid": 4242,
+    "text": "#!/bin/bash\nPID=4242\nUPDATE_PATH=/tmp/accessiweather_update_x/AccessiWeather-0.11.0-linux-x86_64.AppImage\nAPPIMAGE_PATH='/home/me/My Apps/AccessiWeather.AppImage'\nwhile kill -0 \"$PID\" 2>/dev/null; do sleep 1; done\nSTAGED=\"$APPIMAGE_PATH.update-new\"\ncp \"$UPDATE_PATH\" \"$STAGED\" || exit 1\nchmod +x \"$STAGED\"\nmv -f \"$STAGED\" \"$APPIMAGE_PATH\" || exit 1\nrm -f \"$UPDATE_PATH\"\ncd \"$HOME\" || true\nnohup \"$APPIMAGE_PATH\" --updated >/dev/null 2>&1 &\nrm -f \"$0\""
+  }
 }

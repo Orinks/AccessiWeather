@@ -117,12 +117,15 @@ def updates() -> None:
             update = None
             if latest and su.is_update_available(latest, current, nightly):
                 identifier, kind = su.get_release_identifier(latest)
+                asset = su.select_asset(latest, portable=False, platform_system="Windows")
                 update = {
                     "version": identifier,
                     "is_nightly": kind == "nightly",
                     "is_prerelease": bool(latest.get("prerelease")),
                     "commit_hash": su.parse_commit_hash(latest.get("body") or ""),
                     "release_notes": latest.get("body") or "",
+                    "artifact_name": asset["name"],
+                    "download_url": asset["browser_download_url"],
                 }
             selection.append(
                 {
@@ -207,9 +210,82 @@ def updates() -> None:
                 }
             )
 
+    # Asset choice per platform. "fallback" marks Python's last-resort pick of
+    # the first asset when no rule matched (Rust picks nothing instead): a
+    # sentinel placed first is only ever returned by that fallback.
+    asset_lists = [[a["name"] for a in r["assets"]] for r in RELEASES[:3]] + [
+        [
+            "AccessiWeather-0.11.0-linux-x86_64.AppImage",
+            "AccessiWeather-0.11.0-linux.tar.gz",
+            "AccessiWeather-0.11.0-macOS.dmg",
+            "AccessiWeather-0.11.0-macOS.zip",
+            "AccessiWeather-0.11.0-windows-portable.zip",
+            "AccessiWeather-0.11.0-windows-setup.exe",
+            "checksums.txt",
+        ],
+        ["app.zip.sha256", "App-Linux.ZIP", "notes.txt", "x.deb", "y.rpm"],
+        ["signature.exe", "tool-verify.msi", "Setup.MSI", "pack.zip", "a.pkg"],
+        ["other.zip", "AccessiWeather.EXE"],
+        ["readme.txt", "sums.json"],
+        [],
+    ]
+    asset_selection = []
+    sentinel = {"name": "zz-sentinel.bin"}
+    for names in asset_lists:
+        release = {"assets": [{"name": n} for n in names]}
+        for system in ["Windows", "Darwin", "Linux"]:
+            for portable in [False, True]:
+                picked = su.select_asset(release, portable=portable, platform_system=system)
+                probe = su.select_asset(
+                    {"assets": [sentinel, *release["assets"]]},
+                    portable=portable,
+                    platform_system=system,
+                )
+                asset_selection.append(
+                    {
+                        "assets": names,
+                        "system": system,
+                        "portable": portable,
+                        "selected": picked["name"] if picked else None,
+                        "fallback": probe is sentinel,
+                    }
+                )
+
+    running = Path(tempfile.mkdtemp()) / "AccessiWeather.AppImage"
+    running.write_bytes(b"")
+    restart_plans = []
+    for system in ["Windows", "Darwin", "Linux"]:
+        for portable in [False, True]:
+            for update_path in ["u.zip", "u.exe", "u.AppImage", "u.tar.gz"]:
+                for appimage in [None, str(running)]:
+                    plan = update_restart.plan_restart(
+                        Path(update_path),
+                        portable=portable,
+                        platform_system=system,
+                        appimage_path=appimage,
+                    )
+                    restart_plans.append(
+                        {
+                            "system": system,
+                            "portable": portable,
+                            "update_path": update_path,
+                            "appimage": appimage is not None,
+                            "kind": plan.kind,
+                        }
+                    )
+
     update_restart.os.getpid = lambda: 4242
+    appimage_script = {
+        "update_path": "/tmp/accessiweather_update_x/AccessiWeather-0.11.0-linux-x86_64.AppImage",
+        "appimage_path": "/home/me/My Apps/AccessiWeather.AppImage",
+        "pid": 4242,
+    }
+    appimage_script["text"] = update_restart.build_appimage_update_script(
+        PurePosixPath(appimage_script["update_path"]),
+        PurePosixPath(appimage_script["appimage_path"]),
+    )
     portable_script = {
-        "zip_path": r"C:\Users\Test User\AppData\Local\Temp\accessiweather-windows-x86_64.zip",
+        "zip_path": r"C:\Users\Test User\AppData\Local\Temp\AccessiWeather-0.11.0-windows-portable.zip",
         "target_dir": r"D:\Apps\AccessiWeather",
         "exe_path": r"D:\Apps\AccessiWeather\AccessiWeather.exe",
         "pid": 4242,
@@ -221,7 +297,7 @@ def updates() -> None:
     )
     macos_scripts = []
     for update_path, app_path in [
-        ("/tmp/accessiweather-macos-arm64.zip", "/Applications/AccessiWeather.app"),
+        ("/tmp/AccessiWeather-0.11.0-macOS.zip", "/Applications/AccessiWeather.app"),
         ("/Users/me/Down loads/it's.dmg", "/Users/me/My Apps/AccessiWeather.app"),
     ]:
         macos_scripts.append(
@@ -248,6 +324,9 @@ def updates() -> None:
             "checksum_find": checksum_find,
             "portable_script": portable_script,
             "macos_scripts": macos_scripts,
+            "asset_selection": asset_selection,
+            "restart_plans": restart_plans,
+            "appimage_script": appimage_script,
         },
     )
 

@@ -90,6 +90,7 @@ pub(crate) fn check_for_updates(manual: bool) {
         );
     }
     let channel = settings.update_channel;
+    let portable = state.borrow().paths.portable;
     std::thread::Builder::new()
         .name("aw-update-check".into())
         .spawn(move || {
@@ -99,6 +100,7 @@ pub(crate) fn check_for_updates(manual: bool) {
                     &crate::lifecycle::app_version(),
                     nightly.as_deref(),
                     &channel,
+                    portable,
                 )
             });
             post_to_ui(move || finish_check(manual, result, nightly.as_deref(), &channel));
@@ -381,7 +383,8 @@ fn apply_message() -> Message {
 }
 
 fn confirm_apply(path: &Path) {
-    if !can_auto_apply(path) {
+    let portable = with_state().is_some_and(|state| state.borrow().paths.portable);
+    if !can_auto_apply(path, portable) {
         show(manual_update_message(path));
         return;
     }
@@ -392,7 +395,7 @@ fn confirm_apply(path: &Path) {
     if let Some(frame) = main_frame() {
         frame.close(true);
     }
-    if let Err(e) = apply_update(path) {
+    if let Err(e) = apply_update(path, portable) {
         tracing::error!("Failed to apply update: {e}");
     }
 }

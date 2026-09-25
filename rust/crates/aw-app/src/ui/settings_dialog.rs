@@ -1093,11 +1093,17 @@ impl SettingsDialog {
         let current_version = nightly_date
             .clone()
             .unwrap_or_else(crate::lifecycle::app_version);
+        let portable = self.portable();
         std::thread::Builder::new()
             .name("aw-update-check".into())
             .spawn(move || {
                 let result = UpdateService::new().and_then(|service| {
-                    service.check_for_updates(&current_version, nightly_date.as_deref(), channel)
+                    service.check_for_updates(
+                        &current_version,
+                        nightly_date.as_deref(),
+                        channel,
+                        portable,
+                    )
                 });
                 post_to_ui(move || {
                     let Some(d) = open_dialog() else { return };

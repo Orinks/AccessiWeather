@@ -76,24 +76,19 @@ fn version_comparison_and_tags() {
     }
 }
 
+/// Python's `platform.system()` name as `std::env::consts::OS`.
+fn rust_os(system: &str) -> &'static str {
+    match system {
+        "Windows" => "windows",
+        "Darwin" => "macos",
+        _ => "linux",
+    }
+}
+
 #[test]
 fn channel_selection_on_recorded_releases() {
     let g = golden("updates.json");
     let recorded = releases();
-    // The recorded releases predate the Rust artifacts; give every release
-    // one so the Python-side choice can be compared field by field.
-    let with_rust_assets: Vec<Value> = recorded
-        .iter()
-        .map(|r| {
-            let mut r = r.clone();
-            let tag = r["tag_name"].as_str().unwrap().to_string();
-            r["assets"].as_array_mut().unwrap().push(json!({
-                "name": "accessiweather-windows-x86_64.zip",
-                "browser_download_url": format!("https://example.test/{tag}/accessiweather-windows-x86_64.zip"),
-            }));
-            r
-        })
-        .collect();
     for case in g["selection"].as_array().unwrap() {
         let channel = s(&case["channel"]);
         let current = s(&case["current_version"]);
@@ -101,19 +96,9 @@ fn channel_selection_on_recorded_releases() {
         let selected = update::select_latest_release(&recorded, channel)
             .map(|r| r["tag_name"].as_str().unwrap());
         assert_eq!(selected, opt(&case["selected_tag"]), "{case}");
-        assert!(update::update_from_releases(
-            &recorded, current, nightly, channel, "windows", "x86_64"
-        )
-        .is_none());
 
-        let info = update::update_from_releases(
-            &with_rust_assets,
-            current,
-            nightly,
-            channel,
-            "windows",
-            "x86_64",
-        );
+        let info =
+            update::update_from_releases(&recorded, current, nightly, channel, false, "windows");
         let expected = &case["update"];
         match info {
             None => assert!(expected.is_null(), "{case}"),
@@ -126,8 +111,8 @@ fn channel_selection_on_recorded_releases() {
                 );
                 assert_eq!(info.commit_hash.as_deref(), opt(&expected["commit_hash"]));
                 assert_eq!(info.release_notes, s(&expected["release_notes"]));
-                assert_eq!(info.artifact_name, "accessiweather-windows-x86_64.zip");
-                assert!(info.download_url.contains(selected.unwrap()));
+                assert_eq!(info.artifact_name, s(&expected["artifact_name"]));
+                assert_eq!(info.download_url, s(&expected["download_url"]));
                 assert!(info.release.is_some());
             }
         }
@@ -167,6 +152,68 @@ fn release_notes_and_checksums() {
             .map(|a| a["name"].clone());
         assert_eq!(found.unwrap_or(Value::Null), case["found"], "{case}");
     }
+}
+
+#[test]
+fn asset_selection_matches_python() {
+    let g = golden("updates.json");
+    for case in g["asset_selection"].as_array().unwrap() {
+        let assets: Vec<Value> = case["assets"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|n| json!({"name": n}))
+            .collect();
+        let release = json!({"assets": assets});
+        let picked = update::select_asset(
+            &release,
+            case["portable"].as_bool().unwrap(),
+            rust_os(s(&case["system"])),
+        )
+        .map(|a| a["name"].clone());
+        // Python's first-asset fallback is deliberately not ported.
+        let expected = if case["fallback"].as_bool().unwrap() {
+            Value::Null
+        } else {
+            case["selected"].clone()
+        };
+        assert_eq!(picked.unwrap_or(Value::Null), expected, "{case}");
+    }
+}
+
+#[test]
+fn restart_plans_match_python() {
+    let g = golden("updates.json");
+    let running = Path::new("/home/u/AccessiWeather.AppImage");
+    for case in g["restart_plans"].as_array().unwrap() {
+        let plan = update_restart::plan_restart(
+            Path::new(s(&case["update_path"])),
+            case["portable"].as_bool().unwrap(),
+            rust_os(s(&case["system"])),
+            case["appimage"].as_bool().unwrap().then_some(running),
+        )
+        .unwrap();
+        let kind = match plan.kind {
+            update_restart::RestartKind::Portable => "portable",
+            update_restart::RestartKind::WindowsInstaller => "windows_installer",
+            update_restart::RestartKind::MacosScript => "macos_script",
+            update_restart::RestartKind::AppImageScript => "appimage_script",
+            update_restart::RestartKind::Unsupported => "unsupported",
+        };
+        assert_eq!(kind, s(&case["kind"]), "{case}");
+        if let Some(script) = plan.script_path.filter(|_| kind != "portable") {
+            std::fs::remove_dir_all(script.parent().unwrap()).unwrap();
+        }
+    }
+    let a = &g["appimage_script"];
+    assert_eq!(
+        update_restart::build_appimage_update_script(
+            Path::new(s(&a["update_path"])),
+            Path::new(s(&a["appimage_path"])),
+            a["pid"].as_u64().unwrap() as u32,
+        ),
+        s(&a["text"])
+    );
 }
 
 #[test]

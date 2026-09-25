@@ -173,19 +173,19 @@ fn verification_failures_fail_closed() {
 
 #[test]
 fn check_for_updates_reads_the_releases_api() {
-    let Some(artifact) =
-        aw_services::update::artifact_name(std::env::consts::OS, std::env::consts::ARCH)
-    else {
-        return;
+    let artifact = match std::env::consts::OS {
+        "windows" => "AccessiWeather-nightly-20260925-windows-portable.zip",
+        "macos" => "AccessiWeather-nightly-20260925-macOS.dmg",
+        _ => "AccessiWeather-nightly-20260925-linux-x86_64.AppImage",
     };
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../testdata/services/github_releases.json");
     let mut releases: Vec<Value> =
         serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
-    releases[0]["assets"]
-        .as_array_mut()
-        .unwrap()
-        .push(json!({"name": artifact, "browser_download_url": "https://example.test/a"}));
+    releases[0]["assets"].as_array_mut().unwrap().push(json!({
+        "name": "AccessiWeather-nightly-20260925-macOS.dmg",
+        "browser_download_url": "https://example.test/a"
+    }));
     let base = serve(vec![(
         "/releases".into(),
         200,
@@ -193,18 +193,18 @@ fn check_for_updates_reads_the_releases_api() {
     )]);
     let service = UpdateService::with_releases_url(&format!("{base}/releases")).unwrap();
     let update = service
-        .check_for_updates("0.10.1", Some("20260924"), "nightly")
+        .check_for_updates("0.10.1", Some("20260924"), "nightly", true)
         .unwrap()
         .unwrap();
     assert_eq!(update.version, "20260925");
     assert!(update.is_nightly && update.is_prerelease);
     assert_eq!(update.artifact_name, artifact);
     assert!(service
-        .check_for_updates("0.10.1", None, "stable")
+        .check_for_updates("0.10.1", None, "stable", true)
         .unwrap()
         .is_none());
     assert!(UpdateService::with_releases_url(&format!("{base}/nope"))
         .unwrap()
-        .check_for_updates("0.10.1", None, "stable")
+        .check_for_updates("0.10.1", None, "stable", true)
         .is_err());
 }
