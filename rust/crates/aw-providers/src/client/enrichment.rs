@@ -22,20 +22,7 @@ use super::auto::should_enrich_nws_discussion;
 use super::sources::{AviationOptions, AviationSource, MarineSource, SourceError, SourceResult};
 use super::{Config, WeatherClient};
 
-/// `_get_uv_category` (EPA/WHO bands).
-pub fn uv_category(uv_index: f64) -> &'static str {
-    if uv_index <= 2.0 {
-        "Low"
-    } else if uv_index <= 5.0 {
-        "Moderate"
-    } else if uv_index <= 7.0 {
-        "High"
-    } else if uv_index <= 10.0 {
-        "Very High"
-    } else {
-        "Extreme"
-    }
-}
+pub use aw_core::display::environmental::uv_band as uv_category;
 
 const MARINE_KEYWORDS: [&str; 9] = [
     "wind", "winds", "gust", "gusts", "wave", "waves", "seas", "swell", "swells",

@@ -51,18 +51,22 @@ fn pollutant_label(code: &str) -> Option<&'static str> {
 
 /// `_get_uv_category`: EPA/WHO UV category.
 pub fn uv_category(uv_index: Option<f64>) -> Option<&'static str> {
-    let uv = uv_index?;
-    Some(if uv <= 2.0 {
+    uv_index.map(uv_band)
+}
+
+/// The EPA/WHO band for a UV index value.
+pub fn uv_band(uv_index: f64) -> &'static str {
+    if uv_index <= 2.0 {
         "Low"
-    } else if uv <= 5.0 {
+    } else if uv_index <= 5.0 {
         "Moderate"
-    } else if uv <= 7.0 {
+    } else if uv_index <= 7.0 {
         "High"
-    } else if uv <= 10.0 {
+    } else if uv_index <= 10.0 {
         "Very High"
     } else {
         "Extreme"
-    })
+    }
 }
 
 fn nonempty(s: &Option<String>) -> Option<&str> {

@@ -99,20 +99,7 @@ pub fn degrees_to_direction(degrees: Option<f64>) -> &'static str {
     }
 }
 
-/// `_get_uv_category` (EPA/WHO bands).
-pub fn uv_category(uv_index: f64) -> &'static str {
-    if uv_index <= 2.0 {
-        "Low"
-    } else if uv_index <= 5.0 {
-        "Moderate"
-    } else if uv_index <= 7.0 {
-        "High"
-    } else if uv_index <= 10.0 {
-        "Very High"
-    } else {
-        "Extreme"
-    }
-}
+pub use aw_core::display::environmental::uv_band as uv_category;
 
 fn str_unit<'a>(units: &'a Value, key: &str, default: &'a str) -> &'a str {
     get(units, key).and_then(Value::as_str).unwrap_or(default)

@@ -249,24 +249,9 @@ pub(crate) fn next_section(previous: Option<usize>, event_center_visible: bool) 
     }
 }
 
-/// Python's `str.title()`: a letter is upper-cased after a non-letter.
-fn python_title(text: &str) -> String {
-    let mut out = String::with_capacity(text.len());
-    let mut previous_cased = false;
-    for c in text.chars() {
-        if previous_cased {
-            out.extend(c.to_lowercase());
-        } else {
-            out.extend(c.to_uppercase());
-        }
-        previous_cased = c.is_alphabetic();
-    }
-    out
-}
-
 /// Help menu label naming the update channel.
 pub(crate) fn check_updates_label(channel: &str) -> String {
-    format!("Check for &Updates ({})...", python_title(channel))
+    format!("Check for &Updates ({})...", aw_core::py::title(channel))
 }
 
 /// `_on_about` message text; names the toolkit this edition is built with.
