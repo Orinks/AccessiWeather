@@ -287,10 +287,12 @@ name = "aw-providers"
 version = "0.11.0-rust.1"
 dependencies = [
  "aw-core",
+ "aw-store",
  "chrono",
  "reqwest 0.12.28",
  "serde",
  "serde_json",
+ "tempfile",
  "thiserror",
  "tracing",
  "url",

@@ -7,6 +7,7 @@ description = "Weather data providers (NWS, Open-Meteo, geocoding) for AccessiWe
 
 [dependencies]
 aw-core.workspace = true
+aw-store.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
@@ -14,3 +15,7 @@ chrono.workspace = true
 tracing.workspace = true
 reqwest.workspace = true
 url.workspace = true
+
+[dev-dependencies]
+aw-core = { workspace = true, features = ["golden"] }
+tempfile.workspace = true

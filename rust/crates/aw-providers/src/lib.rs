@@ -3,6 +3,7 @@
 //! Every provider talks to the network through the [`HttpClient`] trait so
 //! tests can replay recorded JSON fixtures without touching the network.
 
+pub mod client;
 pub mod geocoding;
 pub mod http;
 pub mod nws;

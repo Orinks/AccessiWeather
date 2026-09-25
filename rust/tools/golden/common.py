@@ -36,10 +36,23 @@ def jsonable(obj):
     return None  # asyncio tasks and other runtime-only values
 
 
-def write(area: str, name: str, data) -> None:
+def drop_nulls(obj):
+    """Remove null-valued keys from objects (list items are kept)."""
+    if isinstance(obj, dict):
+        return {k: drop_nulls(v) for k, v in obj.items() if v is not None}
+    if isinstance(obj, list):
+        return [drop_nulls(v) for v in obj]
+    return obj
+
+
+def write(area: str, name: str, data, compact: bool = False) -> None:
     path = GOLDEN_ROOT / area / f"{name}.json"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(jsonable(data), indent=1, ensure_ascii=False) + "\n", "utf-8")
+    if compact:
+        text = json.dumps(drop_nulls(jsonable(data)), separators=(",", ":"), ensure_ascii=False)
+    else:
+        text = json.dumps(jsonable(data), indent=1, ensure_ascii=False)
+    path.write_text(text + "\n", "utf-8")
     print(f"wrote {path}")
 
 
