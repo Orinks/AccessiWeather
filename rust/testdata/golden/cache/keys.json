@@ -1,0 +1,82 @@
+[
+ {
+  "location": {
+   "name": "Home",
+   "latitude": 40.0,
+   "longitude": -75.0,
+   "timezone": null,
+   "country_code": null,
+   "marine_mode": false,
+   "forecast_zone_id": null,
+   "cwa_office": null,
+   "county_zone_id": null,
+   "fire_zone_id": null,
+   "radar_station": null
+  },
+  "key": "Home-40_0--75_0"
+ },
+ {
+  "location": {
+   "name": "New York, NY",
+   "latitude": 40.7128,
+   "longitude": -74.006,
+   "timezone": null,
+   "country_code": null,
+   "marine_mode": false,
+   "forecast_zone_id": null,
+   "cwa_office": null,
+   "county_zone_id": null,
+   "fire_zone_id": null,
+   "radar_station": null
+  },
+  "key": "New_York_NY-40_7128--74_006"
+ },
+ {
+  "location": {
+   "name": "___",
+   "latitude": -33.8688,
+   "longitude": 151.2093,
+   "timezone": null,
+   "country_code": null,
+   "marine_mode": false,
+   "forecast_zone_id": null,
+   "cwa_office": null,
+   "county_zone_id": null,
+   "fire_zone_id": null,
+   "radar_station": null
+  },
+  "key": "--33_8688-151_2093"
+ },
+ {
+  "location": {
+   "name": "Zürich été!!",
+   "latitude": 47.3769,
+   "longitude": 8.5417,
+   "timezone": null,
+   "country_code": null,
+   "marine_mode": false,
+   "forecast_zone_id": null,
+   "cwa_office": null,
+   "county_zone_id": null,
+   "fire_zone_id": null,
+   "radar_station": null
+  },
+  "key": "Z_rich_t_-47_3769-8_5417"
+ },
+ {
+  "location": {
+   "name": "tiny",
+   "latitude": 1e-05,
+   "longitude": 1e+16,
+   "timezone": null,
+   "country_code": null,
+   "marine_mode": false,
+   "forecast_zone_id": null,
+   "cwa_office": null,
+   "county_zone_id": null,
+   "fire_zone_id": null,
+   "radar_station": null
+  },
+  "key": "tiny-1e-05-1e_16"
+ }
+]

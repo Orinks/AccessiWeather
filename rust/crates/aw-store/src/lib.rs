@@ -9,6 +9,7 @@ use aw_core::settings::AppConfig;
 use aw_core::APP_NAME;
 
 pub mod secrets;
+pub mod weather_cache;
 
 pub const CONFIG_FILE_NAME: &str = "accessiweather.json";
 pub const PORTABLE_DIR_NAME: &str = "config";

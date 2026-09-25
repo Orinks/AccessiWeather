@@ -7,6 +7,7 @@ description = "Weather data providers (NWS, Open-Meteo, geocoding) for AccessiWe
 
 [dependencies]
 aw-core.workspace = true
+aw-store.workspace = true
 serde.workspace = true
 # float_roundtrip: parse floats exactly like Python's json (golden parity).
 serde_json = { workspace = true, features = ["float_roundtrip"] }
@@ -23,3 +24,7 @@ sha1 = "0.10"
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.62", features = ["Devices_Geolocation", "Foundation"] }
 windows-future = "0.3"
+
+[dev-dependencies]
+aw-core = { workspace = true, features = ["golden"] }
+tempfile.workspace = true

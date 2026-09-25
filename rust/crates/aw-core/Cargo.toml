@@ -13,3 +13,7 @@ chrono-tz.workspace = true
 md5 = "0.7"
 iana-time-zone = "0.1"
 regex = "1"
+
+[features]
+# Exposes `aw_core::golden` (Python golden-file helpers) to other crates' tests.
+golden = []

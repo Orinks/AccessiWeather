@@ -1,0 +1,1107 @@
+[
+ {
+  "name": "both_none",
+  "window_minutes": 60,
+  "nws": null,
+  "secondary": null,
+  "result": {
+   "alerts": []
+  }
+ },
+ {
+  "name": "empty_lists",
+  "window_minutes": 60,
+  "nws": {
+   "alerts": []
+  },
+  "secondary": {
+   "alerts": []
+  },
+  "result": {
+   "alerts": []
+  }
+ },
+ {
+  "name": "nws_only",
+  "window_minutes": 60,
+  "nws": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "B",
+     "description": "B description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Heat Advisory",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "secondary": null,
+  "result": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": "nws",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "B",
+     "description": "B description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Heat Advisory",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": "nws",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  }
+ },
+ {
+  "name": "secondary_only",
+  "window_minutes": 60,
+  "nws": null,
+  "secondary": {
+   "alerts": [
+    {
+     "title": "P",
+     "description": "P description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "result": {
+   "alerts": [
+    {
+     "title": "P",
+     "description": "P description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": "pirateweather",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  }
+ },
+ {
+  "name": "source_preserved",
+  "window_minutes": 60,
+  "nws": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": "NWS",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "secondary": {
+   "alerts": [
+    {
+     "title": "P",
+     "description": "P description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Heat",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": "WMO",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "result": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": "NWS",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "P",
+     "description": "P description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Heat",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": "WMO",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  }
+ },
+ {
+  "name": "duplicates_merged",
+  "window_minutes": 60,
+  "nws": {
+   "alerts": [
+    {
+     "title": "NWS Flood",
+     "description": "NWS Flood description",
+     "severity": "Severe",
+     "urgency": "Unknown",
+     "certainty": "Likely",
+     "event": "Flood Warning",
+     "headline": "Flood warning",
+     "instruction": "Move up.",
+     "onset": "2026-07-15T14:00:00+00:00",
+     "expires": "2026-07-15T20:00:00+00:00",
+     "sent": "2026-07-15T14:00:00+00:00",
+     "effective": "2026-07-15T14:00:00+00:00",
+     "areas": [
+      "Kings",
+      "Queens"
+     ],
+     "references": [
+      "r1"
+     ],
+     "id": "urn:nws:1",
+     "source": null,
+     "message_type": "Alert",
+     "affected_zones": [
+      "NYZ075"
+     ],
+     "same_codes": [
+      "036047"
+     ],
+     "same_event_codes": [
+      "FFW"
+     ]
+    }
+   ]
+  },
+  "secondary": {
+   "alerts": [
+    {
+     "title": "PW Flood",
+     "description": "A much longer description from Pirate Weather about flooding.",
+     "severity": "Unknown",
+     "urgency": "Immediate",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": "Flood warning for Kings County and nearby areas",
+     "instruction": "Move to higher ground now.",
+     "onset": "2026-07-15T14:30:00+00:00",
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [
+      " queens ",
+      "Bronx"
+     ],
+     "references": [],
+     "id": null,
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "result": {
+   "alerts": [
+    {
+     "title": "NWS Flood",
+     "description": "A much longer description from Pirate Weather about flooding.",
+     "severity": "Severe",
+     "urgency": "Immediate",
+     "certainty": "Likely",
+     "event": "Flood Warning",
+     "headline": "Flood warning for Kings County and nearby areas",
+     "instruction": "Move to higher ground now.",
+     "onset": "2026-07-15T14:00:00+00:00",
+     "expires": "2026-07-15T20:00:00+00:00",
+     "sent": "2026-07-15T14:00:00+00:00",
+     "effective": "2026-07-15T14:00:00+00:00",
+     "areas": [
+      " queens ",
+      "Bronx",
+      "Kings",
+      "Queens"
+     ],
+     "references": [],
+     "id": "urn:nws:1",
+     "source": "nws, pirateweather",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  }
+ },
+ {
+  "name": "secondary_listed_first_nws_still_base",
+  "window_minutes": 60,
+  "nws": {
+   "alerts": []
+  },
+  "secondary": {
+   "alerts": [
+    {
+     "title": "PW",
+     "description": "PW description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [
+      "A"
+     ],
+     "references": [],
+     "id": null,
+     "source": "pirateweather",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "NWS",
+     "description": "NWS description",
+     "severity": "Minor",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [
+      "a"
+     ],
+     "references": [],
+     "id": null,
+     "source": "nws",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "result": {
+   "alerts": [
+    {
+     "title": "NWS",
+     "description": "NWS description",
+     "severity": "Minor",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [
+      "A",
+      "a"
+     ],
+     "references": [],
+     "id": null,
+     "source": "nws, pirateweather",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  }
+ },
+ {
+  "name": "onset_outside_window",
+  "window_minutes": 60,
+  "nws": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": "2026-07-15T14:00:00+00:00",
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "secondary": {
+   "alerts": [
+    {
+     "title": "B",
+     "description": "B description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": "2026-07-15T15:01:00+00:00",
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "result": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": "2026-07-15T14:00:00+00:00",
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": "nws",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "B",
+     "description": "B description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": "2026-07-15T15:01:00+00:00",
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": "pirateweather",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  }
+ },
+ {
+  "name": "onset_inside_custom_window",
+  "window_minutes": 90,
+  "nws": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": "2026-07-15T14:00:00+00:00",
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "secondary": {
+   "alerts": [
+    {
+     "title": "B",
+     "description": "B description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": "2026-07-15T15:01:00+00:00",
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "result": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": "2026-07-15T14:00:00+00:00",
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": "nws, pirateweather",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  }
+ },
+ {
+  "name": "one_onset_missing_still_matches",
+  "window_minutes": 60,
+  "nws": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": "2026-07-15T14:00:00+00:00",
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "secondary": {
+   "alerts": [
+    {
+     "title": "B",
+     "description": "B description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "result": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": "2026-07-15T14:00:00+00:00",
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": "nws, pirateweather",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  }
+ },
+ {
+  "name": "non_overlapping_areas",
+  "window_minutes": 60,
+  "nws": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [
+      "X"
+     ],
+     "references": [],
+     "id": null,
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "secondary": {
+   "alerts": [
+    {
+     "title": "B",
+     "description": "B description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [
+      "Y"
+     ],
+     "references": [],
+     "id": null,
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "result": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [
+      "X"
+     ],
+     "references": [],
+     "id": null,
+     "source": "nws",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "B",
+     "description": "B description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [
+      "Y"
+     ],
+     "references": [],
+     "id": null,
+     "source": "pirateweather",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  }
+ },
+ {
+  "name": "different_events",
+  "window_minutes": 60,
+  "nws": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "secondary": {
+   "alerts": [
+    {
+     "title": "B",
+     "description": "B description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Watch",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "result": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": "nws",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "B",
+     "description": "B description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Watch",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": "pirateweather",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  }
+ },
+ {
+  "name": "three_way_group",
+  "window_minutes": 60,
+  "nws": {
+   "alerts": [
+    {
+     "title": "N1",
+     "description": "short",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "N2",
+     "description": "N2 description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Other",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "secondary": {
+   "alerts": [
+    {
+     "title": "P1",
+     "description": "longer text here",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": "h",
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "P2",
+     "description": "Ünïcødé descriptïon",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": "hh",
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "result": {
+   "alerts": [
+    {
+     "title": "N1",
+     "description": "Ünïcødé descriptïon",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": "hh",
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": "nws, pirateweather",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "N2",
+     "description": "N2 description",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Other",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": "nws",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  }
+ }
+]
