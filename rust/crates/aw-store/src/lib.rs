@@ -139,16 +139,32 @@ fn home_dir() -> Option<PathBuf> {
         .map(PathBuf::from)
 }
 
-/// Load the configuration file, returning defaults when it does not exist.
-pub fn load_config(path: &Path) -> Result<AppConfig, StoreError> {
+/// `ConfigManager.load_config`: the configuration file, or defaults when it
+/// does not exist. A new config, or settings without `update_channel`, get
+/// the running build's `default_update_channel`; the flag says so, and the
+/// caller saves as Python does.
+pub fn load_config(
+    path: &Path,
+    default_update_channel: &str,
+) -> Result<(AppConfig, bool), StoreError> {
     match fs::read_to_string(path) {
-        Ok(text) => AppConfig::from_json(&text).map_err(|source| StoreError::Json {
-            path: path.to_path_buf(),
-            source,
-        }),
+        Ok(text) => AppConfig::from_json_for_build(&text, default_update_channel)
+            .inspect(|(_, defaulted)| {
+                if *defaulted {
+                    tracing::info!(
+                        "Applying build-aware default update channel for legacy config: {default_update_channel}"
+                    );
+                }
+            })
+            .map_err(|source| StoreError::Json {
+                path: path.to_path_buf(),
+                source,
+            }),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
             tracing::info!("no configuration at {}, using defaults", path.display());
-            Ok(AppConfig::default())
+            let mut config = AppConfig::default();
+            config.settings.update_channel = default_update_channel.to_string();
+            Ok((config, true))
         }
         Err(source) => Err(StoreError::Io {
             path: path.to_path_buf(),
@@ -204,11 +220,14 @@ mod tests {
     fn round_trip_config_file() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("nested").join(CONFIG_FILE_NAME);
-        let mut cfg = load_config(&path).unwrap();
-        assert!(cfg.locations.is_empty());
+        let (mut cfg, new) = load_config(&path, "nightly").unwrap();
+        assert!(new && cfg.locations.is_empty());
+        assert_eq!(cfg.settings.update_channel, "nightly");
         assert!(cfg.add_location(Location::new("Home", 40.0, -75.0).with_country("US")));
         save_config(&path, &cfg).unwrap();
-        let loaded = load_config(&path).unwrap();
+        let (loaded, defaulted) = load_config(&path, "stable").unwrap();
+        assert!(!defaulted);
+        assert_eq!(loaded.settings.update_channel, "nightly");
         assert_eq!(loaded.locations.len(), 1);
         assert_eq!(loaded.current_location.unwrap().name, "Home");
         assert!(!dir.path().join("nested").join(".aw-").exists());

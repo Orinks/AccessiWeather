@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 
 use aw_core::settings::AppConfig;
 use aw_core::Location;
-use aw_services::activation::ActivationRequest;
+use aw_notify::ActivationRequest;
 use aw_services::import_export;
 use aw_services::onboarding::{self, Buttons, Facts, Icon, Onboarding, Response, Step};
 use aw_services::report_issue;
@@ -229,16 +229,15 @@ fn startup_entries() {
 fn activation_tokens_and_handoff() {
     let g = golden("activation.json");
     for case in g["tokens"].as_array().unwrap() {
-        let req =
-            ActivationRequest::new(s(&case["kind"]), opt(&case["alert_id"]).map(String::from))
-                .unwrap();
-        assert_eq!(req.to_token(), s(&case["token"]));
+        let kind = aw_notify::ActivationKind::parse(s(&case["kind"])).unwrap();
+        let req = ActivationRequest::new(kind, opt(&case["alert_id"]).map(String::from)).unwrap();
+        assert_eq!(req.serialize(), s(&case["token"]));
         assert_eq!(req.to_json(), s(&case["handoff"]));
         assert_eq!(
             ActivationRequest::from_json(s(&case["handoff"])),
             Some(req.clone())
         );
-        assert_eq!(ActivationRequest::from_argv(&[req.to_token()]), Some(req));
+        assert_eq!(ActivationRequest::from_argv([req.serialize()]), Some(req));
     }
     for case in g["argv"].as_array().unwrap() {
         let argv: Vec<String> = serde_json::from_value(case["argv"].clone()).unwrap();
@@ -658,5 +657,41 @@ fn onboarding_scenarios_replay_like_python() {
                 json!([hint.title, hint.message, [a, b, c], "information"])
             );
         }
+    }
+}
+
+/// `ConfigManager.load_config` on legacy and hand-edited files, recorded by
+/// `rust/tools/golden/config_load.py`.
+#[test]
+fn config_loading_matches_python() {
+    let path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testdata/golden/config_load/cases.json");
+    let cases: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+    for case in cases.as_array().unwrap() {
+        let name = s(&case["name"]);
+        let dir = tempfile::tempdir().unwrap();
+        let file = dir.path().join(aw_store::CONFIG_FILE_NAME);
+        std::fs::write(&file, s(&case["input"])).unwrap();
+        let channel = update::default_update_channel(opt(&case["build_tag"]));
+        let (config, defaulted) = aw_store::load_config(&file, channel).unwrap();
+        assert_eq!(defaulted, case["saved"].as_bool().unwrap(), "{name}");
+        let got = serde_json::to_value(&config).unwrap();
+        let want = &case["config"];
+        // Python writes only the keys it knows; Rust also keeps unknown ones.
+        for (key, value) in want["settings"].as_object().unwrap() {
+            assert_json_eq(
+                &got["settings"][key],
+                value,
+                &format!("{name}.settings.{key}"),
+            );
+        }
+        assert!(
+            got["settings"]
+                .get("specific_alert_sounds_enabled")
+                .is_none(),
+            "{name}"
+        );
+        assert_json_eq(&got["locations"], &want["locations"], name);
+        assert_json_eq(&got["current_location"], &want["current_location"], name);
     }
 }

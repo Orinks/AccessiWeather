@@ -122,6 +122,27 @@ fn service() -> Option<Arc<ForecastProductService>> {
     with_state().map(|s| s.borrow().products.clone())
 }
 
+/// Take panel `index` out of `panels`, then drop its page with
+/// `remove_page`; put it back when the notebook refuses.
+///
+/// Deliberate divergence: Python updates its panel list only after the
+/// notebook has removed the page, so the page change the removal reports
+/// looks up the stale list and loads the wrong tab (or none) when the
+/// removed tab was selected.
+fn detach_panel<T>(
+    panels: &RefCell<Vec<T>>,
+    index: usize,
+    remove_page: impl FnOnce() -> bool,
+) -> Option<T> {
+    let panel = panels.borrow_mut().remove(index);
+    if remove_page() {
+        Some(panel)
+    } else {
+        panels.borrow_mut().insert(index, panel);
+        None
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Forecaster Notes
 // ---------------------------------------------------------------------------
@@ -349,15 +370,15 @@ impl NotesDialog {
         if tabs::keeps_tab(&product_type, has_product, count) {
             return;
         }
-        // As in Python, the page list still holds the removed panel while
-        // the notebook re-selects (and reports a page change).
-        if !self.notebook.remove_page(index) {
+        let Some(panel) = detach_panel(&self.panels, index, || self.notebook.remove_page(index))
+        else {
             tracing::debug!("Notebook refused to remove empty {product_type} page");
             return;
-        }
-        let panel = self.panels.borrow_mut().remove(index);
+        };
         panel.close();
         panel.panel.destroy();
+        // The page the notebook moved to may not have been loaded yet.
+        self.on_page_changed();
     }
 
     /// Lazy-load a tab when the user selects it.
@@ -369,5 +390,26 @@ impl NotesDialog {
         if let Some(panel) = panel {
             panel.ensure_loaded();
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The page change reported while the notebook drops a page must see
+    /// the panel list without the removed panel.
+    #[test]
+    fn removed_panel_is_gone_before_the_notebook_reselects() {
+        let panels = RefCell::new(vec!["AFD", "HWO", "SPS"]);
+        let removed = detach_panel(&panels, 1, || {
+            // wxNotebook selects the next page and reports it here.
+            assert_eq!(panels.borrow().get(1), Some(&"SPS"));
+            true
+        });
+        assert_eq!(removed, Some("HWO"));
+        assert_eq!(*panels.borrow(), ["AFD", "SPS"]);
+        assert_eq!(detach_panel(&panels, 0, || false), None);
+        assert_eq!(*panels.borrow(), ["AFD", "SPS"]);
     }
 }

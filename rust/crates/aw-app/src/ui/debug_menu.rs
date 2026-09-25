@@ -3,12 +3,9 @@
 //! (`ui/dialogs/debug_alert_dialog.py`). Presets, toasts and diagnostics
 //! come from `aw_notify::debug`.
 
-use std::cell::OnceCell;
-
 use aw_core::model::WeatherData;
 use aw_core::settings::AppSettings;
 use aw_notify::debug::{self, AlertPreset, ALERT_PRESETS};
-use aw_notify::toast::APP_NAME;
 use aw_notify::{ActivationRequest, Notifier, Toast};
 use chrono::{Local, Utc};
 use wxdragon::prelude::*;
@@ -46,12 +43,6 @@ const SEND_NAME: &str = "Send test notification";
 const CLOSE_LABEL: &str = "&Close";
 const CLOSE_NAME: &str = "Close test alert notification dialog";
 
-thread_local! {
-    /// Stands in for `app.notifier` until the notification integration
-    /// provides the app's own.
-    static NOTIFIER: OnceCell<Notifier> = const { OnceCell::new() };
-}
-
 fn show((message, caption, style): Message) {
     if let Some(frame) = main_frame() {
         message_box(&frame, message, caption, style);
@@ -67,7 +58,7 @@ fn settings() -> AppSettings {
 /// `notifier.send_notification(...)`: show the toast and play its sound
 /// cue from the current sound pack (whether or not the toast showed).
 fn send_notification(toast: &Toast, settings: &AppSettings) -> bool {
-    let sent = NOTIFIER.with(|n| n.get_or_init(|| Notifier::new(APP_NAME)).send(toast));
+    let sent = crate::lifecycle::with_notifier(|n| n.send(toast));
     if let Some(keys) = toast.sound_keys(settings) {
         aw_audio::player().play_candidates(
             &keys,

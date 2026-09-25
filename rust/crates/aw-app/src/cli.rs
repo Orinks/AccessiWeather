@@ -5,7 +5,7 @@
 use std::ffi::OsString;
 use std::path::PathBuf;
 
-use aw_services::activation::ActivationRequest;
+use aw_notify::ActivationRequest;
 use clap::error::ErrorKind;
 use clap::{CommandFactory, Parser};
 
@@ -94,7 +94,7 @@ impl Args {
         let unknown: Vec<&str> = args
             .activation_tokens
             .iter()
-            .filter(|t| ActivationRequest::from_argv(&[t.as_str()]).is_none())
+            .filter(|t| ActivationRequest::from_argv([t.as_str()]).is_none())
             .map(String::as_str)
             .collect();
         if !unknown.is_empty() {
@@ -148,7 +148,7 @@ mod tests {
         .unwrap();
         assert_eq!(
             args.activation_request,
-            ActivationRequest::new("alert_details", Some("urn:1".into()))
+            Some(ActivationRequest::alert_details("urn:1"))
         );
         assert!(parse(&["accessiweather-toast:kind=discussion"])
             .unwrap()

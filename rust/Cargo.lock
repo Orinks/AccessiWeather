@@ -414,6 +414,7 @@ name = "aw-services"
 version = "0.11.0-rust.1"
 dependencies = [
  "aw-core",
+ "aw-notify",
  "aw-store",
  "chrono",
  "md5",

@@ -1058,19 +1058,10 @@ impl Manager {
     }
 }
 
-/// `github_backend_url` is not a typed `AppSettings` field yet; the Python
-/// value round-trips through `extra`.
+/// `config_manager.get_github_backend_url`.
 fn github_backend_url_setting() -> String {
     with_state()
-        .and_then(|s| {
-            s.borrow()
-                .config
-                .settings
-                .extra
-                .get("github_backend_url")
-                .and_then(Value::as_str)
-                .map(str::to_string)
-        })
+        .map(|s| s.borrow().config.settings.github_backend_url.clone())
         .unwrap_or_default()
 }
 

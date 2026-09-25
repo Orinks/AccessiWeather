@@ -11,6 +11,8 @@ use std::cell::{Cell, RefCell};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
+use aw_core::display::tray::TaskbarIconUpdater;
+use aw_services::update::{self, messages, UpdateService};
 use aw_store::secrets::{self, PORTABLE_PASSPHRASE_KEY};
 use serde_json::{Map, Value};
 use wxdragon::prelude::*;
@@ -19,7 +21,9 @@ use super::main_window::message_box;
 use super::settings_actions::{self as actions, TrayPreviewContext};
 use super::settings_form::{apply_settings_dict, SettingsForm};
 use super::settings_tabs::{self, Controls, ADVANCED_PAGE, TAB_LABELS};
-use super::{model_browser_dialog, settings_modals, tray_text_format_dialog};
+use super::{
+    model_browser_dialog, settings_modals, soundpack_manager, tray_text_format_dialog, updates,
+};
 use crate::app::{post_to_ui, save, save_api_key, Shared};
 use crate::screen_reader::announce;
 
@@ -81,7 +85,7 @@ pub(crate) fn show_settings_dialog(parent: &Frame, state: &Shared, tab: Option<&
     }
     let notebook = Notebook::builder(&dialog).build();
     let portable = state.borrow().paths.portable;
-    let packs = actions::available_sound_packs(&actions::soundpacks_dir(portable));
+    let packs = actions::available_sound_packs(aw_audio::player().soundpacks_dir());
     let pack_names: Vec<String> = packs.iter().map(|p| p.name.clone()).collect();
     let c = settings_tabs::build(&notebook, &pack_names, portable);
     main_sizer.add(&notebook, 1, SizerFlag::Expand | SizerFlag::All, 10);
@@ -266,7 +270,7 @@ impl SettingsDialog {
     /// `_load_settings`.
     fn load_settings(&self) {
         let settings = self.state.borrow().config.settings.clone();
-        let actual = actions::is_startup_enabled();
+        let actual = crate::lifecycle::is_startup_enabled();
         if actual != settings.startup_enabled {
             tracing::info!(
                 "Startup setting differs from OS registration: configured={}, actual={actual}",
@@ -424,21 +428,10 @@ impl SettingsDialog {
             return true;
         };
         let previous = self.form.borrow().state.loaded_startup_enabled;
-        if desired == previous && desired == actions::is_startup_enabled() {
-            return true;
-        }
-        let (success, message) = if desired {
-            actions::enable_startup()
-        } else {
-            actions::disable_startup()
-        };
-        if success {
-            tracing::info!("Startup setting applied: {message}");
+        if crate::lifecycle::apply_startup_enabled_setting(&self.dialog, desired, previous) {
             self.form.borrow_mut().state.loaded_startup_enabled = desired;
             return true;
         }
-        tracing::error!("Failed to apply startup setting: {message}");
-        self.message(&message, "Startup Setting Failed", ERROR);
         values.insert("startup_enabled".into(), previous.into());
         false
     }
@@ -829,14 +822,19 @@ impl SettingsDialog {
                 form.selected_wind_speed_unit().to_string(),
             )
         };
+        let initial = self.c.taskbar_icon_text_format.get_value();
         let context = TrayPreviewContext {
-            dynamic_enabled: self.c.taskbar_icon_dynamic_enabled.is_checked(),
-            temperature_unit,
-            wind_speed_unit,
+            updater: TaskbarIconUpdater {
+                text_enabled: true,
+                dynamic_enabled: self.c.taskbar_icon_dynamic_enabled.is_checked(),
+                format_string: initial.clone(),
+                temperature_unit,
+                wind_speed_unit,
+                ..TaskbarIconUpdater::default()
+            },
             location_name: weather.as_ref().map(|w| w.location.name.clone()),
             weather,
         };
-        let initial = self.c.taskbar_icon_text_format.get_value();
         if let Some(format) =
             tray_text_format_dialog::show_tray_text_format_dialog(&self.dialog, context, &initial)
         {
@@ -875,16 +873,13 @@ impl SettingsDialog {
             form.sound_pack = self.c.sound_pack.get_selection().map(|i| i as usize);
             form.selected_sound_pack().to_string()
         };
-        if let Err(e) = actions::play_sample_sound(&pack) {
-            tracing::error!("Failed to play test sound: {e}");
-            self.message(&format!("Failed to play test sound: {e}"), "Error", ERROR);
-        }
+        aw_audio::player().play_sample(&pack);
     }
 
     /// `_on_manage_soundpacks` then `_refresh_sound_pack_list`.
     fn on_manage_soundpacks(&self) {
-        actions::show_soundpack_manager(&self.dialog);
-        let packs = actions::available_sound_packs(&actions::soundpacks_dir(self.portable()));
+        soundpack_manager::open_soundpack_manager(&self.dialog);
+        let packs = actions::available_sound_packs(aw_audio::player().soundpacks_dir());
         let mut form = self.form.borrow_mut();
         let current = self
             .c
@@ -1030,7 +1025,7 @@ impl SettingsDialog {
             self.c.openrouter_key,
             self.c.validate_openrouter_key,
             "OpenRouter",
-            actions::validate_openrouter_key,
+            aw_ai::provider::validate_openrouter_api_key,
         );
     }
 
@@ -1039,7 +1034,7 @@ impl SettingsDialog {
             self.c.venice_key,
             self.c.validate_venice_key,
             "Venice",
-            actions::validate_venice_key,
+            aw_ai::provider::validate_venice_api_key,
         );
     }
 
@@ -1083,49 +1078,56 @@ impl SettingsDialog {
         }
     }
 
-    /// `_on_check_updates`. Rust builds are always installed builds, so the
-    /// "Running from Source" notice never applies.
+    /// `_on_check_updates`.
     fn on_check_updates(&self) {
-        self.c.update_status.set_label("Checking for updates...");
+        if aw_services::is_running_from_source() {
+            self.message(
+                messages::RUNNING_FROM_SOURCE,
+                messages::RUNNING_FROM_SOURCE_TITLE,
+                INFO,
+            );
+            return;
+        }
+        self.c.update_status.set_label(messages::CHECKING_STATUS);
         let channel = if self.c.update_channel.get_selection() == Some(1) {
             "nightly"
         } else {
             "stable"
         };
-        let (version, nightly_date) = actions::current_update_version();
-        let current_version = nightly_date.clone().unwrap_or(version);
+        let nightly_date =
+            crate::lifecycle::build_tag().and_then(|tag| update::parse_nightly_date(&tag));
+        let current_version = nightly_date
+            .clone()
+            .unwrap_or_else(crate::lifecycle::app_version);
         std::thread::Builder::new()
             .name("aw-update-check".into())
             .spawn(move || {
-                let result =
-                    actions::check_for_updates(&current_version, nightly_date.as_deref(), channel);
+                let result = UpdateService::new().and_then(|service| {
+                    service.check_for_updates(&current_version, nightly_date.as_deref(), channel)
+                });
                 post_to_ui(move || {
                     let Some(d) = open_dialog() else { return };
                     let status = d.c.update_status;
                     match result {
                         Ok(None) => {
-                            let message = match (&nightly_date, channel) {
-                                (Some(date), "stable") => format!(
-                                    "You're on nightly ({date}).\nNo newer stable release available."
-                                ),
-                                (Some(date), _) => {
-                                    format!("You're on the latest nightly ({date}).")
-                                }
-                                (None, _) => format!("You're up to date ({current_version})."),
-                            };
+                            let message = messages::no_update(
+                                nightly_date.as_deref(),
+                                channel,
+                                &current_version,
+                            );
                             status.set_label(&message);
-                            d.message(&message, "No Updates Available", INFO);
+                            d.message(&message, messages::NO_UPDATES_TITLE, INFO);
                         }
                         Ok(Some(info)) => {
-                            status.set_label(&format!("Update available: {}", info.version));
-                            actions::offer_update(&d.dialog, &current_version, &info);
+                            status.set_label(&messages::update_available_status(&info.version));
+                            updates::offer_update(&d.dialog, &current_version, info);
                         }
                         Err(e) => {
                             tracing::error!("Error checking for updates: {e}");
-                            status.set_label("Could not check for updates");
+                            status.set_label(messages::CHECK_FAILED_STATUS);
                             d.message(
-                                &format!("Failed to check for updates:\n{e}"),
-                                "Update Check Failed",
+                                &messages::check_failed(&e.to_string()),
+                                messages::CHECK_FAILED_TITLE,
                                 ERROR,
                             );
                         }
@@ -1225,9 +1227,9 @@ impl SettingsDialog {
 
     /// `_on_open_soundpacks_dir`.
     fn on_open_soundpacks_dir(&self) {
-        let dir = actions::soundpacks_dir(self.portable());
+        let dir = aw_audio::player().soundpacks_dir();
         if dir.exists() {
-            actions::open_folder(&dir);
+            actions::open_folder(dir);
         } else {
             self.message(
                 &format!("Sound packs directory not found: {}", dir.display()),

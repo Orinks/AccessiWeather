@@ -17,7 +17,7 @@ use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
-use aw_services::activation::ActivationRequest;
+use aw_notify::ActivationRequest;
 use aw_services::single_instance::SingleInstance;
 use aw_services::startup::{StartupManager, StartupSync, STARTUP_FAILED_TITLE};
 use aw_services::update;
@@ -168,20 +168,37 @@ fn ensure_startup_registration() {
     }
 }
 
-/// `SettingsDialog._apply_startup_enabled_setting` for the settings port:
-/// register or remove the login entry for the "launch at login" checkbox.
-/// `loaded` is the value the dialog opened with. False (after telling the
-/// user) when it could not be applied; the dialog then keeps `loaded`.
-#[allow(dead_code)] // Called by the settings dialog port.
+/// The login entry manager, or `None` for sample-data and source runs, which
+/// must not point the login entry at themselves (see `on_init`).
+fn startup_manager() -> Option<StartupManager> {
+    let offline = with_state().is_none_or(|s| s.borrow().offline);
+    (!offline && !aw_services::is_running_from_source()).then(StartupManager::new)
+}
+
+/// `config_manager.is_startup_enabled`; without a manager, the saved setting.
+pub(crate) fn is_startup_enabled() -> bool {
+    match startup_manager() {
+        Some(manager) => manager.is_startup_enabled(),
+        None => settings().is_some_and(|s| s.startup_enabled),
+    }
+}
+
+/// `SettingsDialog._apply_startup_enabled_setting`: register or remove the
+/// login entry for the "launch at login" checkbox. `loaded` is the value
+/// the dialog opened with. False (after telling the user) when it could not
+/// be applied; the dialog then keeps `loaded`.
 pub(crate) fn apply_startup_enabled_setting(
     parent: &dyn WxWidget,
     desired: bool,
     loaded: bool,
 ) -> bool {
-    let manager = StartupManager::new();
-    if desired == loaded && manager.is_startup_enabled() == desired {
+    if desired == loaded && is_startup_enabled() == desired {
         return true;
     }
+    let Some(manager) = startup_manager() else {
+        tracing::info!("Startup setting saved without OS registration (sample-data or source run)");
+        return true;
+    };
     let (ok, message) = manager.set_startup(desired);
     if ok {
         tracing::info!("Startup setting applied: {message}");
@@ -380,18 +397,10 @@ fn start_activation_handoff_polling() {
         }
     });
     timer.start(
-        aw_services::activation::HANDOFF_POLL_INTERVAL.as_millis() as i32,
+        aw_notify::activation::HANDOFF_POLL_INTERVAL.as_millis() as i32,
         false,
     );
     HANDOFF_TIMER.with(|t| *t.borrow_mut() = Some(timer));
-}
-
-/// The request in `aw_notify`'s terms (the two crates share the format).
-fn to_notify_request(request: &ActivationRequest) -> Option<aw_notify::ActivationRequest> {
-    aw_notify::ActivationRequest::new(
-        aw_notify::ActivationKind::parse(request.kind.as_str())?,
-        request.alert_id.clone(),
-    )
 }
 
 /// `_handle_notification_activation_request`: open the discussion or the
@@ -400,8 +409,6 @@ pub(crate) fn handle_activation_request(request: ActivationRequest) {
     let (Some(frame), Some(state)) = (ui::main_frame(), with_state()) else {
         return;
     };
-    let request =
-        to_notify_request(&request).unwrap_or_else(aw_notify::ActivationRequest::generic_fallback);
     let route = {
         let st = state.borrow();
         let alerts = st
@@ -591,29 +598,15 @@ pub(crate) fn shutdown() {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Startup guidance hooks: dialogs other workstreams port.
-// ---------------------------------------------------------------------------
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    /// Without a real (non-sample, installed) run nothing may touch the
+    /// login entry: tests have no app state and run from the target dir.
     #[test]
-    fn activation_requests_convert_between_the_crates() {
-        let req = ActivationRequest::new("alert_details", Some("urn:1".into())).unwrap();
-        assert_eq!(
-            to_notify_request(&req),
-            Some(aw_notify::ActivationRequest::alert_details("urn:1"))
-        );
-        assert_eq!(
-            to_notify_request(&ActivationRequest::generic_fallback()),
-            Some(aw_notify::ActivationRequest::generic_fallback())
-        );
-        let discussion = ActivationRequest::new("discussion", None).unwrap();
-        assert_eq!(
-            to_notify_request(&discussion),
-            Some(aw_notify::ActivationRequest::discussion())
-        );
+    fn no_login_entry_without_a_real_run() {
+        assert!(startup_manager().is_none());
+        assert!(!is_startup_enabled());
     }
 }

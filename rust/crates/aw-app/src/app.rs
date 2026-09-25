@@ -126,15 +126,23 @@ pub fn run(args: Args) -> Result<(), AppError> {
         single_instance = Some(si);
     }
 
-    let mut config = aw_store::load_config(&paths.config_file())?;
-    config.normalize();
+    let offline = args.offline || args.smoke || args.check;
+    let build_tag = args
+        .fake_nightly
+        .clone()
+        .or_else(|| aw_services::update::build_tag().map(str::to_string));
+    let channel = aw_services::update::default_update_channel(build_tag.as_deref());
+    let (mut config, channel_defaulted) = aw_store::load_config(&paths.config_file(), channel)?;
+    if channel_defaulted && !offline {
+        let _ = aw_store::save_config(&paths.config_file(), &config)
+            .inspect_err(|e| tracing::error!("saving config: {e}"));
+    }
     tracing::info!(
         "loaded {} saved location(s) from {}",
         config.locations.len(),
         paths.config_file().display()
     );
 
-    let offline = args.offline || args.smoke || args.check;
     if !offline {
         if paths.portable {
             // A failed silent import is retried with a prompt at 400 ms
@@ -191,10 +199,7 @@ pub fn run(args: Args) -> Result<(), AppError> {
             .fake_version
             .clone()
             .unwrap_or_else(|| aw_services::update::app_version().to_string()),
-        build_tag: args
-            .fake_nightly
-            .clone()
-            .or_else(|| aw_services::update::build_tag().map(str::to_string)),
+        build_tag,
         force_wizard: args.wizard,
         activation_request: args.activation_request.clone(),
         smoke,

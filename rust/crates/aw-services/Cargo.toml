@@ -8,6 +8,7 @@ description = "Application services for AccessiWeather: updates, launch at login
 [dependencies]
 aw-core.workspace = true
 aw-store.workspace = true
+aw-notify.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
 chrono.workspace = true

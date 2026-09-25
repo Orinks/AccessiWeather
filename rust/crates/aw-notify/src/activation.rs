@@ -118,8 +118,20 @@ impl ActivationRequest {
         Self::new(kind, first("alert_id"))
     }
 
-    fn to_json(&self) -> Value {
-        json!({"kind": self.kind.as_str(), "alert_id": self.alert_id})
+    /// `json.dumps(asdict(request))`: what the handoff file and the single
+    /// instance pipe carry.
+    pub fn to_json(&self) -> String {
+        py::json_dumps(&json!({"kind": self.kind.as_str(), "alert_id": self.alert_id}))
+    }
+
+    pub fn from_json(text: &str) -> Option<Self> {
+        let payload: Value = serde_json::from_str(text).ok()?;
+        let kind = ActivationKind::parse(payload.get("kind")?.as_str()?)?;
+        let alert_id = payload
+            .get("alert_id")
+            .and_then(Value::as_str)
+            .map(str::to_string);
+        Self::new(kind, alert_id)
     }
 }
 
@@ -130,7 +142,7 @@ pub fn handoff_file(config_root: &Path) -> PathBuf {
 
 /// `write_activation_request_handoff`.
 pub fn write_handoff(path: &Path, request: &ActivationRequest) -> bool {
-    let text = py::json_dumps(&request.to_json());
+    let text = request.to_json();
     let tmp = path.with_extension("tmp");
     let result = path
         .parent()
@@ -154,15 +166,7 @@ pub fn consume_handoff(path: &Path) -> Option<ActivationRequest> {
     }
     let request = std::fs::read_to_string(path)
         .ok()
-        .and_then(|t| serde_json::from_str::<Value>(&t).ok())
-        .and_then(|payload| {
-            let kind = ActivationKind::parse(payload.get("kind")?.as_str()?)?;
-            let alert_id = payload
-                .get("alert_id")
-                .and_then(Value::as_str)
-                .map(str::to_string);
-            ActivationRequest::new(kind, alert_id)
-        });
+        .and_then(|text| ActivationRequest::from_json(&text));
     if request.is_none() {
         tracing::warn!("Failed to consume activation handoff at {}", path.display());
     }
@@ -279,6 +283,23 @@ mod tests {
         std::fs::write(&path, "NOT JSON").unwrap();
         assert_eq!(consume_handoff(&path), None);
         assert!(!path.exists());
+    }
+
+    #[test]
+    fn json_escapes_like_python_and_round_trips() {
+        let request = ActivationRequest::alert_details("\u{e9}\"\u{1}");
+        assert_eq!(
+            request.to_json(),
+            r#"{"kind": "alert_details", "alert_id": "\u00e9\"\u0001"}"#
+        );
+        assert_eq!(
+            ActivationRequest::from_json(&request.to_json()),
+            Some(request)
+        );
+        assert_eq!(
+            ActivationRequest::from_json(r#"{"kind": "alert_details", "alert_id": ""}"#),
+            None
+        );
     }
 
     #[test]

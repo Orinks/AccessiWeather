@@ -6,8 +6,10 @@ use aw_core::shortcut_preferences::{normalize_hotkey, normalize_shortcut_text};
 use aw_core::sound_events::{user_mutable_sound_events, SOUND_EVENT_SECTIONS};
 use serde_json::{Map, Value};
 
-use super::model_browser_dialog::*;
-use super::settings_actions::{self, VeniceBalance};
+use aw_ai::models::{self as mb, BrowserFilter, CatalogModel, PriceFilter, VeniceBalance};
+use aw_ai::Provider;
+
+use super::settings_actions;
 use super::settings_form::*;
 use super::tray_text_format_dialog::{supported_placeholders_help, validate_format_string};
 
@@ -391,17 +393,42 @@ fn applying_the_dict_keeps_unknown_keys_and_unsent_api_keys() {
     assert_eq!(settings.extra["future_flag"], Value::Bool(true));
 }
 
-fn catalog(models: &Value) -> Vec<CatalogModel> {
-    from(models)
+/// A golden model row as the browser's `aw_ai::models::CatalogModel`.
+fn catalog_model(v: &Value) -> CatalogModel {
+    let flag = |key: &str| v[key].as_bool().unwrap_or(false);
+    CatalogModel {
+        id: from(&v["id"]),
+        name: from(&v["name"]),
+        description: from(&v["description"]),
+        context_length: v["context_length"].as_i64(),
+        pricing_prompt: v["pricing_prompt"].as_f64(),
+        pricing_completion: v["pricing_completion"].as_f64(),
+        is_free: flag("is_free"),
+        input_modalities: vec!["text".into()],
+        output_modalities: vec!["text".into()],
+        supports_function_calling: flag("supports_function_calling"),
+        offline: flag("offline"),
+        provider: from(&v["provider"]),
+    }
 }
 
+fn catalog(models: &Value) -> Vec<CatalogModel> {
+    models
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(catalog_model)
+        .collect()
+}
+
+/// The browser's texts, now from `aw_ai::models`, against the Python dialog.
 #[test]
 fn model_browser_text_matches_python() {
     let g = golden();
-    let mb = &g["model_browser"];
+    let mb_cases = &g["model_browser"];
     for kind in ["openrouter", "venice"] {
-        for model in mb[kind]["models"].as_array().unwrap() {
-            let m: CatalogModel = from(model);
+        for model in mb_cases[kind]["models"].as_array().unwrap() {
+            let m = catalog_model(model);
             assert_eq!(m.display_name(), model["display_name"].as_str().unwrap());
             assert_eq!(
                 m.context_display(),
@@ -409,64 +436,69 @@ fn model_browser_text_matches_python() {
             );
         }
     }
-    for case in mb["lists"].as_array().unwrap() {
-        let venice = case["provider"] == "venice";
-        let models = catalog(&mb[if venice { "venice" } else { "openrouter" }]["models"]);
+    let provider = |case: &Value| {
+        if case["provider"] == "venice" {
+            (Provider::Venice, "venice")
+        } else {
+            (Provider::OpenRouter, "openrouter")
+        }
+    };
+    for case in mb_cases["lists"].as_array().unwrap() {
+        let (kind, key) = provider(case);
+        let models = catalog(&mb_cases[key]["models"]);
         let f = &case["filters"];
-        let filters = Filters {
-            search: f["search"].as_str().unwrap_or("").to_string(),
-            free_only: f["free_only"].as_bool().unwrap_or(false),
-            price: f["price"].as_u64().unwrap_or(0) as u32,
-            function_only: f["function_only"].as_bool().unwrap_or(false),
-            provider_index: f["provider_index"].as_u64().unwrap_or(0) as usize,
-        };
         let providers: Vec<String> = from(&case["providers"]);
         assert_eq!(
-            provider_list(&models, venice, &Filters::default()),
+            mb::provider_ids(kind, &models, &BrowserFilter::default()),
             providers
         );
-        let shown = apply_filters(&models, venice, &filters, &providers);
+        let filter = BrowserFilter {
+            search: f["search"].as_str().unwrap_or("").to_string(),
+            free_only: f["free_only"].as_bool().unwrap_or(false),
+            price: match f["price"].as_u64() {
+                Some(1) => PriceFilter::Free,
+                Some(2) => PriceFilter::Paid,
+                _ => PriceFilter::All,
+            },
+            function_calling_only: f["function_only"].as_bool().unwrap_or(false),
+            provider: (f["provider_index"].as_u64().unwrap_or(0) as usize)
+                .checked_sub(1)
+                .map(|i| providers[i].clone()),
+        };
+        let shown = mb::filter_models(kind, &models, &filter);
         let ids: Vec<&str> = shown.iter().map(|m| m.id.as_str()).collect();
         assert_eq!(ids, from::<Vec<String>>(&case["filtered"]), "{f}");
-        let items: Vec<String> = shown.iter().map(|m| list_item(m, venice)).collect();
+        let items: Vec<String> = shown.iter().map(|m| mb::list_item(kind, m)).collect();
         assert_eq!(items, from::<Vec<String>>(&case["items"]), "{f}");
         assert_eq!(
-            status_text(shown.len(), models.len()),
+            mb::status_text(shown.len(), models.len()),
             case["status"].as_str().unwrap()
         );
     }
-    for case in mb["descriptions"].as_array().unwrap() {
-        let venice = case["provider"] == "venice";
-        let models = catalog(&mb[if venice { "venice" } else { "openrouter" }]["models"]);
+    for case in mb_cases["descriptions"].as_array().unwrap() {
+        let (kind, key) = provider(case);
+        let models = catalog(&mb_cases[key]["models"]);
         let m = &models[case["index"].as_u64().unwrap() as usize];
-        assert_eq!(model_description(m, venice), case["text"].as_str().unwrap());
+        assert_eq!(
+            mb::description_text(kind, m),
+            case["text"].as_str().unwrap()
+        );
         assert_eq!(!m.offline, case["select_enabled"].as_bool().unwrap());
     }
-    for case in mb["balances"].as_array().unwrap() {
-        let balance: Option<VeniceBalance> = from(&case["balance"]);
+    for case in mb_cases["balances"].as_array().unwrap() {
+        let balance = case["balance"].as_object().map(|b| VeniceBalance {
+            can_consume: b["can_consume"].as_bool(),
+            consumption_currency: b["consumption_currency"].as_str().map(String::from),
+            usd: b["usd"].as_f64(),
+            diem: b["diem"].as_f64(),
+        });
         assert_eq!(
-            balance_status(balance.as_ref()),
+            mb::balance_status(balance.as_ref()),
             case["text"].as_str().unwrap()
         );
     }
-    for (provider, name) in mb["provider_names"].as_object().unwrap() {
-        assert_eq!(provider_display_name(provider), name.as_str().unwrap());
-    }
-}
-
-#[test]
-fn format_g_matches_python() {
-    for (value, expected) in [
-        (0.0, "0"),
-        (12.5, "12.5"),
-        (1234567.0, "1.23457e+06"),
-        (0.00001, "1e-05"),
-        (0.0001, "0.0001"),
-        (100000.0, "100000"),
-        (0.15, "0.15"),
-        (2.8, "2.8"),
-    ] {
-        assert_eq!(format_g(value), expected, "{value}");
+    for (provider, name) in mb_cases["provider_names"].as_object().unwrap() {
+        assert_eq!(mb::provider_display_name(provider), name.as_str().unwrap());
     }
 }
 

@@ -9,6 +9,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::Arc;
 
+use aw_ai::CancelToken;
 use aw_providers::products::{ProductError, ProductResult};
 use wxdragon::prelude::*;
 
@@ -73,6 +74,8 @@ pub(crate) struct ProductPanel {
     loader: Loader,
     location_name: String,
     on_availability: Option<Box<dyn Fn(u64, bool)>>,
+    /// Stops a running summary once the panel closes.
+    cancel: CancelToken,
 }
 
 /// Whether the selected AI provider has a key, read at the moment it matters.
@@ -192,6 +195,7 @@ impl ProductPanel {
             loader: options.loader,
             location_name: options.location_name,
             on_availability: options.on_availability,
+            cancel: CancelToken::new(),
         });
         register(p.id, p.clone());
 
@@ -223,6 +227,7 @@ impl ProductPanel {
 
     /// Stop delivering background results to this panel.
     pub fn close(&self) {
+        self.cancel.cancel();
         unregister(self.id);
     }
 
@@ -303,6 +308,7 @@ impl ProductPanel {
         };
         let product_type = self.product_type();
         let location_name = self.location_name.clone();
+        let cancel = self.cancel.clone();
         let id = self.id;
         in_background(
             id,
@@ -318,6 +324,7 @@ impl ProductPanel {
                     &product_type,
                     &location_name,
                     &status,
+                    &cancel,
                 )
             },
             |p: &Rc<ProductPanel>, result| match result {

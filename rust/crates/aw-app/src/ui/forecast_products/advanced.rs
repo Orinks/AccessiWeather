@@ -5,18 +5,22 @@
 use std::rc::Rc;
 use std::sync::Arc;
 
-use aw_core::model::Location;
+use aw_core::model::{Location, Timestamp};
 use aw_providers::products::advanced::{
     self as rules, lookup, LookupForm, DATE_PRESETS, ORDER_CHOICES, SOURCE_CHOICES,
 };
 use aw_providers::products::ForecastProductService;
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use wxdragon::prelude::*;
 
 use super::{in_background, next_id, register, unregister, Texts, WidgetSpec};
 
 const TITLE: &str = "Advanced Text Product Lookup";
 const LOOKING_UP: &str = "Looking up product...";
+/// The close box and Escape press Close. Deliberate divergence: Python
+/// leaves wx's default, which with no Cancel button falls back to the
+/// affirmative button, so closing from the title bar ran a lookup instead.
+const ESCAPE_ID: i32 = ID_CLOSE;
 
 /// Labelled widgets in creation order (`*`: the value is computed).
 pub(super) const WIDGETS: WidgetSpec = &[
@@ -150,6 +154,8 @@ struct AdvancedDialog {
     location: Location,
     service: Arc<ForecastProductService>,
     office_choices: Vec<String>,
+    /// The year choices' items (`year_choices` at open).
+    years: Vec<String>,
     product_category_choice: Choice,
     product_preset_choice: Choice,
     product_input: TextCtrl,
@@ -320,6 +326,7 @@ pub(crate) fn show_advanced_text_product_dialog(
         location: location.clone(),
         service,
         office_choices,
+        years,
         product_category_choice,
         product_preset_choice,
         product_input,
@@ -359,8 +366,10 @@ pub(crate) fn show_advanced_text_product_dialog(
         product_category_choice.on_selection_changed(move |_| handler());
         let handler = with(AdvancedDialog::on_product_preset);
         product_preset_choice.on_selection_changed(move |_| handler());
-        // Python binds the date presets with EVT_CHOICE, which a ComboBox
-        // never sends, so choosing a preset changes nothing. Kept for parity.
+        // Deliberate divergence: Python binds this ComboBox with EVT_CHOICE,
+        // which a ComboBox never sends, so a preset filled nothing in.
+        let handler = with(AdvancedDialog::on_date_preset);
+        date_preset_choice.on_selection_changed(move |_| handler());
         for part in start_parts.iter().chain(&end_parts) {
             let handler = with(AdvancedDialog::on_date_parts);
             part.on_selection_changed(move |_| handler());
@@ -384,6 +393,7 @@ pub(crate) fn show_advanced_text_product_dialog(
         });
     }
 
+    dialog.set_escape_id(ESCAPE_ID);
     dialog.set_size(Size::new(760, 620));
     dialog.centre();
     dialog.show_modal();
@@ -461,6 +471,25 @@ impl AdvancedDialog {
         }
     }
 
+    /// `_on_date_preset`: fill the date choices and the UTC fields.
+    fn on_date_preset(&self) {
+        let preset = self
+            .date_preset_choice
+            .get_string_selection()
+            .unwrap_or_default();
+        let (start, end, start_text, end_text) =
+            date_preset_fields(&preset, Utc::now(), &self.years);
+        for (choices, selections) in [(&self.start_parts, start), (&self.end_parts, end)] {
+            for (choice, index) in choices.iter().zip(selections) {
+                if let Some(index) = index {
+                    choice.set_selection(index as u32);
+                }
+            }
+        }
+        self.start_input.set_value(&start_text);
+        self.end_input.set_value(&end_text);
+    }
+
     /// Year/month/day choices resolve into the UTC start and end fields.
     fn on_date_parts(&self) {
         let parts = |choices: &[Choice; 3]| {
@@ -509,5 +538,56 @@ impl AdvancedDialog {
             move || lookup(&service, &location, &form),
             |d: &Rc<AdvancedDialog>, text| d.result_text.set_value(&text),
         );
+    }
+}
+
+/// What a date preset puts in the start and end year/month/day choices and
+/// the resolved UTC fields (`_on_date_preset`).
+fn date_preset_fields(
+    preset: &str,
+    now: DateTime<Utc>,
+    years: &[String],
+) -> ([Option<usize>; 3], [Option<usize>; 3], String, String) {
+    let (start, end) = rules::date_range_for_preset(preset, now);
+    let text =
+        |value: Option<&Timestamp>| value.map(rules::format_form_datetime).unwrap_or_default();
+    (
+        rules::date_choice_selections(start.as_ref(), years),
+        rules::date_choice_selections(end.as_ref(), years),
+        text(start.as_ref()),
+        text(end.as_ref()),
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn date_presets_fill_the_dates() {
+        let now: DateTime<Utc> = "2026-09-25T12:30:45.5Z".parse().unwrap();
+        let years = rules::year_choices(now);
+        let (start, end, start_text, end_text) = date_preset_fields("Past 7 days", now, &years);
+        assert_eq!(start_text, "2026-09-18T12:30:45Z");
+        assert_eq!(end_text, "2026-09-25T12:30:45Z");
+        let year = years.iter().position(|y| y == "2026");
+        assert_eq!(start, [year, Some(9), Some(18)]);
+        assert_eq!(end, [year, Some(9), Some(25)]);
+        let latest = date_preset_fields("Latest or current", now, &years);
+        assert_eq!(
+            latest,
+            ([Some(0); 3], [Some(0); 3], String::new(), String::new())
+        );
+    }
+
+    #[test]
+    fn closing_the_window_presses_close_not_lookup() {
+        let buttons: Vec<&str> = WIDGETS
+            .iter()
+            .filter_map(|(kind, _)| kind.strip_prefix("Button#"))
+            .collect();
+        assert_eq!(buttons, ["OK", "CLOSE"]);
+        assert_eq!(ESCAPE_ID, ID_CLOSE);
+        assert_ne!(ESCAPE_ID, ID_OK);
     }
 }
