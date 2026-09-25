@@ -1,0 +1,4430 @@
+{
+"name": "openmeteo_alaska",
+"now": "2026-01-20T18:00:00+00:00",
+"local_tz": "America/New_York",
+"weather_data": {
+"location": {
+"name": "Anchorage, AK",
+"latitude": 61.2181,
+"longitude": -149.9003,
+"timezone": "America/Anchorage",
+"country_code": "US",
+"marine_mode": false,
+"forecast_zone_id": null,
+"cwa_office": null,
+"county_zone_id": null,
+"fire_zone_id": null,
+"radar_station": null
+},
+"current": {
+"temperature": 21.9,
+"temperature_f": 21.9,
+"temperature_c": -5.611111111111112,
+"condition": "Fog",
+"humidity": 99,
+"wind_speed": 3.2,
+"dewpoint_f": 21.66275691843321,
+"dewpoint_c": -5.742912823092661,
+"wind_speed_mph": 3.2,
+"wind_speed_kph": 5.149888000000001,
+"wind_direction": "N",
+"pressure": 30.463130536456237,
+"pressure_in": 30.463130536456237,
+"pressure_mb": 1031.6,
+"feels_like_f": 15.4,
+"feels_like_c": -9.222222222222221,
+"visibility_miles": 10.0,
+"visibility_km": 16.09344,
+"uv_index": 0.05,
+"cloud_cover": null,
+"wind_gust_mph": null,
+"wind_gust_kph": null,
+"precipitation_in": 0.0,
+"precipitation_mm": 0.0,
+"sunrise_time": "2026-01-20T09:46:00-09:00",
+"sunset_time": "2026-01-20T16:34:00-09:00",
+"moon_phase": null,
+"moonrise_time": null,
+"moonset_time": null,
+"snow_depth_in": 5.904,
+"snow_depth_cm": 14.99616,
+"snowfall_rate_in": 0.0,
+"wind_chill_f": 15.4,
+"wind_chill_c": -9.222222222222221,
+"freezing_level_ft": null,
+"freezing_level_m": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"frost_risk": null,
+"precipitation_type": null,
+"severe_weather_risk": null
+},
+"forecast": {
+"periods": [
+{
+"name": "Today",
+"temperature": 27.4,
+"temperature_low": 19.6,
+"temperature_unit": "F",
+"short_forecast": "Depositing rime fog",
+"detailed_forecast": null,
+"wind_speed": "3.8 mph",
+"wind_speed_mph": 3.8,
+"wind_direction": "N",
+"icon": null,
+"start_time": "2026-01-20T12:00:00-09:00",
+"end_time": null,
+"precipitation_probability": 3.0,
+"snowfall": 0.0,
+"uv_index": 0.6,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"wind_chill_min_f": null,
+"wind_chill_max_f": null,
+"freezing_level_ft": null,
+"ice_risk": null,
+"heat_index_max_f": null,
+"heat_index_min_f": null,
+"uv_index_max": null,
+"air_quality_forecast": null,
+"frost_risk": null,
+"pollen_forecast": null,
+"precipitation_type": null,
+"severe_weather_risk": null,
+"feels_like_high": null,
+"feels_like_low": null
+},
+{
+"name": "Tomorrow",
+"temperature": 23.7,
+"temperature_low": 17.7,
+"temperature_unit": "F",
+"short_forecast": "Fog",
+"detailed_forecast": null,
+"wind_speed": "3.1 mph",
+"wind_speed_mph": 3.1,
+"wind_direction": "N",
+"icon": null,
+"start_time": "2026-01-21T12:00:00-09:00",
+"end_time": null,
+"precipitation_probability": 0.0,
+"snowfall": 0.0,
+"uv_index": 0.6,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"wind_chill_min_f": null,
+"wind_chill_max_f": null,
+"freezing_level_ft": null,
+"ice_risk": null,
+"heat_index_max_f": null,
+"heat_index_min_f": null,
+"uv_index_max": null,
+"air_quality_forecast": null,
+"frost_risk": null,
+"pollen_forecast": null,
+"precipitation_type": null,
+"severe_weather_risk": null,
+"feels_like_high": null,
+"feels_like_low": null
+},
+{
+"name": "Thursday",
+"temperature": 21.8,
+"temperature_low": 18.6,
+"temperature_unit": "F",
+"short_forecast": "Fog",
+"detailed_forecast": null,
+"wind_speed": "3.9 mph",
+"wind_speed_mph": 3.9,
+"wind_direction": "NNE",
+"icon": null,
+"start_time": "2026-01-22T12:00:00-09:00",
+"end_time": null,
+"precipitation_probability": 0.0,
+"snowfall": 0.0,
+"uv_index": 0.65,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"wind_chill_min_f": null,
+"wind_chill_max_f": null,
+"freezing_level_ft": null,
+"ice_risk": null,
+"heat_index_max_f": null,
+"heat_index_min_f": null,
+"uv_index_max": null,
+"air_quality_forecast": null,
+"frost_risk": null,
+"pollen_forecast": null,
+"precipitation_type": null,
+"severe_weather_risk": null,
+"feels_like_high": null,
+"feels_like_low": null
+},
+{
+"name": "Friday",
+"temperature": 29.7,
+"temperature_low": 21.4,
+"temperature_unit": "F",
+"short_forecast": "Overcast",
+"detailed_forecast": null,
+"wind_speed": "7.8 mph",
+"wind_speed_mph": 7.8,
+"wind_direction": "NNE",
+"icon": null,
+"start_time": "2026-01-23T12:00:00-09:00",
+"end_time": null,
+"precipitation_probability": 0.0,
+"snowfall": 0.0,
+"uv_index": 0.7,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"wind_chill_min_f": null,
+"wind_chill_max_f": null,
+"freezing_level_ft": null,
+"ice_risk": null,
+"heat_index_max_f": null,
+"heat_index_min_f": null,
+"uv_index_max": null,
+"air_quality_forecast": null,
+"frost_risk": null,
+"pollen_forecast": null,
+"precipitation_type": null,
+"severe_weather_risk": null,
+"feels_like_high": null,
+"feels_like_low": null
+},
+{
+"name": "Saturday",
+"temperature": 30.9,
+"temperature_low": 28.9,
+"temperature_unit": "F",
+"short_forecast": "Light freezing rain",
+"detailed_forecast": null,
+"wind_speed": "9.9 mph",
+"wind_speed_mph": 9.9,
+"wind_direction": "NNE",
+"icon": null,
+"start_time": "2026-01-24T12:00:00-09:00",
+"end_time": null,
+"precipitation_probability": 2.0,
+"snowfall": 0.0,
+"uv_index": 0.7,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"wind_chill_min_f": null,
+"wind_chill_max_f": null,
+"freezing_level_ft": null,
+"ice_risk": null,
+"heat_index_max_f": null,
+"heat_index_min_f": null,
+"uv_index_max": null,
+"air_quality_forecast": null,
+"frost_risk": null,
+"pollen_forecast": null,
+"precipitation_type": null,
+"severe_weather_risk": null,
+"feels_like_high": null,
+"feels_like_low": null
+},
+{
+"name": "Sunday",
+"temperature": 31.7,
+"temperature_low": 29.9,
+"temperature_unit": "F",
+"short_forecast": "Light freezing rain",
+"detailed_forecast": null,
+"wind_speed": "8.5 mph",
+"wind_speed_mph": 8.5,
+"wind_direction": "NNE",
+"icon": null,
+"start_time": "2026-01-25T12:00:00-09:00",
+"end_time": null,
+"precipitation_probability": 12.0,
+"snowfall": 0.0,
+"uv_index": 0.7,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"wind_chill_min_f": null,
+"wind_chill_max_f": null,
+"freezing_level_ft": null,
+"ice_risk": null,
+"heat_index_max_f": null,
+"heat_index_min_f": null,
+"uv_index_max": null,
+"air_quality_forecast": null,
+"frost_risk": null,
+"pollen_forecast": null,
+"precipitation_type": null,
+"severe_weather_risk": null,
+"feels_like_high": null,
+"feels_like_low": null
+},
+{
+"name": "Monday",
+"temperature": 30.4,
+"temperature_low": 25.9,
+"temperature_unit": "F",
+"short_forecast": "Fog",
+"detailed_forecast": null,
+"wind_speed": "7 mph",
+"wind_speed_mph": 7.0,
+"wind_direction": "N",
+"icon": null,
+"start_time": "2026-01-26T12:00:00-09:00",
+"end_time": null,
+"precipitation_probability": 24.0,
+"snowfall": 0.0,
+"uv_index": 0.7,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"wind_chill_min_f": null,
+"wind_chill_max_f": null,
+"freezing_level_ft": null,
+"ice_risk": null,
+"heat_index_max_f": null,
+"heat_index_min_f": null,
+"uv_index_max": null,
+"air_quality_forecast": null,
+"frost_risk": null,
+"pollen_forecast": null,
+"precipitation_type": null,
+"severe_weather_risk": null,
+"feels_like_high": null,
+"feels_like_low": null
+}
+],
+"generated_at": "2026-01-20T08:00:00-09:00",
+"summary": null
+},
+"hourly_forecast": null,
+"daily_history": [],
+"discussion": null,
+"discussion_issuance_time": null,
+"minutely_precipitation": null,
+"alerts": null,
+"environmental": null,
+"aviation": null,
+"marine": null,
+"trend_insights": [],
+"stale": false,
+"stale_since": null,
+"stale_reason": null,
+"source_attribution": null,
+"incomplete_sections": [],
+"alert_lifecycle_diff": null,
+"forecast_confidence": null,
+"anomaly_callout": null
+},
+"variants": [
+{
+"settings": {},
+"presentation": {
+"location_name": "Anchorage, AK",
+"summary_text": "Anchorage, AK - 22°F (-6°C) - Fog",
+"current_conditions": {
+"title": "Current conditions for Anchorage, AK",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "21.9°F (-5.6°C) (feels like 15.4°F (-9.2°C))"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "21.7°F (-5.7°C)"
+},
+{
+"label": "Wind chill",
+"value": "15.4°F (-9.2°C)"
+},
+{
+"label": "Snow on ground",
+"value": "5.9 in (15.0 cm)"
+},
+{
+"label": "Wind",
+"value": "N at 3.2 mph (5.1 kph)"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.5 inHg (1031.6 hPa)"
+},
+{
+"label": "Visibility",
+"value": "10.0 mi (16.1 km)"
+},
+{
+"label": "UV Index",
+"value": "0.05 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "9:46 AM"
+},
+{
+"label": "Sunset",
+"value": "4:34 PM"
+}
+],
+"fallback_text": "Current conditions for Anchorage, AK: Fog\nTemperature: 21.9°F (-5.6°C) (feels like 15.4°F (-9.2°C))\nFeels different: Due to wind chill\nDewpoint: 21.7°F (-5.7°C)\nWind chill: 15.4°F (-9.2°C)\nSnow on ground: 5.9 in (15.0 cm)\nWind: N at 3.2 mph (5.1 kph)\nHumidity: 99%\nPressure: 30.5 inHg (1031.6 hPa)\nVisibility: 10.0 mi (16.1 km)\nUV Index: 0.05 (Low)\nSunrise: 9:46 AM\nSunset: 4:34 PM",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Anchorage, AK",
+"periods": [
+{
+"name": "Today",
+"temperature": "27.4°F (-2.6°C) / 19.6°F (-6.9°C)",
+"conditions": "Depositing rime fog",
+"wind": "N 4 mph (6 km/h)",
+"details": null,
+"precipitation_probability": "3%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tomorrow",
+"temperature": "23.7°F (-4.6°C) / 17.7°F (-7.9°C)",
+"conditions": "Fog",
+"wind": "N 3 mph (5 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Thursday",
+"temperature": "21.8°F (-5.7°C) / 18.6°F (-7.4°C)",
+"conditions": "Fog",
+"wind": "NNE 4 mph (6 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Friday",
+"temperature": "29.7°F (-1.3°C) / 21.4°F (-5.9°C)",
+"conditions": "Overcast",
+"wind": "NNE 8 mph (13 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Saturday",
+"temperature": "30.9°F (-0.6°C) / 28.9°F (-1.7°C)",
+"conditions": "Light freezing rain",
+"wind": "NNE 10 mph (16 km/h)",
+"details": null,
+"precipitation_probability": "2%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "31.7°F (-0.2°C) / 29.9°F (-1.2°C)",
+"conditions": "Light freezing rain",
+"wind": "NNE 8 mph (14 km/h)",
+"details": null,
+"precipitation_probability": "12%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "30.4°F (-0.9°C) / 25.9°F (-3.4°C)",
+"conditions": "Fog",
+"wind": "N 7 mph (11 km/h)",
+"details": null,
+"precipitation_probability": "24%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [],
+"hourly_summary": null,
+"generated_at": "8:00 AM",
+"fallback_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F (-2.6°C) / 19.6°F (-6.9°C)\n  Conditions: Depositing rime fog\n  Wind: N 4 mph (6 km/h)\n  Precipitation: 3% chance\nTomorrow: 23.7°F (-4.6°C) / 17.7°F (-7.9°C)\n  Conditions: Fog\n  Wind: N 3 mph (5 km/h)\n  Precipitation: 0% chance\nThursday: 21.8°F (-5.7°C) / 18.6°F (-7.4°C)\n  Conditions: Fog\n  Wind: NNE 4 mph (6 km/h)\n  Precipitation: 0% chance\nFriday: 29.7°F (-1.3°C) / 21.4°F (-5.9°C)\n  Conditions: Overcast\n  Wind: NNE 8 mph (13 km/h)\n  Precipitation: 0% chance\nSaturday: 30.9°F (-0.6°C) / 28.9°F (-1.7°C)\n  Conditions: Light freezing rain\n  Wind: NNE 10 mph (16 km/h)\n  Precipitation: 2% chance\nSunday: 31.7°F (-0.2°C) / 29.9°F (-1.2°C)\n  Conditions: Light freezing rain\n  Wind: NNE 8 mph (14 km/h)\n  Precipitation: 12% chance\nMonday: 30.4°F (-0.9°C) / 25.9°F (-3.4°C)\n  Conditions: Fog\n  Wind: N 7 mph (11 km/h)\n  Precipitation: 24% chance\nForecast generated: 8:00 AM",
+"daily_section_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F (-2.6°C) / 19.6°F (-6.9°C)\n  Conditions: Depositing rime fog\n  Wind: N 4 mph (6 km/h)\n  Precipitation: 3% chance\nTomorrow: 23.7°F (-4.6°C) / 17.7°F (-7.9°C)\n  Conditions: Fog\n  Wind: N 3 mph (5 km/h)\n  Precipitation: 0% chance\nThursday: 21.8°F (-5.7°C) / 18.6°F (-7.4°C)\n  Conditions: Fog\n  Wind: NNE 4 mph (6 km/h)\n  Precipitation: 0% chance\nFriday: 29.7°F (-1.3°C) / 21.4°F (-5.9°C)\n  Conditions: Overcast\n  Wind: NNE 8 mph (13 km/h)\n  Precipitation: 0% chance\nSaturday: 30.9°F (-0.6°C) / 28.9°F (-1.7°C)\n  Conditions: Light freezing rain\n  Wind: NNE 10 mph (16 km/h)\n  Precipitation: 2% chance\nSunday: 31.7°F (-0.2°C) / 29.9°F (-1.2°C)\n  Conditions: Light freezing rain\n  Wind: NNE 8 mph (14 km/h)\n  Precipitation: 12% chance\nMonday: 30.4°F (-0.9°C) / 25.9°F (-3.4°C)\n  Conditions: Fog\n  Wind: N 7 mph (11 km/h)\n  Precipitation: 24% chance\nForecast generated: 8:00 AM",
+"hourly_section_text": "",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "22F/-6C Fog",
+"preview": "22F/-6C Fog",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Anchorage, AK: 22F/-6C (feels like 15F/-9C) N at 3.2 mph (5.1 km/h) 99%",
+"preview": "Anchorage, AK: 22F/-6C (feels like 15F/-9C) N at 3.2 mph (5.1 km/h) 99%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "27F/-3C/20F/-7C 0.00 in (0.00 mm) N/A% UV 0.1 10.0 mi (16.1 km) 30.46 inHg (1031.60 hPa)",
+"preview": "27F/-3C/20F/-7C 0.00 in (0.00 mm) N/A% UV 0.1 10.0 mi (16.1 km) 30.46 inHg (1031.60 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "22F -6C N 3.2 mph (5.1 km/h) {unknown}",
+"preview": "22F -6C N 3.2 mph (5.1 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 15F/-9C | 22F/-6C",
+"preview": "Feels like: 15F/-9C | 22F/-6C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h...",
+"preview": "Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+},
+"present_current": {
+"title": "Current conditions for Anchorage, AK",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "21.9°F (-5.6°C) (feels like 15.4°F (-9.2°C))"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "21.7°F (-5.7°C)"
+},
+{
+"label": "Wind chill",
+"value": "15.4°F (-9.2°C)"
+},
+{
+"label": "Snow on ground",
+"value": "5.9 in (15.0 cm)"
+},
+{
+"label": "Wind",
+"value": "N at 3.2 mph (5.1 kph)"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.5 inHg (1031.6 hPa)"
+},
+{
+"label": "Visibility",
+"value": "10.0 mi (16.1 km)"
+},
+{
+"label": "UV Index",
+"value": "0.05 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "9:46 AM"
+},
+{
+"label": "Sunset",
+"value": "4:34 PM"
+}
+],
+"fallback_text": "Current conditions for Anchorage, AK: Fog\nTemperature: 21.9°F (-5.6°C) (feels like 15.4°F (-9.2°C))\nFeels different: Due to wind chill\nDewpoint: 21.7°F (-5.7°C)\nWind chill: 15.4°F (-9.2°C)\nSnow on ground: 5.9 in (15.0 cm)\nWind: N at 3.2 mph (5.1 kph)\nHumidity: 99%\nPressure: 30.5 inHg (1031.6 hPa)\nVisibility: 10.0 mi (16.1 km)\nUV Index: 0.05 (Low)\nSunrise: 9:46 AM\nSunset: 4:34 PM",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"present_forecast": {
+"title": "Forecast for Anchorage, AK",
+"periods": [
+{
+"name": "Today",
+"temperature": "27.4°F (-2.6°C) / 19.6°F (-6.9°C)",
+"conditions": "Depositing rime fog",
+"wind": "N 4 mph (6 km/h)",
+"details": null,
+"precipitation_probability": "3%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tomorrow",
+"temperature": "23.7°F (-4.6°C) / 17.7°F (-7.9°C)",
+"conditions": "Fog",
+"wind": "N 3 mph (5 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Thursday",
+"temperature": "21.8°F (-5.7°C) / 18.6°F (-7.4°C)",
+"conditions": "Fog",
+"wind": "NNE 4 mph (6 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Friday",
+"temperature": "29.7°F (-1.3°C) / 21.4°F (-5.9°C)",
+"conditions": "Overcast",
+"wind": "NNE 8 mph (13 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Saturday",
+"temperature": "30.9°F (-0.6°C) / 28.9°F (-1.7°C)",
+"conditions": "Light freezing rain",
+"wind": "NNE 10 mph (16 km/h)",
+"details": null,
+"precipitation_probability": "2%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "31.7°F (-0.2°C) / 29.9°F (-1.2°C)",
+"conditions": "Light freezing rain",
+"wind": "NNE 8 mph (14 km/h)",
+"details": null,
+"precipitation_probability": "12%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "30.4°F (-0.9°C) / 25.9°F (-3.4°C)",
+"conditions": "Fog",
+"wind": "N 7 mph (11 km/h)",
+"details": null,
+"precipitation_probability": "24%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [],
+"hourly_summary": null,
+"generated_at": "8:00 AM",
+"fallback_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F (-2.6°C) / 19.6°F (-6.9°C)\n  Conditions: Depositing rime fog\n  Wind: N 4 mph (6 km/h)\n  Precipitation: 3% chance\nTomorrow: 23.7°F (-4.6°C) / 17.7°F (-7.9°C)\n  Conditions: Fog\n  Wind: N 3 mph (5 km/h)\n  Precipitation: 0% chance\nThursday: 21.8°F (-5.7°C) / 18.6°F (-7.4°C)\n  Conditions: Fog\n  Wind: NNE 4 mph (6 km/h)\n  Precipitation: 0% chance\nFriday: 29.7°F (-1.3°C) / 21.4°F (-5.9°C)\n  Conditions: Overcast\n  Wind: NNE 8 mph (13 km/h)\n  Precipitation: 0% chance\nSaturday: 30.9°F (-0.6°C) / 28.9°F (-1.7°C)\n  Conditions: Light freezing rain\n  Wind: NNE 10 mph (16 km/h)\n  Precipitation: 2% chance\nSunday: 31.7°F (-0.2°C) / 29.9°F (-1.2°C)\n  Conditions: Light freezing rain\n  Wind: NNE 8 mph (14 km/h)\n  Precipitation: 12% chance\nMonday: 30.4°F (-0.9°C) / 25.9°F (-3.4°C)\n  Conditions: Fog\n  Wind: N 7 mph (11 km/h)\n  Precipitation: 24% chance\nForecast generated: 8:00 AM\n\nHourly forecast:\nMobility briefing: Stay dry.",
+"daily_section_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F (-2.6°C) / 19.6°F (-6.9°C)\n  Conditions: Depositing rime fog\n  Wind: N 4 mph (6 km/h)\n  Precipitation: 3% chance\nTomorrow: 23.7°F (-4.6°C) / 17.7°F (-7.9°C)\n  Conditions: Fog\n  Wind: N 3 mph (5 km/h)\n  Precipitation: 0% chance\nThursday: 21.8°F (-5.7°C) / 18.6°F (-7.4°C)\n  Conditions: Fog\n  Wind: NNE 4 mph (6 km/h)\n  Precipitation: 0% chance\nFriday: 29.7°F (-1.3°C) / 21.4°F (-5.9°C)\n  Conditions: Overcast\n  Wind: NNE 8 mph (13 km/h)\n  Precipitation: 0% chance\nSaturday: 30.9°F (-0.6°C) / 28.9°F (-1.7°C)\n  Conditions: Light freezing rain\n  Wind: NNE 10 mph (16 km/h)\n  Precipitation: 2% chance\nSunday: 31.7°F (-0.2°C) / 29.9°F (-1.2°C)\n  Conditions: Light freezing rain\n  Wind: NNE 8 mph (14 km/h)\n  Precipitation: 12% chance\nMonday: 30.4°F (-0.9°C) / 25.9°F (-3.4°C)\n  Conditions: Fog\n  Wind: N 7 mph (11 km/h)\n  Precipitation: 24% chance\nForecast generated: 8:00 AM",
+"hourly_section_text": "Hourly forecast:\nMobility briefing: Stay dry.",
+"mobility_briefing": "Stay dry.",
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"present_alerts": null
+},
+{
+"settings": {
+"temperature_unit": "f"
+},
+"presentation": {
+"location_name": "Anchorage, AK",
+"summary_text": "Anchorage, AK - 22°F - Fog",
+"current_conditions": {
+"title": "Current conditions for Anchorage, AK",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "21.9°F (feels like 15.4°F)"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "21.7°F"
+},
+{
+"label": "Wind chill",
+"value": "15.4°F"
+},
+{
+"label": "Snow on ground",
+"value": "5.9 in"
+},
+{
+"label": "Wind",
+"value": "N at 3.2 mph"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.5 inHg"
+},
+{
+"label": "Visibility",
+"value": "10.0 mi"
+},
+{
+"label": "UV Index",
+"value": "0.05 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "9:46 AM"
+},
+{
+"label": "Sunset",
+"value": "4:34 PM"
+}
+],
+"fallback_text": "Current conditions for Anchorage, AK: Fog\nTemperature: 21.9°F (feels like 15.4°F)\nFeels different: Due to wind chill\nDewpoint: 21.7°F\nWind chill: 15.4°F\nSnow on ground: 5.9 in\nWind: N at 3.2 mph\nHumidity: 99%\nPressure: 30.5 inHg\nVisibility: 10.0 mi\nUV Index: 0.05 (Low)\nSunrise: 9:46 AM\nSunset: 4:34 PM",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Anchorage, AK",
+"periods": [
+{
+"name": "Today",
+"temperature": "27.4°F / 19.6°F",
+"conditions": "Depositing rime fog",
+"wind": "N 4 mph",
+"details": null,
+"precipitation_probability": "3%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tomorrow",
+"temperature": "23.7°F / 17.7°F",
+"conditions": "Fog",
+"wind": "N 3 mph",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Thursday",
+"temperature": "21.8°F / 18.6°F",
+"conditions": "Fog",
+"wind": "NNE 4 mph",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Friday",
+"temperature": "29.7°F / 21.4°F",
+"conditions": "Overcast",
+"wind": "NNE 8 mph",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Saturday",
+"temperature": "30.9°F / 28.9°F",
+"conditions": "Light freezing rain",
+"wind": "NNE 10 mph",
+"details": null,
+"precipitation_probability": "2%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "31.7°F / 29.9°F",
+"conditions": "Light freezing rain",
+"wind": "NNE 8 mph",
+"details": null,
+"precipitation_probability": "12%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "30.4°F / 25.9°F",
+"conditions": "Fog",
+"wind": "N 7 mph",
+"details": null,
+"precipitation_probability": "24%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [],
+"hourly_summary": null,
+"generated_at": "8:00 AM",
+"fallback_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F / 19.6°F\n  Conditions: Depositing rime fog\n  Wind: N 4 mph\n  Precipitation: 3% chance\nTomorrow: 23.7°F / 17.7°F\n  Conditions: Fog\n  Wind: N 3 mph\n  Precipitation: 0% chance\nThursday: 21.8°F / 18.6°F\n  Conditions: Fog\n  Wind: NNE 4 mph\n  Precipitation: 0% chance\nFriday: 29.7°F / 21.4°F\n  Conditions: Overcast\n  Wind: NNE 8 mph\n  Precipitation: 0% chance\nSaturday: 30.9°F / 28.9°F\n  Conditions: Light freezing rain\n  Wind: NNE 10 mph\n  Precipitation: 2% chance\nSunday: 31.7°F / 29.9°F\n  Conditions: Light freezing rain\n  Wind: NNE 8 mph\n  Precipitation: 12% chance\nMonday: 30.4°F / 25.9°F\n  Conditions: Fog\n  Wind: N 7 mph\n  Precipitation: 24% chance\nForecast generated: 8:00 AM",
+"daily_section_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F / 19.6°F\n  Conditions: Depositing rime fog\n  Wind: N 4 mph\n  Precipitation: 3% chance\nTomorrow: 23.7°F / 17.7°F\n  Conditions: Fog\n  Wind: N 3 mph\n  Precipitation: 0% chance\nThursday: 21.8°F / 18.6°F\n  Conditions: Fog\n  Wind: NNE 4 mph\n  Precipitation: 0% chance\nFriday: 29.7°F / 21.4°F\n  Conditions: Overcast\n  Wind: NNE 8 mph\n  Precipitation: 0% chance\nSaturday: 30.9°F / 28.9°F\n  Conditions: Light freezing rain\n  Wind: NNE 10 mph\n  Precipitation: 2% chance\nSunday: 31.7°F / 29.9°F\n  Conditions: Light freezing rain\n  Wind: NNE 8 mph\n  Precipitation: 12% chance\nMonday: 30.4°F / 25.9°F\n  Conditions: Fog\n  Wind: N 7 mph\n  Precipitation: 24% chance\nForecast generated: 8:00 AM",
+"hourly_section_text": "",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "22F Fog",
+"preview": "22F Fog",
+"sample_preview": "72F Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Anchorage, AK: 22F (feels like 15F) N at 3.2 mph 99%",
+"preview": "Anchorage, AK: 22F (feels like 15F) N at 3.2 mph 99%",
+"sample_preview": "Sample Location: 72F (feels like 74F) NW at 8.0 mph 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "27F/20F 0.00 in N/A% UV 0.1 10.0 mi 30.46 inHg",
+"preview": "27F/20F 0.00 in N/A% UV 0.1 10.0 mi 30.46 inHg",
+"sample_preview": "78F/61F 0.00 in 20% UV 5 10.0 mi 30.10 inHg"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "22F -6C N 3.2 mph {unknown}",
+"preview": "22F -6C N 3.2 mph {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 15F | 22F",
+"preview": "Feels like: 15F | 22F",
+"sample_preview": "Feels like: 74F | 72F"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Anchorage, AK Fog N at 3.2 mph Anchorage, AK Fog N at 3.2 mph Anchorage, AK Fog N at 3.2 mph Anchorage, AK",
+"preview": "Anchorage, AK Fog N at 3.2 mph Anchorage, AK Fog N at 3.2 mph Anchorage, AK Fog N at 3.2 mph Anchorage, AK",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "c"
+},
+"presentation": {
+"location_name": "Anchorage, AK",
+"summary_text": "Anchorage, AK - -6°C - Fog",
+"current_conditions": {
+"title": "Current conditions for Anchorage, AK",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "-5.6°C (feels like -9.2°C)"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "-5.7°C"
+},
+{
+"label": "Wind chill",
+"value": "-9.2°C"
+},
+{
+"label": "Snow on ground",
+"value": "15.0 cm"
+},
+{
+"label": "Wind",
+"value": "N at 5.1 kph"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "1031.6 hPa"
+},
+{
+"label": "Visibility",
+"value": "16.1 km"
+},
+{
+"label": "UV Index",
+"value": "0.05 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "9:46 AM"
+},
+{
+"label": "Sunset",
+"value": "4:34 PM"
+}
+],
+"fallback_text": "Current conditions for Anchorage, AK: Fog\nTemperature: -5.6°C (feels like -9.2°C)\nFeels different: Due to wind chill\nDewpoint: -5.7°C\nWind chill: -9.2°C\nSnow on ground: 15.0 cm\nWind: N at 5.1 kph\nHumidity: 99%\nPressure: 1031.6 hPa\nVisibility: 16.1 km\nUV Index: 0.05 (Low)\nSunrise: 9:46 AM\nSunset: 4:34 PM",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Anchorage, AK",
+"periods": [
+{
+"name": "Today",
+"temperature": "-2.6°C / -6.9°C",
+"conditions": "Depositing rime fog",
+"wind": "N 6 km/h",
+"details": null,
+"precipitation_probability": "3%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tomorrow",
+"temperature": "-4.6°C / -7.9°C",
+"conditions": "Fog",
+"wind": "N 5 km/h",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Thursday",
+"temperature": "-5.7°C / -7.4°C",
+"conditions": "Fog",
+"wind": "NNE 6 km/h",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Friday",
+"temperature": "-1.3°C / -5.9°C",
+"conditions": "Overcast",
+"wind": "NNE 13 km/h",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Saturday",
+"temperature": "-0.6°C / -1.7°C",
+"conditions": "Light freezing rain",
+"wind": "NNE 16 km/h",
+"details": null,
+"precipitation_probability": "2%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "-0.2°C / -1.2°C",
+"conditions": "Light freezing rain",
+"wind": "NNE 14 km/h",
+"details": null,
+"precipitation_probability": "12%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "-0.9°C / -3.4°C",
+"conditions": "Fog",
+"wind": "N 11 km/h",
+"details": null,
+"precipitation_probability": "24%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [],
+"hourly_summary": null,
+"generated_at": "8:00 AM",
+"fallback_text": "Daily forecast for Anchorage, AK:\nToday: -2.6°C / -6.9°C\n  Conditions: Depositing rime fog\n  Wind: N 6 km/h\n  Precipitation: 3% chance\nTomorrow: -4.6°C / -7.9°C\n  Conditions: Fog\n  Wind: N 5 km/h\n  Precipitation: 0% chance\nThursday: -5.7°C / -7.4°C\n  Conditions: Fog\n  Wind: NNE 6 km/h\n  Precipitation: 0% chance\nFriday: -1.3°C / -5.9°C\n  Conditions: Overcast\n  Wind: NNE 13 km/h\n  Precipitation: 0% chance\nSaturday: -0.6°C / -1.7°C\n  Conditions: Light freezing rain\n  Wind: NNE 16 km/h\n  Precipitation: 2% chance\nSunday: -0.2°C / -1.2°C\n  Conditions: Light freezing rain\n  Wind: NNE 14 km/h\n  Precipitation: 12% chance\nMonday: -0.9°C / -3.4°C\n  Conditions: Fog\n  Wind: N 11 km/h\n  Precipitation: 24% chance\nForecast generated: 8:00 AM",
+"daily_section_text": "Daily forecast for Anchorage, AK:\nToday: -2.6°C / -6.9°C\n  Conditions: Depositing rime fog\n  Wind: N 6 km/h\n  Precipitation: 3% chance\nTomorrow: -4.6°C / -7.9°C\n  Conditions: Fog\n  Wind: N 5 km/h\n  Precipitation: 0% chance\nThursday: -5.7°C / -7.4°C\n  Conditions: Fog\n  Wind: NNE 6 km/h\n  Precipitation: 0% chance\nFriday: -1.3°C / -5.9°C\n  Conditions: Overcast\n  Wind: NNE 13 km/h\n  Precipitation: 0% chance\nSaturday: -0.6°C / -1.7°C\n  Conditions: Light freezing rain\n  Wind: NNE 16 km/h\n  Precipitation: 2% chance\nSunday: -0.2°C / -1.2°C\n  Conditions: Light freezing rain\n  Wind: NNE 14 km/h\n  Precipitation: 12% chance\nMonday: -0.9°C / -3.4°C\n  Conditions: Fog\n  Wind: N 11 km/h\n  Precipitation: 24% chance\nForecast generated: 8:00 AM",
+"hourly_section_text": "",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "-6C Fog",
+"preview": "-6C Fog",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Anchorage, AK: -6C (feels like -9C) N at 5.1 km/h 99%",
+"preview": "Anchorage, AK: -6C (feels like -9C) N at 5.1 km/h 99%",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 12.9 km/h 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "-3C/-7C 0.00 mm N/A% UV 0.1 16.1 km 1031.60 hPa",
+"preview": "-3C/-7C 0.00 mm N/A% UV 0.1 16.1 km 1031.60 hPa",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "22F -6C N 5.1 km/h {unknown}",
+"preview": "22F -6C N 5.1 km/h {unknown}",
+"sample_preview": "72F 22C NW 12.9 km/h {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: -9C | -6C",
+"preview": "Feels like: -9C | -6C",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Anchorage, AK Fog N at 5.1 km/h Anchorage, AK Fog N at 5.1 km/h Anchorage, AK Fog N at 5.1 km/h Anchorage, AK",
+"preview": "Anchorage, AK Fog N at 5.1 km/h Anchorage, AK Fog N at 5.1 km/h Anchorage, AK Fog N at 5.1 km/h Anchorage, AK",
+"sample_preview": "Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "auto"
+},
+"presentation": {
+"location_name": "Anchorage, AK",
+"summary_text": "Anchorage, AK - 22°F - Fog",
+"current_conditions": {
+"title": "Current conditions for Anchorage, AK",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "21.9°F (feels like 15.4°F)"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "21.7°F"
+},
+{
+"label": "Wind chill",
+"value": "15.4°F"
+},
+{
+"label": "Snow on ground",
+"value": "5.9 in"
+},
+{
+"label": "Wind",
+"value": "N at 3.2 mph"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.5 inHg"
+},
+{
+"label": "Visibility",
+"value": "10.0 mi"
+},
+{
+"label": "UV Index",
+"value": "0.05 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "9:46 AM"
+},
+{
+"label": "Sunset",
+"value": "4:34 PM"
+}
+],
+"fallback_text": "Current conditions for Anchorage, AK: Fog\nTemperature: 21.9°F (feels like 15.4°F)\nFeels different: Due to wind chill\nDewpoint: 21.7°F\nWind chill: 15.4°F\nSnow on ground: 5.9 in\nWind: N at 3.2 mph\nHumidity: 99%\nPressure: 30.5 inHg\nVisibility: 10.0 mi\nUV Index: 0.05 (Low)\nSunrise: 9:46 AM\nSunset: 4:34 PM",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Anchorage, AK",
+"periods": [
+{
+"name": "Today",
+"temperature": "27.4°F / 19.6°F",
+"conditions": "Depositing rime fog",
+"wind": "N 4 mph",
+"details": null,
+"precipitation_probability": "3%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tomorrow",
+"temperature": "23.7°F / 17.7°F",
+"conditions": "Fog",
+"wind": "N 3 mph",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Thursday",
+"temperature": "21.8°F / 18.6°F",
+"conditions": "Fog",
+"wind": "NNE 4 mph",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Friday",
+"temperature": "29.7°F / 21.4°F",
+"conditions": "Overcast",
+"wind": "NNE 8 mph",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Saturday",
+"temperature": "30.9°F / 28.9°F",
+"conditions": "Light freezing rain",
+"wind": "NNE 10 mph",
+"details": null,
+"precipitation_probability": "2%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "31.7°F / 29.9°F",
+"conditions": "Light freezing rain",
+"wind": "NNE 8 mph",
+"details": null,
+"precipitation_probability": "12%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "30.4°F / 25.9°F",
+"conditions": "Fog",
+"wind": "N 7 mph",
+"details": null,
+"precipitation_probability": "24%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [],
+"hourly_summary": null,
+"generated_at": "8:00 AM",
+"fallback_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F / 19.6°F\n  Conditions: Depositing rime fog\n  Wind: N 4 mph\n  Precipitation: 3% chance\nTomorrow: 23.7°F / 17.7°F\n  Conditions: Fog\n  Wind: N 3 mph\n  Precipitation: 0% chance\nThursday: 21.8°F / 18.6°F\n  Conditions: Fog\n  Wind: NNE 4 mph\n  Precipitation: 0% chance\nFriday: 29.7°F / 21.4°F\n  Conditions: Overcast\n  Wind: NNE 8 mph\n  Precipitation: 0% chance\nSaturday: 30.9°F / 28.9°F\n  Conditions: Light freezing rain\n  Wind: NNE 10 mph\n  Precipitation: 2% chance\nSunday: 31.7°F / 29.9°F\n  Conditions: Light freezing rain\n  Wind: NNE 8 mph\n  Precipitation: 12% chance\nMonday: 30.4°F / 25.9°F\n  Conditions: Fog\n  Wind: N 7 mph\n  Precipitation: 24% chance\nForecast generated: 8:00 AM",
+"daily_section_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F / 19.6°F\n  Conditions: Depositing rime fog\n  Wind: N 4 mph\n  Precipitation: 3% chance\nTomorrow: 23.7°F / 17.7°F\n  Conditions: Fog\n  Wind: N 3 mph\n  Precipitation: 0% chance\nThursday: 21.8°F / 18.6°F\n  Conditions: Fog\n  Wind: NNE 4 mph\n  Precipitation: 0% chance\nFriday: 29.7°F / 21.4°F\n  Conditions: Overcast\n  Wind: NNE 8 mph\n  Precipitation: 0% chance\nSaturday: 30.9°F / 28.9°F\n  Conditions: Light freezing rain\n  Wind: NNE 10 mph\n  Precipitation: 2% chance\nSunday: 31.7°F / 29.9°F\n  Conditions: Light freezing rain\n  Wind: NNE 8 mph\n  Precipitation: 12% chance\nMonday: 30.4°F / 25.9°F\n  Conditions: Fog\n  Wind: N 7 mph\n  Precipitation: 24% chance\nForecast generated: 8:00 AM",
+"hourly_section_text": "",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "22F Fog",
+"preview": "-6C Fog",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Anchorage, AK: 22F (feels like 15F) N at 3.2 mph 99%",
+"preview": "Anchorage, AK: -6C (feels like -9C) N at 1.4 m/s 99%",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 3.6 m/s 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "27F/20F 0.00 in N/A% UV 0.1 10.0 mi 30.46 inHg",
+"preview": "-3C/-7C 0.00 mm N/A% UV 0.1 16.1 km 1031.60 hPa",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "22F -6C N 3.2 mph {unknown}",
+"preview": "22F -6C N 1.4 m/s {unknown}",
+"sample_preview": "72F 22C NW 3.6 m/s {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 15F | 22F",
+"preview": "Feels like: -9C | -6C",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Anchorage, AK Fog N at 3.2 mph Anchorage, AK Fog N at 3.2 mph Anchorage, AK Fog N at 3.2 mph Anchorage, AK",
+"preview": "Anchorage, AK Fog N at 1.4 m/s Anchorage, AK Fog N at 1.4 m/s Anchorage, AK Fog N at 1.4 m/s Anchorage, AK",
+"sample_preview": "Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "auto",
+"wind_speed_unit": "m/s"
+},
+"presentation": {
+"location_name": "Anchorage, AK",
+"summary_text": "Anchorage, AK - 22°F - Fog",
+"current_conditions": {
+"title": "Current conditions for Anchorage, AK",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "21.9°F (feels like 15.4°F)"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "21.7°F"
+},
+{
+"label": "Wind chill",
+"value": "15.4°F"
+},
+{
+"label": "Snow on ground",
+"value": "5.9 in"
+},
+{
+"label": "Wind",
+"value": "N at 1.4 m/s"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.5 inHg"
+},
+{
+"label": "Visibility",
+"value": "10.0 mi"
+},
+{
+"label": "UV Index",
+"value": "0.05 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "9:46 AM"
+},
+{
+"label": "Sunset",
+"value": "4:34 PM"
+}
+],
+"fallback_text": "Current conditions for Anchorage, AK: Fog\nTemperature: 21.9°F (feels like 15.4°F)\nFeels different: Due to wind chill\nDewpoint: 21.7°F\nWind chill: 15.4°F\nSnow on ground: 5.9 in\nWind: N at 1.4 m/s\nHumidity: 99%\nPressure: 30.5 inHg\nVisibility: 10.0 mi\nUV Index: 0.05 (Low)\nSunrise: 9:46 AM\nSunset: 4:34 PM",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Anchorage, AK",
+"periods": [
+{
+"name": "Today",
+"temperature": "27.4°F / 19.6°F",
+"conditions": "Depositing rime fog",
+"wind": "N 2 m/s",
+"details": null,
+"precipitation_probability": "3%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tomorrow",
+"temperature": "23.7°F / 17.7°F",
+"conditions": "Fog",
+"wind": "N 1 m/s",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Thursday",
+"temperature": "21.8°F / 18.6°F",
+"conditions": "Fog",
+"wind": "NNE 2 m/s",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Friday",
+"temperature": "29.7°F / 21.4°F",
+"conditions": "Overcast",
+"wind": "NNE 3 m/s",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Saturday",
+"temperature": "30.9°F / 28.9°F",
+"conditions": "Light freezing rain",
+"wind": "NNE 4 m/s",
+"details": null,
+"precipitation_probability": "2%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "31.7°F / 29.9°F",
+"conditions": "Light freezing rain",
+"wind": "NNE 4 m/s",
+"details": null,
+"precipitation_probability": "12%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "30.4°F / 25.9°F",
+"conditions": "Fog",
+"wind": "N 3 m/s",
+"details": null,
+"precipitation_probability": "24%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [],
+"hourly_summary": null,
+"generated_at": "8:00 AM",
+"fallback_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F / 19.6°F\n  Conditions: Depositing rime fog\n  Wind: N 2 m/s\n  Precipitation: 3% chance\nTomorrow: 23.7°F / 17.7°F\n  Conditions: Fog\n  Wind: N 1 m/s\n  Precipitation: 0% chance\nThursday: 21.8°F / 18.6°F\n  Conditions: Fog\n  Wind: NNE 2 m/s\n  Precipitation: 0% chance\nFriday: 29.7°F / 21.4°F\n  Conditions: Overcast\n  Wind: NNE 3 m/s\n  Precipitation: 0% chance\nSaturday: 30.9°F / 28.9°F\n  Conditions: Light freezing rain\n  Wind: NNE 4 m/s\n  Precipitation: 2% chance\nSunday: 31.7°F / 29.9°F\n  Conditions: Light freezing rain\n  Wind: NNE 4 m/s\n  Precipitation: 12% chance\nMonday: 30.4°F / 25.9°F\n  Conditions: Fog\n  Wind: N 3 m/s\n  Precipitation: 24% chance\nForecast generated: 8:00 AM",
+"daily_section_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F / 19.6°F\n  Conditions: Depositing rime fog\n  Wind: N 2 m/s\n  Precipitation: 3% chance\nTomorrow: 23.7°F / 17.7°F\n  Conditions: Fog\n  Wind: N 1 m/s\n  Precipitation: 0% chance\nThursday: 21.8°F / 18.6°F\n  Conditions: Fog\n  Wind: NNE 2 m/s\n  Precipitation: 0% chance\nFriday: 29.7°F / 21.4°F\n  Conditions: Overcast\n  Wind: NNE 3 m/s\n  Precipitation: 0% chance\nSaturday: 30.9°F / 28.9°F\n  Conditions: Light freezing rain\n  Wind: NNE 4 m/s\n  Precipitation: 2% chance\nSunday: 31.7°F / 29.9°F\n  Conditions: Light freezing rain\n  Wind: NNE 4 m/s\n  Precipitation: 12% chance\nMonday: 30.4°F / 25.9°F\n  Conditions: Fog\n  Wind: N 3 m/s\n  Precipitation: 24% chance\nForecast generated: 8:00 AM",
+"hourly_section_text": "",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "22F Fog",
+"preview": "-6C Fog",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Anchorage, AK: 22F (feels like 15F) N at 1.4 m/s 99%",
+"preview": "Anchorage, AK: -6C (feels like -9C) N at 1.4 m/s 99%",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 3.6 m/s 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "27F/20F 0.00 in N/A% UV 0.1 10.0 mi 30.46 inHg",
+"preview": "-3C/-7C 0.00 mm N/A% UV 0.1 16.1 km 1031.60 hPa",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "22F -6C N 1.4 m/s {unknown}",
+"preview": "22F -6C N 1.4 m/s {unknown}",
+"sample_preview": "72F 22C NW 3.6 m/s {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 15F | 22F",
+"preview": "Feels like: -9C | -6C",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Anchorage, AK Fog N at 1.4 m/s Anchorage, AK Fog N at 1.4 m/s Anchorage, AK Fog N at 1.4 m/s Anchorage, AK",
+"preview": "Anchorage, AK Fog N at 1.4 m/s Anchorage, AK Fog N at 1.4 m/s Anchorage, AK Fog N at 1.4 m/s Anchorage, AK",
+"sample_preview": "Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "both",
+"wind_speed_unit": "kph"
+},
+"presentation": {
+"location_name": "Anchorage, AK",
+"summary_text": "Anchorage, AK - 22°F (-6°C) - Fog",
+"current_conditions": {
+"title": "Current conditions for Anchorage, AK",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "21.9°F (-5.6°C) (feels like 15.4°F (-9.2°C))"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "21.7°F (-5.7°C)"
+},
+{
+"label": "Wind chill",
+"value": "15.4°F (-9.2°C)"
+},
+{
+"label": "Snow on ground",
+"value": "5.9 in (15.0 cm)"
+},
+{
+"label": "Wind",
+"value": "N at 5.1 km/h"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.5 inHg (1031.6 hPa)"
+},
+{
+"label": "Visibility",
+"value": "10.0 mi (16.1 km)"
+},
+{
+"label": "UV Index",
+"value": "0.05 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "9:46 AM"
+},
+{
+"label": "Sunset",
+"value": "4:34 PM"
+}
+],
+"fallback_text": "Current conditions for Anchorage, AK: Fog\nTemperature: 21.9°F (-5.6°C) (feels like 15.4°F (-9.2°C))\nFeels different: Due to wind chill\nDewpoint: 21.7°F (-5.7°C)\nWind chill: 15.4°F (-9.2°C)\nSnow on ground: 5.9 in (15.0 cm)\nWind: N at 5.1 km/h\nHumidity: 99%\nPressure: 30.5 inHg (1031.6 hPa)\nVisibility: 10.0 mi (16.1 km)\nUV Index: 0.05 (Low)\nSunrise: 9:46 AM\nSunset: 4:34 PM",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Anchorage, AK",
+"periods": [
+{
+"name": "Today",
+"temperature": "27.4°F (-2.6°C) / 19.6°F (-6.9°C)",
+"conditions": "Depositing rime fog",
+"wind": "N 6 km/h",
+"details": null,
+"precipitation_probability": "3%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tomorrow",
+"temperature": "23.7°F (-4.6°C) / 17.7°F (-7.9°C)",
+"conditions": "Fog",
+"wind": "N 5 km/h",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Thursday",
+"temperature": "21.8°F (-5.7°C) / 18.6°F (-7.4°C)",
+"conditions": "Fog",
+"wind": "NNE 6 km/h",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Friday",
+"temperature": "29.7°F (-1.3°C) / 21.4°F (-5.9°C)",
+"conditions": "Overcast",
+"wind": "NNE 13 km/h",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Saturday",
+"temperature": "30.9°F (-0.6°C) / 28.9°F (-1.7°C)",
+"conditions": "Light freezing rain",
+"wind": "NNE 16 km/h",
+"details": null,
+"precipitation_probability": "2%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "31.7°F (-0.2°C) / 29.9°F (-1.2°C)",
+"conditions": "Light freezing rain",
+"wind": "NNE 14 km/h",
+"details": null,
+"precipitation_probability": "12%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "30.4°F (-0.9°C) / 25.9°F (-3.4°C)",
+"conditions": "Fog",
+"wind": "N 11 km/h",
+"details": null,
+"precipitation_probability": "24%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [],
+"hourly_summary": null,
+"generated_at": "8:00 AM",
+"fallback_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F (-2.6°C) / 19.6°F (-6.9°C)\n  Conditions: Depositing rime fog\n  Wind: N 6 km/h\n  Precipitation: 3% chance\nTomorrow: 23.7°F (-4.6°C) / 17.7°F (-7.9°C)\n  Conditions: Fog\n  Wind: N 5 km/h\n  Precipitation: 0% chance\nThursday: 21.8°F (-5.7°C) / 18.6°F (-7.4°C)\n  Conditions: Fog\n  Wind: NNE 6 km/h\n  Precipitation: 0% chance\nFriday: 29.7°F (-1.3°C) / 21.4°F (-5.9°C)\n  Conditions: Overcast\n  Wind: NNE 13 km/h\n  Precipitation: 0% chance\nSaturday: 30.9°F (-0.6°C) / 28.9°F (-1.7°C)\n  Conditions: Light freezing rain\n  Wind: NNE 16 km/h\n  Precipitation: 2% chance\nSunday: 31.7°F (-0.2°C) / 29.9°F (-1.2°C)\n  Conditions: Light freezing rain\n  Wind: NNE 14 km/h\n  Precipitation: 12% chance\nMonday: 30.4°F (-0.9°C) / 25.9°F (-3.4°C)\n  Conditions: Fog\n  Wind: N 11 km/h\n  Precipitation: 24% chance\nForecast generated: 8:00 AM",
+"daily_section_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F (-2.6°C) / 19.6°F (-6.9°C)\n  Conditions: Depositing rime fog\n  Wind: N 6 km/h\n  Precipitation: 3% chance\nTomorrow: 23.7°F (-4.6°C) / 17.7°F (-7.9°C)\n  Conditions: Fog\n  Wind: N 5 km/h\n  Precipitation: 0% chance\nThursday: 21.8°F (-5.7°C) / 18.6°F (-7.4°C)\n  Conditions: Fog\n  Wind: NNE 6 km/h\n  Precipitation: 0% chance\nFriday: 29.7°F (-1.3°C) / 21.4°F (-5.9°C)\n  Conditions: Overcast\n  Wind: NNE 13 km/h\n  Precipitation: 0% chance\nSaturday: 30.9°F (-0.6°C) / 28.9°F (-1.7°C)\n  Conditions: Light freezing rain\n  Wind: NNE 16 km/h\n  Precipitation: 2% chance\nSunday: 31.7°F (-0.2°C) / 29.9°F (-1.2°C)\n  Conditions: Light freezing rain\n  Wind: NNE 14 km/h\n  Precipitation: 12% chance\nMonday: 30.4°F (-0.9°C) / 25.9°F (-3.4°C)\n  Conditions: Fog\n  Wind: N 11 km/h\n  Precipitation: 24% chance\nForecast generated: 8:00 AM",
+"hourly_section_text": "",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "22F/-6C Fog",
+"preview": "22F/-6C Fog",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Anchorage, AK: 22F/-6C (feels like 15F/-9C) N at 5.1 km/h 99%",
+"preview": "Anchorage, AK: 22F/-6C (feels like 15F/-9C) N at 5.1 km/h 99%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 12.9 km/h 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "27F/-3C/20F/-7C 0.00 in (0.00 mm) N/A% UV 0.1 10.0 mi (16.1 km) 30.46 inHg (1031.60 hPa)",
+"preview": "27F/-3C/20F/-7C 0.00 in (0.00 mm) N/A% UV 0.1 10.0 mi (16.1 km) 30.46 inHg (1031.60 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "22F -6C N 5.1 km/h {unknown}",
+"preview": "22F -6C N 5.1 km/h {unknown}",
+"sample_preview": "72F 22C NW 12.9 km/h {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 15F/-9C | 22F/-6C",
+"preview": "Feels like: 15F/-9C | 22F/-6C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Anchorage, AK Fog N at 5.1 km/h Anchorage, AK Fog N at 5.1 km/h Anchorage, AK Fog N at 5.1 km/h Anchorage, AK",
+"preview": "Anchorage, AK Fog N at 5.1 km/h Anchorage, AK Fog N at 5.1 km/h Anchorage, AK Fog N at 5.1 km/h Anchorage, AK",
+"sample_preview": "Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "fahrenheit",
+"wind_speed_unit": "mph",
+"verbosity_level": "detailed",
+"show_impact_summaries": true
+},
+"presentation": {
+"location_name": "Anchorage, AK",
+"summary_text": "Anchorage, AK - 22°F - Fog",
+"current_conditions": {
+"title": "Current conditions for Anchorage, AK",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "21.9°F (feels like 15.4°F)"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "21.7°F"
+},
+{
+"label": "Wind chill",
+"value": "15.4°F"
+},
+{
+"label": "Snow on ground",
+"value": "5.9 in"
+},
+{
+"label": "Wind",
+"value": "N at 3.2 mph"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.5 inHg"
+},
+{
+"label": "Visibility",
+"value": "10.0 mi"
+},
+{
+"label": "UV Index",
+"value": "0.05 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "9:46 AM"
+},
+{
+"label": "Sunset",
+"value": "4:34 PM"
+},
+{
+"label": "Impact: Outdoor",
+"value": "Very cold - heavy winter clothing required"
+},
+{
+"label": "Impact: Driving",
+"value": "Normal driving conditions"
+}
+],
+"fallback_text": "Current conditions for Anchorage, AK: Fog\nTemperature: 21.9°F (feels like 15.4°F)\nFeels different: Due to wind chill\nDewpoint: 21.7°F\nWind chill: 15.4°F\nSnow on ground: 5.9 in\nWind: N at 3.2 mph\nHumidity: 99%\nPressure: 30.5 inHg\nVisibility: 10.0 mi\nUV Index: 0.05 (Low)\nSunrise: 9:46 AM\nSunset: 4:34 PM\nImpact: Outdoor: Very cold - heavy winter clothing required\nImpact: Driving: Normal driving conditions",
+"trends": [],
+"impact_summary": {
+"outdoor": "Very cold - heavy winter clothing required",
+"driving": "Normal driving conditions",
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Anchorage, AK",
+"periods": [
+{
+"name": "Today",
+"temperature": "27.4°F / 19.6°F",
+"conditions": "Depositing rime fog",
+"wind": "N 4 mph",
+"details": null,
+"precipitation_probability": "3%",
+"snowfall": null,
+"uv_index": "1 (Low)",
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tomorrow",
+"temperature": "23.7°F / 17.7°F",
+"conditions": "Fog",
+"wind": "N 3 mph",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": "1 (Low)",
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Thursday",
+"temperature": "21.8°F / 18.6°F",
+"conditions": "Fog",
+"wind": "NNE 4 mph",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": "1 (Low)",
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Friday",
+"temperature": "29.7°F / 21.4°F",
+"conditions": "Overcast",
+"wind": "NNE 8 mph",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": "1 (Low)",
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Saturday",
+"temperature": "30.9°F / 28.9°F",
+"conditions": "Light freezing rain",
+"wind": "NNE 10 mph",
+"details": null,
+"precipitation_probability": "2%",
+"snowfall": null,
+"uv_index": "1 (Low)",
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "31.7°F / 29.9°F",
+"conditions": "Light freezing rain",
+"wind": "NNE 8 mph",
+"details": null,
+"precipitation_probability": "12%",
+"snowfall": null,
+"uv_index": "1 (Low)",
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "30.4°F / 25.9°F",
+"conditions": "Fog",
+"wind": "N 7 mph",
+"details": null,
+"precipitation_probability": "24%",
+"snowfall": null,
+"uv_index": "1 (Low)",
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [],
+"hourly_summary": null,
+"generated_at": "8:00 AM",
+"fallback_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F / 19.6°F\n  Conditions: Depositing rime fog\n  Wind: N 4 mph\n  Precipitation: 3% chance\n  UV Index: 1 (Low)\nTomorrow: 23.7°F / 17.7°F\n  Conditions: Fog\n  Wind: N 3 mph\n  Precipitation: 0% chance\n  UV Index: 1 (Low)\nThursday: 21.8°F / 18.6°F\n  Conditions: Fog\n  Wind: NNE 4 mph\n  Precipitation: 0% chance\n  UV Index: 1 (Low)\nFriday: 29.7°F / 21.4°F\n  Conditions: Overcast\n  Wind: NNE 8 mph\n  Precipitation: 0% chance\n  UV Index: 1 (Low)\nSaturday: 30.9°F / 28.9°F\n  Conditions: Light freezing rain\n  Wind: NNE 10 mph\n  Precipitation: 2% chance\n  UV Index: 1 (Low)\nSunday: 31.7°F / 29.9°F\n  Conditions: Light freezing rain\n  Wind: NNE 8 mph\n  Precipitation: 12% chance\n  UV Index: 1 (Low)\nMonday: 30.4°F / 25.9°F\n  Conditions: Fog\n  Wind: N 7 mph\n  Precipitation: 24% chance\n  UV Index: 1 (Low)\nForecast generated: 8:00 AM",
+"daily_section_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F / 19.6°F\n  Conditions: Depositing rime fog\n  Wind: N 4 mph\n  Precipitation: 3% chance\n  UV Index: 1 (Low)\nTomorrow: 23.7°F / 17.7°F\n  Conditions: Fog\n  Wind: N 3 mph\n  Precipitation: 0% chance\n  UV Index: 1 (Low)\nThursday: 21.8°F / 18.6°F\n  Conditions: Fog\n  Wind: NNE 4 mph\n  Precipitation: 0% chance\n  UV Index: 1 (Low)\nFriday: 29.7°F / 21.4°F\n  Conditions: Overcast\n  Wind: NNE 8 mph\n  Precipitation: 0% chance\n  UV Index: 1 (Low)\nSaturday: 30.9°F / 28.9°F\n  Conditions: Light freezing rain\n  Wind: NNE 10 mph\n  Precipitation: 2% chance\n  UV Index: 1 (Low)\nSunday: 31.7°F / 29.9°F\n  Conditions: Light freezing rain\n  Wind: NNE 8 mph\n  Precipitation: 12% chance\n  UV Index: 1 (Low)\nMonday: 30.4°F / 25.9°F\n  Conditions: Fog\n  Wind: N 7 mph\n  Precipitation: 24% chance\n  UV Index: 1 (Low)\nForecast generated: 8:00 AM",
+"hourly_section_text": "",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": {
+"outdoor": "Cold - wear a heavy coat",
+"driving": "Caution: near-freezing temperatures - watch for black ice",
+"allergy": null
+}
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "22F Fog",
+"preview": "22F Fog",
+"sample_preview": "72F Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Anchorage, AK: 22F (feels like 15F) N at 3.2 mph 99%",
+"preview": "Anchorage, AK: 22F (feels like 15F) N at 3.2 mph 99%",
+"sample_preview": "Sample Location: 72F (feels like 74F) NW at 8.0 mph 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "27F/20F 0.00 in N/A% UV 0.1 10.0 mi 30.46 inHg",
+"preview": "27F/20F 0.00 in N/A% UV 0.1 10.0 mi 30.46 inHg",
+"sample_preview": "78F/61F 0.00 in 20% UV 5 10.0 mi 30.10 inHg"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "22F -6C N 3.2 mph {unknown}",
+"preview": "22F -6C N 3.2 mph {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 15F | 22F",
+"preview": "Feels like: 15F | 22F",
+"sample_preview": "Feels like: 74F | 72F"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Anchorage, AK Fog N at 3.2 mph Anchorage, AK Fog N at 3.2 mph Anchorage, AK Fog N at 3.2 mph Anchorage, AK",
+"preview": "Anchorage, AK Fog N at 3.2 mph Anchorage, AK Fog N at 3.2 mph Anchorage, AK Fog N at 3.2 mph Anchorage, AK",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"verbosity_level": "minimal",
+"round_values": true
+},
+"presentation": {
+"location_name": "Anchorage, AK",
+"summary_text": "Anchorage, AK - 22°F (-6°C) - Fog",
+"current_conditions": {
+"title": "Current conditions for Anchorage, AK",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "22°F (-6°C) (feels like 15°F (-9°C))"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "22°F (-6°C)"
+},
+{
+"label": "Wind chill",
+"value": "15°F (-9°C)"
+},
+{
+"label": "Snow on ground",
+"value": "6 in (15 cm)"
+},
+{
+"label": "Wind",
+"value": "N at 3 mph (5 kph)"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30 inHg (1032 hPa)"
+},
+{
+"label": "Visibility",
+"value": "10 mi (16 km)"
+},
+{
+"label": "UV Index",
+"value": "0.05 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "9:46 AM"
+},
+{
+"label": "Sunset",
+"value": "4:34 PM"
+}
+],
+"fallback_text": "Current conditions for Anchorage, AK: Fog\nTemperature: 22°F (-6°C) (feels like 15°F (-9°C))\nFeels different: Due to wind chill\nDewpoint: 22°F (-6°C)\nWind chill: 15°F (-9°C)\nSnow on ground: 6 in (15 cm)\nWind: N at 3 mph (5 kph)\nHumidity: 99%\nPressure: 30 inHg (1032 hPa)\nVisibility: 10 mi (16 km)\nUV Index: 0.05 (Low)\nSunrise: 9:46 AM\nSunset: 4:34 PM",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Anchorage, AK",
+"periods": [
+{
+"name": "Today",
+"temperature": "27°F (-3°C) / 20°F (-7°C)",
+"conditions": "Depositing rime fog",
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tomorrow",
+"temperature": "24°F (-5°C) / 18°F (-8°C)",
+"conditions": "Fog",
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Thursday",
+"temperature": "22°F (-6°C) / 19°F (-7°C)",
+"conditions": "Fog",
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Friday",
+"temperature": "30°F (-1°C) / 21°F (-6°C)",
+"conditions": "Overcast",
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Saturday",
+"temperature": "31°F (-1°C) / 29°F (-2°C)",
+"conditions": "Light freezing rain",
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "32°F (-0°C) / 30°F (-1°C)",
+"conditions": "Light freezing rain",
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "30°F (-1°C) / 26°F (-3°C)",
+"conditions": "Fog",
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [],
+"hourly_summary": null,
+"generated_at": "8:00 AM",
+"fallback_text": "Daily forecast for Anchorage, AK:\nToday: 27°F (-3°C) / 20°F (-7°C)\n  Conditions: Depositing rime fog\nTomorrow: 24°F (-5°C) / 18°F (-8°C)\n  Conditions: Fog\nThursday: 22°F (-6°C) / 19°F (-7°C)\n  Conditions: Fog\nFriday: 30°F (-1°C) / 21°F (-6°C)\n  Conditions: Overcast\nSaturday: 31°F (-1°C) / 29°F (-2°C)\n  Conditions: Light freezing rain\nSunday: 32°F (-0°C) / 30°F (-1°C)\n  Conditions: Light freezing rain\nMonday: 30°F (-1°C) / 26°F (-3°C)\n  Conditions: Fog\nForecast generated: 8:00 AM",
+"daily_section_text": "Daily forecast for Anchorage, AK:\nToday: 27°F (-3°C) / 20°F (-7°C)\n  Conditions: Depositing rime fog\nTomorrow: 24°F (-5°C) / 18°F (-8°C)\n  Conditions: Fog\nThursday: 22°F (-6°C) / 19°F (-7°C)\n  Conditions: Fog\nFriday: 30°F (-1°C) / 21°F (-6°C)\n  Conditions: Overcast\nSaturday: 31°F (-1°C) / 29°F (-2°C)\n  Conditions: Light freezing rain\nSunday: 32°F (-0°C) / 30°F (-1°C)\n  Conditions: Light freezing rain\nMonday: 30°F (-1°C) / 26°F (-3°C)\n  Conditions: Fog\nForecast generated: 8:00 AM",
+"hourly_section_text": "",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "22F/-6C Fog",
+"preview": "22F/-6C Fog",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Anchorage, AK: 22F/-6C (feels like 15F/-9C) N at 3 mph (5 km/h) 99%",
+"preview": "Anchorage, AK: 22F/-6C (feels like 15F/-9C) N at 3 mph (5 km/h) 99%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8 mph (13 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "27F/-3C/20F/-7C 0 in (0 mm) N/A% UV 0.1 10 mi (16 km) 30 inHg (1032 hPa)",
+"preview": "27F/-3C/20F/-7C 0 in (0 mm) N/A% UV 0.1 10 mi (16 km) 30 inHg (1032 hPa)",
+"sample_preview": "78F/26C/61F/16C 0 in (0 mm) 20% UV 5 10 mi (16 km) 30 inHg (1019 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "22F -6C N 3 mph (5 km/h) {unknown}",
+"preview": "22F -6C N 3 mph (5 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8 mph (13 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 15F/-9C | 22F/-6C",
+"preview": "Feels like: 15F/-9C | 22F/-6C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Anchorage, AK Fog N at 3 mph (5 km/h) Anchorage, AK Fog N at 3 mph (5 km/h) Anchorage, AK Fog N at 3 mph (5 km/h) Anchorage, AK",
+"preview": "Anchorage, AK Fog N at 3 mph (5 km/h) Anchorage, AK Fog N at 3 mph (5 km/h) Anchorage, AK Fog N at 3 mph (5 km/h) Anchorage, AK",
+"sample_preview": "Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Part..."
+}
+}
+},
+{
+"settings": {
+"verbosity_level": "detailed",
+"time_format_12hour": false,
+"show_timezone_suffix": true
+},
+"presentation": {
+"location_name": "Anchorage, AK",
+"summary_text": "Anchorage, AK - 22°F (-6°C) - Fog",
+"current_conditions": {
+"title": "Current conditions for Anchorage, AK",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "21.9°F (-5.6°C) (feels like 15.4°F (-9.2°C))"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "21.7°F (-5.7°C)"
+},
+{
+"label": "Wind chill",
+"value": "15.4°F (-9.2°C)"
+},
+{
+"label": "Snow on ground",
+"value": "5.9 in (15.0 cm)"
+},
+{
+"label": "Wind",
+"value": "N at 3.2 mph (5.1 kph)"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.5 inHg (1031.6 hPa)"
+},
+{
+"label": "Visibility",
+"value": "10.0 mi (16.1 km)"
+},
+{
+"label": "UV Index",
+"value": "0.05 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "09:46 AKST"
+},
+{
+"label": "Sunset",
+"value": "16:34 AKST"
+}
+],
+"fallback_text": "Current conditions for Anchorage, AK: Fog\nTemperature: 21.9°F (-5.6°C) (feels like 15.4°F (-9.2°C))\nFeels different: Due to wind chill\nDewpoint: 21.7°F (-5.7°C)\nWind chill: 15.4°F (-9.2°C)\nSnow on ground: 5.9 in (15.0 cm)\nWind: N at 3.2 mph (5.1 kph)\nHumidity: 99%\nPressure: 30.5 inHg (1031.6 hPa)\nVisibility: 10.0 mi (16.1 km)\nUV Index: 0.05 (Low)\nSunrise: 09:46 AKST\nSunset: 16:34 AKST",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Anchorage, AK",
+"periods": [
+{
+"name": "Today",
+"temperature": "27.4°F (-2.6°C) / 19.6°F (-6.9°C)",
+"conditions": "Depositing rime fog",
+"wind": "N 4 mph (6 km/h)",
+"details": null,
+"precipitation_probability": "3%",
+"snowfall": null,
+"uv_index": "1 (Low)",
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tomorrow",
+"temperature": "23.7°F (-4.6°C) / 17.7°F (-7.9°C)",
+"conditions": "Fog",
+"wind": "N 3 mph (5 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": "1 (Low)",
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Thursday",
+"temperature": "21.8°F (-5.7°C) / 18.6°F (-7.4°C)",
+"conditions": "Fog",
+"wind": "NNE 4 mph (6 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": "1 (Low)",
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Friday",
+"temperature": "29.7°F (-1.3°C) / 21.4°F (-5.9°C)",
+"conditions": "Overcast",
+"wind": "NNE 8 mph (13 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": "1 (Low)",
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Saturday",
+"temperature": "30.9°F (-0.6°C) / 28.9°F (-1.7°C)",
+"conditions": "Light freezing rain",
+"wind": "NNE 10 mph (16 km/h)",
+"details": null,
+"precipitation_probability": "2%",
+"snowfall": null,
+"uv_index": "1 (Low)",
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "31.7°F (-0.2°C) / 29.9°F (-1.2°C)",
+"conditions": "Light freezing rain",
+"wind": "NNE 8 mph (14 km/h)",
+"details": null,
+"precipitation_probability": "12%",
+"snowfall": null,
+"uv_index": "1 (Low)",
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "30.4°F (-0.9°C) / 25.9°F (-3.4°C)",
+"conditions": "Fog",
+"wind": "N 7 mph (11 km/h)",
+"details": null,
+"precipitation_probability": "24%",
+"snowfall": null,
+"uv_index": "1 (Low)",
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [],
+"hourly_summary": null,
+"generated_at": "08:00 AKST",
+"fallback_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F (-2.6°C) / 19.6°F (-6.9°C)\n  Conditions: Depositing rime fog\n  Wind: N 4 mph (6 km/h)\n  Precipitation: 3% chance\n  UV Index: 1 (Low)\nTomorrow: 23.7°F (-4.6°C) / 17.7°F (-7.9°C)\n  Conditions: Fog\n  Wind: N 3 mph (5 km/h)\n  Precipitation: 0% chance\n  UV Index: 1 (Low)\nThursday: 21.8°F (-5.7°C) / 18.6°F (-7.4°C)\n  Conditions: Fog\n  Wind: NNE 4 mph (6 km/h)\n  Precipitation: 0% chance\n  UV Index: 1 (Low)\nFriday: 29.7°F (-1.3°C) / 21.4°F (-5.9°C)\n  Conditions: Overcast\n  Wind: NNE 8 mph (13 km/h)\n  Precipitation: 0% chance\n  UV Index: 1 (Low)\nSaturday: 30.9°F (-0.6°C) / 28.9°F (-1.7°C)\n  Conditions: Light freezing rain\n  Wind: NNE 10 mph (16 km/h)\n  Precipitation: 2% chance\n  UV Index: 1 (Low)\nSunday: 31.7°F (-0.2°C) / 29.9°F (-1.2°C)\n  Conditions: Light freezing rain\n  Wind: NNE 8 mph (14 km/h)\n  Precipitation: 12% chance\n  UV Index: 1 (Low)\nMonday: 30.4°F (-0.9°C) / 25.9°F (-3.4°C)\n  Conditions: Fog\n  Wind: N 7 mph (11 km/h)\n  Precipitation: 24% chance\n  UV Index: 1 (Low)\nForecast generated: 08:00 AKST",
+"daily_section_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F (-2.6°C) / 19.6°F (-6.9°C)\n  Conditions: Depositing rime fog\n  Wind: N 4 mph (6 km/h)\n  Precipitation: 3% chance\n  UV Index: 1 (Low)\nTomorrow: 23.7°F (-4.6°C) / 17.7°F (-7.9°C)\n  Conditions: Fog\n  Wind: N 3 mph (5 km/h)\n  Precipitation: 0% chance\n  UV Index: 1 (Low)\nThursday: 21.8°F (-5.7°C) / 18.6°F (-7.4°C)\n  Conditions: Fog\n  Wind: NNE 4 mph (6 km/h)\n  Precipitation: 0% chance\n  UV Index: 1 (Low)\nFriday: 29.7°F (-1.3°C) / 21.4°F (-5.9°C)\n  Conditions: Overcast\n  Wind: NNE 8 mph (13 km/h)\n  Precipitation: 0% chance\n  UV Index: 1 (Low)\nSaturday: 30.9°F (-0.6°C) / 28.9°F (-1.7°C)\n  Conditions: Light freezing rain\n  Wind: NNE 10 mph (16 km/h)\n  Precipitation: 2% chance\n  UV Index: 1 (Low)\nSunday: 31.7°F (-0.2°C) / 29.9°F (-1.2°C)\n  Conditions: Light freezing rain\n  Wind: NNE 8 mph (14 km/h)\n  Precipitation: 12% chance\n  UV Index: 1 (Low)\nMonday: 30.4°F (-0.9°C) / 25.9°F (-3.4°C)\n  Conditions: Fog\n  Wind: N 7 mph (11 km/h)\n  Precipitation: 24% chance\n  UV Index: 1 (Low)\nForecast generated: 08:00 AKST",
+"hourly_section_text": "",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "22F/-6C Fog",
+"preview": "22F/-6C Fog",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Anchorage, AK: 22F/-6C (feels like 15F/-9C) N at 3.2 mph (5.1 km/h) 99%",
+"preview": "Anchorage, AK: 22F/-6C (feels like 15F/-9C) N at 3.2 mph (5.1 km/h) 99%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "27F/-3C/20F/-7C 0.00 in (0.00 mm) N/A% UV 0.1 10.0 mi (16.1 km) 30.46 inHg (1031.60 hPa)",
+"preview": "27F/-3C/20F/-7C 0.00 in (0.00 mm) N/A% UV 0.1 10.0 mi (16.1 km) 30.46 inHg (1031.60 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "22F -6C N 3.2 mph (5.1 km/h) {unknown}",
+"preview": "22F -6C N 3.2 mph (5.1 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 15F/-9C | 22F/-6C",
+"preview": "Feels like: 15F/-9C | 22F/-6C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h...",
+"preview": "Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"time_display_mode": "utc",
+"show_timezone_suffix": true
+},
+"presentation": {
+"location_name": "Anchorage, AK",
+"summary_text": "Anchorage, AK - 22°F (-6°C) - Fog",
+"current_conditions": {
+"title": "Current conditions for Anchorage, AK",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "21.9°F (-5.6°C) (feels like 15.4°F (-9.2°C))"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "21.7°F (-5.7°C)"
+},
+{
+"label": "Wind chill",
+"value": "15.4°F (-9.2°C)"
+},
+{
+"label": "Snow on ground",
+"value": "5.9 in (15.0 cm)"
+},
+{
+"label": "Wind",
+"value": "N at 3.2 mph (5.1 kph)"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.5 inHg (1031.6 hPa)"
+},
+{
+"label": "Visibility",
+"value": "10.0 mi (16.1 km)"
+},
+{
+"label": "UV Index",
+"value": "0.05 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "6:46 PM UTC"
+},
+{
+"label": "Sunset",
+"value": "1:34 AM UTC"
+}
+],
+"fallback_text": "Current conditions for Anchorage, AK: Fog\nTemperature: 21.9°F (-5.6°C) (feels like 15.4°F (-9.2°C))\nFeels different: Due to wind chill\nDewpoint: 21.7°F (-5.7°C)\nWind chill: 15.4°F (-9.2°C)\nSnow on ground: 5.9 in (15.0 cm)\nWind: N at 3.2 mph (5.1 kph)\nHumidity: 99%\nPressure: 30.5 inHg (1031.6 hPa)\nVisibility: 10.0 mi (16.1 km)\nUV Index: 0.05 (Low)\nSunrise: 6:46 PM UTC\nSunset: 1:34 AM UTC",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Anchorage, AK",
+"periods": [
+{
+"name": "Today",
+"temperature": "27.4°F (-2.6°C) / 19.6°F (-6.9°C)",
+"conditions": "Depositing rime fog",
+"wind": "N 4 mph (6 km/h)",
+"details": null,
+"precipitation_probability": "3%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tomorrow",
+"temperature": "23.7°F (-4.6°C) / 17.7°F (-7.9°C)",
+"conditions": "Fog",
+"wind": "N 3 mph (5 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Thursday",
+"temperature": "21.8°F (-5.7°C) / 18.6°F (-7.4°C)",
+"conditions": "Fog",
+"wind": "NNE 4 mph (6 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Friday",
+"temperature": "29.7°F (-1.3°C) / 21.4°F (-5.9°C)",
+"conditions": "Overcast",
+"wind": "NNE 8 mph (13 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Saturday",
+"temperature": "30.9°F (-0.6°C) / 28.9°F (-1.7°C)",
+"conditions": "Light freezing rain",
+"wind": "NNE 10 mph (16 km/h)",
+"details": null,
+"precipitation_probability": "2%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "31.7°F (-0.2°C) / 29.9°F (-1.2°C)",
+"conditions": "Light freezing rain",
+"wind": "NNE 8 mph (14 km/h)",
+"details": null,
+"precipitation_probability": "12%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "30.4°F (-0.9°C) / 25.9°F (-3.4°C)",
+"conditions": "Fog",
+"wind": "N 7 mph (11 km/h)",
+"details": null,
+"precipitation_probability": "24%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [],
+"hourly_summary": null,
+"generated_at": "5:00 PM UTC",
+"fallback_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F (-2.6°C) / 19.6°F (-6.9°C)\n  Conditions: Depositing rime fog\n  Wind: N 4 mph (6 km/h)\n  Precipitation: 3% chance\nTomorrow: 23.7°F (-4.6°C) / 17.7°F (-7.9°C)\n  Conditions: Fog\n  Wind: N 3 mph (5 km/h)\n  Precipitation: 0% chance\nThursday: 21.8°F (-5.7°C) / 18.6°F (-7.4°C)\n  Conditions: Fog\n  Wind: NNE 4 mph (6 km/h)\n  Precipitation: 0% chance\nFriday: 29.7°F (-1.3°C) / 21.4°F (-5.9°C)\n  Conditions: Overcast\n  Wind: NNE 8 mph (13 km/h)\n  Precipitation: 0% chance\nSaturday: 30.9°F (-0.6°C) / 28.9°F (-1.7°C)\n  Conditions: Light freezing rain\n  Wind: NNE 10 mph (16 km/h)\n  Precipitation: 2% chance\nSunday: 31.7°F (-0.2°C) / 29.9°F (-1.2°C)\n  Conditions: Light freezing rain\n  Wind: NNE 8 mph (14 km/h)\n  Precipitation: 12% chance\nMonday: 30.4°F (-0.9°C) / 25.9°F (-3.4°C)\n  Conditions: Fog\n  Wind: N 7 mph (11 km/h)\n  Precipitation: 24% chance\nForecast generated: 5:00 PM UTC",
+"daily_section_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F (-2.6°C) / 19.6°F (-6.9°C)\n  Conditions: Depositing rime fog\n  Wind: N 4 mph (6 km/h)\n  Precipitation: 3% chance\nTomorrow: 23.7°F (-4.6°C) / 17.7°F (-7.9°C)\n  Conditions: Fog\n  Wind: N 3 mph (5 km/h)\n  Precipitation: 0% chance\nThursday: 21.8°F (-5.7°C) / 18.6°F (-7.4°C)\n  Conditions: Fog\n  Wind: NNE 4 mph (6 km/h)\n  Precipitation: 0% chance\nFriday: 29.7°F (-1.3°C) / 21.4°F (-5.9°C)\n  Conditions: Overcast\n  Wind: NNE 8 mph (13 km/h)\n  Precipitation: 0% chance\nSaturday: 30.9°F (-0.6°C) / 28.9°F (-1.7°C)\n  Conditions: Light freezing rain\n  Wind: NNE 10 mph (16 km/h)\n  Precipitation: 2% chance\nSunday: 31.7°F (-0.2°C) / 29.9°F (-1.2°C)\n  Conditions: Light freezing rain\n  Wind: NNE 8 mph (14 km/h)\n  Precipitation: 12% chance\nMonday: 30.4°F (-0.9°C) / 25.9°F (-3.4°C)\n  Conditions: Fog\n  Wind: N 7 mph (11 km/h)\n  Precipitation: 24% chance\nForecast generated: 5:00 PM UTC",
+"hourly_section_text": "",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "22F/-6C Fog",
+"preview": "22F/-6C Fog",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Anchorage, AK: 22F/-6C (feels like 15F/-9C) N at 3.2 mph (5.1 km/h) 99%",
+"preview": "Anchorage, AK: 22F/-6C (feels like 15F/-9C) N at 3.2 mph (5.1 km/h) 99%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "27F/-3C/20F/-7C 0.00 in (0.00 mm) N/A% UV 0.1 10.0 mi (16.1 km) 30.46 inHg (1031.60 hPa)",
+"preview": "27F/-3C/20F/-7C 0.00 in (0.00 mm) N/A% UV 0.1 10.0 mi (16.1 km) 30.46 inHg (1031.60 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "22F -6C N 3.2 mph (5.1 km/h) {unknown}",
+"preview": "22F -6C N 3.2 mph (5.1 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 15F/-9C | 22F/-6C",
+"preview": "Feels like: 15F/-9C | 22F/-6C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h...",
+"preview": "Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"time_display_mode": "both",
+"show_timezone_suffix": true,
+"time_format_12hour": false
+},
+"presentation": {
+"location_name": "Anchorage, AK",
+"summary_text": "Anchorage, AK - 22°F (-6°C) - Fog",
+"current_conditions": {
+"title": "Current conditions for Anchorage, AK",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "21.9°F (-5.6°C) (feels like 15.4°F (-9.2°C))"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "21.7°F (-5.7°C)"
+},
+{
+"label": "Wind chill",
+"value": "15.4°F (-9.2°C)"
+},
+{
+"label": "Snow on ground",
+"value": "5.9 in (15.0 cm)"
+},
+{
+"label": "Wind",
+"value": "N at 3.2 mph (5.1 kph)"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.5 inHg (1031.6 hPa)"
+},
+{
+"label": "Visibility",
+"value": "10.0 mi (16.1 km)"
+},
+{
+"label": "UV Index",
+"value": "0.05 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "09:46 AKST (18:46 UTC)"
+},
+{
+"label": "Sunset",
+"value": "16:34 AKST (01:34 UTC)"
+}
+],
+"fallback_text": "Current conditions for Anchorage, AK: Fog\nTemperature: 21.9°F (-5.6°C) (feels like 15.4°F (-9.2°C))\nFeels different: Due to wind chill\nDewpoint: 21.7°F (-5.7°C)\nWind chill: 15.4°F (-9.2°C)\nSnow on ground: 5.9 in (15.0 cm)\nWind: N at 3.2 mph (5.1 kph)\nHumidity: 99%\nPressure: 30.5 inHg (1031.6 hPa)\nVisibility: 10.0 mi (16.1 km)\nUV Index: 0.05 (Low)\nSunrise: 09:46 AKST (18:46 UTC)\nSunset: 16:34 AKST (01:34 UTC)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Anchorage, AK",
+"periods": [
+{
+"name": "Today",
+"temperature": "27.4°F (-2.6°C) / 19.6°F (-6.9°C)",
+"conditions": "Depositing rime fog",
+"wind": "N 4 mph (6 km/h)",
+"details": null,
+"precipitation_probability": "3%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tomorrow",
+"temperature": "23.7°F (-4.6°C) / 17.7°F (-7.9°C)",
+"conditions": "Fog",
+"wind": "N 3 mph (5 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Thursday",
+"temperature": "21.8°F (-5.7°C) / 18.6°F (-7.4°C)",
+"conditions": "Fog",
+"wind": "NNE 4 mph (6 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Friday",
+"temperature": "29.7°F (-1.3°C) / 21.4°F (-5.9°C)",
+"conditions": "Overcast",
+"wind": "NNE 8 mph (13 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Saturday",
+"temperature": "30.9°F (-0.6°C) / 28.9°F (-1.7°C)",
+"conditions": "Light freezing rain",
+"wind": "NNE 10 mph (16 km/h)",
+"details": null,
+"precipitation_probability": "2%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "31.7°F (-0.2°C) / 29.9°F (-1.2°C)",
+"conditions": "Light freezing rain",
+"wind": "NNE 8 mph (14 km/h)",
+"details": null,
+"precipitation_probability": "12%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "30.4°F (-0.9°C) / 25.9°F (-3.4°C)",
+"conditions": "Fog",
+"wind": "N 7 mph (11 km/h)",
+"details": null,
+"precipitation_probability": "24%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [],
+"hourly_summary": null,
+"generated_at": "08:00 AKST (17:00 UTC)",
+"fallback_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F (-2.6°C) / 19.6°F (-6.9°C)\n  Conditions: Depositing rime fog\n  Wind: N 4 mph (6 km/h)\n  Precipitation: 3% chance\nTomorrow: 23.7°F (-4.6°C) / 17.7°F (-7.9°C)\n  Conditions: Fog\n  Wind: N 3 mph (5 km/h)\n  Precipitation: 0% chance\nThursday: 21.8°F (-5.7°C) / 18.6°F (-7.4°C)\n  Conditions: Fog\n  Wind: NNE 4 mph (6 km/h)\n  Precipitation: 0% chance\nFriday: 29.7°F (-1.3°C) / 21.4°F (-5.9°C)\n  Conditions: Overcast\n  Wind: NNE 8 mph (13 km/h)\n  Precipitation: 0% chance\nSaturday: 30.9°F (-0.6°C) / 28.9°F (-1.7°C)\n  Conditions: Light freezing rain\n  Wind: NNE 10 mph (16 km/h)\n  Precipitation: 2% chance\nSunday: 31.7°F (-0.2°C) / 29.9°F (-1.2°C)\n  Conditions: Light freezing rain\n  Wind: NNE 8 mph (14 km/h)\n  Precipitation: 12% chance\nMonday: 30.4°F (-0.9°C) / 25.9°F (-3.4°C)\n  Conditions: Fog\n  Wind: N 7 mph (11 km/h)\n  Precipitation: 24% chance\nForecast generated: 08:00 AKST (17:00 UTC)",
+"daily_section_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F (-2.6°C) / 19.6°F (-6.9°C)\n  Conditions: Depositing rime fog\n  Wind: N 4 mph (6 km/h)\n  Precipitation: 3% chance\nTomorrow: 23.7°F (-4.6°C) / 17.7°F (-7.9°C)\n  Conditions: Fog\n  Wind: N 3 mph (5 km/h)\n  Precipitation: 0% chance\nThursday: 21.8°F (-5.7°C) / 18.6°F (-7.4°C)\n  Conditions: Fog\n  Wind: NNE 4 mph (6 km/h)\n  Precipitation: 0% chance\nFriday: 29.7°F (-1.3°C) / 21.4°F (-5.9°C)\n  Conditions: Overcast\n  Wind: NNE 8 mph (13 km/h)\n  Precipitation: 0% chance\nSaturday: 30.9°F (-0.6°C) / 28.9°F (-1.7°C)\n  Conditions: Light freezing rain\n  Wind: NNE 10 mph (16 km/h)\n  Precipitation: 2% chance\nSunday: 31.7°F (-0.2°C) / 29.9°F (-1.2°C)\n  Conditions: Light freezing rain\n  Wind: NNE 8 mph (14 km/h)\n  Precipitation: 12% chance\nMonday: 30.4°F (-0.9°C) / 25.9°F (-3.4°C)\n  Conditions: Fog\n  Wind: N 7 mph (11 km/h)\n  Precipitation: 24% chance\nForecast generated: 08:00 AKST (17:00 UTC)",
+"hourly_section_text": "",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "22F/-6C Fog",
+"preview": "22F/-6C Fog",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Anchorage, AK: 22F/-6C (feels like 15F/-9C) N at 3.2 mph (5.1 km/h) 99%",
+"preview": "Anchorage, AK: 22F/-6C (feels like 15F/-9C) N at 3.2 mph (5.1 km/h) 99%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "27F/-3C/20F/-7C 0.00 in (0.00 mm) N/A% UV 0.1 10.0 mi (16.1 km) 30.46 inHg (1031.60 hPa)",
+"preview": "27F/-3C/20F/-7C 0.00 in (0.00 mm) N/A% UV 0.1 10.0 mi (16.1 km) 30.46 inHg (1031.60 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "22F -6C N 3.2 mph (5.1 km/h) {unknown}",
+"preview": "22F -6C N 3.2 mph (5.1 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 15F/-9C | 22F/-6C",
+"preview": "Feels like: 15F/-9C | 22F/-6C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h...",
+"preview": "Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"forecast_time_reference": "user_local",
+"show_timezone_suffix": true
+},
+"presentation": {
+"location_name": "Anchorage, AK",
+"summary_text": "Anchorage, AK - 22°F (-6°C) - Fog",
+"current_conditions": {
+"title": "Current conditions for Anchorage, AK",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "21.9°F (-5.6°C) (feels like 15.4°F (-9.2°C))"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "21.7°F (-5.7°C)"
+},
+{
+"label": "Wind chill",
+"value": "15.4°F (-9.2°C)"
+},
+{
+"label": "Snow on ground",
+"value": "5.9 in (15.0 cm)"
+},
+{
+"label": "Wind",
+"value": "N at 3.2 mph (5.1 kph)"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.5 inHg (1031.6 hPa)"
+},
+{
+"label": "Visibility",
+"value": "10.0 mi (16.1 km)"
+},
+{
+"label": "UV Index",
+"value": "0.05 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "9:46 AM AKST"
+},
+{
+"label": "Sunset",
+"value": "4:34 PM AKST"
+}
+],
+"fallback_text": "Current conditions for Anchorage, AK: Fog\nTemperature: 21.9°F (-5.6°C) (feels like 15.4°F (-9.2°C))\nFeels different: Due to wind chill\nDewpoint: 21.7°F (-5.7°C)\nWind chill: 15.4°F (-9.2°C)\nSnow on ground: 5.9 in (15.0 cm)\nWind: N at 3.2 mph (5.1 kph)\nHumidity: 99%\nPressure: 30.5 inHg (1031.6 hPa)\nVisibility: 10.0 mi (16.1 km)\nUV Index: 0.05 (Low)\nSunrise: 9:46 AM AKST\nSunset: 4:34 PM AKST",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Anchorage, AK",
+"periods": [
+{
+"name": "Today",
+"temperature": "27.4°F (-2.6°C) / 19.6°F (-6.9°C)",
+"conditions": "Depositing rime fog",
+"wind": "N 4 mph (6 km/h)",
+"details": null,
+"precipitation_probability": "3%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tomorrow",
+"temperature": "23.7°F (-4.6°C) / 17.7°F (-7.9°C)",
+"conditions": "Fog",
+"wind": "N 3 mph (5 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Thursday",
+"temperature": "21.8°F (-5.7°C) / 18.6°F (-7.4°C)",
+"conditions": "Fog",
+"wind": "NNE 4 mph (6 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Friday",
+"temperature": "29.7°F (-1.3°C) / 21.4°F (-5.9°C)",
+"conditions": "Overcast",
+"wind": "NNE 8 mph (13 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Saturday",
+"temperature": "30.9°F (-0.6°C) / 28.9°F (-1.7°C)",
+"conditions": "Light freezing rain",
+"wind": "NNE 10 mph (16 km/h)",
+"details": null,
+"precipitation_probability": "2%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "31.7°F (-0.2°C) / 29.9°F (-1.2°C)",
+"conditions": "Light freezing rain",
+"wind": "NNE 8 mph (14 km/h)",
+"details": null,
+"precipitation_probability": "12%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "30.4°F (-0.9°C) / 25.9°F (-3.4°C)",
+"conditions": "Fog",
+"wind": "N 7 mph (11 km/h)",
+"details": null,
+"precipitation_probability": "24%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [],
+"hourly_summary": null,
+"generated_at": "12:00 PM EST",
+"fallback_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F (-2.6°C) / 19.6°F (-6.9°C)\n  Conditions: Depositing rime fog\n  Wind: N 4 mph (6 km/h)\n  Precipitation: 3% chance\nTomorrow: 23.7°F (-4.6°C) / 17.7°F (-7.9°C)\n  Conditions: Fog\n  Wind: N 3 mph (5 km/h)\n  Precipitation: 0% chance\nThursday: 21.8°F (-5.7°C) / 18.6°F (-7.4°C)\n  Conditions: Fog\n  Wind: NNE 4 mph (6 km/h)\n  Precipitation: 0% chance\nFriday: 29.7°F (-1.3°C) / 21.4°F (-5.9°C)\n  Conditions: Overcast\n  Wind: NNE 8 mph (13 km/h)\n  Precipitation: 0% chance\nSaturday: 30.9°F (-0.6°C) / 28.9°F (-1.7°C)\n  Conditions: Light freezing rain\n  Wind: NNE 10 mph (16 km/h)\n  Precipitation: 2% chance\nSunday: 31.7°F (-0.2°C) / 29.9°F (-1.2°C)\n  Conditions: Light freezing rain\n  Wind: NNE 8 mph (14 km/h)\n  Precipitation: 12% chance\nMonday: 30.4°F (-0.9°C) / 25.9°F (-3.4°C)\n  Conditions: Fog\n  Wind: N 7 mph (11 km/h)\n  Precipitation: 24% chance\nForecast generated: 12:00 PM EST",
+"daily_section_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F (-2.6°C) / 19.6°F (-6.9°C)\n  Conditions: Depositing rime fog\n  Wind: N 4 mph (6 km/h)\n  Precipitation: 3% chance\nTomorrow: 23.7°F (-4.6°C) / 17.7°F (-7.9°C)\n  Conditions: Fog\n  Wind: N 3 mph (5 km/h)\n  Precipitation: 0% chance\nThursday: 21.8°F (-5.7°C) / 18.6°F (-7.4°C)\n  Conditions: Fog\n  Wind: NNE 4 mph (6 km/h)\n  Precipitation: 0% chance\nFriday: 29.7°F (-1.3°C) / 21.4°F (-5.9°C)\n  Conditions: Overcast\n  Wind: NNE 8 mph (13 km/h)\n  Precipitation: 0% chance\nSaturday: 30.9°F (-0.6°C) / 28.9°F (-1.7°C)\n  Conditions: Light freezing rain\n  Wind: NNE 10 mph (16 km/h)\n  Precipitation: 2% chance\nSunday: 31.7°F (-0.2°C) / 29.9°F (-1.2°C)\n  Conditions: Light freezing rain\n  Wind: NNE 8 mph (14 km/h)\n  Precipitation: 12% chance\nMonday: 30.4°F (-0.9°C) / 25.9°F (-3.4°C)\n  Conditions: Fog\n  Wind: N 7 mph (11 km/h)\n  Precipitation: 24% chance\nForecast generated: 12:00 PM EST",
+"hourly_section_text": "",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "22F/-6C Fog",
+"preview": "22F/-6C Fog",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Anchorage, AK: 22F/-6C (feels like 15F/-9C) N at 3.2 mph (5.1 km/h) 99%",
+"preview": "Anchorage, AK: 22F/-6C (feels like 15F/-9C) N at 3.2 mph (5.1 km/h) 99%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "27F/-3C/20F/-7C 0.00 in (0.00 mm) N/A% UV 0.1 10.0 mi (16.1 km) 30.46 inHg (1031.60 hPa)",
+"preview": "27F/-3C/20F/-7C 0.00 in (0.00 mm) N/A% UV 0.1 10.0 mi (16.1 km) 30.46 inHg (1031.60 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "22F -6C N 3.2 mph (5.1 km/h) {unknown}",
+"preview": "22F -6C N 3.2 mph (5.1 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 15F/-9C | 22F/-6C",
+"preview": "Feels like: 15F/-9C | 22F/-6C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h...",
+"preview": "Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"show_dewpoint": false,
+"show_visibility": false,
+"show_uv_index": false,
+"show_pressure_trend": false,
+"show_seasonal_data": false
+},
+"presentation": {
+"location_name": "Anchorage, AK",
+"summary_text": "Anchorage, AK - 22°F (-6°C) - Fog",
+"current_conditions": {
+"title": "Current conditions for Anchorage, AK",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "21.9°F (-5.6°C) (feels like 15.4°F (-9.2°C))"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Wind",
+"value": "N at 3.2 mph (5.1 kph)"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.5 inHg (1031.6 hPa)"
+},
+{
+"label": "Sunrise",
+"value": "9:46 AM"
+},
+{
+"label": "Sunset",
+"value": "4:34 PM"
+}
+],
+"fallback_text": "Current conditions for Anchorage, AK: Fog\nTemperature: 21.9°F (-5.6°C) (feels like 15.4°F (-9.2°C))\nFeels different: Due to wind chill\nWind: N at 3.2 mph (5.1 kph)\nHumidity: 99%\nPressure: 30.5 inHg (1031.6 hPa)\nSunrise: 9:46 AM\nSunset: 4:34 PM",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Anchorage, AK",
+"periods": [
+{
+"name": "Today",
+"temperature": "27.4°F (-2.6°C) / 19.6°F (-6.9°C)",
+"conditions": "Depositing rime fog",
+"wind": "N 4 mph (6 km/h)",
+"details": null,
+"precipitation_probability": "3%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tomorrow",
+"temperature": "23.7°F (-4.6°C) / 17.7°F (-7.9°C)",
+"conditions": "Fog",
+"wind": "N 3 mph (5 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Thursday",
+"temperature": "21.8°F (-5.7°C) / 18.6°F (-7.4°C)",
+"conditions": "Fog",
+"wind": "NNE 4 mph (6 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Friday",
+"temperature": "29.7°F (-1.3°C) / 21.4°F (-5.9°C)",
+"conditions": "Overcast",
+"wind": "NNE 8 mph (13 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Saturday",
+"temperature": "30.9°F (-0.6°C) / 28.9°F (-1.7°C)",
+"conditions": "Light freezing rain",
+"wind": "NNE 10 mph (16 km/h)",
+"details": null,
+"precipitation_probability": "2%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "31.7°F (-0.2°C) / 29.9°F (-1.2°C)",
+"conditions": "Light freezing rain",
+"wind": "NNE 8 mph (14 km/h)",
+"details": null,
+"precipitation_probability": "12%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "30.4°F (-0.9°C) / 25.9°F (-3.4°C)",
+"conditions": "Fog",
+"wind": "N 7 mph (11 km/h)",
+"details": null,
+"precipitation_probability": "24%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [],
+"hourly_summary": null,
+"generated_at": "8:00 AM",
+"fallback_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F (-2.6°C) / 19.6°F (-6.9°C)\n  Conditions: Depositing rime fog\n  Wind: N 4 mph (6 km/h)\n  Precipitation: 3% chance\nTomorrow: 23.7°F (-4.6°C) / 17.7°F (-7.9°C)\n  Conditions: Fog\n  Wind: N 3 mph (5 km/h)\n  Precipitation: 0% chance\nThursday: 21.8°F (-5.7°C) / 18.6°F (-7.4°C)\n  Conditions: Fog\n  Wind: NNE 4 mph (6 km/h)\n  Precipitation: 0% chance\nFriday: 29.7°F (-1.3°C) / 21.4°F (-5.9°C)\n  Conditions: Overcast\n  Wind: NNE 8 mph (13 km/h)\n  Precipitation: 0% chance\nSaturday: 30.9°F (-0.6°C) / 28.9°F (-1.7°C)\n  Conditions: Light freezing rain\n  Wind: NNE 10 mph (16 km/h)\n  Precipitation: 2% chance\nSunday: 31.7°F (-0.2°C) / 29.9°F (-1.2°C)\n  Conditions: Light freezing rain\n  Wind: NNE 8 mph (14 km/h)\n  Precipitation: 12% chance\nMonday: 30.4°F (-0.9°C) / 25.9°F (-3.4°C)\n  Conditions: Fog\n  Wind: N 7 mph (11 km/h)\n  Precipitation: 24% chance\nForecast generated: 8:00 AM",
+"daily_section_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F (-2.6°C) / 19.6°F (-6.9°C)\n  Conditions: Depositing rime fog\n  Wind: N 4 mph (6 km/h)\n  Precipitation: 3% chance\nTomorrow: 23.7°F (-4.6°C) / 17.7°F (-7.9°C)\n  Conditions: Fog\n  Wind: N 3 mph (5 km/h)\n  Precipitation: 0% chance\nThursday: 21.8°F (-5.7°C) / 18.6°F (-7.4°C)\n  Conditions: Fog\n  Wind: NNE 4 mph (6 km/h)\n  Precipitation: 0% chance\nFriday: 29.7°F (-1.3°C) / 21.4°F (-5.9°C)\n  Conditions: Overcast\n  Wind: NNE 8 mph (13 km/h)\n  Precipitation: 0% chance\nSaturday: 30.9°F (-0.6°C) / 28.9°F (-1.7°C)\n  Conditions: Light freezing rain\n  Wind: NNE 10 mph (16 km/h)\n  Precipitation: 2% chance\nSunday: 31.7°F (-0.2°C) / 29.9°F (-1.2°C)\n  Conditions: Light freezing rain\n  Wind: NNE 8 mph (14 km/h)\n  Precipitation: 12% chance\nMonday: 30.4°F (-0.9°C) / 25.9°F (-3.4°C)\n  Conditions: Fog\n  Wind: N 7 mph (11 km/h)\n  Precipitation: 24% chance\nForecast generated: 8:00 AM",
+"hourly_section_text": "",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "22F/-6C Fog",
+"preview": "22F/-6C Fog",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Anchorage, AK: 22F/-6C (feels like 15F/-9C) N at 3.2 mph (5.1 km/h) 99%",
+"preview": "Anchorage, AK: 22F/-6C (feels like 15F/-9C) N at 3.2 mph (5.1 km/h) 99%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "27F/-3C/20F/-7C 0.00 in (0.00 mm) N/A% UV 0.1 10.0 mi (16.1 km) 30.46 inHg (1031.60 hPa)",
+"preview": "27F/-3C/20F/-7C 0.00 in (0.00 mm) N/A% UV 0.1 10.0 mi (16.1 km) 30.46 inHg (1031.60 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "22F -6C N 3.2 mph (5.1 km/h) {unknown}",
+"preview": "22F -6C N 3.2 mph (5.1 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 15F/-9C | 22F/-6C",
+"preview": "Feels like: 15F/-9C | 22F/-6C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h...",
+"preview": "Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"severe_weather_override": true,
+"category_order": [
+"uv_index",
+"visibility_clouds",
+"humidity_pressure",
+"wind",
+"precipitation",
+"temperature"
+]
+},
+"presentation": {
+"location_name": "Anchorage, AK",
+"summary_text": "Anchorage, AK - 22°F (-6°C) - Fog",
+"current_conditions": {
+"title": "Current conditions for Anchorage, AK",
+"description": "Fog",
+"metrics": [
+{
+"label": "UV Index",
+"value": "0.05 (Low)"
+},
+{
+"label": "Visibility",
+"value": "10.0 mi (16.1 km)"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.5 inHg (1031.6 hPa)"
+},
+{
+"label": "Wind",
+"value": "N at 3.2 mph (5.1 kph)"
+},
+{
+"label": "Snow on ground",
+"value": "5.9 in (15.0 cm)"
+},
+{
+"label": "Temperature",
+"value": "21.9°F (-5.6°C) (feels like 15.4°F (-9.2°C))"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "21.7°F (-5.7°C)"
+},
+{
+"label": "Wind chill",
+"value": "15.4°F (-9.2°C)"
+},
+{
+"label": "Sunrise",
+"value": "9:46 AM"
+},
+{
+"label": "Sunset",
+"value": "4:34 PM"
+}
+],
+"fallback_text": "Current conditions for Anchorage, AK: Fog\nUV Index: 0.05 (Low)\nVisibility: 10.0 mi (16.1 km)\nHumidity: 99%\nPressure: 30.5 inHg (1031.6 hPa)\nWind: N at 3.2 mph (5.1 kph)\nSnow on ground: 5.9 in (15.0 cm)\nTemperature: 21.9°F (-5.6°C) (feels like 15.4°F (-9.2°C))\nFeels different: Due to wind chill\nDewpoint: 21.7°F (-5.7°C)\nWind chill: 15.4°F (-9.2°C)\nSunrise: 9:46 AM\nSunset: 4:34 PM",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Anchorage, AK",
+"periods": [
+{
+"name": "Today",
+"temperature": "27.4°F (-2.6°C) / 19.6°F (-6.9°C)",
+"conditions": "Depositing rime fog",
+"wind": "N 4 mph (6 km/h)",
+"details": null,
+"precipitation_probability": "3%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tomorrow",
+"temperature": "23.7°F (-4.6°C) / 17.7°F (-7.9°C)",
+"conditions": "Fog",
+"wind": "N 3 mph (5 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Thursday",
+"temperature": "21.8°F (-5.7°C) / 18.6°F (-7.4°C)",
+"conditions": "Fog",
+"wind": "NNE 4 mph (6 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Friday",
+"temperature": "29.7°F (-1.3°C) / 21.4°F (-5.9°C)",
+"conditions": "Overcast",
+"wind": "NNE 8 mph (13 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Saturday",
+"temperature": "30.9°F (-0.6°C) / 28.9°F (-1.7°C)",
+"conditions": "Light freezing rain",
+"wind": "NNE 10 mph (16 km/h)",
+"details": null,
+"precipitation_probability": "2%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "31.7°F (-0.2°C) / 29.9°F (-1.2°C)",
+"conditions": "Light freezing rain",
+"wind": "NNE 8 mph (14 km/h)",
+"details": null,
+"precipitation_probability": "12%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "30.4°F (-0.9°C) / 25.9°F (-3.4°C)",
+"conditions": "Fog",
+"wind": "N 7 mph (11 km/h)",
+"details": null,
+"precipitation_probability": "24%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [],
+"hourly_summary": null,
+"generated_at": "8:00 AM",
+"fallback_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F (-2.6°C) / 19.6°F (-6.9°C)\n  Conditions: Depositing rime fog\n  Wind: N 4 mph (6 km/h)\n  Precipitation: 3% chance\nTomorrow: 23.7°F (-4.6°C) / 17.7°F (-7.9°C)\n  Conditions: Fog\n  Wind: N 3 mph (5 km/h)\n  Precipitation: 0% chance\nThursday: 21.8°F (-5.7°C) / 18.6°F (-7.4°C)\n  Conditions: Fog\n  Wind: NNE 4 mph (6 km/h)\n  Precipitation: 0% chance\nFriday: 29.7°F (-1.3°C) / 21.4°F (-5.9°C)\n  Conditions: Overcast\n  Wind: NNE 8 mph (13 km/h)\n  Precipitation: 0% chance\nSaturday: 30.9°F (-0.6°C) / 28.9°F (-1.7°C)\n  Conditions: Light freezing rain\n  Wind: NNE 10 mph (16 km/h)\n  Precipitation: 2% chance\nSunday: 31.7°F (-0.2°C) / 29.9°F (-1.2°C)\n  Conditions: Light freezing rain\n  Wind: NNE 8 mph (14 km/h)\n  Precipitation: 12% chance\nMonday: 30.4°F (-0.9°C) / 25.9°F (-3.4°C)\n  Conditions: Fog\n  Wind: N 7 mph (11 km/h)\n  Precipitation: 24% chance\nForecast generated: 8:00 AM",
+"daily_section_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F (-2.6°C) / 19.6°F (-6.9°C)\n  Conditions: Depositing rime fog\n  Wind: N 4 mph (6 km/h)\n  Precipitation: 3% chance\nTomorrow: 23.7°F (-4.6°C) / 17.7°F (-7.9°C)\n  Conditions: Fog\n  Wind: N 3 mph (5 km/h)\n  Precipitation: 0% chance\nThursday: 21.8°F (-5.7°C) / 18.6°F (-7.4°C)\n  Conditions: Fog\n  Wind: NNE 4 mph (6 km/h)\n  Precipitation: 0% chance\nFriday: 29.7°F (-1.3°C) / 21.4°F (-5.9°C)\n  Conditions: Overcast\n  Wind: NNE 8 mph (13 km/h)\n  Precipitation: 0% chance\nSaturday: 30.9°F (-0.6°C) / 28.9°F (-1.7°C)\n  Conditions: Light freezing rain\n  Wind: NNE 10 mph (16 km/h)\n  Precipitation: 2% chance\nSunday: 31.7°F (-0.2°C) / 29.9°F (-1.2°C)\n  Conditions: Light freezing rain\n  Wind: NNE 8 mph (14 km/h)\n  Precipitation: 12% chance\nMonday: 30.4°F (-0.9°C) / 25.9°F (-3.4°C)\n  Conditions: Fog\n  Wind: N 7 mph (11 km/h)\n  Precipitation: 24% chance\nForecast generated: 8:00 AM",
+"hourly_section_text": "",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "22F/-6C Fog",
+"preview": "22F/-6C Fog",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Anchorage, AK: 22F/-6C (feels like 15F/-9C) N at 3.2 mph (5.1 km/h) 99%",
+"preview": "Anchorage, AK: 22F/-6C (feels like 15F/-9C) N at 3.2 mph (5.1 km/h) 99%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "27F/-3C/20F/-7C 0.00 in (0.00 mm) N/A% UV 0.1 10.0 mi (16.1 km) 30.46 inHg (1031.60 hPa)",
+"preview": "27F/-3C/20F/-7C 0.00 in (0.00 mm) N/A% UV 0.1 10.0 mi (16.1 km) 30.46 inHg (1031.60 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "22F -6C N 3.2 mph (5.1 km/h) {unknown}",
+"preview": "22F -6C N 3.2 mph (5.1 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 15F/-9C | 22F/-6C",
+"preview": "Feels like: 15F/-9C | 22F/-6C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h...",
+"preview": "Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"severe_weather_override": true,
+"show_impact_summaries": true,
+"temperature_unit": "celsius"
+},
+"presentation": {
+"location_name": "Anchorage, AK",
+"summary_text": "Anchorage, AK - -6°C - Fog",
+"current_conditions": {
+"title": "Current conditions for Anchorage, AK",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "-5.6°C (feels like -9.2°C)"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "-5.7°C"
+},
+{
+"label": "Wind chill",
+"value": "-9.2°C"
+},
+{
+"label": "Snow on ground",
+"value": "15.0 cm"
+},
+{
+"label": "Wind",
+"value": "N at 5.1 kph"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "1031.6 hPa"
+},
+{
+"label": "Visibility",
+"value": "16.1 km"
+},
+{
+"label": "UV Index",
+"value": "0.05 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "9:46 AM"
+},
+{
+"label": "Sunset",
+"value": "4:34 PM"
+},
+{
+"label": "Impact: Outdoor",
+"value": "Very cold - heavy winter clothing required"
+},
+{
+"label": "Impact: Driving",
+"value": "Normal driving conditions"
+}
+],
+"fallback_text": "Current conditions for Anchorage, AK: Fog\nTemperature: -5.6°C (feels like -9.2°C)\nFeels different: Due to wind chill\nDewpoint: -5.7°C\nWind chill: -9.2°C\nSnow on ground: 15.0 cm\nWind: N at 5.1 kph\nHumidity: 99%\nPressure: 1031.6 hPa\nVisibility: 16.1 km\nUV Index: 0.05 (Low)\nSunrise: 9:46 AM\nSunset: 4:34 PM\nImpact: Outdoor: Very cold - heavy winter clothing required\nImpact: Driving: Normal driving conditions",
+"trends": [],
+"impact_summary": {
+"outdoor": "Very cold - heavy winter clothing required",
+"driving": "Normal driving conditions",
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Anchorage, AK",
+"periods": [
+{
+"name": "Today",
+"temperature": "-2.6°C / -6.9°C",
+"conditions": "Depositing rime fog",
+"wind": "N 6 km/h",
+"details": null,
+"precipitation_probability": "3%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tomorrow",
+"temperature": "-4.6°C / -7.9°C",
+"conditions": "Fog",
+"wind": "N 5 km/h",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Thursday",
+"temperature": "-5.7°C / -7.4°C",
+"conditions": "Fog",
+"wind": "NNE 6 km/h",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Friday",
+"temperature": "-1.3°C / -5.9°C",
+"conditions": "Overcast",
+"wind": "NNE 13 km/h",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Saturday",
+"temperature": "-0.6°C / -1.7°C",
+"conditions": "Light freezing rain",
+"wind": "NNE 16 km/h",
+"details": null,
+"precipitation_probability": "2%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "-0.2°C / -1.2°C",
+"conditions": "Light freezing rain",
+"wind": "NNE 14 km/h",
+"details": null,
+"precipitation_probability": "12%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "-0.9°C / -3.4°C",
+"conditions": "Fog",
+"wind": "N 11 km/h",
+"details": null,
+"precipitation_probability": "24%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [],
+"hourly_summary": null,
+"generated_at": "8:00 AM",
+"fallback_text": "Daily forecast for Anchorage, AK:\nToday: -2.6°C / -6.9°C\n  Conditions: Depositing rime fog\n  Wind: N 6 km/h\n  Precipitation: 3% chance\nTomorrow: -4.6°C / -7.9°C\n  Conditions: Fog\n  Wind: N 5 km/h\n  Precipitation: 0% chance\nThursday: -5.7°C / -7.4°C\n  Conditions: Fog\n  Wind: NNE 6 km/h\n  Precipitation: 0% chance\nFriday: -1.3°C / -5.9°C\n  Conditions: Overcast\n  Wind: NNE 13 km/h\n  Precipitation: 0% chance\nSaturday: -0.6°C / -1.7°C\n  Conditions: Light freezing rain\n  Wind: NNE 16 km/h\n  Precipitation: 2% chance\nSunday: -0.2°C / -1.2°C\n  Conditions: Light freezing rain\n  Wind: NNE 14 km/h\n  Precipitation: 12% chance\nMonday: -0.9°C / -3.4°C\n  Conditions: Fog\n  Wind: N 11 km/h\n  Precipitation: 24% chance\nForecast generated: 8:00 AM",
+"daily_section_text": "Daily forecast for Anchorage, AK:\nToday: -2.6°C / -6.9°C\n  Conditions: Depositing rime fog\n  Wind: N 6 km/h\n  Precipitation: 3% chance\nTomorrow: -4.6°C / -7.9°C\n  Conditions: Fog\n  Wind: N 5 km/h\n  Precipitation: 0% chance\nThursday: -5.7°C / -7.4°C\n  Conditions: Fog\n  Wind: NNE 6 km/h\n  Precipitation: 0% chance\nFriday: -1.3°C / -5.9°C\n  Conditions: Overcast\n  Wind: NNE 13 km/h\n  Precipitation: 0% chance\nSaturday: -0.6°C / -1.7°C\n  Conditions: Light freezing rain\n  Wind: NNE 16 km/h\n  Precipitation: 2% chance\nSunday: -0.2°C / -1.2°C\n  Conditions: Light freezing rain\n  Wind: NNE 14 km/h\n  Precipitation: 12% chance\nMonday: -0.9°C / -3.4°C\n  Conditions: Fog\n  Wind: N 11 km/h\n  Precipitation: 24% chance\nForecast generated: 8:00 AM",
+"hourly_section_text": "",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": {
+"outdoor": "Cold - wear a heavy coat",
+"driving": "Caution: near-freezing temperatures - watch for black ice",
+"allergy": null
+}
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "-6C Fog",
+"preview": "-6C Fog",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Anchorage, AK: -6C (feels like -9C) N at 5.1 km/h 99%",
+"preview": "Anchorage, AK: -6C (feels like -9C) N at 5.1 km/h 99%",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 12.9 km/h 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "-3C/-7C 0.00 mm N/A% UV 0.1 16.1 km 1031.60 hPa",
+"preview": "-3C/-7C 0.00 mm N/A% UV 0.1 16.1 km 1031.60 hPa",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "22F -6C N 5.1 km/h {unknown}",
+"preview": "22F -6C N 5.1 km/h {unknown}",
+"sample_preview": "72F 22C NW 12.9 km/h {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: -9C | -6C",
+"preview": "Feels like: -9C | -6C",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Anchorage, AK Fog N at 5.1 km/h Anchorage, AK Fog N at 5.1 km/h Anchorage, AK Fog N at 5.1 km/h Anchorage, AK",
+"preview": "Anchorage, AK Fog N at 5.1 km/h Anchorage, AK Fog N at 5.1 km/h Anchorage, AK Fog N at 5.1 km/h Anchorage, AK",
+"sample_preview": "Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW..."
+}
+}
+},
+{
+"settings": {
+"forecast_duration_days": 3,
+"hourly_forecast_hours": 12,
+"round_values": true
+},
+"presentation": {
+"location_name": "Anchorage, AK",
+"summary_text": "Anchorage, AK - 22°F (-6°C) - Fog",
+"current_conditions": {
+"title": "Current conditions for Anchorage, AK",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "22°F (-6°C) (feels like 15°F (-9°C))"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "22°F (-6°C)"
+},
+{
+"label": "Wind chill",
+"value": "15°F (-9°C)"
+},
+{
+"label": "Snow on ground",
+"value": "6 in (15 cm)"
+},
+{
+"label": "Wind",
+"value": "N at 3 mph (5 kph)"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30 inHg (1032 hPa)"
+},
+{
+"label": "Visibility",
+"value": "10 mi (16 km)"
+},
+{
+"label": "UV Index",
+"value": "0.05 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "9:46 AM"
+},
+{
+"label": "Sunset",
+"value": "4:34 PM"
+}
+],
+"fallback_text": "Current conditions for Anchorage, AK: Fog\nTemperature: 22°F (-6°C) (feels like 15°F (-9°C))\nFeels different: Due to wind chill\nDewpoint: 22°F (-6°C)\nWind chill: 15°F (-9°C)\nSnow on ground: 6 in (15 cm)\nWind: N at 3 mph (5 kph)\nHumidity: 99%\nPressure: 30 inHg (1032 hPa)\nVisibility: 10 mi (16 km)\nUV Index: 0.05 (Low)\nSunrise: 9:46 AM\nSunset: 4:34 PM",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Anchorage, AK",
+"periods": [
+{
+"name": "Today",
+"temperature": "27°F (-3°C) / 20°F (-7°C)",
+"conditions": "Depositing rime fog",
+"wind": "N 4 mph (6 km/h)",
+"details": null,
+"precipitation_probability": "3%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tomorrow",
+"temperature": "24°F (-5°C) / 18°F (-8°C)",
+"conditions": "Fog",
+"wind": "N 3 mph (5 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Thursday",
+"temperature": "22°F (-6°C) / 19°F (-7°C)",
+"conditions": "Fog",
+"wind": "NNE 4 mph (6 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [],
+"hourly_summary": null,
+"generated_at": "8:00 AM",
+"fallback_text": "Daily forecast for Anchorage, AK:\nToday: 27°F (-3°C) / 20°F (-7°C)\n  Conditions: Depositing rime fog\n  Wind: N 4 mph (6 km/h)\n  Precipitation: 3% chance\nTomorrow: 24°F (-5°C) / 18°F (-8°C)\n  Conditions: Fog\n  Wind: N 3 mph (5 km/h)\n  Precipitation: 0% chance\nThursday: 22°F (-6°C) / 19°F (-7°C)\n  Conditions: Fog\n  Wind: NNE 4 mph (6 km/h)\n  Precipitation: 0% chance\nForecast generated: 8:00 AM",
+"daily_section_text": "Daily forecast for Anchorage, AK:\nToday: 27°F (-3°C) / 20°F (-7°C)\n  Conditions: Depositing rime fog\n  Wind: N 4 mph (6 km/h)\n  Precipitation: 3% chance\nTomorrow: 24°F (-5°C) / 18°F (-8°C)\n  Conditions: Fog\n  Wind: N 3 mph (5 km/h)\n  Precipitation: 0% chance\nThursday: 22°F (-6°C) / 19°F (-7°C)\n  Conditions: Fog\n  Wind: NNE 4 mph (6 km/h)\n  Precipitation: 0% chance\nForecast generated: 8:00 AM",
+"hourly_section_text": "",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "22F/-6C Fog",
+"preview": "22F/-6C Fog",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Anchorage, AK: 22F/-6C (feels like 15F/-9C) N at 3 mph (5 km/h) 99%",
+"preview": "Anchorage, AK: 22F/-6C (feels like 15F/-9C) N at 3 mph (5 km/h) 99%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8 mph (13 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "27F/-3C/20F/-7C 0 in (0 mm) N/A% UV 0.1 10 mi (16 km) 30 inHg (1032 hPa)",
+"preview": "27F/-3C/20F/-7C 0 in (0 mm) N/A% UV 0.1 10 mi (16 km) 30 inHg (1032 hPa)",
+"sample_preview": "78F/26C/61F/16C 0 in (0 mm) 20% UV 5 10 mi (16 km) 30 inHg (1019 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "22F -6C N 3 mph (5 km/h) {unknown}",
+"preview": "22F -6C N 3 mph (5 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8 mph (13 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 15F/-9C | 22F/-6C",
+"preview": "Feels like: 15F/-9C | 22F/-6C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Anchorage, AK Fog N at 3 mph (5 km/h) Anchorage, AK Fog N at 3 mph (5 km/h) Anchorage, AK Fog N at 3 mph (5 km/h) Anchorage, AK",
+"preview": "Anchorage, AK Fog N at 3 mph (5 km/h) Anchorage, AK Fog N at 3 mph (5 km/h) Anchorage, AK Fog N at 3 mph (5 km/h) Anchorage, AK",
+"sample_preview": "Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Part..."
+}
+}
+},
+{
+"settings": {
+"forecast_duration_days": 16,
+"hourly_forecast_hours": 48,
+"date_format": "eu",
+"time_display_mode": "both"
+},
+"presentation": {
+"location_name": "Anchorage, AK",
+"summary_text": "Anchorage, AK - 22°F (-6°C) - Fog",
+"current_conditions": {
+"title": "Current conditions for Anchorage, AK",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "21.9°F (-5.6°C) (feels like 15.4°F (-9.2°C))"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "21.7°F (-5.7°C)"
+},
+{
+"label": "Wind chill",
+"value": "15.4°F (-9.2°C)"
+},
+{
+"label": "Snow on ground",
+"value": "5.9 in (15.0 cm)"
+},
+{
+"label": "Wind",
+"value": "N at 3.2 mph (5.1 kph)"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.5 inHg (1031.6 hPa)"
+},
+{
+"label": "Visibility",
+"value": "10.0 mi (16.1 km)"
+},
+{
+"label": "UV Index",
+"value": "0.05 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "9:46 AM (6:46 PM UTC)"
+},
+{
+"label": "Sunset",
+"value": "4:34 PM (1:34 AM UTC)"
+}
+],
+"fallback_text": "Current conditions for Anchorage, AK: Fog\nTemperature: 21.9°F (-5.6°C) (feels like 15.4°F (-9.2°C))\nFeels different: Due to wind chill\nDewpoint: 21.7°F (-5.7°C)\nWind chill: 15.4°F (-9.2°C)\nSnow on ground: 5.9 in (15.0 cm)\nWind: N at 3.2 mph (5.1 kph)\nHumidity: 99%\nPressure: 30.5 inHg (1031.6 hPa)\nVisibility: 10.0 mi (16.1 km)\nUV Index: 0.05 (Low)\nSunrise: 9:46 AM (6:46 PM UTC)\nSunset: 4:34 PM (1:34 AM UTC)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Anchorage, AK",
+"periods": [
+{
+"name": "Today",
+"temperature": "27.4°F (-2.6°C) / 19.6°F (-6.9°C)",
+"conditions": "Depositing rime fog",
+"wind": "N 4 mph (6 km/h)",
+"details": null,
+"precipitation_probability": "3%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tomorrow",
+"temperature": "23.7°F (-4.6°C) / 17.7°F (-7.9°C)",
+"conditions": "Fog",
+"wind": "N 3 mph (5 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Thursday",
+"temperature": "21.8°F (-5.7°C) / 18.6°F (-7.4°C)",
+"conditions": "Fog",
+"wind": "NNE 4 mph (6 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Friday",
+"temperature": "29.7°F (-1.3°C) / 21.4°F (-5.9°C)",
+"conditions": "Overcast",
+"wind": "NNE 8 mph (13 km/h)",
+"details": null,
+"precipitation_probability": "0%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Saturday",
+"temperature": "30.9°F (-0.6°C) / 28.9°F (-1.7°C)",
+"conditions": "Light freezing rain",
+"wind": "NNE 10 mph (16 km/h)",
+"details": null,
+"precipitation_probability": "2%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "31.7°F (-0.2°C) / 29.9°F (-1.2°C)",
+"conditions": "Light freezing rain",
+"wind": "NNE 8 mph (14 km/h)",
+"details": null,
+"precipitation_probability": "12%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "30.4°F (-0.9°C) / 25.9°F (-3.4°C)",
+"conditions": "Fog",
+"wind": "N 7 mph (11 km/h)",
+"details": null,
+"precipitation_probability": "24%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [],
+"hourly_summary": null,
+"generated_at": "8:00 AM (5:00 PM UTC)",
+"fallback_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F (-2.6°C) / 19.6°F (-6.9°C)\n  Conditions: Depositing rime fog\n  Wind: N 4 mph (6 km/h)\n  Precipitation: 3% chance\nTomorrow: 23.7°F (-4.6°C) / 17.7°F (-7.9°C)\n  Conditions: Fog\n  Wind: N 3 mph (5 km/h)\n  Precipitation: 0% chance\nThursday: 21.8°F (-5.7°C) / 18.6°F (-7.4°C)\n  Conditions: Fog\n  Wind: NNE 4 mph (6 km/h)\n  Precipitation: 0% chance\nFriday: 29.7°F (-1.3°C) / 21.4°F (-5.9°C)\n  Conditions: Overcast\n  Wind: NNE 8 mph (13 km/h)\n  Precipitation: 0% chance\nSaturday: 30.9°F (-0.6°C) / 28.9°F (-1.7°C)\n  Conditions: Light freezing rain\n  Wind: NNE 10 mph (16 km/h)\n  Precipitation: 2% chance\nSunday: 31.7°F (-0.2°C) / 29.9°F (-1.2°C)\n  Conditions: Light freezing rain\n  Wind: NNE 8 mph (14 km/h)\n  Precipitation: 12% chance\nMonday: 30.4°F (-0.9°C) / 25.9°F (-3.4°C)\n  Conditions: Fog\n  Wind: N 7 mph (11 km/h)\n  Precipitation: 24% chance\nForecast generated: 8:00 AM (5:00 PM UTC)",
+"daily_section_text": "Daily forecast for Anchorage, AK:\nToday: 27.4°F (-2.6°C) / 19.6°F (-6.9°C)\n  Conditions: Depositing rime fog\n  Wind: N 4 mph (6 km/h)\n  Precipitation: 3% chance\nTomorrow: 23.7°F (-4.6°C) / 17.7°F (-7.9°C)\n  Conditions: Fog\n  Wind: N 3 mph (5 km/h)\n  Precipitation: 0% chance\nThursday: 21.8°F (-5.7°C) / 18.6°F (-7.4°C)\n  Conditions: Fog\n  Wind: NNE 4 mph (6 km/h)\n  Precipitation: 0% chance\nFriday: 29.7°F (-1.3°C) / 21.4°F (-5.9°C)\n  Conditions: Overcast\n  Wind: NNE 8 mph (13 km/h)\n  Precipitation: 0% chance\nSaturday: 30.9°F (-0.6°C) / 28.9°F (-1.7°C)\n  Conditions: Light freezing rain\n  Wind: NNE 10 mph (16 km/h)\n  Precipitation: 2% chance\nSunday: 31.7°F (-0.2°C) / 29.9°F (-1.2°C)\n  Conditions: Light freezing rain\n  Wind: NNE 8 mph (14 km/h)\n  Precipitation: 12% chance\nMonday: 30.4°F (-0.9°C) / 25.9°F (-3.4°C)\n  Conditions: Fog\n  Wind: N 7 mph (11 km/h)\n  Precipitation: 24% chance\nForecast generated: 8:00 AM (5:00 PM UTC)",
+"hourly_section_text": "",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "22F/-6C Fog",
+"preview": "22F/-6C Fog",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Anchorage, AK: 22F/-6C (feels like 15F/-9C) N at 3.2 mph (5.1 km/h) 99%",
+"preview": "Anchorage, AK: 22F/-6C (feels like 15F/-9C) N at 3.2 mph (5.1 km/h) 99%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "27F/-3C/20F/-7C 0.00 in (0.00 mm) N/A% UV 0.1 10.0 mi (16.1 km) 30.46 inHg (1031.60 hPa)",
+"preview": "27F/-3C/20F/-7C 0.00 in (0.00 mm) N/A% UV 0.1 10.0 mi (16.1 km) 30.46 inHg (1031.60 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "22F -6C N 3.2 mph (5.1 km/h) {unknown}",
+"preview": "22F -6C N 3.2 mph (5.1 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 15F/-9C | 22F/-6C",
+"preview": "Feels like: 15F/-9C | 22F/-6C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h...",
+"preview": "Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h) Anchorage, AK Fog N at 3.2 mph (5.1 km/h...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+}
+]
+}

@@ -324,7 +324,9 @@ version = "0.11.0-rust.1"
 dependencies = [
  "chrono",
  "chrono-tz",
+ "iana-time-zone",
  "md5",
+ "regex",
  "serde",
  "serde_json",
 ]

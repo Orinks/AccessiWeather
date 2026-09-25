@@ -4,6 +4,7 @@
 //! shared by the providers, the storage layer and the UI.
 
 pub mod alerts;
+pub mod display;
 pub mod location;
 pub mod location_sorting;
 pub mod model;
