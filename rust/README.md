@@ -13,6 +13,7 @@ NSAccessibility and AT-SPI respectively, like the wxPython edition.
 | `aw-core` | Domain models, settings (JSON-compatible with the Python app), units, source planning, alerts, text presentation |
 | `aw-providers` | NWS, Open-Meteo, Pirate Weather, geocoding, multi-source fetch/merge with fallback |
 | `aw-store` | Config directories, portable mode, API keys (keyring / encrypted bundle), atomic JSON persistence |
+| `aw-notify` | Alert and event notification decisions, `runtime_state.json` (shared with Python), toast delivery and click activation |
 | `aw-app` (`accessiweather`) | The executable: CLI, wxDragon windows and dialogs, refresh loop |
 
 ## Building

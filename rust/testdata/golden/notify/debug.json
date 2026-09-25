@@ -1,0 +1,109 @@
+{
+  "local_now": "2026-09-25T12:00:00-04:00",
+  "presets": [
+    {
+      "label": "Tornado Warning (Extreme)",
+      "id": "debug-test-tornado-warning",
+      "expires": "2026-09-25T18:00:00+00:00",
+      "candidates_text": "extreme → alert → notify",
+      "title": "EXTREME ALERT: Tornado Warning",
+      "message": "Tornado Warning in effect until 9:15 PM EDT.\nA tornado warning has been issued for your area. Take cover now in a sturdy building."
+    },
+    {
+      "label": "Severe Thunderstorm Warning (Severe)",
+      "id": "debug-test-severe-thunderstorm-warning",
+      "expires": "2026-09-25T18:00:00+00:00",
+      "candidates_text": "severe → alert → notify",
+      "title": "SEVERE ALERT: Severe Thunderstorm Warning",
+      "message": "Severe Thunderstorm Warning until 7:45 PM EDT.\nA severe thunderstorm capable of producing golf ball sized hail and damaging winds is approaching."
+    },
+    {
+      "label": "Flash Flood Warning (Severe)",
+      "id": "debug-test-flash-flood-warning",
+      "expires": "2026-09-25T18:00:00+00:00",
+      "candidates_text": "severe → alert → notify",
+      "title": "SEVERE ALERT: Flash Flood Warning",
+      "message": "Flash Flood Warning until midnight EDT.\nFlash flooding is occurring or imminent. Do not attempt to travel in flooded areas."
+    },
+    {
+      "label": "Flash Flood Watch (Moderate)",
+      "id": "debug-test-flash-flood-watch",
+      "expires": "2026-09-25T18:00:00+00:00",
+      "candidates_text": "moderate → alert → notify",
+      "title": "MODERATE ALERT: Flash Flood Watch",
+      "message": "Flash Flood Watch in effect through Wednesday morning.\nConditions are favorable for flash flooding."
+    },
+    {
+      "label": "Hurricane Warning (Extreme)",
+      "id": "debug-test-hurricane-warning",
+      "expires": "2026-09-25T18:00:00+00:00",
+      "candidates_text": "extreme → alert → notify",
+      "title": "EXTREME ALERT: Hurricane Warning",
+      "message": "Hurricane Warning in effect.\nHurricane conditions expected within 36 hours. Complete preparations immediately."
+    },
+    {
+      "label": "Winter Storm Watch (Moderate)",
+      "id": "debug-test-winter-storm-watch",
+      "expires": "2026-09-25T18:00:00+00:00",
+      "candidates_text": "moderate → alert → notify",
+      "title": "MODERATE ALERT: Winter Storm Watch",
+      "message": "Winter Storm Watch from late tonight through Thursday morning.\nHeavy snow possible. Total snowfall accumulations of 8 to 14 inches possible."
+    },
+    {
+      "label": "Winter Storm Warning (Severe)",
+      "id": "debug-test-winter-storm-warning",
+      "expires": "2026-09-25T18:00:00+00:00",
+      "candidates_text": "severe → alert → notify",
+      "title": "SEVERE ALERT: Winter Storm Warning",
+      "message": "Winter Storm Warning until 6 AM EST Thursday.\nHeavy snow expected. Total snowfall accumulations of 10 to 16 inches."
+    },
+    {
+      "label": "Dense Fog Advisory (Minor)",
+      "id": "debug-test-dense-fog-advisory",
+      "expires": "2026-09-25T18:00:00+00:00",
+      "candidates_text": "minor → alert → notify",
+      "title": "MINOR ALERT: Dense Fog Advisory",
+      "message": "Dense Fog Advisory until 10 AM EDT.\nVisibility of one quarter mile or less expected."
+    },
+    {
+      "label": "Frost Advisory (Minor)",
+      "id": "debug-test-frost-advisory",
+      "expires": "2026-09-25T18:00:00+00:00",
+      "candidates_text": "minor → alert → notify",
+      "title": "MINOR ALERT: Frost Advisory",
+      "message": "Frost Advisory from 2 AM to 8 AM EDT.\nTemperatures in the upper 20s to low 30s with light winds will result in frost formation."
+    },
+    {
+      "label": "Heat Advisory (Moderate)",
+      "id": "debug-test-heat-advisory",
+      "expires": "2026-09-25T18:00:00+00:00",
+      "candidates_text": "moderate → alert → notify",
+      "title": "MODERATE ALERT: Heat Advisory",
+      "message": "Heat Advisory until 8 PM EDT this evening.\nHeat index values up to 105 expected. Drink plenty of fluids."
+    },
+    {
+      "label": "Special Weather Statement (Minor)",
+      "id": "debug-test-special-weather-statement",
+      "expires": "2026-09-25T18:00:00+00:00",
+      "candidates_text": "minor → alert → notify",
+      "title": "MINOR ALERT: Special Weather Statement",
+      "message": "Special Weather Statement.\nA hazardous weather outlook is in effect for the area."
+    },
+    {
+      "label": "Air Quality Alert (Unknown)",
+      "id": "debug-test-air-quality-alert",
+      "expires": "2026-09-25T18:00:00+00:00",
+      "candidates_text": "unknown → alert → notify",
+      "title": "UNKNOWN ALERT: Air Quality Alert",
+      "message": "Air Quality Alert in effect.\nAir quality index values are forecast to reach the Unhealthy for Sensitive Groups range."
+    }
+  ],
+  "menu": {
+    "message": "Notification test results:\n- Safe Desktop Notifier: PASS\n  SafeDesktopNotifier.send_notification returned success\n- Alert Notification System: PASS\n  process_and_notify sent 1 notifications; notifier_called=True\n- Discussion Update Path: PASS\n  initial_events=0, update_events>=1, notifier_send=True\n\nSummary: 3/3 passed",
+    "caption": "Notification Test Results"
+  },
+  "tray": {
+    "message": "PASS: safe_desktop_notifier\nPASS: alert_notification_system\nPASS: discussion_update_path\nPASS: passed_count\nPASS: total_count\nPASS: all_passed",
+    "caption": "Notification Test Results"
+  }
+}

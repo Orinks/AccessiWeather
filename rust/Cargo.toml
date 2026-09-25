@@ -4,6 +4,7 @@ members = [
     "crates/aw-core",
     "crates/aw-providers",
     "crates/aw-store",
+    "crates/aw-notify",
     "crates/aw-app",
 ]
 
@@ -17,6 +18,7 @@ repository = "https://github.com/Orinks/AccessiWeather"
 aw-core = { path = "crates/aw-core" }
 aw-providers = { path = "crates/aw-providers" }
 aw-store = { path = "crates/aw-store" }
+aw-notify = { path = "crates/aw-notify" }
 
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
