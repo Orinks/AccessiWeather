@@ -12,6 +12,7 @@ path = "src/main.rs"
 [dependencies]
 aw-core.workspace = true
 aw-providers.workspace = true
+aw-radio.workspace = true
 aw-store.workspace = true
 prismer.workspace = true
 wxdragon.workspace = true

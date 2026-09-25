@@ -8,6 +8,7 @@ version = "0.11.0-rust.1"
 dependencies = [
  "aw-core",
  "aw-providers",
+ "aw-radio",
  "aw-store",
  "chrono",
  "clap",
