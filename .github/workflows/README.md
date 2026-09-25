@@ -4,22 +4,7 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 
 ## Core Workflows
 
-### 1. CI (`ci.yml`)
-**Purpose**: Validate the Python edition's pull requests and branch pushes with the same core checks, using the fewest visible jobs possible
-**Triggers** (only when Python files change: `src/`, `tests/`, `scripts/`, `installer/`, `pyproject.toml`, requirements):
-- Push to `main` or `dev` branches
-- Pull requests to `main` or `dev`
-- Manual dispatch
-
-**What it does**:
-- Runs Ruff format and lint checks on the primary Python lane
-- Executes the non-integration pytest suite on Python 3.12 and 3.13
-- Runs changed-line coverage gating for pull requests in the primary lane
-- Fails when user-facing changes target `dev` without a curated `CHANGELOG.md` entry under `## [Unreleased]`
-
----
-
-### 2. Rust CI (`rust.yml`)
+### 1. Rust CI (`rust.yml`)
 **Purpose**: Validate pull requests that touch `rust/`
 **Triggers**: pull requests (`rust/**`), version tags, manual dispatch
 
@@ -29,7 +14,7 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 
 ---
 
-### 3. Build and Package (`rust-build.yml`)
+### 2. Build and Package (`rust-build.yml`)
 **Purpose**: Build nightly or tagged release artifacts separately from pull request validation
 **Triggers**:
 - Nightly schedule at 00:17 UTC (8:17 PM EDT / 7:17 PM EST)
@@ -44,13 +29,13 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 
 ---
 
-### 4. Integration Tests (`rust-integration.yml`)
+### 3. Integration Tests (`rust-integration.yml`)
 **Purpose**: Catch weather API changes with live NWS, Open-Meteo and IEM requests
 **Triggers**: daily at 06:00 UTC and manual dispatch, never on pull requests
 
 ---
 
-### 5. Website Deployment
+### 4. Website Deployment
 **Purpose**: Handled by the separate Vercel deployment workflow
 
 The desktop build workflow does not trigger website publishing. It only creates GitHub
@@ -62,7 +47,7 @@ release assets that the Vercel site can consume.
 
 ## Workflow Dependencies
 
-`ci.yml` and `rust.yml` handle validation only.
+`rust.yml` handles validation only.
 
 `rust-build.yml` handles nightly/tagged packaging and release publication.
 
@@ -74,7 +59,7 @@ Website deployment is intentionally separate and owned by the Vercel workflow.
 
 | Need to... | Use workflow | How |
 |------------|--------------|-----|
-| Test code changes | `rust.yml` (Rust), `ci.yml` (Python) | Automatic on PR |
+| Test code changes | `rust.yml` | Automatic on PR |
 | Build installers / nightlies | `rust-build.yml` | Nightly, tags, or manual |
 | Deploy website | Vercel workflow | Managed outside the desktop build workflow |
 
@@ -84,13 +69,13 @@ Website deployment is intentionally separate and owned by the Vercel workflow.
 
 As a solo maintainer, you typically only need to:
 
-1. **Open a PR to `dev`**: `rust.yml` (and `ci.yml` for Python changes) validates formatting, lint, tests and changelog entries
+1. **Open a PR to `dev`**: `rust.yml` validates formatting, lint, tests and changelog entries
 2. **Merge changes to `dev`**: Nightly `rust-build.yml` creates user-facing artifacts when there were user-facing commits
 3. **Publish a stable release tag**: `rust-build.yml` creates the release assets; the Vercel workflow owns website deployment
 
-Every user-facing PR needs a `CHANGELOG.md` bullet under `## [Unreleased]`. Direct pushes to
-`dev` or `main` are checked too, so user-facing commits without an associated PR still need a
-curated changelog entry.
+Every user-facing PR needs a `CHANGELOG.md` bullet under `## [Unreleased]`. Commits are checked
+locally too: the `commit-msg` hook from `pre-commit install` rejects a user-facing commit when
+nothing since `origin/dev` (`origin/main` on `main`) adds one.
 
 **Skipping the gate for non-user-facing work.** The gate flags any change under `src/`,
 `installer/`, `soundpacks/`, `rust/crates/` or `rust/packaging/` (the generated
@@ -98,8 +83,8 @@ curated changelog entry.
 PR is purely internal — refactors, CI, tooling, release plumbing — you have two escape hatches:
 
 - **PR:** add the `skip-changelog` label. The `Check CHANGELOG entry` step is skipped entirely.
-- **Direct push:** put `Changelog: none` (or `[skip changelog]`) in the commit message. The gate
-  passes only when *every* non-merge commit in the range carries the marker, so a marker can't
+- **Commit:** put `Changelog: none` (or `[skip changelog]`) in the commit message. The hook
+  passes only when *every* non-merge commit since `origin/dev` carries the marker, so a marker can't
   silently exempt a change set that also contains user-facing work.
 
 Note: `.github/`, `tests/`, and `docs/` are never gated, so CI and test-only changes need no marker.

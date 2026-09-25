@@ -1,4 +1,4 @@
-default_install_hook_types: [pre-commit, pre-push]
+default_install_hook_types: [pre-commit, commit-msg]
 
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
@@ -25,9 +25,10 @@ repos:
 
 -   repo: local
     hooks:
+    # Rejects a user-facing commit that adds no CHANGELOG.md Unreleased bullet
+    # to what origin/dev (origin/main on main) lacks; git passes the message file.
     -   id: changelog-check
         name: changelog check
-        entry: python scripts/changelog_tools.py check --base auto --head HEAD --committed-only
+        entry: cargo run --quiet --manifest-path rust/Cargo.toml --package xtask -- changelog check --base auto --staged
         language: system
-        pass_filenames: false
-        stages: [pre-push]
+        stages: [commit-msg]

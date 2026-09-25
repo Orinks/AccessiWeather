@@ -46,6 +46,7 @@ const SECTION_ORDER: [&str; 7] = [
 const PYPROJECT_METADATA_FIELDS_WITHOUT_CHANGELOG: [&str; 2] = ["version", "description"];
 const PYPROJECT_TOOLING_REQUIREMENTS_WITHOUT_CHANGELOG: [&str; 2] = ["pyright", "ruff"];
 const UNRELEASED: &str = r"^## \[?Unreleased\]?.*$";
+const STAGED_HINT: &str = "Add a bullet under ## [Unreleased] in CHANGELOG.md, or put `Changelog: none` in the commit message if nothing user-facing changed.";
 
 #[derive(Subcommand)]
 pub enum Command {
@@ -59,6 +60,10 @@ pub enum Command {
         /// Ignore uncommitted working-tree changes during local checks.
         #[arg(long)]
         committed_only: bool,
+        /// Check the commit being made (the `commit-msg` hook): HEAD plus the
+        /// index, with the new commit's message read from MESSAGE_FILE.
+        #[arg(long, value_name = "MESSAGE_FILE")]
+        staged: Option<String>,
     },
     /// Generate release notes from CHANGELOG.md.
     Notes {
@@ -103,7 +108,22 @@ pub fn run(root: &Path, cmd: Command, out: &mut dyn Write, err: &mut dyn Write) 
             base,
             head,
             committed_only,
-        } => check(&git, &base, &head, committed_only, out, err),
+            staged,
+        } => {
+            let code = check(
+                &git,
+                &base,
+                &head,
+                committed_only,
+                staged.as_deref(),
+                out,
+                err,
+            )?;
+            if code != 0 && staged.is_some() {
+                writeln!(err, "{STAGED_HINT}")?;
+            }
+            Ok(code)
+        }
         Command::Notes {
             kind,
             version,
@@ -166,10 +186,29 @@ fn check(
     base: &str,
     head: &str,
     committed_only: bool,
+    staged: Option<&str>,
     out: &mut dyn Write,
     err: &mut dyn Write,
 ) -> Result<u8> {
     let base = git.resolve_base(base)?;
+    // Staged, `head` is the index as a tree: diffable, but not a commit to log.
+    let (head, message) = match staged {
+        Some(_)
+            if git
+                .run(&["rev-parse", "-q", "--verify", "MERGE_HEAD"])
+                .is_ok() =>
+        {
+            writeln!(
+                out,
+                "Merge commit; the merged commits are checked on their own."
+            )?;
+            return Ok(0);
+        }
+        Some(file) => (git.run(&["write-tree"])?, Some(read_text(Path::new(file))?)),
+        None => (head.to_string(), None),
+    };
+    let head = head.as_str();
+    let log_head = if message.is_some() { "HEAD" } else { head };
     let worktree_files = if head == "HEAD" && !committed_only {
         git.worktree_changed_files()?
     } else {
@@ -196,7 +235,9 @@ fn check(
         worktree_user_facing |=
             git.requires_changelog_entry(path, "HEAD", "HEAD", include_worktree)?;
     }
-    if !worktree_user_facing && messages_opt_out_of_changelog(&git.commit_messages(&base, head)?) {
+    let mut messages = git.commit_messages(&base, log_head)?;
+    messages.extend(message);
+    if !worktree_user_facing && messages_opt_out_of_changelog(&messages) {
         writeln!(
             out,
             "All commits opt out of the changelog gate via a skip marker."
@@ -830,6 +871,65 @@ mod tests {
                 assert_eq!(written, notes, "{name}");
             }
         }
+    }
+
+    #[test]
+    fn staged_check_covers_the_commit_being_made() {
+        let repo = tempfile::tempdir().unwrap();
+        let dir = repo.path();
+        let init = serde_json::json!({"steps": [{
+            "write": {"CHANGELOG.md": "# Changelog
+
+## [Unreleased]
+"},
+            "commit": "init",
+        }]});
+        build_repo(dir, &init, "");
+        let msg = dir.join(".git/COMMIT_EDITMSG");
+        let check = |message: &str| {
+            std::fs::write(&msg, message).unwrap();
+            let args = ["changelog", "check", "--base", "HEAD", "--staged"];
+            let cmd = Cli::try_parse_from(args.into_iter().chain([msg.to_str().unwrap()]))
+                .unwrap()
+                .cmd;
+            run(dir, cmd, &mut Vec::new(), &mut Vec::new()).unwrap()
+        };
+
+        std::fs::create_dir_all(dir.join("rust/crates")).unwrap();
+        std::fs::write(
+            dir.join("rust/crates/app.rs"),
+            "fn main() {}
+",
+        )
+        .unwrap();
+        assert_eq!(
+            check("fix: thing"),
+            0,
+            "unstaged changes aren't in the commit"
+        );
+        git(dir, &["add", "-A"]);
+        assert_eq!(check("fix: thing"), 1, "user-facing without a bullet");
+        assert_eq!(
+            check(
+                "refactor: thing
+
+Changelog: none"
+            ),
+            0,
+            "opted out"
+        );
+
+        let bullet = "# Changelog
+
+## [Unreleased]
+
+### Fixed
+
+- The thing works.
+";
+        std::fs::write(dir.join("CHANGELOG.md"), bullet).unwrap();
+        git(dir, &["add", "-A"]);
+        assert_eq!(check("fix: thing"), 0, "bullet staged");
     }
 
     #[test]

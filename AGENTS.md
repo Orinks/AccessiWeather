@@ -144,7 +144,6 @@ pytest --hypothesis-profile=thorough
 
 | Workflow | Purpose |
 |----------|---------|
-| `ci.yml` | Python edition: linting, tests, changelog check, coverage gate (Python paths only) |
 | `rust.yml` | Rust edition PR checks: fmt, clippy, tests, smoke test, changelog check |
 | `rust-build.yml` | Nightly and tagged releases, built and packaged with `cargo xtask` |
 | `rust-integration.yml` | Scheduled live NWS/Open-Meteo/IEM API tests |
@@ -192,12 +191,13 @@ HYPOTHESIS_PROFILE: ci
 
 ## Changelog Gate
 
-AccessiWeather runs a CI gate (`scripts/changelog_tools.py check`) that fails
-when a user-facing change reaches `dev`/`main` without a curated `CHANGELOG.md`
-bullet under `## [Unreleased]`.
+`cargo xtask changelog check` fails a user-facing change that lacks a curated
+`CHANGELOG.md` bullet under `## [Unreleased]`: on every PR (`rust.yml`), and on
+every commit through the `commit-msg` hook (`pre-commit install`). When you
+commit a user-facing change, add its bullet in the same commit.
 
-- **When an entry is required:** changes under `src/`, `installer/`, or
-  `soundpacks/` (plus `accessiweather.spec`, `pyproject.toml` dependency
+- **When an entry is required:** changes under `rust/crates/`,
+  `rust/packaging/`, `src/`, `installer/`, or `soundpacks/` (plus `accessiweather.spec`, `pyproject.toml` dependency
   changes, and `scripts/generate_build_meta.py`). Write the bullet as a
   plain-language, user-facing note; describe the benefit, not the
   implementation.
@@ -207,10 +207,10 @@ bullet under `## [Unreleased]`.
 - **Exempting an internal change that still touches gated paths** such as
   refactors, CI, tooling, or release plumbing inside `src/`:
   - On a PR: add the `skip-changelog` label.
-  - On a direct push to `dev`/`main`: include `Changelog: none` or
+  - On a commit: include `Changelog: none` or
     `[skip changelog]` in the commit message. The gate only passes when every
-    non-merge commit in the range carries the marker, so do not mix a marked
-    internal commit with an unmarked user-facing one in the same push.
+    non-merge commit since `origin/dev` carries the marker, so do not mix a
+    marked internal commit with an unmarked user-facing one in the same push.
 - Do not pad the changelog with technical or internal notes just to satisfy the
   gate. Use the exemptions above instead.
 
