@@ -1,0 +1,58 @@
+{
+  "list2cmdline": [
+    {
+      "args": [
+        "C:\\Program Files\\AccessiWeather\\AccessiWeather.exe",
+        "--startup"
+      ],
+      "command": "\"C:\\Program Files\\AccessiWeather\\AccessiWeather.exe\" --startup"
+    },
+    {
+      "args": [
+        "C:\\Apps\\AccessiWeather.exe",
+        "--startup"
+      ],
+      "command": "C:\\Apps\\AccessiWeather.exe --startup"
+    },
+    {
+      "args": [
+        "C:\\a b\\c\\\\",
+        "say \"hi\"",
+        "",
+        "tab\there",
+        "back\\\\slash"
+      ],
+      "command": "\"C:\\a b\\c\\\\\\\\\" \"say \\\"hi\\\"\" \"\" \"tab\there\" back\\\\slash"
+    }
+  ],
+  "desktop_entries": [
+    {
+      "executable": "/opt/accessiweather/accessiweather",
+      "text": "[Desktop Entry]\nType=Application\nVersion=1.0\nName=accessiweather\nComment=Start AccessiWeather at login\nExec=\"/opt/accessiweather/accessiweather\"\nX-GNOME-Autostart-enabled=true\n"
+    },
+    {
+      "executable": "/home/me/My \"Apps\"/aw/accessiweather",
+      "text": "[Desktop Entry]\nType=Application\nVersion=1.0\nName=aw\nComment=Start AccessiWeather at login\nExec=\"/home/me/My \\\"Apps\\\"/aw/accessiweather\"\nX-GNOME-Autostart-enabled=true\n"
+    }
+  ],
+  "plists": [
+    {
+      "executable": "/Applications/AccessiWeather.app/Contents/MacOS/AccessiWeather",
+      "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\">\n<dict>\n\t<key>KeepAlive</key>\n\t<false/>\n\t<key>Label</key>\n\t<string>net.orinks.accessiweather.startup</string>\n\t<key>ProgramArguments</key>\n\t<array>\n\t\t<string>/Applications/AccessiWeather.app/Contents/MacOS/AccessiWeather</string>\n\t</array>\n\t<key>RunAtLoad</key>\n\t<true/>\n\t<key>WorkingDirectory</key>\n\t<string>/Applications/AccessiWeather.app/Contents/MacOS</string>\n</dict>\n</plist>\n"
+    },
+    {
+      "executable": "/Users/me/A & B <x>.app/Contents/MacOS/AccessiWeather",
+      "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\">\n<dict>\n\t<key>KeepAlive</key>\n\t<false/>\n\t<key>Label</key>\n\t<string>net.orinks.accessiweather.startup</string>\n\t<key>ProgramArguments</key>\n\t<array>\n\t\t<string>/Users/me/A &amp; B &lt;x&gt;.app/Contents/MacOS/AccessiWeather</string>\n\t</array>\n\t<key>RunAtLoad</key>\n\t<true/>\n\t<key>WorkingDirectory</key>\n\t<string>/Users/me/A &amp; B &lt;x&gt;.app/Contents/MacOS</string>\n</dict>\n</plist>\n"
+    }
+  ],
+  "windows_run_commands": [
+    {
+      "executable": "C:\\Program Files\\AccessiWeather\\AccessiWeather.exe",
+      "command": "\"C:\\Program Files\\AccessiWeather\\AccessiWeather.exe\" --startup"
+    },
+    {
+      "executable": "C:\\Tools\\aw.exe",
+      "command": "C:\\Tools\\aw.exe --startup"
+    }
+  ]
+}
