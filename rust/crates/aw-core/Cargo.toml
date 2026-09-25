@@ -11,3 +11,5 @@ serde_json.workspace = true
 chrono.workspace = true
 chrono-tz.workspace = true
 md5 = "0.7"
+iana-time-zone = "0.1"
+regex = "1"
