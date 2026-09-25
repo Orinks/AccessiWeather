@@ -1,14 +1,22 @@
 //! Settings, locations and encrypted API key import/export, backup/restore
-//! and resets (`config/import_export*.py`, `config/settings.py`), the
-//! installed-to-portable copy (`ui/dialogs/settings_dialog_portable.py`) and
-//! the "open folder" buttons (`settings_dialog_handlers.py`, `soundpack_paths.py`).
+//! and resets (`config/import_export*.py`, `config/settings.py`) and the
+//! installed-to-portable copy (`ui/dialogs/settings_dialog_portable.py`).
 //!
 //! Functions return `bool` like Python's and log the reason on failure; the
-//! UI shows its own success/failure messages.
+//! UI shows its own success/failure messages. Functions that save take the
+//! config file (or folder) as an `Option`: sample-data runs pass `None` and
+//! only the in-memory config changes.
+//!
+//! Deliberate divergences from Python: importing settings keeps the active
+//! API keys (Python blanks them, so the next Save deletes them from the
+//! keyring or the portable bundle), and resetting to defaults keeps the saved
+//! locations, the current location and the API keys (Python empties the
+//! locations its confirmation promises to keep).
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
+use aw_core::display::pyfmt::py_str;
 use aw_core::settings::{AppConfig, AppSettings};
 use aw_core::Location;
 use aw_store::secrets::{self, API_KEY_NAMES};
@@ -131,9 +139,11 @@ pub fn export_locations(config: &AppConfig, path: &Path) -> bool {
 /// `_coerce_location_entry`: `(name, lat, lon, country_code)` or `None`.
 fn coerce_location(entry: &Value) -> Option<Location> {
     let obj = entry.as_object()?;
+    // `str(name)` of a truthy name.
     let name = match obj.get("name")? {
         Value::String(s) if !s.is_empty() => s.clone(),
-        Value::Number(n) if n.as_f64() != Some(0.0) => n.to_string(),
+        v @ Value::Number(n) if n.as_f64() != Some(0.0) => py_str(v),
+        Value::Bool(true) => "True".into(),
         _ => return None,
     };
     let float = |v: Option<&Value>| -> Option<f64> {
@@ -212,9 +222,32 @@ pub fn import_locations(config: &mut AppConfig, path: &Path, config_file: &Path)
     success
 }
 
+/// Save `config`; `None` (sample-data runs) keeps it in memory only.
+fn save(config: &AppConfig, config_file: Option<&Path>) -> bool {
+    config_file.is_none_or(|file| {
+        aw_store::save_config(file, config)
+            .inspect_err(|e| tracing::error!("Failed to save config: {e}"))
+            .is_ok()
+    })
+}
+
+/// Carry the API keys active in `from` over to `to` where `to` has none.
+fn keep_api_keys(to: &mut AppSettings, from: &mut AppSettings) {
+    for name in API_KEY_NAMES {
+        if let (Some(new), Some(old)) = (
+            secrets::api_key_mut(to, name),
+            secrets::api_key_mut(from, name),
+        ) {
+            if new.is_empty() {
+                *new = std::mem::take(old);
+            }
+        }
+    }
+}
+
 /// Replace the settings with an export's, add its new locations and save.
-/// API keys in memory are kept: the export never contains them.
-pub fn import_settings(config: &mut AppConfig, path: &Path, config_file: &Path) -> bool {
+/// The active API keys are kept unless the file carries its own.
+pub fn import_settings(config: &mut AppConfig, path: &Path, config_file: Option<&Path>) -> bool {
     if !path.exists() {
         tracing::error!("Import file not found: {}", path.display());
         return false;
@@ -250,21 +283,12 @@ pub fn import_settings(config: &mut AppConfig, path: &Path, config_file: &Path) 
     let field_count = settings_data.len();
     let present: Vec<String> = settings_data.keys().cloned().collect();
     let mut imported = AppSettings::from_python_dict(settings_data);
-    for name in API_KEY_NAMES {
-        if let (Some(new), Some(old)) = (
-            secrets::api_key_mut(&mut imported, name),
-            secrets::api_key_mut(&mut config.settings, name),
-        ) {
-            if new.is_empty() {
-                *new = std::mem::take(old);
-            }
-        }
-    }
+    keep_api_keys(&mut imported, &mut config.settings);
     config.settings = imported;
     if let Some((n, _)) = merge_locations(&data, &mut config.locations).filter(|(n, _)| *n > 0) {
         tracing::info!("Imported {n} locations from settings file");
     }
-    if aw_store::save_config(config_file, config).is_err() {
+    if !save(config, config_file) {
         tracing::error!("Failed to save imported settings");
         return false;
     }
@@ -315,9 +339,7 @@ pub fn export_encrypted_api_keys(
         tracing::warn!("No API keys available in secure storage to export");
         return false;
     }
-    let result = secrets::encrypt_bundle(&keys, passphrase)
-        .and_then(|envelope| write_json(path, &envelope).map_err(secrets::SecretsError::Io));
-    match result {
+    match secrets::write_bundle(path, &keys, passphrase) {
         Ok(()) => {
             tracing::info!("Encrypted API keys exported to {}", path.display());
             true
@@ -331,8 +353,10 @@ pub fn export_encrypted_api_keys(
 
 /// Import a `*.keys` / legacy `*.awkeys` bundle: every key goes into the
 /// keyring (in portable mode too, as Python does), then becomes active in
-/// `settings`. False when the bundle is unreadable, the passphrase is
-/// wrong, it holds no supported key, or a keyring write failed.
+/// `settings`: straight from the bundle when `portable` (sample-data runs
+/// too), otherwise reread from the keyring. Keys the bundle lacks are never
+/// deleted. False when the bundle is unreadable, the passphrase is wrong, it
+/// holds no supported key, or a keyring write failed.
 pub fn import_encrypted_api_keys(
     settings: &mut AppSettings,
     keyring: &mut dyn KeyStore,
@@ -439,43 +463,48 @@ pub fn restore_config(config_file: &Path, backup_path: &Path) -> Option<AppConfi
     Some(config)
 }
 
-/// Settings > Advanced > Reset: default settings, locations kept, saved.
-/// API keys stay active (they live in the keyring, which a reset leaves alone).
-pub fn reset_to_defaults(config: &mut AppConfig, config_file: &Path) -> bool {
+/// Settings > Advanced > Reset: default settings, saved. The saved
+/// locations, the current location and the active API keys stay.
+pub fn reset_to_defaults(config: &mut AppConfig, config_file: Option<&Path>) -> bool {
     tracing::info!("Resetting configuration to defaults");
     let mut settings = AppSettings::default();
-    for name in API_KEY_NAMES {
-        if let (Some(new), Some(old)) = (
-            secrets::api_key_mut(&mut settings, name),
-            secrets::api_key_mut(&mut config.settings, name),
-        ) {
-            *new = std::mem::take(old);
-        }
-    }
+    keep_api_keys(&mut settings, &mut config.settings);
     config.settings = settings;
-    aw_store::save_config(config_file, config).is_ok()
+    save(config, config_file)
 }
 
 /// Delete everything in the config folder (settings, locations, caches,
-/// state, a portable key bundle) and save a default configuration.
-pub fn reset_all_data(config: &mut AppConfig, config_dir: &Path) -> bool {
-    if let Ok(entries) = std::fs::read_dir(config_dir) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            let result = if path.is_dir() {
-                std::fs::remove_dir_all(&path)
-            } else {
-                std::fs::remove_file(&path)
-            };
-            if let Err(e) = result {
-                tracing::warn!("Failed to remove {}: {e}", path.display());
-            }
+/// state, a portable key bundle) and save a default configuration. With no
+/// folder (sample-data runs) only the in-memory config is reset.
+pub fn reset_all_data(config: &mut AppConfig, config_dir: Option<&Path>) -> bool {
+    let Some(dir) = config_dir else {
+        *config = AppConfig::default();
+        return true;
+    };
+    let entries = match std::fs::read_dir(dir) {
+        Ok(entries) => entries,
+        Err(e) => {
+            tracing::error!("Failed to reset all data: {e}");
+            return false;
+        }
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        let result = if path.is_dir() {
+            std::fs::remove_dir_all(&path)
+        } else {
+            std::fs::remove_file(&path)
+        };
+        if let Err(e) = result {
+            tracing::warn!("Failed to remove {}: {e}", path.display());
         }
     }
     *config = AppConfig::default();
-    aw_store::save_config(&config_dir.join(aw_store::CONFIG_FILE_NAME), config)
-        .inspect_err(|e| tracing::error!("Failed to reset all data: {e}"))
-        .is_ok()
+    if let Err(e) = std::fs::create_dir_all(dir) {
+        tracing::error!("Failed to reset all data: {e}");
+        return false;
+    }
+    save(config, Some(&dir.join(aw_store::CONFIG_FILE_NAME)))
 }
 
 // Installed -> portable copy -----------------------------------------------
@@ -622,106 +651,13 @@ pub fn portable_copy_summary(portable_dir: &Path) -> Result<Vec<String>, String>
     ])
 }
 
-/// Python's `str()` of a JSON value (so a null prints as `None`).
-fn py_str(value: &Value) -> String {
-    match value {
-        Value::Null => "None".into(),
-        Value::Bool(true) => "True".into(),
-        Value::Bool(false) => "False".into(),
-        Value::String(s) => s.clone(),
-        other => other.to_string(),
-    }
-}
-
 /// Python's `repr()` of a missing (`None`) or JSON value.
 fn py_repr(value: Option<&Value>) -> String {
     match value {
         None => "None".into(),
-        Some(Value::String(s)) => {
-            let quote = if s.contains('\'') && !s.contains('"') {
-                '"'
-            } else {
-                '\''
-            };
-            let mut out = String::from(quote);
-            for c in s.chars() {
-                match c {
-                    '\\' => out.push_str("\\\\"),
-                    '\n' => out.push_str("\\n"),
-                    '\r' => out.push_str("\\r"),
-                    '\t' => out.push_str("\\t"),
-                    c if c == quote => {
-                        out.push('\\');
-                        out.push(c);
-                    }
-                    c => out.push(c),
-                }
-            }
-            out.push(quote);
-            out
-        }
+        Some(Value::String(s)) => aw_core::shortcut_preferences::py_repr(s),
         Some(other) => py_str(other),
     }
-}
-
-// Folders ------------------------------------------------------------------
-
-/// Open the config folder, or the "Config directory not found: ..." error
-/// (message box title "Error").
-pub fn open_config_dir(config_dir: &Path) -> Result<(), String> {
-    if !config_dir.exists() {
-        return Err(format!(
-            "Config directory not found: {}",
-            config_dir.display()
-        ));
-    }
-    crate::open_in_shell(config_dir);
-    Ok(())
-}
-
-/// Open the installed config folder from a portable copy; the error goes in
-/// a message box titled "Info".
-pub fn open_installed_config_dir() -> Result<(), String> {
-    let dir = installed_config_dir().unwrap_or_default();
-    if !dir.exists() {
-        return Err(format!(
-            "Installed config directory not found: {}",
-            dir.display()
-        ));
-    }
-    crate::open_in_shell(&dir);
-    Ok(())
-}
-
-/// The sound packs folder (`get_soundpacks_dir`): `data/soundpacks` beside a
-/// portable executable, `soundpacks` beside an installed one, the
-/// checkout's `soundpacks` when running from source.
-pub fn soundpacks_dir() -> PathBuf {
-    if crate::is_running_from_source() {
-        return crate::user_manual::source_project_root()
-            .unwrap_or_else(|| PathBuf::from(env!("CARGO_MANIFEST_DIR")))
-            .join("soundpacks");
-    }
-    let exe_dir = crate::exe_dir();
-    if aw_store::detect_portable_mode(&exe_dir) {
-        exe_dir.join("data").join("soundpacks")
-    } else {
-        exe_dir.join("soundpacks")
-    }
-}
-
-/// Open the sound packs folder, or the "Sound packs directory not found: ..."
-/// error (message box title "Error").
-pub fn open_soundpacks_dir() -> Result<(), String> {
-    let dir = soundpacks_dir();
-    if !dir.exists() {
-        return Err(format!(
-            "Sound packs directory not found: {}",
-            dir.display()
-        ));
-    }
-    crate::open_in_shell(&dir);
-    Ok(())
 }
 
 #[cfg(test)]
@@ -815,7 +751,7 @@ mod tests {
                 ],
             }),
         );
-        assert!(import_settings(&mut config, &file, &cfg_file));
+        assert!(import_settings(&mut config, &file, Some(&cfg_file)));
         assert_eq!(config.settings.temperature_unit, "c");
         assert_eq!(config.settings.data_source, "auto");
         assert_eq!(config.settings.pirate_weather_api_key, "pw-key");
@@ -824,7 +760,7 @@ mod tests {
 
         for bad in [json!([1]), json!({"other": 1}), json!({"settings": "x"})] {
             let f = write(dir.path(), "bad.json", bad);
-            assert!(!import_settings(&mut config, &f, &cfg_file));
+            assert!(!import_settings(&mut config, &f, Some(&cfg_file)));
         }
         // Python imports a mistyped value as is; Rust falls back to the default.
         let wrong_type = write(
@@ -832,14 +768,36 @@ mod tests {
             "t.json",
             json!({"settings": {"update_interval_minutes": "soon", "sound_enabled": "off"}}),
         );
-        assert!(import_settings(&mut config, &wrong_type, &cfg_file));
+        assert!(import_settings(&mut config, &wrong_type, Some(&cfg_file)));
         assert_eq!(config.settings.update_interval_minutes, 10);
         assert!(!config.settings.sound_enabled);
         assert!(!import_settings(
             &mut config,
             &dir.path().join("nope.json"),
-            &cfg_file
+            Some(&cfg_file)
         ));
+    }
+
+    /// A key the file carries wins; the others stay active. Without a config
+    /// file (sample-data runs) nothing is written.
+    #[test]
+    fn import_settings_keeps_active_keys_and_can_stay_in_memory() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut config = config_with(&["Home"]);
+        config.settings.pirate_weather_api_key = "pw".into();
+        config.settings.venice_api_key = "vn".into();
+        let file = write(
+            dir.path(),
+            "s.json",
+            json!({"settings": {"temperature_unit": "f", "venice_api_key": "from-file"}}),
+        );
+        assert!(import_settings(&mut config, &file, None));
+        let s = &config.settings;
+        assert_eq!(s.temperature_unit, "f");
+        assert_eq!(s.pirate_weather_api_key, "pw");
+        assert_eq!(s.venice_api_key, "from-file");
+        let written: Vec<_> = std::fs::read_dir(dir.path()).unwrap().flatten().collect();
+        assert_eq!(written.len(), 1, "only the import file");
     }
 
     #[test]
@@ -859,7 +817,7 @@ mod tests {
         assert!(import_settings(
             &mut fresh,
             &path,
-            &dir.path().join("c.json")
+            Some(&dir.path().join("c.json"))
         ));
         assert_eq!(fresh.location_names(), ["Home"]);
         let locations = locations_export(&config, "t");
@@ -887,7 +845,7 @@ mod tests {
         ));
 
         let mut target = AppSettings::default();
-        let mut other = BTreeMap::new();
+        let mut other = BTreeMap::from([("venice_api_key".to_string(), "vn".to_string())]);
         assert!(!import_encrypted_api_keys(
             &mut target,
             &mut other,
@@ -904,8 +862,14 @@ mod tests {
         ));
         assert_eq!(other.get("pirate_weather_api_key").unwrap(), "pw-key");
         assert_eq!(target.avwx_api_key, "avwx");
+        // A stored key the bundle lacks is neither deleted nor deactivated.
+        assert_eq!(other.get("venice_api_key").unwrap(), "vn");
+        assert_eq!(target.venice_api_key, "vn");
 
-        let mut portable = AppSettings::default();
+        let mut portable = AppSettings {
+            venice_api_key: "active".into(),
+            ..AppSettings::default()
+        };
         keyring.clear();
         assert!(import_encrypted_api_keys(
             &mut portable,
@@ -915,23 +879,33 @@ mod tests {
             true
         ));
         assert_eq!(portable.pirate_weather_api_key, "pw-key");
+        assert_eq!(portable.venice_api_key, "active");
     }
 
     #[test]
     fn resets_keep_or_drop_the_right_things() {
         let dir = tempfile::tempdir().unwrap();
         let cfg_file = dir.path().join(aw_store::CONFIG_FILE_NAME);
-        let mut config = config_with(&["Home"]);
+        let mut config = config_with(&["Home", "Work"]);
+        config.set_current_location("Work");
         config.settings.update_interval_minutes = 999;
         config.settings.venice_api_key = "v".into();
-        assert!(reset_to_defaults(&mut config, &cfg_file));
+        assert!(reset_to_defaults(&mut config, None));
+        assert!(!cfg_file.exists(), "sample-data runs write nothing");
+        assert!(reset_to_defaults(&mut config, Some(&cfg_file)));
+        assert!(cfg_file.exists());
         assert_eq!(config.settings.update_interval_minutes, 10);
         assert_eq!(config.settings.venice_api_key, "v");
-        assert_eq!(config.location_names(), ["Home"]);
+        assert_eq!(config.location_names(), ["Home", "Work"]);
+        assert_eq!(config.current_location.as_ref().unwrap().name, "Work");
 
         std::fs::create_dir_all(dir.path().join("weather_cache").join("x")).unwrap();
         std::fs::write(dir.path().join("api-keys.keys"), "{}").unwrap();
-        assert!(reset_all_data(&mut config, dir.path()));
+        let mut in_memory = config.clone();
+        assert!(reset_all_data(&mut in_memory, None));
+        assert!(in_memory.locations.is_empty());
+        assert!(dir.path().join("api-keys.keys").exists(), "nothing deleted");
+        assert!(reset_all_data(&mut config, Some(dir.path())));
         assert!(config.locations.is_empty());
         let left: Vec<_> = std::fs::read_dir(dir.path())
             .unwrap()

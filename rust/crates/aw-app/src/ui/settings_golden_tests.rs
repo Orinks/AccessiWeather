@@ -8,6 +8,7 @@ use serde_json::{Map, Value};
 
 use aw_ai::models::{self as mb, BrowserFilter, CatalogModel, PriceFilter, VeniceBalance};
 use aw_ai::Provider;
+use aw_services::import_export;
 
 use super::settings_actions;
 use super::settings_form::*;
@@ -565,16 +566,16 @@ fn portable_copy_checks_match_python() {
     ];
     for (expected, (name, src, dst)) in g["portable"].as_array().unwrap().iter().zip(cases) {
         assert_eq!(expected["name"], name);
-        let check = settings_actions::installed_config_precheck(&src);
+        let check = import_export::check_installed_config(&src);
         assert_eq!(check.is_ok(), expected["ok"].as_bool().unwrap(), "{name}");
-        if let Err(reason) = &check {
+        if let Err(reason) = check {
             assert_eq!(reason, expected["reason"].as_str().unwrap(), "{name}");
             continue;
         }
-        let summary = settings_actions::portable_copy_summary(&src).unwrap();
+        let summary = import_export::portable_copy_summary(&src).unwrap();
         assert_eq!(summary, from::<Vec<String>>(&expected["summary"]), "{name}");
         if let Some(dst) = dst {
-            let validation = settings_actions::validate_portable_copy(&src, &dst);
+            let validation = import_export::validate_portable_copy(&src, &dst);
             let messages = validation.clone().err().unwrap_or_default();
             assert_eq!(
                 serde_json::json!([validation.is_ok(), messages]),
@@ -595,7 +596,7 @@ fn settings_export_import_round_trip() {
     config
         .locations
         .push(aw_core::Location::new("Home", 40.0, -75.0).with_country("US"));
-    settings_actions::export_settings(&path, &config).unwrap();
+    assert!(import_export::export_settings(&config, &path));
     let text = std::fs::read_to_string(&path).unwrap();
     assert!(!text.contains("secret"));
     let data: Value = serde_json::from_str(&text).unwrap();
@@ -615,7 +616,7 @@ fn settings_export_import_round_trip() {
                           {"name": "NoLon", "latitude": 1}]}"#,
     )
     .unwrap();
-    settings_actions::import_settings(&path, &mut target).unwrap();
+    assert!(import_export::import_settings(&mut target, &path, None));
     assert_eq!(target.settings.temperature_unit, "f");
     assert_eq!(target.settings.data_source, "auto");
     let names: Vec<&str> = target.locations.iter().map(|l| l.name.as_str()).collect();

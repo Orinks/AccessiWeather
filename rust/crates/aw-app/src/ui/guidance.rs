@@ -8,7 +8,6 @@ use std::path::Path;
 use std::sync::OnceLock;
 use std::time::Duration;
 
-use aw_services::import_export::{self, SystemKeyring};
 use aw_services::onboarding::{
     self, Buttons, Dialog as GuidanceDialog, Facts, Icon, Onboarding, Response, Step,
 };
@@ -16,7 +15,7 @@ use aw_store::secrets::{self, BUNDLE_FILE_NAMES, PORTABLE_PASSPHRASE_KEY};
 use wxdragon::prelude::*;
 
 use super::main_window::{self as mw, main_frame};
-use super::{locations, refresh, updates};
+use super::{locations, refresh, settings_actions, updates};
 use crate::app::{post_to_ui, save, save_api_key, with_state, Shared};
 use crate::portable_keys;
 
@@ -349,11 +348,7 @@ fn refresh_after_onboarding_import(state: &Shared) {
 }
 
 fn import_settings(state: &Shared, path: &Path) -> bool {
-    let imported = {
-        let mut st = state.borrow_mut();
-        let config_file = st.paths.config_file();
-        import_export::import_settings(&mut st.config, path, &config_file)
-    };
+    let imported = settings_actions::import_settings(&mut state.borrow_mut(), path);
     if imported {
         refresh_after_onboarding_import(state);
     }
@@ -364,23 +359,13 @@ fn import_settings(state: &Shared, path: &Path) -> bool {
 fn write_keys_file_after_import(state: &Shared, passphrase: &str) {
     let mut st = state.borrow_mut();
     let dest = st.paths.config_dir.join(BUNDLE_FILE_NAMES[0]);
-    import_export::export_encrypted_api_keys(
-        &mut st.config.settings,
-        &SystemKeyring,
-        &dest,
-        passphrase,
-    );
+    settings_actions::export_encrypted_api_keys(&mut st, &dest, passphrase);
 }
 
 fn import_api_keys(state: &Shared, path: &Path, passphrase: &str) -> bool {
     let portable = state.borrow().paths.portable;
-    let imported = import_export::import_encrypted_api_keys(
-        &mut state.borrow_mut().config.settings,
-        &mut SystemKeyring,
-        path,
-        passphrase,
-        portable,
-    );
+    let imported =
+        settings_actions::import_encrypted_api_keys(&mut state.borrow_mut(), path, passphrase);
     if !imported {
         return false;
     }
@@ -404,12 +389,7 @@ fn write_key_bundle(state: &Shared, keys: Vec<(&'static str, String)>, passphras
             }
         }
         let bundle = st.paths.config_dir.join(BUNDLE_FILE_NAMES[0]);
-        import_export::export_encrypted_api_keys(
-            &mut st.config.settings,
-            &SystemKeyring,
-            &bundle,
-            passphrase,
-        )
+        settings_actions::export_encrypted_api_keys(&mut st, &bundle, passphrase)
     };
     if written {
         portable_keys::set_keys_imported_this_session();

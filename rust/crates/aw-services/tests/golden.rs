@@ -323,7 +323,7 @@ fn imports_match_python() {
             let ok = if method == "import_locations" {
                 import_export::import_locations(&mut config, &path, &config_file)
             } else {
-                import_export::import_settings(&mut config, &path, &config_file)
+                import_export::import_settings(&mut config, &path, Some(&config_file))
             };
             let context = format!("{method} {}", case["input"]);
             assert_eq!(ok, case["result"].as_bool().unwrap(), "{context}");

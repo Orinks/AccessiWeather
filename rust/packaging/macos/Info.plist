@@ -12,5 +12,6 @@
     <key>LSMinimumSystemVersion</key><string>11.0</string>
     <key>NSHighResolutionCapable</key><true/>
     <key>NSSupportsAutomaticGraphicsSwitching</key><true/>
+    <key>NSLocationWhenInUseUsageDescription</key><string>AccessiWeather uses your location only when you choose Use my current location to add or edit a saved weather location.</string>
 </dict>
 </plist>

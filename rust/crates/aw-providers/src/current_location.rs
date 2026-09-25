@@ -1,7 +1,7 @@
 //! One-time "Use my current location" detection, ported from
 //! `accessiweather.current_location`. Windows uses Windows Location Services
-//! (WinRT `Geolocator`); other platforms report "unsupported" (see the port
-//! notes: the macOS CoreLocation provider is not implemented yet).
+//! (WinRT `Geolocator`), macOS uses CoreLocation; other platforms report
+//! "unsupported".
 
 use std::time::Duration;
 
@@ -145,7 +145,11 @@ pub fn native_provider() -> Box<dyn CurrentLocationProvider> {
     {
         Box::new(windows_provider::WindowsLocationProvider)
     }
-    #[cfg(not(windows))]
+    #[cfg(target_os = "macos")]
+    {
+        Box::new(macos_provider::MacOSLocationProvider)
+    }
+    #[cfg(not(any(windows, target_os = "macos")))]
     {
         Box::new(UnsupportedLocationProvider)
     }
@@ -153,6 +157,225 @@ pub fn native_provider() -> Box<dyn CurrentLocationProvider> {
 
 #[cfg(windows)]
 pub use windows_provider::WindowsLocationProvider;
+
+#[cfg(target_os = "macos")]
+pub use macos_provider::MacOSLocationProvider;
+
+/// Platform-independent half of `MacOSLocationProvider`: what each delegate
+/// callback means for the one-shot request, and the run-loop wait.
+#[cfg(any(target_os = "macos", test))]
+mod core_location {
+    use std::time::{Duration, Instant};
+
+    use super::{CurrentCoordinates, DetectError, LocationDetectionStatus};
+
+    pub const TIMEOUT_MESSAGE: &str =
+        "macOS location detection timed out. You can still search manually.";
+
+    /// Longest stretch the run loop runs before the outcome is checked again.
+    pub const SLICE: Duration = Duration::from_millis(100);
+
+    /// A `CLLocationManagerDelegate` callback.
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    pub enum Event {
+        Located {
+            latitude: f64,
+            longitude: f64,
+            horizontal_accuracy: f64,
+        },
+        Failed,
+        /// Raw `CLAuthorizationStatus`.
+        Authorization(i32),
+    }
+
+    /// Python's `_LocationDelegate`: the request's outcome for a callback,
+    /// `None` to keep waiting.
+    pub fn outcome(event: Event) -> Option<Result<CurrentCoordinates, DetectError>> {
+        match event {
+            Event::Located {
+                latitude,
+                longitude,
+                horizontal_accuracy,
+            } => Some(Ok(CurrentCoordinates {
+                latitude,
+                longitude,
+                // CoreLocation reports a negative accuracy when it is unknown.
+                accuracy_meters: (horizontal_accuracy >= 0.0).then_some(horizontal_accuracy),
+            })),
+            Event::Failed => Some(Err(DetectError::Known(
+                LocationDetectionStatus::Unavailable,
+                "macOS could not detect your current location. You can still search manually."
+                    .into(),
+            ))),
+            // kCLAuthorizationStatusRestricted, kCLAuthorizationStatusDenied
+            Event::Authorization(1 | 2) => Some(Err(DetectError::Known(
+                LocationDetectionStatus::Denied,
+                "Location permission was denied. You can still search manually.".into(),
+            ))),
+            Event::Authorization(_) => None,
+        }
+    }
+
+    /// Run the run loop in slices until `outcome` yields, or `None` once
+    /// `timeout` has passed.
+    pub fn pump_until<T>(
+        timeout: Duration,
+        mut run_slice: impl FnMut(Duration),
+        mut outcome: impl FnMut() -> Option<T>,
+    ) -> Option<T> {
+        let deadline = Instant::now() + timeout;
+        loop {
+            if let Some(found) = outcome() {
+                return Some(found);
+            }
+            let left = deadline.saturating_duration_since(Instant::now());
+            if left.is_zero() {
+                return None;
+            }
+            run_slice(left.min(SLICE));
+        }
+    }
+}
+
+#[cfg(target_os = "macos")]
+mod macos_provider {
+    use std::cell::RefCell;
+    use std::time::Duration;
+
+    use objc2::rc::{autoreleasepool, Retained};
+    use objc2::runtime::ProtocolObject;
+    use objc2::{define_class, msg_send, AnyThread, DefinedClass};
+    use objc2_core_location::{CLLocation, CLLocationManager, CLLocationManagerDelegate};
+    use objc2_foundation::{
+        NSArray, NSDate, NSDefaultRunLoopMode, NSError, NSObject, NSObjectProtocol, NSPort,
+        NSRunLoop,
+    };
+
+    use super::core_location::{outcome, pump_until, Event, TIMEOUT_MESSAGE};
+    use super::{
+        CurrentCoordinates, CurrentLocationProvider, DetectError, LocationDetectionStatus,
+    };
+
+    /// One-shot CoreLocation provider.
+    pub struct MacOSLocationProvider;
+
+    struct DelegateIvars {
+        outcome: RefCell<Option<Result<CurrentCoordinates, DetectError>>>,
+    }
+
+    define_class!(
+        // SAFETY: NSObject has no subclassing requirements and the class
+        // does not implement Drop.
+        #[unsafe(super(NSObject))]
+        #[name = "AccessiWeatherLocationDelegate"]
+        #[ivars = DelegateIvars]
+        struct LocationDelegate;
+
+        unsafe impl NSObjectProtocol for LocationDelegate {}
+
+        unsafe impl CLLocationManagerDelegate for LocationDelegate {
+            #[unsafe(method(locationManager:didUpdateLocations:))]
+            fn did_update_locations(
+                &self,
+                manager: &CLLocationManager,
+                locations: &NSArray<CLLocation>,
+            ) {
+                if let Some(latest) = locations.lastObject() {
+                    // SAFETY: plain property reads on a location CoreLocation handed us.
+                    let (coordinate, accuracy) =
+                        unsafe { (latest.coordinate(), latest.horizontalAccuracy()) };
+                    self.record(Event::Located {
+                        latitude: coordinate.latitude,
+                        longitude: coordinate.longitude,
+                        horizontal_accuracy: accuracy,
+                    });
+                }
+                // SAFETY: called on the manager's own run-loop thread.
+                unsafe { manager.stopUpdatingLocation() };
+            }
+
+            #[unsafe(method(locationManager:didFailWithError:))]
+            fn did_fail(&self, manager: &CLLocationManager, _error: &NSError) {
+                self.record(Event::Failed);
+                // SAFETY: as above.
+                unsafe { manager.stopUpdatingLocation() };
+            }
+
+            #[unsafe(method(locationManagerDidChangeAuthorization:))]
+            fn did_change_authorization(&self, manager: &CLLocationManager) {
+                // SAFETY: as above.
+                let status = unsafe { manager.authorizationStatus() };
+                self.record(Event::Authorization(status.0));
+            }
+        }
+    );
+
+    impl LocationDelegate {
+        fn new() -> Retained<Self> {
+            let this = Self::alloc().set_ivars(DelegateIvars {
+                outcome: RefCell::new(None),
+            });
+            // SAFETY: NSObject's designated initializer.
+            unsafe { msg_send![super(this), init] }
+        }
+
+        /// The first decisive callback wins, like Python's `future.done()` guard.
+        fn record(&self, event: Event) {
+            let mut slot = self.ivars().outcome.borrow_mut();
+            if slot.is_none() {
+                *slot = outcome(event);
+            }
+        }
+    }
+
+    impl CurrentLocationProvider for MacOSLocationProvider {
+        fn detect(&self, timeout: Duration) -> Result<CurrentCoordinates, DetectError> {
+            autoreleasepool(|_| {
+                // CoreLocation calls the delegate on the run loop of the thread
+                // that created the manager, so create it here and run this
+                // thread's run loop until the answer arrives.
+                let delegate = LocationDelegate::new();
+                let run_loop = NSRunLoop::currentRunLoop();
+                // A worker thread's run loop has no input sources, so
+                // `runUntilDate:` would return at once and spin; a port keeps
+                // it waiting between callbacks.
+                let keep_alive = NSPort::port();
+                // SAFETY: CLLocationManager may be used from any thread with
+                // a run loop; the delegate (held weakly by the manager) lives
+                // until after it is cleared below.
+                let manager = unsafe {
+                    let manager = CLLocationManager::new();
+                    manager.setDelegate(Some(ProtocolObject::from_ref(&*delegate)));
+                    manager.requestWhenInUseAuthorization();
+                    manager.requestLocation();
+                    run_loop.addPort_forMode(&keep_alive, NSDefaultRunLoopMode);
+                    manager
+                };
+                let result = pump_until(
+                    timeout,
+                    |slice| {
+                        run_loop.runUntilDate(&NSDate::dateWithTimeIntervalSinceNow(
+                            slice.as_secs_f64(),
+                        ))
+                    },
+                    || delegate.ivars().outcome.borrow_mut().take(),
+                );
+                // SAFETY: same thread and objects as above.
+                unsafe {
+                    run_loop.removePort_forMode(&keep_alive, NSDefaultRunLoopMode);
+                    manager.stopUpdatingLocation();
+                    manager.setDelegate(None);
+                }
+                result.unwrap_or_else(|| {
+                    Err(DetectError::Known(
+                        LocationDetectionStatus::Timeout,
+                        TIMEOUT_MESSAGE.into(),
+                    ))
+                })
+            })
+        }
+    }
+}
 
 #[cfg(windows)]
 mod windows_provider {
@@ -314,5 +537,72 @@ mod tests {
             accuracy_meters: None,
         };
         assert_eq!(location_from_coordinates(toronto, None).country_code, None);
+    }
+
+    #[test]
+    fn core_location_callbacks_map_like_python() {
+        use core_location::{outcome, Event};
+        let located = |horizontal_accuracy| Event::Located {
+            latitude: 39.9526,
+            longitude: -75.1652,
+            horizontal_accuracy,
+        };
+        let coords = outcome(located(15.0)).unwrap().unwrap();
+        assert_eq!((coords.latitude, coords.longitude), (39.9526, -75.1652));
+        assert_eq!(coords.accuracy_meters, Some(15.0));
+        let unknown = outcome(located(-1.0)).unwrap().unwrap();
+        assert_eq!(unknown.accuracy_meters, None);
+
+        assert_eq!(
+            outcome(Event::Failed),
+            Some(Err(DetectError::Known(
+                LocationDetectionStatus::Unavailable,
+                "macOS could not detect your current location. You can still search manually."
+                    .into()
+            )))
+        );
+        let denied = Some(Err(DetectError::Known(
+            LocationDetectionStatus::Denied,
+            "Location permission was denied. You can still search manually.".into(),
+        )));
+        // Restricted and Denied refuse; NotDetermined and the granted states keep waiting.
+        assert_eq!(outcome(Event::Authorization(1)), denied);
+        assert_eq!(outcome(Event::Authorization(2)), denied);
+        for waiting in [0, 3, 4] {
+            assert_eq!(outcome(Event::Authorization(waiting)), None);
+        }
+    }
+
+    #[test]
+    fn core_location_wait_stops_at_the_answer_or_the_timeout() {
+        use core_location::{pump_until, SLICE};
+        use std::time::Instant;
+
+        let slices = std::cell::Cell::new(0);
+        let found = pump_until(
+            DEFAULT_TIMEOUT,
+            |_| slices.set(slices.get() + 1),
+            || (slices.get() == 3).then_some("x"),
+        );
+        assert_eq!((found, slices.get()), (Some("x"), 3));
+
+        let timeout = Duration::from_millis(120);
+        let start = Instant::now();
+        let mut longest = Duration::ZERO;
+        let never = pump_until(
+            timeout,
+            |slice| {
+                longest = longest.max(slice);
+                std::thread::sleep(slice);
+            },
+            || None::<()>,
+        );
+        assert_eq!(never, None);
+        assert!(start.elapsed() >= timeout);
+        assert!(longest <= SLICE);
+        assert_eq!(
+            core_location::TIMEOUT_MESSAGE,
+            "macOS location detection timed out. You can still search manually."
+        );
     }
 }

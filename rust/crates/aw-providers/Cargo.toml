@@ -25,6 +25,11 @@ sha1 = "0.10"
 windows = { version = "0.62", features = ["Devices_Geolocation", "Foundation"] }
 windows-future = "0.3"
 
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSArray", "NSDate", "NSError", "NSObjCRuntime", "NSObject", "NSPort", "NSRunLoop", "NSString"] }
+objc2-core-location = { version = "0.3", default-features = false, features = ["std", "CLLocation", "CLLocationManager", "CLLocationManagerDelegate"] }
+
 [dev-dependencies]
 aw-core = { workspace = true, features = ["golden"] }
 tempfile.workspace = true
