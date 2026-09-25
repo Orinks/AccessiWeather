@@ -1,0 +1,764 @@
+[
+  {
+    "text": "Ctrl+Alt+Shift+R",
+    "normalize": {
+      "ok": "Ctrl+Alt+Shift+R"
+    },
+    "normalize_strict": {
+      "ok": "Ctrl+Alt+Shift+R"
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+Shift+R",
+      "modifiers": 7,
+      "key_code": 82
+    }
+  },
+  {
+    "text": "ctrl+alt+shift+r",
+    "normalize": {
+      "ok": "Ctrl+Alt+Shift+R"
+    },
+    "normalize_strict": {
+      "ok": "Ctrl+Alt+Shift+R"
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+Shift+R",
+      "modifiers": 7,
+      "key_code": 82
+    }
+  },
+  {
+    "text": " Control + Alt + R ",
+    "normalize": {
+      "ok": "Ctrl+Alt+R"
+    },
+    "normalize_strict": {
+      "ok": "Ctrl+Alt+R"
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+R",
+      "modifiers": 3,
+      "key_code": 82
+    }
+  },
+  {
+    "text": "shift+ctrl+w",
+    "normalize": {
+      "ok": "Ctrl+Shift+W"
+    },
+    "normalize_strict": {
+      "ok": "Ctrl+Shift+W"
+    },
+    "resolved": {
+      "normalized": "Ctrl+Shift+W",
+      "modifiers": 6,
+      "key_code": 87
+    }
+  },
+  {
+    "text": "Win+Alt+R",
+    "normalize": {
+      "error": "Unknown modifier 'Win'. Use Ctrl, Alt, or Shift."
+    },
+    "normalize_strict": {
+      "error": "Unknown modifier 'Win'. Use Ctrl, Alt, or Shift."
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+Shift+W",
+      "modifiers": 7,
+      "key_code": 87
+    }
+  },
+  {
+    "text": "super+F5",
+    "normalize": {
+      "error": "Unknown modifier 'super'. Use Ctrl, Alt, or Shift."
+    },
+    "normalize_strict": {
+      "error": "Unknown modifier 'super'. Use Ctrl, Alt, or Shift."
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+Shift+W",
+      "modifiers": 7,
+      "key_code": 87
+    }
+  },
+  {
+    "text": "cmd+command+x",
+    "normalize": {
+      "error": "Ctrl appears more than once."
+    },
+    "normalize_strict": {
+      "error": "Ctrl appears more than once."
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+Shift+W",
+      "modifiers": 7,
+      "key_code": 87
+    }
+  },
+  {
+    "text": "Ctrl+Ctrl+R",
+    "normalize": {
+      "error": "Ctrl appears more than once."
+    },
+    "normalize_strict": {
+      "error": "Ctrl appears more than once."
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+Shift+W",
+      "modifiers": 7,
+      "key_code": 87
+    }
+  },
+  {
+    "text": "Ctrl+F1",
+    "normalize": {
+      "ok": "Ctrl+F1"
+    },
+    "normalize_strict": {
+      "ok": "Ctrl+F1"
+    },
+    "resolved": {
+      "normalized": "Ctrl+F1",
+      "modifiers": 2,
+      "key_code": 340
+    }
+  },
+  {
+    "text": "Ctrl+F24",
+    "normalize": {
+      "ok": "Ctrl+F24"
+    },
+    "normalize_strict": {
+      "ok": "Ctrl+F24"
+    },
+    "resolved": {
+      "normalized": "Ctrl+F24",
+      "modifiers": 2,
+      "key_code": 363
+    }
+  },
+  {
+    "text": "Ctrl+F25",
+    "normalize": {
+      "error": "Function-key shortcuts must be between F1 and F24."
+    },
+    "normalize_strict": {
+      "error": "Function-key shortcuts must be between F1 and F24."
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+Shift+W",
+      "modifiers": 7,
+      "key_code": 87
+    }
+  },
+  {
+    "text": "Ctrl+F0",
+    "normalize": {
+      "error": "Function-key shortcuts must be between F1 and F24."
+    },
+    "normalize_strict": {
+      "error": "Function-key shortcuts must be between F1 and F24."
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+Shift+W",
+      "modifiers": 7,
+      "key_code": 87
+    }
+  },
+  {
+    "text": "Ctrl+F01",
+    "normalize": {
+      "ok": "Ctrl+F1"
+    },
+    "normalize_strict": {
+      "ok": "Ctrl+F1"
+    },
+    "resolved": {
+      "normalized": "Ctrl+F1",
+      "modifiers": 2,
+      "key_code": 340
+    }
+  },
+  {
+    "text": "Ctrl+f12",
+    "normalize": {
+      "ok": "Ctrl+F12"
+    },
+    "normalize_strict": {
+      "ok": "Ctrl+F12"
+    },
+    "resolved": {
+      "normalized": "Ctrl+F12",
+      "modifiers": 2,
+      "key_code": 351
+    }
+  },
+  {
+    "text": "Alt+F",
+    "normalize": {
+      "ok": "Alt+F"
+    },
+    "normalize_strict": {
+      "ok": "Alt+F"
+    },
+    "resolved": {
+      "normalized": "Alt+F",
+      "modifiers": 1,
+      "key_code": 70
+    }
+  },
+  {
+    "text": "Alt+Fx",
+    "normalize": {
+      "error": "Shortcut keys must be letters, numbers, F1-F24, Tab, Space, or Escape."
+    },
+    "normalize_strict": {
+      "error": "Shortcut keys must be letters, numbers, F1-F24, Tab, Space, or Escape."
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+Shift+W",
+      "modifiers": 7,
+      "key_code": 87
+    }
+  },
+  {
+    "text": "Ctrl+1",
+    "normalize": {
+      "ok": "Ctrl+1"
+    },
+    "normalize_strict": {
+      "ok": "Ctrl+1"
+    },
+    "resolved": {
+      "normalized": "Ctrl+1",
+      "modifiers": 2,
+      "key_code": 49
+    }
+  },
+  {
+    "text": "Ctrl+é",
+    "normalize": {
+      "ok": "Ctrl+É"
+    },
+    "normalize_strict": {
+      "ok": "Ctrl+É"
+    },
+    "resolved": {
+      "normalized": "Ctrl+É",
+      "modifiers": 2,
+      "key_code": 201
+    }
+  },
+  {
+    "text": "Ctrl+Space",
+    "normalize": {
+      "ok": "Ctrl+Space"
+    },
+    "normalize_strict": {
+      "ok": "Ctrl+Space"
+    },
+    "resolved": {
+      "normalized": "Ctrl+Space",
+      "modifiers": 2,
+      "key_code": 32
+    }
+  },
+  {
+    "text": "Ctrl+Escape",
+    "normalize": {
+      "ok": "Ctrl+Escape"
+    },
+    "normalize_strict": {
+      "ok": "Ctrl+Escape"
+    },
+    "resolved": {
+      "normalized": "Ctrl+Escape",
+      "modifiers": 2,
+      "key_code": 27
+    }
+  },
+  {
+    "text": "Ctrl+Tab",
+    "normalize": {
+      "ok": "Ctrl+Tab"
+    },
+    "normalize_strict": {
+      "ok": "Ctrl+Tab"
+    },
+    "resolved": {
+      "normalized": "Ctrl+Tab",
+      "modifiers": 2,
+      "key_code": 9
+    }
+  },
+  {
+    "text": "R",
+    "normalize": {
+      "ok": "R"
+    },
+    "normalize_strict": {
+      "ok": "R"
+    },
+    "resolved": {
+      "normalized": "R",
+      "modifiers": 0,
+      "key_code": 82
+    }
+  },
+  {
+    "text": "",
+    "normalize": {
+      "ok": ""
+    },
+    "normalize_strict": {
+      "error": "Shortcut cannot be blank."
+    },
+    "resolved": null
+  },
+  {
+    "text": "   ",
+    "normalize": {
+      "ok": ""
+    },
+    "normalize_strict": {
+      "error": "Shortcut cannot be blank."
+    },
+    "resolved": null
+  },
+  {
+    "text": "+",
+    "normalize": {
+      "error": "Use '+' only between modifiers and the key, for example Ctrl+Alt+Shift+W."
+    },
+    "normalize_strict": {
+      "error": "Use '+' only between modifiers and the key, for example Ctrl+Alt+Shift+W."
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+Shift+W",
+      "modifiers": 7,
+      "key_code": 87
+    }
+  },
+  {
+    "text": "Ctrl+",
+    "normalize": {
+      "error": "Use '+' only between modifiers and the key, for example Ctrl+Alt+Shift+W."
+    },
+    "normalize_strict": {
+      "error": "Use '+' only between modifiers and the key, for example Ctrl+Alt+Shift+W."
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+Shift+W",
+      "modifiers": 7,
+      "key_code": 87
+    }
+  },
+  {
+    "text": "+R",
+    "normalize": {
+      "error": "Use '+' only between modifiers and the key, for example Ctrl+Alt+Shift+W."
+    },
+    "normalize_strict": {
+      "error": "Use '+' only between modifiers and the key, for example Ctrl+Alt+Shift+W."
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+Shift+W",
+      "modifiers": 7,
+      "key_code": 87
+    }
+  },
+  {
+    "text": "Ctrl++",
+    "normalize": {
+      "error": "Use '+' only between modifiers and the key, for example Ctrl+Alt+Shift+W."
+    },
+    "normalize_strict": {
+      "error": "Use '+' only between modifiers and the key, for example Ctrl+Alt+Shift+W."
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+Shift+W",
+      "modifiers": 7,
+      "key_code": 87
+    }
+  },
+  {
+    "text": "Meta+R",
+    "normalize": {
+      "error": "Unknown modifier 'Meta'. Use Ctrl, Alt, or Shift."
+    },
+    "normalize_strict": {
+      "error": "Unknown modifier 'Meta'. Use Ctrl, Alt, or Shift."
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+Shift+W",
+      "modifiers": 7,
+      "key_code": 87
+    }
+  },
+  {
+    "text": "Option+R",
+    "normalize": {
+      "ok": "Alt+R"
+    },
+    "normalize_strict": {
+      "ok": "Alt+R"
+    },
+    "resolved": {
+      "normalized": "Alt+R",
+      "modifiers": 1,
+      "key_code": 82
+    }
+  },
+  {
+    "text": "Ctrl+Alt+Shift+W",
+    "normalize": {
+      "ok": "Ctrl+Alt+Shift+W"
+    },
+    "normalize_strict": {
+      "ok": "Ctrl+Alt+Shift+W"
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+Shift+W",
+      "modifiers": 7,
+      "key_code": 87
+    }
+  },
+  {
+    "text": "Ctrl + Shift + I",
+    "normalize": {
+      "ok": "Ctrl+Shift+I"
+    },
+    "normalize_strict": {
+      "ok": "Ctrl+Shift+I"
+    },
+    "resolved": {
+      "normalized": "Ctrl+Shift+I",
+      "modifiers": 6,
+      "key_code": 73
+    }
+  },
+  {
+    "text": "Ctrl+RR",
+    "normalize": {
+      "error": "Shortcut keys must be letters, numbers, F1-F24, Tab, Space, or Escape."
+    },
+    "normalize_strict": {
+      "error": "Shortcut keys must be letters, numbers, F1-F24, Tab, Space, or Escape."
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+Shift+W",
+      "modifiers": 7,
+      "key_code": 87
+    }
+  },
+  {
+    "text": "Ctrl+?",
+    "normalize": {
+      "error": "Shortcut keys must be letters, numbers, F1-F24, Tab, Space, or Escape."
+    },
+    "normalize_strict": {
+      "error": "Shortcut keys must be letters, numbers, F1-F24, Tab, Space, or Escape."
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+Shift+W",
+      "modifiers": 7,
+      "key_code": 87
+    }
+  },
+  {
+    "text": "Alt+F4",
+    "normalize": {
+      "ok": "Alt+F4"
+    },
+    "normalize_strict": {
+      "ok": "Alt+F4"
+    },
+    "resolved": {
+      "normalized": "Alt+F4",
+      "modifiers": 1,
+      "key_code": 343
+    }
+  },
+  {
+    "text": "Ctrl+ß",
+    "normalize": {
+      "ok": "Ctrl+SS"
+    },
+    "normalize_strict": {
+      "ok": "Ctrl+SS"
+    },
+    "resolved": {
+      "normalized": "Ctrl+SS",
+      "modifiers": 2,
+      "key_code": null
+    }
+  },
+  {
+    "text": "Shift+F99999999999",
+    "normalize": {
+      "error": "Function-key shortcuts must be between F1 and F24."
+    },
+    "normalize_strict": {
+      "error": "Function-key shortcuts must be between F1 and F24."
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+Shift+W",
+      "modifiers": 7,
+      "key_code": 87
+    }
+  },
+  {
+    "text": "Esc",
+    "normalize": {
+      "ok": "Escape"
+    },
+    "normalize_strict": {
+      "ok": "Escape"
+    },
+    "resolved": {
+      "normalized": "Escape",
+      "modifiers": 0,
+      "key_code": 27
+    }
+  },
+  {
+    "text": "ctrl+esc",
+    "normalize": {
+      "ok": "Ctrl+Escape"
+    },
+    "normalize_strict": {
+      "ok": "Ctrl+Escape"
+    },
+    "resolved": {
+      "normalized": "Ctrl+Escape",
+      "modifiers": 2,
+      "key_code": 27
+    }
+  },
+  {
+    "text": "Alt+space",
+    "normalize": {
+      "ok": "Alt+Space"
+    },
+    "normalize_strict": {
+      "ok": "Alt+Space"
+    },
+    "resolved": {
+      "normalized": "Alt+Space",
+      "modifiers": 1,
+      "key_code": 32
+    }
+  },
+  {
+    "text": "ctrl+TAB",
+    "normalize": {
+      "ok": "Ctrl+Tab"
+    },
+    "normalize_strict": {
+      "ok": "Ctrl+Tab"
+    },
+    "resolved": {
+      "normalized": "Ctrl+Tab",
+      "modifiers": 2,
+      "key_code": 9
+    }
+  },
+  {
+    "text": "Option+Cmd+W",
+    "normalize": {
+      "ok": "Ctrl+Alt+W"
+    },
+    "normalize_strict": {
+      "ok": "Ctrl+Alt+W"
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+W",
+      "modifiers": 3,
+      "key_code": 87
+    }
+  },
+  {
+    "text": "Alt+Alt+W",
+    "normalize": {
+      "error": "Alt appears more than once."
+    },
+    "normalize_strict": {
+      "error": "Alt appears more than once."
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+Shift+W",
+      "modifiers": 7,
+      "key_code": 87
+    }
+  },
+  {
+    "text": "Ctrl+Alt+Shift+Shift+W",
+    "normalize": {
+      "error": "Shift appears more than once."
+    },
+    "normalize_strict": {
+      "error": "Shift appears more than once."
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+Shift+W",
+      "modifiers": 7,
+      "key_code": 87
+    }
+  },
+  {
+    "text": "F2",
+    "normalize": {
+      "ok": "F2"
+    },
+    "normalize_strict": {
+      "ok": "F2"
+    },
+    "resolved": {
+      "normalized": "F2",
+      "modifiers": 0,
+      "key_code": 341
+    }
+  },
+  {
+    "text": "F5",
+    "normalize": {
+      "ok": "F5"
+    },
+    "normalize_strict": {
+      "ok": "F5"
+    },
+    "resolved": {
+      "normalized": "F5",
+      "modifiers": 0,
+      "key_code": 344
+    }
+  },
+  {
+    "text": "Escape",
+    "normalize": {
+      "ok": "Escape"
+    },
+    "normalize_strict": {
+      "ok": "Escape"
+    },
+    "resolved": {
+      "normalized": "Escape",
+      "modifiers": 0,
+      "key_code": 27
+    }
+  },
+  {
+    "text": "Shift+F3",
+    "normalize": {
+      "ok": "Shift+F3"
+    },
+    "normalize_strict": {
+      "ok": "Shift+F3"
+    },
+    "resolved": {
+      "normalized": "Shift+F3",
+      "modifiers": 4,
+      "key_code": 342
+    }
+  },
+  {
+    "text": "ctrl+r",
+    "normalize": {
+      "ok": "Ctrl+R"
+    },
+    "normalize_strict": {
+      "ok": "Ctrl+R"
+    },
+    "resolved": {
+      "normalized": "Ctrl+R",
+      "modifiers": 2,
+      "key_code": 82
+    }
+  },
+  {
+    "text": "Control+5",
+    "normalize": {
+      "ok": "Ctrl+5"
+    },
+    "normalize_strict": {
+      "ok": "Ctrl+5"
+    },
+    "resolved": {
+      "normalized": "Ctrl+5",
+      "modifiers": 2,
+      "key_code": 53
+    }
+  },
+  {
+    "text": "Ctrl+Alt+F24",
+    "normalize": {
+      "ok": "Ctrl+Alt+F24"
+    },
+    "normalize_strict": {
+      "ok": "Ctrl+Alt+F24"
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+F24",
+      "modifiers": 3,
+      "key_code": 363
+    }
+  },
+  {
+    "text": "Ctrl+Alt+F25",
+    "normalize": {
+      "error": "Function-key shortcuts must be between F1 and F24."
+    },
+    "normalize_strict": {
+      "error": "Function-key shortcuts must be between F1 and F24."
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+Shift+W",
+      "modifiers": 7,
+      "key_code": 87
+    }
+  },
+  {
+    "text": "Ctrl+Alt+F",
+    "normalize": {
+      "ok": "Ctrl+Alt+F"
+    },
+    "normalize_strict": {
+      "ok": "Ctrl+Alt+F"
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+F",
+      "modifiers": 3,
+      "key_code": 70
+    }
+  },
+  {
+    "text": "Ctrl+Alt+Win+W",
+    "normalize": {
+      "error": "Unknown modifier 'Win'. Use Ctrl, Alt, or Shift."
+    },
+    "normalize_strict": {
+      "error": "Unknown modifier 'Win'. Use Ctrl, Alt, or Shift."
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+Shift+W",
+      "modifiers": 7,
+      "key_code": 87
+    }
+  },
+  {
+    "text": "Ctrl+Alt+1",
+    "normalize": {
+      "ok": "Ctrl+Alt+1"
+    },
+    "normalize_strict": {
+      "ok": "Ctrl+Alt+1"
+    },
+    "resolved": {
+      "normalized": "Ctrl+Alt+1",
+      "modifiers": 3,
+      "key_code": 49
+    }
+  }
+]

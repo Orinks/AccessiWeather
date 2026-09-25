@@ -313,13 +313,16 @@ pub(crate) fn build_main_window(state: &Shared, smoke: bool) {
         });
     }
 
-    frame.show(true);
-    // Python sets focus from EVT_SHOW (which wxDragon lacks) 100 ms after the
-    // window appears, so screen readers announce the dropdown.
-    keep_timer(100, move || {
-        location_dropdown.set_focus();
+    // `crate::lifecycle` shows the window, or leaves it in the tray.
+}
+
+/// `_set_initial_focus`: 100 ms after every show, so screen readers
+/// announce the dropdown.
+pub(crate) fn set_initial_focus() {
+    if let Some(w) = window() {
+        w.location_dropdown.set_focus();
         tracing::debug!("Initial focus set to location dropdown");
-    });
+    }
 }
 
 /// Start a one-shot timer that lives until the window closes.
@@ -365,8 +368,11 @@ fn bind_events(win: &MainWindow) {
 
     w.frame.bind_internal(EventType::CHAR_HOOK, |e: Event| {
         let key = e.get_key_code().unwrap_or(0);
-        let Some(shortcut) = match_shortcut(key, e.cmd_down(), e.alt_down(), e.shift_down()) else {
-            e.skip(true);
+        let (ctrl, alt, shift) = (e.cmd_down(), e.alt_down(), e.shift_down());
+        let Some(shortcut) = match_shortcut(key, ctrl, alt, shift) else {
+            // The configurable window/tray shortcuts come after the fixed ones.
+            let handled = crate::hotkeys::on_window_tray_accelerator(key, ctrl, alt, shift);
+            e.skip(!handled);
             return;
         };
         e.skip(false);
@@ -374,26 +380,17 @@ fn bind_events(win: &MainWindow) {
             Shortcut::Refresh => locations::on_refresh(),
             Shortcut::FocusSection(n) => focus_section_by_number(n),
             Shortcut::CycleSections => cycle_section_focus(),
-            // `_on_escape_pressed` minimizes to the tray when that is on;
-            // see `should_minimize_to_tray`.
-            Shortcut::Escape => {}
+            Shortcut::Escape => crate::lifecycle::on_escape_pressed(),
         }
     });
 }
 
-/// `_should_minimize_to_tray`. Python reads only the setting; until the tray
-/// icon is ported, hiding the window would leave no way back, so this
-/// reports false. The tray work should return
-/// `settings.minimize_to_tray` here and hide the window on Escape, close
-/// and minimize (Python's EVT_ICONIZE, which wxDragon lacks).
-fn should_minimize_to_tray() -> bool {
-    false
-}
-
-/// `_on_close`.
+/// `_on_close`: hide to the tray when that is on, otherwise exit
+/// (`request_exit`; File > Exit and the tray's Quit close with `force`).
 fn on_close(e: &Event) {
-    if e.can_veto() && should_minimize_to_tray() {
+    if e.can_veto() && crate::lifecycle::should_minimize_to_tray() {
         e.veto();
+        crate::lifecycle::minimize_to_tray();
         return;
     }
     // Stop timers and drop handles before wx tears the window down.
@@ -404,6 +401,7 @@ fn on_close(e: &Event) {
             }
         });
     }
+    crate::lifecycle::shutdown();
     TIMERS.with(|t| t.borrow_mut().clear());
     WINDOW.with(|w| w.set(None));
     e.skip(true);
@@ -702,7 +700,7 @@ pub(crate) fn show_all_locations_summary() {
     set_forecast_sections_visible(false);
     update_all_locations_alerts(&location_alerts);
     window_state(|s| s.all_locations_alerts_data = location_alerts);
-    // Python also points the tray tooltip at the most severe location here.
+    crate::tray::update_for_all_locations();
     set_stale_warning("");
     update_precipitation_timeline_menu_state(None);
     app_state().borrow_mut().is_updating = false;

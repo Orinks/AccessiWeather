@@ -1,0 +1,276 @@
+[
+  {
+    "radio": "Ctrl+Alt+Shift+R",
+    "values": [
+      "Ctrl+Alt+Shift+W",
+      "Ctrl+Alt+Shift+M",
+      "Ctrl+Alt+Shift+I"
+    ],
+    "error": null,
+    "normalized": [
+      "Ctrl+Alt+Shift+W",
+      "Ctrl+Alt+Shift+M",
+      "Ctrl+Alt+Shift+I"
+    ]
+  },
+  {
+    "radio": "Ctrl+Alt+Shift+R",
+    "values": [
+      "ctrl+alt+shift+w",
+      "",
+      " alt+shift+m "
+    ],
+    "error": null,
+    "normalized": [
+      "Ctrl+Alt+Shift+W",
+      "",
+      "Alt+Shift+M"
+    ]
+  },
+  {
+    "radio": "Ctrl+Alt+Shift+R",
+    "values": [
+      "Ctrl+Alt+Shift+R",
+      "",
+      ""
+    ],
+    "error": [
+      "shortcut_show_main_window",
+      "Show main window shortcut duplicates NOAA Weather Radio hotkey (Ctrl+Alt+Shift+R). Choose a different shortcut or leave one field blank."
+    ],
+    "normalized": [
+      "Ctrl+Alt+Shift+R",
+      null,
+      null
+    ]
+  },
+  {
+    "radio": "Win+Alt+R",
+    "values": [
+      "Alt+R",
+      "",
+      ""
+    ],
+    "error": null,
+    "normalized": [
+      "Alt+R",
+      "",
+      ""
+    ]
+  },
+  {
+    "radio": "",
+    "values": [
+      "Shift+W",
+      "",
+      ""
+    ],
+    "error": [
+      "shortcut_show_main_window",
+      "Show main window shortcut must include Ctrl or Alt to avoid capturing typing keys."
+    ],
+    "normalized": [
+      "Shift+W",
+      null,
+      null
+    ]
+  },
+  {
+    "radio": "",
+    "values": [
+      "F5",
+      "",
+      ""
+    ],
+    "error": [
+      "shortcut_show_main_window",
+      "Show main window shortcut must include Ctrl or Alt to avoid capturing typing keys."
+    ],
+    "normalized": [
+      "F5",
+      null,
+      null
+    ]
+  },
+  {
+    "radio": "",
+    "values": [
+      "Ctrl+R",
+      "",
+      ""
+    ],
+    "error": [
+      "shortcut_show_main_window",
+      "Show main window shortcut cannot use Ctrl+R because that shortcut already refresh the weather."
+    ],
+    "normalized": [
+      "Ctrl+R",
+      null,
+      null
+    ]
+  },
+  {
+    "radio": "",
+    "values": [
+      "Ctrl+Alt+W",
+      "Ctrl+Alt+W",
+      ""
+    ],
+    "error": [
+      "shortcut_hide_main_window",
+      "Hide window shortcut duplicates Show main window shortcut (Ctrl+Alt+W). Choose a different shortcut or leave one field blank."
+    ],
+    "normalized": [
+      "Ctrl+Alt+W",
+      "Ctrl+Alt+W",
+      null
+    ]
+  },
+  {
+    "radio": "",
+    "values": [
+      "Ctrl+Alt+W",
+      "Ctrl+Bogus+W",
+      ""
+    ],
+    "error": [
+      "shortcut_hide_main_window",
+      "Hide window shortcut: Unknown modifier 'Bogus'. Use Ctrl, Alt, or Shift."
+    ],
+    "normalized": [
+      "Ctrl+Alt+W",
+      null,
+      null
+    ]
+  },
+  {
+    "radio": "",
+    "values": [
+      "Ctrl+Alt+W",
+      "Ctrl+Alt+M",
+      "Ctrl++"
+    ],
+    "error": [
+      "shortcut_read_tray_info",
+      "Read tray information shortcut: Use '+' only between modifiers and the key, for example Ctrl+Alt+Shift+W."
+    ],
+    "normalized": [
+      "Ctrl+Alt+W",
+      "Ctrl+Alt+M",
+      null
+    ]
+  },
+  {
+    "radio": "",
+    "values": [
+      "Ctrl+Alt+W",
+      "Ctrl+Alt+M",
+      "Ctrl+Alt+F30"
+    ],
+    "error": [
+      "shortcut_read_tray_info",
+      "Read tray information shortcut: Function-key shortcuts must be between F1 and F24."
+    ],
+    "normalized": [
+      "Ctrl+Alt+W",
+      "Ctrl+Alt+M",
+      null
+    ]
+  },
+  {
+    "radio": "",
+    "values": [
+      "Ctrl+Shift+Shift+W",
+      "",
+      ""
+    ],
+    "error": [
+      "shortcut_show_main_window",
+      "Show main window shortcut: Shift appears more than once."
+    ],
+    "normalized": [
+      null,
+      null,
+      null
+    ]
+  },
+  {
+    "radio": "",
+    "values": [
+      "Ctrl+Q",
+      "",
+      ""
+    ],
+    "error": [
+      "shortcut_show_main_window",
+      "Show main window shortcut cannot use Ctrl+Q because that shortcut already exit AccessiWeather."
+    ],
+    "normalized": [
+      "Ctrl+Q",
+      null,
+      null
+    ]
+  },
+  {
+    "radio": "",
+    "values": [
+      "Alt+F4",
+      "",
+      ""
+    ],
+    "error": [
+      "shortcut_show_main_window",
+      "Show main window shortcut cannot use Alt+F4 because that shortcut already close the window."
+    ],
+    "normalized": [
+      "Alt+F4",
+      null,
+      null
+    ]
+  },
+  {
+    "radio": "",
+    "values": [
+      "Ctrl+Escape",
+      "Ctrl+Alt+Space",
+      "Alt+Tab"
+    ],
+    "error": null,
+    "normalized": [
+      "Ctrl+Escape",
+      "Ctrl+Alt+Space",
+      "Alt+Tab"
+    ]
+  },
+  {
+    "radio": "not a combo",
+    "values": [
+      "Ctrl+Alt+Shift+R",
+      "",
+      ""
+    ],
+    "error": null,
+    "normalized": [
+      "Ctrl+Alt+Shift+R",
+      "",
+      ""
+    ]
+  },
+  {
+    "radio": "ctrl+alt+shift+r",
+    "values": [
+      "Ctrl+Alt+Shift+R",
+      "",
+      ""
+    ],
+    "error": [
+      "shortcut_show_main_window",
+      "Show main window shortcut duplicates NOAA Weather Radio hotkey (Ctrl+Alt+Shift+R). Choose a different shortcut or leave one field blank."
+    ],
+    "normalized": [
+      "Ctrl+Alt+Shift+R",
+      null,
+      null
+    ]
+  }
+]

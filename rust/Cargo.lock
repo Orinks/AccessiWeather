@@ -6,8 +6,12 @@ version = 4
 name = "accessiweather"
 version = "0.11.0-rust.1"
 dependencies = [
+ "aw-audio",
  "aw-core",
+ "aw-notify",
  "aw-providers",
+ "aw-radio",
+ "aw-services",
  "aw-store",
  "chrono",
  "clap",
@@ -18,6 +22,7 @@ dependencies = [
  "thiserror 2.0.21",
  "tracing",
  "tracing-subscriber",
+ "windows-sys 0.61.2",
  "wxdragon",
 ]
 

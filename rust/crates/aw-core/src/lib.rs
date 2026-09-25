@@ -18,6 +18,7 @@ pub mod presenter;
 pub mod provider_normalization;
 pub mod py;
 pub mod settings;
+pub mod shortcuts;
 pub mod source_selection;
 pub mod sources;
 pub mod thermal_comfort;

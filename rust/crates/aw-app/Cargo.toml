@@ -13,6 +13,10 @@ path = "src/main.rs"
 aw-core.workspace = true
 aw-providers.workspace = true
 aw-store.workspace = true
+aw-audio.workspace = true
+aw-notify.workspace = true
+aw-radio.workspace = true
+aw-services.workspace = true
 prismer.workspace = true
 wxdragon.workspace = true
 clap.workspace = true
@@ -27,6 +31,13 @@ tracing-subscriber.workspace = true
 # library shipped beside the executable.
 [target.'cfg(windows)'.dependencies]
 prismer = { workspace = true, features = ["static"] }
+windows-sys = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_System_Threading",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_Shell",
+    "Win32_UI_WindowsAndMessaging",
+] }
 
 [build-dependencies]
 embed-manifest = "1.4"

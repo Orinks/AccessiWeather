@@ -221,8 +221,7 @@ pub(crate) fn on_settings() {
         return;
     };
     if settings_dialog::show_settings_dialog(&w.frame, &state) {
-        // `refresh_runtime_settings`: the update interval may have changed.
-        mw::start_background_updates();
+        crate::lifecycle::refresh_runtime_settings();
         mw::populate_locations();
         mw::update_check_updates_menu_label();
         refresh::refresh_weather_async(true);
