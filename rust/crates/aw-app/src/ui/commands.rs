@@ -146,11 +146,14 @@ pub(crate) fn on_view_alert() {
     let Some(index) = window().and_then(|w| w.alerts_list.get_selection()) else {
         return;
     };
-    show_alert_details(index as usize);
+    show_alert_details_at(index as usize);
 }
 
-/// `_show_alert_details`.
-fn show_alert_details(alert_index: usize) {
+/// `_show_alert_details`: the alert behind list row `alert_index`. In All
+/// Locations the rows are the aggregated (location, alert) pairs; otherwise
+/// they are the current location's active alerts. Toast activation also
+/// lands here with an index into the active alerts.
+pub(crate) fn show_alert_details_at(alert_index: usize) {
     let alert = if window_state(|s| s.all_locations_active) {
         window_state(|s| {
             s.all_locations_alerts_data
@@ -168,43 +171,6 @@ fn show_alert_details(alert_index: usize) {
         })
     };
     if let Some(alert) = alert {
-        show_alert_dialog(&alert);
+        super::alert_dialog::show_alert_details(&alert);
     }
-}
-
-/// `show_alert_dialog`. Until `alert_dialog.py` is ported this shows the
-/// alert text in a plain read-only dialog so alerts stay readable.
-fn show_alert_dialog(alert: &aw_core::model::WeatherAlert) {
-    let Some(w) = window() else { return };
-    let event = alert.event.as_deref().unwrap_or("Unknown");
-    let dlg = Dialog::builder(&w.frame, &format!("Alert: {event}"))
-        .with_style(DialogStyle::DefaultDialogStyle | DialogStyle::ResizeBorder)
-        .with_size(640, 480)
-        .build();
-    let body = [
-        alert.headline.as_deref().unwrap_or(&alert.title),
-        &alert.description,
-        alert.instruction.as_deref().unwrap_or(""),
-    ]
-    .into_iter()
-    .filter(|s| !s.is_empty())
-    .collect::<Vec<_>>()
-    .join("\n\n");
-    let root = BoxSizer::builder(Orientation::Vertical).build();
-    let text = TextCtrl::builder(&dlg)
-        .with_style(TextCtrlStyle::MultiLine | TextCtrlStyle::ReadOnly | TextCtrlStyle::WordWrap)
-        .with_value(&body)
-        .build();
-    root.add(&text, 1, SizerFlag::Expand | SizerFlag::All, 8);
-    let close = Button::builder(&dlg)
-        .with_id(ID_CANCEL)
-        .with_label("&Close")
-        .build();
-    root.add(&close, 0, SizerFlag::AlignRight | SizerFlag::All, 8);
-    dlg.set_sizer(root, true);
-    dlg.set_escape_id(ID_CANCEL);
-    text.set_focus();
-    text.set_insertion_point(0);
-    dlg.show_modal();
-    dlg.destroy();
 }
