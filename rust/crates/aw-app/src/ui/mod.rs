@@ -3,13 +3,16 @@
 //! the main window, its menus and shortcuts, the location dialogs and the
 //! Settings dialog.
 
+mod ai_model_check;
 mod alert_dialog;
 mod aviation_dialog;
+mod assistant_host;
 mod commands;
 mod community_packs_dialog;
 mod data_dialogs;
 mod display;
 mod forecast_products;
+mod explanation_dialog;
 mod location_dialog;
 mod locations;
 mod main_window;
@@ -26,6 +29,7 @@ mod shortcuts;
 mod soundpack_manager;
 mod soundpack_wizard;
 mod tray_text_format_dialog;
+mod weather_assistant_dialog;
 mod weather_source;
 
 #[cfg(test)]

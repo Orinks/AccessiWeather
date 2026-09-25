@@ -15,6 +15,7 @@ aw-notify.workspace = true
 aw-providers.workspace = true
 aw-store.workspace = true
 aw-audio.workspace = true
+aw-ai.workspace = true
 prismer.workspace = true
 wxdragon.workspace = true
 clap.workspace = true

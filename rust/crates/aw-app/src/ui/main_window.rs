@@ -300,6 +300,8 @@ pub(crate) fn build_main_window(state: &Shared, smoke: bool) {
     } else if has_current {
         refresh::refresh_weather_async(false);
     }
+    // Defer AI model validation so it never delays startup.
+    keep_timer(500, super::ai_model_check::validate_ai_model_deferred);
     start_background_updates();
 
     if smoke {
