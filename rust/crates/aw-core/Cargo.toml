@@ -7,7 +7,7 @@ description = "Toolkit-independent weather domain models, settings, units and pr
 
 [dependencies]
 serde.workspace = true
-serde_json.workspace = true
+serde_json = { workspace = true, features = ["float_roundtrip"] }
 chrono.workspace = true
 chrono-tz.workspace = true
 md5 = "0.7"

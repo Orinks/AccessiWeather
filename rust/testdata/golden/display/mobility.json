@@ -1,0 +1,4157 @@
+{
+"name": "mobility",
+"now": "2026-06-01T12:00:00+00:00",
+"local_tz": "America/New_York",
+"weather_data": {
+"location": {
+"name": "Toronto",
+"latitude": 43.65,
+"longitude": -79.38,
+"timezone": "America/Toronto",
+"country_code": "CA",
+"marine_mode": false,
+"forecast_zone_id": null,
+"cwa_office": null,
+"county_zone_id": null,
+"fire_zone_id": null,
+"radar_station": null
+},
+"current": {
+"temperature": 60.0,
+"temperature_f": 60.0,
+"temperature_c": null,
+"condition": "Cloudy",
+"humidity": null,
+"wind_speed": null,
+"dewpoint_f": null,
+"dewpoint_c": null,
+"wind_speed_mph": null,
+"wind_speed_kph": null,
+"wind_direction": null,
+"pressure": null,
+"pressure_in": null,
+"pressure_mb": null,
+"feels_like_f": null,
+"feels_like_c": null,
+"visibility_miles": 9.0,
+"visibility_km": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust_mph": null,
+"wind_gust_kph": null,
+"precipitation_in": null,
+"precipitation_mm": null,
+"sunrise_time": null,
+"sunset_time": null,
+"moon_phase": null,
+"moonrise_time": null,
+"moonset_time": null,
+"snow_depth_in": null,
+"snow_depth_cm": null,
+"snowfall_rate_in": null,
+"wind_chill_f": null,
+"wind_chill_c": null,
+"freezing_level_ft": null,
+"freezing_level_m": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"frost_risk": null,
+"precipitation_type": null,
+"severe_weather_risk": null
+},
+"forecast": {
+"periods": [
+{
+"name": "Today",
+"temperature": 64.0,
+"temperature_low": null,
+"temperature_unit": "F",
+"short_forecast": null,
+"detailed_forecast": null,
+"wind_speed": null,
+"wind_speed_mph": null,
+"wind_direction": null,
+"icon": null,
+"start_time": null,
+"end_time": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"wind_chill_min_f": null,
+"wind_chill_max_f": null,
+"freezing_level_ft": null,
+"ice_risk": null,
+"heat_index_max_f": null,
+"heat_index_min_f": null,
+"uv_index_max": null,
+"air_quality_forecast": null,
+"frost_risk": null,
+"pollen_forecast": null,
+"precipitation_type": null,
+"severe_weather_risk": null,
+"feels_like_high": null,
+"feels_like_low": null
+}
+],
+"generated_at": null,
+"summary": null
+},
+"hourly_forecast": {
+"periods": [
+{
+"start_time": "2026-06-01T12:30:00+00:00",
+"temperature": 60.0,
+"temperature_unit": "F",
+"short_forecast": "Showers",
+"wind_speed": null,
+"wind_direction": null,
+"icon": null,
+"end_time": null,
+"humidity": null,
+"dewpoint_f": null,
+"dewpoint_c": null,
+"pressure_mb": null,
+"pressure_in": null,
+"precipitation_probability": 70.0,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_speed_mph": null,
+"wind_gust_mph": 10.0,
+"precipitation_amount": null,
+"snow_depth": null,
+"freezing_level_ft": null,
+"wind_chill_f": null,
+"wind_chill_c": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"air_quality_index": null,
+"frost_risk": null,
+"pollen_level": null,
+"precipitation_type": null,
+"feels_like": null,
+"visibility_miles": 8.0,
+"visibility_km": null
+},
+{
+"start_time": "2026-06-01T13:00:00+00:00",
+"temperature": 60.0,
+"temperature_unit": "F",
+"short_forecast": "Showers",
+"wind_speed": null,
+"wind_direction": null,
+"icon": null,
+"end_time": null,
+"humidity": null,
+"dewpoint_f": null,
+"dewpoint_c": null,
+"pressure_mb": null,
+"pressure_in": null,
+"precipitation_probability": 70.0,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_speed_mph": null,
+"wind_gust_mph": 18.0,
+"precipitation_amount": null,
+"snow_depth": null,
+"freezing_level_ft": null,
+"wind_chill_f": null,
+"wind_chill_c": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"air_quality_index": null,
+"frost_risk": null,
+"pollen_level": null,
+"precipitation_type": null,
+"feels_like": null,
+"visibility_miles": 4.4,
+"visibility_km": null
+},
+{
+"start_time": "2026-06-01T13:30:00+00:00",
+"temperature": 60.0,
+"temperature_unit": "F",
+"short_forecast": "Showers",
+"wind_speed": null,
+"wind_direction": null,
+"icon": null,
+"end_time": null,
+"humidity": null,
+"dewpoint_f": null,
+"dewpoint_c": null,
+"pressure_mb": null,
+"pressure_in": null,
+"precipitation_probability": 70.0,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_speed_mph": null,
+"wind_gust_mph": 31.0,
+"precipitation_amount": null,
+"snow_depth": null,
+"freezing_level_ft": null,
+"wind_chill_f": null,
+"wind_chill_c": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"air_quality_index": null,
+"frost_risk": null,
+"pollen_level": null,
+"precipitation_type": null,
+"feels_like": null,
+"visibility_miles": 5.0,
+"visibility_km": null
+},
+{
+"start_time": "2026-06-01T14:00:00+00:00",
+"temperature": 60.0,
+"temperature_unit": "F",
+"short_forecast": "Showers",
+"wind_speed": null,
+"wind_direction": null,
+"icon": null,
+"end_time": null,
+"humidity": null,
+"dewpoint_f": null,
+"dewpoint_c": null,
+"pressure_mb": null,
+"pressure_in": null,
+"precipitation_probability": 70.0,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_speed_mph": null,
+"wind_gust_mph": 50.0,
+"precipitation_amount": null,
+"snow_depth": null,
+"freezing_level_ft": null,
+"wind_chill_f": null,
+"wind_chill_c": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"air_quality_index": null,
+"frost_risk": null,
+"pollen_level": null,
+"precipitation_type": null,
+"feels_like": null,
+"visibility_miles": 1.0,
+"visibility_km": null
+}
+],
+"generated_at": "2026-06-01T12:05:00+00:00",
+"summary": null
+},
+"daily_history": [],
+"discussion": null,
+"discussion_issuance_time": null,
+"minutely_precipitation": {
+"summary": "Rain starting in 20 min.",
+"icon": null,
+"points": [
+{
+"time": "2026-06-01T12:00:00+00:00",
+"precipitation_intensity": 0.0,
+"precipitation_probability": 0.1,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:01:00+00:00",
+"precipitation_intensity": 0.0,
+"precipitation_probability": 0.1,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:02:00+00:00",
+"precipitation_intensity": 0.0,
+"precipitation_probability": 0.1,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:03:00+00:00",
+"precipitation_intensity": 0.0,
+"precipitation_probability": 0.1,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:04:00+00:00",
+"precipitation_intensity": 0.0,
+"precipitation_probability": 0.1,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:05:00+00:00",
+"precipitation_intensity": 0.0,
+"precipitation_probability": 0.1,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:06:00+00:00",
+"precipitation_intensity": 0.0,
+"precipitation_probability": 0.1,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:07:00+00:00",
+"precipitation_intensity": 0.0,
+"precipitation_probability": 0.1,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:08:00+00:00",
+"precipitation_intensity": 0.0,
+"precipitation_probability": 0.1,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:09:00+00:00",
+"precipitation_intensity": 0.0,
+"precipitation_probability": 0.1,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:10:00+00:00",
+"precipitation_intensity": 0.0,
+"precipitation_probability": 0.1,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:11:00+00:00",
+"precipitation_intensity": 0.0,
+"precipitation_probability": 0.1,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:12:00+00:00",
+"precipitation_intensity": 0.0,
+"precipitation_probability": 0.1,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:13:00+00:00",
+"precipitation_intensity": 0.0,
+"precipitation_probability": 0.1,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:14:00+00:00",
+"precipitation_intensity": 0.0,
+"precipitation_probability": 0.1,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:15:00+00:00",
+"precipitation_intensity": 0.0,
+"precipitation_probability": 0.1,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:16:00+00:00",
+"precipitation_intensity": 0.0,
+"precipitation_probability": 0.1,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:17:00+00:00",
+"precipitation_intensity": 0.0,
+"precipitation_probability": 0.1,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:18:00+00:00",
+"precipitation_intensity": 0.0,
+"precipitation_probability": 0.1,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:19:00+00:00",
+"precipitation_intensity": 0.0,
+"precipitation_probability": 0.1,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:20:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:21:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:22:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:23:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:24:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:25:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:26:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:27:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:28:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:29:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:30:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:31:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:32:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:33:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:34:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:35:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:36:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:37:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:38:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:39:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:40:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:41:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:42:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:43:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:44:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:45:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:46:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:47:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:48:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:49:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:50:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:51:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:52:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:53:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:54:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:55:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:56:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:57:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:58:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T12:59:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+},
+{
+"time": "2026-06-01T13:00:00+00:00",
+"precipitation_intensity": 0.4,
+"precipitation_probability": 0.8,
+"precipitation_type": null,
+"precipitation_intensity_unit": "mm/hr",
+"precipitation_intensity_error": null,
+"precipitation_intensity_error_unit": "mm/hr"
+}
+]
+},
+"alerts": null,
+"environmental": null,
+"aviation": null,
+"marine": null,
+"trend_insights": [],
+"stale": false,
+"stale_since": null,
+"stale_reason": null,
+"source_attribution": {
+"field_sources": {
+"condition": "nws",
+"minutely_precipitation": "pirateweather"
+},
+"conflicts": [],
+"contributing_sources": [
+"nws",
+"pirateweather"
+],
+"failed_sources": [
+"openmeteo"
+]
+},
+"incomplete_sections": [],
+"alert_lifecycle_diff": null,
+"forecast_confidence": null,
+"anomaly_callout": null
+},
+"variants": [
+{
+"settings": {},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 60°F (16°C) - Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Cloudy",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Rain starting in 20 min."
+},
+{
+"label": "Temperature",
+"value": "60°F (15.6°C)"
+},
+{
+"label": "Visibility",
+"value": "9.0 mi (14.5 km)"
+}
+],
+"fallback_text": "Current conditions for Toronto: Cloudy\nPrecipitation outlook: Rain starting in 20 min.\nTemperature: 60°F (15.6°C)\nVisibility: 9.0 mi (14.5 km)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Toronto",
+"periods": [
+{
+"name": "Today",
+"temperature": "64°F (17.8°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:30 AM",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 AM",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:30 AM",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 AM",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": null,
+"generated_at": null,
+"fallback_text": "Daily forecast for Toronto:\nToday: 64°F (17.8°C)\n\nHourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  8:30 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:00 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:30 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  10:00 AM - 60°F (15.6°C) - Showers - Precip 70% chance",
+"daily_section_text": "Daily forecast for Toronto:\nToday: 64°F (17.8°C)",
+"hourly_section_text": "Hourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  8:30 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:00 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:30 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  10:00 AM - 60°F (15.6°C) - Showers - Precip 70% chance",
+"mobility_briefing": "Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.",
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": {
+"contributing_sources": [
+"National Weather Service",
+"Pirate Weather"
+],
+"failed_sources": [
+"Open-Meteo"
+],
+"incomplete_sections": [],
+"summary_text": "Data from: National Weather Service, Pirate Weather. Unavailable: Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min.",
+"aria_label": "Weather data provided by National Weather Service, Pirate Weather. Data unavailable from Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "60F Cloudy",
+"preview": "60F Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 60F N/A N/A",
+"preview": "Toronto: 60F N/A N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "64F/18C/N/A N/A 70% UV N/A 9.0 mi (14.5 km) N/A",
+"preview": "64F/18C/N/A N/A 70% UV N/A 9.0 mi (14.5 km) N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "60F N/A N/A N/A {unknown}",
+"preview": "60F N/A N/A N/A {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "60F",
+"preview": "60F",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"preview": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+},
+"present_current": {
+"title": "Current conditions for Toronto",
+"description": "Cloudy",
+"metrics": [
+{
+"label": "Temperature",
+"value": "60°F (15.6°C)"
+},
+{
+"label": "Visibility",
+"value": "9.0 mi (14.5 km)"
+}
+],
+"fallback_text": "Current conditions for Toronto: Cloudy\nTemperature: 60°F (15.6°C)\nVisibility: 9.0 mi (14.5 km)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"present_forecast": {
+"title": "Forecast for Toronto",
+"periods": [
+{
+"name": "Today",
+"temperature": "64°F (17.8°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:30 AM",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 AM",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:30 AM",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 AM",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": null,
+"generated_at": null,
+"fallback_text": "Daily forecast for Toronto:\nToday: 64°F (17.8°C)\n\nHourly forecast:\nMobility briefing: Stay dry.\nNext 6 Hours:\n  8:30 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:00 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:30 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  10:00 AM - 60°F (15.6°C) - Showers - Precip 70% chance",
+"daily_section_text": "Daily forecast for Toronto:\nToday: 64°F (17.8°C)",
+"hourly_section_text": "Hourly forecast:\nMobility briefing: Stay dry.\nNext 6 Hours:\n  8:30 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:00 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:30 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  10:00 AM - 60°F (15.6°C) - Showers - Precip 70% chance",
+"mobility_briefing": "Stay dry.",
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"present_alerts": null
+},
+{
+"settings": {
+"temperature_unit": "f"
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 60°F - Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Cloudy",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Rain starting in 20 min."
+},
+{
+"label": "Temperature",
+"value": "60°F"
+},
+{
+"label": "Visibility",
+"value": "9.0 mi"
+}
+],
+"fallback_text": "Current conditions for Toronto: Cloudy\nPrecipitation outlook: Rain starting in 20 min.\nTemperature: 60°F\nVisibility: 9.0 mi",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Toronto",
+"periods": [
+{
+"name": "Today",
+"temperature": "64°F",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:30 AM",
+"temperature": "60°F",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 AM",
+"temperature": "60°F",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:30 AM",
+"temperature": "60°F",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 AM",
+"temperature": "60°F",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": null,
+"generated_at": null,
+"fallback_text": "Daily forecast for Toronto:\nToday: 64°F\n\nHourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  8:30 AM - 60°F - Showers - Precip 70% chance\n  9:00 AM - 60°F - Showers - Precip 70% chance\n  9:30 AM - 60°F - Showers - Precip 70% chance\n  10:00 AM - 60°F - Showers - Precip 70% chance",
+"daily_section_text": "Daily forecast for Toronto:\nToday: 64°F",
+"hourly_section_text": "Hourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  8:30 AM - 60°F - Showers - Precip 70% chance\n  9:00 AM - 60°F - Showers - Precip 70% chance\n  9:30 AM - 60°F - Showers - Precip 70% chance\n  10:00 AM - 60°F - Showers - Precip 70% chance",
+"mobility_briefing": "Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.",
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": {
+"contributing_sources": [
+"National Weather Service",
+"Pirate Weather"
+],
+"failed_sources": [
+"Open-Meteo"
+],
+"incomplete_sections": [],
+"summary_text": "Data from: National Weather Service, Pirate Weather. Unavailable: Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min.",
+"aria_label": "Weather data provided by National Weather Service, Pirate Weather. Data unavailable from Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "60F Cloudy",
+"preview": "60F Cloudy",
+"sample_preview": "72F Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 60F N/A N/A",
+"preview": "Toronto: 60F N/A N/A",
+"sample_preview": "Sample Location: 72F (feels like 74F) NW at 8.0 mph 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "64F/N/A N/A 70% UV N/A 9.0 mi N/A",
+"preview": "64F/N/A N/A 70% UV N/A 9.0 mi N/A",
+"sample_preview": "78F/61F 0.00 in 20% UV 5 10.0 mi 30.10 inHg"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "60F N/A N/A N/A {unknown}",
+"preview": "60F N/A N/A N/A {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "60F",
+"preview": "60F",
+"sample_preview": "Feels like: 74F | 72F"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"preview": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "c"
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 16°C - Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Cloudy",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Rain starting in 20 min."
+},
+{
+"label": "Temperature",
+"value": "15.6°C"
+},
+{
+"label": "Visibility",
+"value": "14.5 km"
+}
+],
+"fallback_text": "Current conditions for Toronto: Cloudy\nPrecipitation outlook: Rain starting in 20 min.\nTemperature: 15.6°C\nVisibility: 14.5 km",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Toronto",
+"periods": [
+{
+"name": "Today",
+"temperature": "17.8°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:30 AM",
+"temperature": "15.6°C",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 AM",
+"temperature": "15.6°C",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:30 AM",
+"temperature": "15.6°C",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 AM",
+"temperature": "15.6°C",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": null,
+"generated_at": null,
+"fallback_text": "Daily forecast for Toronto:\nToday: 17.8°C\n\nHourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  8:30 AM - 15.6°C - Showers - Precip 70% chance\n  9:00 AM - 15.6°C - Showers - Precip 70% chance\n  9:30 AM - 15.6°C - Showers - Precip 70% chance\n  10:00 AM - 15.6°C - Showers - Precip 70% chance",
+"daily_section_text": "Daily forecast for Toronto:\nToday: 17.8°C",
+"hourly_section_text": "Hourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  8:30 AM - 15.6°C - Showers - Precip 70% chance\n  9:00 AM - 15.6°C - Showers - Precip 70% chance\n  9:30 AM - 15.6°C - Showers - Precip 70% chance\n  10:00 AM - 15.6°C - Showers - Precip 70% chance",
+"mobility_briefing": "Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.",
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": {
+"contributing_sources": [
+"National Weather Service",
+"Pirate Weather"
+],
+"failed_sources": [
+"Open-Meteo"
+],
+"incomplete_sections": [],
+"summary_text": "Data from: National Weather Service, Pirate Weather. Unavailable: Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min.",
+"aria_label": "Weather data provided by National Weather Service, Pirate Weather. Data unavailable from Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "N/A Cloudy",
+"preview": "N/A Cloudy",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: N/A N/A N/A",
+"preview": "Toronto: N/A N/A N/A",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 12.9 km/h 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "18C/N/A N/A 70% UV N/A 14.5 km N/A",
+"preview": "18C/N/A N/A 70% UV N/A 14.5 km N/A",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "60F N/A N/A N/A {unknown}",
+"preview": "60F N/A N/A N/A {unknown}",
+"sample_preview": "72F 22C NW 12.9 km/h {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "N/A",
+"preview": "N/A",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"preview": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"sample_preview": "Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "auto"
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 16°C - Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Cloudy",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Rain starting in 20 min."
+},
+{
+"label": "Temperature",
+"value": "15.6°C"
+},
+{
+"label": "Visibility",
+"value": "14.5 km"
+}
+],
+"fallback_text": "Current conditions for Toronto: Cloudy\nPrecipitation outlook: Rain starting in 20 min.\nTemperature: 15.6°C\nVisibility: 14.5 km",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Toronto",
+"periods": [
+{
+"name": "Today",
+"temperature": "17.8°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:30 AM",
+"temperature": "15.6°C",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 AM",
+"temperature": "15.6°C",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:30 AM",
+"temperature": "15.6°C",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 AM",
+"temperature": "15.6°C",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": null,
+"generated_at": null,
+"fallback_text": "Daily forecast for Toronto:\nToday: 17.8°C\n\nHourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  8:30 AM - 15.6°C - Showers - Precip 70% chance\n  9:00 AM - 15.6°C - Showers - Precip 70% chance\n  9:30 AM - 15.6°C - Showers - Precip 70% chance\n  10:00 AM - 15.6°C - Showers - Precip 70% chance",
+"daily_section_text": "Daily forecast for Toronto:\nToday: 17.8°C",
+"hourly_section_text": "Hourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  8:30 AM - 15.6°C - Showers - Precip 70% chance\n  9:00 AM - 15.6°C - Showers - Precip 70% chance\n  9:30 AM - 15.6°C - Showers - Precip 70% chance\n  10:00 AM - 15.6°C - Showers - Precip 70% chance",
+"mobility_briefing": "Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.",
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": {
+"contributing_sources": [
+"National Weather Service",
+"Pirate Weather"
+],
+"failed_sources": [
+"Open-Meteo"
+],
+"incomplete_sections": [],
+"summary_text": "Data from: National Weather Service, Pirate Weather. Unavailable: Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min.",
+"aria_label": "Weather data provided by National Weather Service, Pirate Weather. Data unavailable from Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "N/A Cloudy",
+"preview": "N/A Cloudy",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: N/A N/A N/A",
+"preview": "Toronto: N/A N/A N/A",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 3.6 m/s 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "18C/N/A N/A 70% UV N/A 14.5 km N/A",
+"preview": "18C/N/A N/A 70% UV N/A 14.5 km N/A",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "60F N/A N/A N/A {unknown}",
+"preview": "60F N/A N/A N/A {unknown}",
+"sample_preview": "72F 22C NW 3.6 m/s {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "N/A",
+"preview": "N/A",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"preview": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"sample_preview": "Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "auto",
+"wind_speed_unit": "m/s"
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 16°C - Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Cloudy",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Rain starting in 20 min."
+},
+{
+"label": "Temperature",
+"value": "15.6°C"
+},
+{
+"label": "Visibility",
+"value": "14.5 km"
+}
+],
+"fallback_text": "Current conditions for Toronto: Cloudy\nPrecipitation outlook: Rain starting in 20 min.\nTemperature: 15.6°C\nVisibility: 14.5 km",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Toronto",
+"periods": [
+{
+"name": "Today",
+"temperature": "17.8°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:30 AM",
+"temperature": "15.6°C",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 AM",
+"temperature": "15.6°C",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:30 AM",
+"temperature": "15.6°C",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 AM",
+"temperature": "15.6°C",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": null,
+"generated_at": null,
+"fallback_text": "Daily forecast for Toronto:\nToday: 17.8°C\n\nHourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  8:30 AM - 15.6°C - Showers - Precip 70% chance\n  9:00 AM - 15.6°C - Showers - Precip 70% chance\n  9:30 AM - 15.6°C - Showers - Precip 70% chance\n  10:00 AM - 15.6°C - Showers - Precip 70% chance",
+"daily_section_text": "Daily forecast for Toronto:\nToday: 17.8°C",
+"hourly_section_text": "Hourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  8:30 AM - 15.6°C - Showers - Precip 70% chance\n  9:00 AM - 15.6°C - Showers - Precip 70% chance\n  9:30 AM - 15.6°C - Showers - Precip 70% chance\n  10:00 AM - 15.6°C - Showers - Precip 70% chance",
+"mobility_briefing": "Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.",
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": {
+"contributing_sources": [
+"National Weather Service",
+"Pirate Weather"
+],
+"failed_sources": [
+"Open-Meteo"
+],
+"incomplete_sections": [],
+"summary_text": "Data from: National Weather Service, Pirate Weather. Unavailable: Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min.",
+"aria_label": "Weather data provided by National Weather Service, Pirate Weather. Data unavailable from Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "N/A Cloudy",
+"preview": "N/A Cloudy",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: N/A N/A N/A",
+"preview": "Toronto: N/A N/A N/A",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 3.6 m/s 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "18C/N/A N/A 70% UV N/A 14.5 km N/A",
+"preview": "18C/N/A N/A 70% UV N/A 14.5 km N/A",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "60F N/A N/A N/A {unknown}",
+"preview": "60F N/A N/A N/A {unknown}",
+"sample_preview": "72F 22C NW 3.6 m/s {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "N/A",
+"preview": "N/A",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"preview": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"sample_preview": "Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "both",
+"wind_speed_unit": "kph"
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 60°F (16°C) - Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Cloudy",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Rain starting in 20 min."
+},
+{
+"label": "Temperature",
+"value": "60°F (15.6°C)"
+},
+{
+"label": "Visibility",
+"value": "9.0 mi (14.5 km)"
+}
+],
+"fallback_text": "Current conditions for Toronto: Cloudy\nPrecipitation outlook: Rain starting in 20 min.\nTemperature: 60°F (15.6°C)\nVisibility: 9.0 mi (14.5 km)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Toronto",
+"periods": [
+{
+"name": "Today",
+"temperature": "64°F (17.8°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:30 AM",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 AM",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:30 AM",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 AM",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": null,
+"generated_at": null,
+"fallback_text": "Daily forecast for Toronto:\nToday: 64°F (17.8°C)\n\nHourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  8:30 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:00 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:30 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  10:00 AM - 60°F (15.6°C) - Showers - Precip 70% chance",
+"daily_section_text": "Daily forecast for Toronto:\nToday: 64°F (17.8°C)",
+"hourly_section_text": "Hourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  8:30 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:00 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:30 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  10:00 AM - 60°F (15.6°C) - Showers - Precip 70% chance",
+"mobility_briefing": "Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.",
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": {
+"contributing_sources": [
+"National Weather Service",
+"Pirate Weather"
+],
+"failed_sources": [
+"Open-Meteo"
+],
+"incomplete_sections": [],
+"summary_text": "Data from: National Weather Service, Pirate Weather. Unavailable: Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min.",
+"aria_label": "Weather data provided by National Weather Service, Pirate Weather. Data unavailable from Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "60F Cloudy",
+"preview": "60F Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 60F N/A N/A",
+"preview": "Toronto: 60F N/A N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 12.9 km/h 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "64F/18C/N/A N/A 70% UV N/A 9.0 mi (14.5 km) N/A",
+"preview": "64F/18C/N/A N/A 70% UV N/A 9.0 mi (14.5 km) N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "60F N/A N/A N/A {unknown}",
+"preview": "60F N/A N/A N/A {unknown}",
+"sample_preview": "72F 22C NW 12.9 km/h {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "60F",
+"preview": "60F",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"preview": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"sample_preview": "Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "fahrenheit",
+"wind_speed_unit": "mph",
+"verbosity_level": "detailed",
+"show_impact_summaries": true
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 60°F - Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Cloudy",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Rain starting in 20 min."
+},
+{
+"label": "Temperature",
+"value": "60°F"
+},
+{
+"label": "Visibility",
+"value": "9.0 mi"
+},
+{
+"label": "Impact: Outdoor",
+"value": "Comfortable - good conditions for outdoor activities"
+},
+{
+"label": "Impact: Driving",
+"value": "Normal driving conditions"
+}
+],
+"fallback_text": "Current conditions for Toronto: Cloudy\nPrecipitation outlook: Rain starting in 20 min.\nTemperature: 60°F\nVisibility: 9.0 mi\nImpact: Outdoor: Comfortable - good conditions for outdoor activities\nImpact: Driving: Normal driving conditions",
+"trends": [],
+"impact_summary": {
+"outdoor": "Comfortable - good conditions for outdoor activities",
+"driving": "Normal driving conditions",
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Toronto",
+"periods": [
+{
+"name": "Today",
+"temperature": "64°F",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:30 AM",
+"temperature": "60°F",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": "10 mph",
+"precipitation_amount": null
+},
+{
+"time": "9:00 AM",
+"temperature": "60°F",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": "18 mph",
+"precipitation_amount": null
+},
+{
+"time": "9:30 AM",
+"temperature": "60°F",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": "31 mph",
+"precipitation_amount": null
+},
+{
+"time": "10:00 AM",
+"temperature": "60°F",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": "50 mph",
+"precipitation_amount": null
+}
+],
+"hourly_summary": null,
+"generated_at": null,
+"fallback_text": "Daily forecast for Toronto:\nToday: 64°F\n\nHourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  8:30 AM - 60°F - Showers - Gusts 10 mph - Precip 70% chance\n  9:00 AM - 60°F - Showers - Gusts 18 mph - Precip 70% chance\n  9:30 AM - 60°F - Showers - Gusts 31 mph - Precip 70% chance\n  10:00 AM - 60°F - Showers - Gusts 50 mph - Precip 70% chance",
+"daily_section_text": "Daily forecast for Toronto:\nToday: 64°F",
+"hourly_section_text": "Hourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  8:30 AM - 60°F - Showers - Gusts 10 mph - Precip 70% chance\n  9:00 AM - 60°F - Showers - Gusts 18 mph - Precip 70% chance\n  9:30 AM - 60°F - Showers - Gusts 31 mph - Precip 70% chance\n  10:00 AM - 60°F - Showers - Gusts 50 mph - Precip 70% chance",
+"mobility_briefing": "Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.",
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": {
+"outdoor": "Comfortable - good conditions for outdoor activities",
+"driving": "Normal driving conditions",
+"allergy": null
+}
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": {
+"contributing_sources": [
+"National Weather Service",
+"Pirate Weather"
+],
+"failed_sources": [
+"Open-Meteo"
+],
+"incomplete_sections": [],
+"summary_text": "Data from: National Weather Service, Pirate Weather. Unavailable: Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min.",
+"aria_label": "Weather data provided by National Weather Service, Pirate Weather. Data unavailable from Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "60F Cloudy",
+"preview": "60F Cloudy",
+"sample_preview": "72F Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 60F N/A N/A",
+"preview": "Toronto: 60F N/A N/A",
+"sample_preview": "Sample Location: 72F (feels like 74F) NW at 8.0 mph 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "64F/N/A N/A 70% UV N/A 9.0 mi N/A",
+"preview": "64F/N/A N/A 70% UV N/A 9.0 mi N/A",
+"sample_preview": "78F/61F 0.00 in 20% UV 5 10.0 mi 30.10 inHg"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "60F N/A N/A N/A {unknown}",
+"preview": "60F N/A N/A N/A {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "60F",
+"preview": "60F",
+"sample_preview": "Feels like: 74F | 72F"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"preview": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"verbosity_level": "minimal",
+"round_values": true
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 60°F (16°C) - Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Cloudy",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Rain starting in 20 min."
+},
+{
+"label": "Temperature",
+"value": "60°F (16°C)"
+},
+{
+"label": "Visibility",
+"value": "9 mi (14 km)"
+}
+],
+"fallback_text": "Current conditions for Toronto: Cloudy\nPrecipitation outlook: Rain starting in 20 min.\nTemperature: 60°F (16°C)\nVisibility: 9 mi (14 km)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Toronto",
+"periods": [
+{
+"name": "Today",
+"temperature": "64°F (18°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:30 AM",
+"temperature": "60°F (16°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 AM",
+"temperature": "60°F (16°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:30 AM",
+"temperature": "60°F (16°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 AM",
+"temperature": "60°F (16°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": null,
+"generated_at": null,
+"fallback_text": "Daily forecast for Toronto:\nToday: 64°F (18°C)\n\nHourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  8:30 AM - 60°F (16°C) - Showers\n  9:00 AM - 60°F (16°C) - Showers\n  9:30 AM - 60°F (16°C) - Showers\n  10:00 AM - 60°F (16°C) - Showers",
+"daily_section_text": "Daily forecast for Toronto:\nToday: 64°F (18°C)",
+"hourly_section_text": "Hourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  8:30 AM - 60°F (16°C) - Showers\n  9:00 AM - 60°F (16°C) - Showers\n  9:30 AM - 60°F (16°C) - Showers\n  10:00 AM - 60°F (16°C) - Showers",
+"mobility_briefing": "Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.",
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": {
+"contributing_sources": [
+"National Weather Service",
+"Pirate Weather"
+],
+"failed_sources": [
+"Open-Meteo"
+],
+"incomplete_sections": [],
+"summary_text": "Data from: National Weather Service, Pirate Weather. Unavailable: Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min.",
+"aria_label": "Weather data provided by National Weather Service, Pirate Weather. Data unavailable from Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "60F Cloudy",
+"preview": "60F Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 60F N/A N/A",
+"preview": "Toronto: 60F N/A N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8 mph (13 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "64F/18C/N/A N/A 70% UV N/A 9 mi (14 km) N/A",
+"preview": "64F/18C/N/A N/A 70% UV N/A 9 mi (14 km) N/A",
+"sample_preview": "78F/26C/61F/16C 0 in (0 mm) 20% UV 5 10 mi (16 km) 30 inHg (1019 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "60F N/A N/A N/A {unknown}",
+"preview": "60F N/A N/A N/A {unknown}",
+"sample_preview": "72F 22C NW 8 mph (13 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "60F",
+"preview": "60F",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"preview": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"sample_preview": "Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Part..."
+}
+}
+},
+{
+"settings": {
+"verbosity_level": "detailed",
+"time_format_12hour": false,
+"show_timezone_suffix": true
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 60°F (16°C) - Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Cloudy",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Rain starting in 20 min."
+},
+{
+"label": "Temperature",
+"value": "60°F (15.6°C)"
+},
+{
+"label": "Visibility",
+"value": "9.0 mi (14.5 km)"
+}
+],
+"fallback_text": "Current conditions for Toronto: Cloudy\nPrecipitation outlook: Rain starting in 20 min.\nTemperature: 60°F (15.6°C)\nVisibility: 9.0 mi (14.5 km)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Toronto",
+"periods": [
+{
+"name": "Today",
+"temperature": "64°F (17.8°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "08:30 EDT",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": "10 mph (16 km/h)",
+"precipitation_amount": null
+},
+{
+"time": "09:00 EDT",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": "18 mph (29 km/h)",
+"precipitation_amount": null
+},
+{
+"time": "09:30 EDT",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": "31 mph (50 km/h)",
+"precipitation_amount": null
+},
+{
+"time": "10:00 EDT",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": "50 mph (80 km/h)",
+"precipitation_amount": null
+}
+],
+"hourly_summary": null,
+"generated_at": null,
+"fallback_text": "Daily forecast for Toronto:\nToday: 64°F (17.8°C)\n\nHourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  08:30 EDT - 60°F (15.6°C) - Showers - Gusts 10 mph (16 km/h) - Precip 70% chance\n  09:00 EDT - 60°F (15.6°C) - Showers - Gusts 18 mph (29 km/h) - Precip 70% chance\n  09:30 EDT - 60°F (15.6°C) - Showers - Gusts 31 mph (50 km/h) - Precip 70% chance\n  10:00 EDT - 60°F (15.6°C) - Showers - Gusts 50 mph (80 km/h) - Precip 70% chance",
+"daily_section_text": "Daily forecast for Toronto:\nToday: 64°F (17.8°C)",
+"hourly_section_text": "Hourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  08:30 EDT - 60°F (15.6°C) - Showers - Gusts 10 mph (16 km/h) - Precip 70% chance\n  09:00 EDT - 60°F (15.6°C) - Showers - Gusts 18 mph (29 km/h) - Precip 70% chance\n  09:30 EDT - 60°F (15.6°C) - Showers - Gusts 31 mph (50 km/h) - Precip 70% chance\n  10:00 EDT - 60°F (15.6°C) - Showers - Gusts 50 mph (80 km/h) - Precip 70% chance",
+"mobility_briefing": "Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.",
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": {
+"contributing_sources": [
+"National Weather Service",
+"Pirate Weather"
+],
+"failed_sources": [
+"Open-Meteo"
+],
+"incomplete_sections": [],
+"summary_text": "Data from: National Weather Service, Pirate Weather. Unavailable: Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min.",
+"aria_label": "Weather data provided by National Weather Service, Pirate Weather. Data unavailable from Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "60F Cloudy",
+"preview": "60F Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 60F N/A N/A",
+"preview": "Toronto: 60F N/A N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "64F/18C/N/A N/A 70% UV N/A 9.0 mi (14.5 km) N/A",
+"preview": "64F/18C/N/A N/A 70% UV N/A 9.0 mi (14.5 km) N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "60F N/A N/A N/A {unknown}",
+"preview": "60F N/A N/A N/A {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "60F",
+"preview": "60F",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"preview": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"time_display_mode": "utc",
+"show_timezone_suffix": true
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 60°F (16°C) - Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Cloudy",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Rain starting in 20 min."
+},
+{
+"label": "Temperature",
+"value": "60°F (15.6°C)"
+},
+{
+"label": "Visibility",
+"value": "9.0 mi (14.5 km)"
+}
+],
+"fallback_text": "Current conditions for Toronto: Cloudy\nPrecipitation outlook: Rain starting in 20 min.\nTemperature: 60°F (15.6°C)\nVisibility: 9.0 mi (14.5 km)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Toronto",
+"periods": [
+{
+"name": "Today",
+"temperature": "64°F (17.8°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "12:30 PM UTC",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "1:00 PM UTC",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "1:30 PM UTC",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "2:00 PM UTC",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": null,
+"generated_at": null,
+"fallback_text": "Daily forecast for Toronto:\nToday: 64°F (17.8°C)\n\nHourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  12:30 PM UTC - 60°F (15.6°C) - Showers - Precip 70% chance\n  1:00 PM UTC - 60°F (15.6°C) - Showers - Precip 70% chance\n  1:30 PM UTC - 60°F (15.6°C) - Showers - Precip 70% chance\n  2:00 PM UTC - 60°F (15.6°C) - Showers - Precip 70% chance",
+"daily_section_text": "Daily forecast for Toronto:\nToday: 64°F (17.8°C)",
+"hourly_section_text": "Hourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  12:30 PM UTC - 60°F (15.6°C) - Showers - Precip 70% chance\n  1:00 PM UTC - 60°F (15.6°C) - Showers - Precip 70% chance\n  1:30 PM UTC - 60°F (15.6°C) - Showers - Precip 70% chance\n  2:00 PM UTC - 60°F (15.6°C) - Showers - Precip 70% chance",
+"mobility_briefing": "Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.",
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": {
+"contributing_sources": [
+"National Weather Service",
+"Pirate Weather"
+],
+"failed_sources": [
+"Open-Meteo"
+],
+"incomplete_sections": [],
+"summary_text": "Data from: National Weather Service, Pirate Weather. Unavailable: Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min.",
+"aria_label": "Weather data provided by National Weather Service, Pirate Weather. Data unavailable from Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "60F Cloudy",
+"preview": "60F Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 60F N/A N/A",
+"preview": "Toronto: 60F N/A N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "64F/18C/N/A N/A 70% UV N/A 9.0 mi (14.5 km) N/A",
+"preview": "64F/18C/N/A N/A 70% UV N/A 9.0 mi (14.5 km) N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "60F N/A N/A N/A {unknown}",
+"preview": "60F N/A N/A N/A {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "60F",
+"preview": "60F",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"preview": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"time_display_mode": "both",
+"show_timezone_suffix": true,
+"time_format_12hour": false
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 60°F (16°C) - Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Cloudy",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Rain starting in 20 min."
+},
+{
+"label": "Temperature",
+"value": "60°F (15.6°C)"
+},
+{
+"label": "Visibility",
+"value": "9.0 mi (14.5 km)"
+}
+],
+"fallback_text": "Current conditions for Toronto: Cloudy\nPrecipitation outlook: Rain starting in 20 min.\nTemperature: 60°F (15.6°C)\nVisibility: 9.0 mi (14.5 km)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Toronto",
+"periods": [
+{
+"name": "Today",
+"temperature": "64°F (17.8°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "08:30 EDT (12:30 UTC)",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "09:00 EDT (13:00 UTC)",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "09:30 EDT (13:30 UTC)",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 EDT (14:00 UTC)",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": null,
+"generated_at": null,
+"fallback_text": "Daily forecast for Toronto:\nToday: 64°F (17.8°C)\n\nHourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  08:30 EDT (12:30 UTC) - 60°F (15.6°C) - Showers - Precip 70% chance\n  09:00 EDT (13:00 UTC) - 60°F (15.6°C) - Showers - Precip 70% chance\n  09:30 EDT (13:30 UTC) - 60°F (15.6°C) - Showers - Precip 70% chance\n  10:00 EDT (14:00 UTC) - 60°F (15.6°C) - Showers - Precip 70% chance",
+"daily_section_text": "Daily forecast for Toronto:\nToday: 64°F (17.8°C)",
+"hourly_section_text": "Hourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  08:30 EDT (12:30 UTC) - 60°F (15.6°C) - Showers - Precip 70% chance\n  09:00 EDT (13:00 UTC) - 60°F (15.6°C) - Showers - Precip 70% chance\n  09:30 EDT (13:30 UTC) - 60°F (15.6°C) - Showers - Precip 70% chance\n  10:00 EDT (14:00 UTC) - 60°F (15.6°C) - Showers - Precip 70% chance",
+"mobility_briefing": "Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.",
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": {
+"contributing_sources": [
+"National Weather Service",
+"Pirate Weather"
+],
+"failed_sources": [
+"Open-Meteo"
+],
+"incomplete_sections": [],
+"summary_text": "Data from: National Weather Service, Pirate Weather. Unavailable: Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min.",
+"aria_label": "Weather data provided by National Weather Service, Pirate Weather. Data unavailable from Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "60F Cloudy",
+"preview": "60F Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 60F N/A N/A",
+"preview": "Toronto: 60F N/A N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "64F/18C/N/A N/A 70% UV N/A 9.0 mi (14.5 km) N/A",
+"preview": "64F/18C/N/A N/A 70% UV N/A 9.0 mi (14.5 km) N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "60F N/A N/A N/A {unknown}",
+"preview": "60F N/A N/A N/A {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "60F",
+"preview": "60F",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"preview": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"forecast_time_reference": "user_local",
+"show_timezone_suffix": true
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 60°F (16°C) - Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Cloudy",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Rain starting in 20 min."
+},
+{
+"label": "Temperature",
+"value": "60°F (15.6°C)"
+},
+{
+"label": "Visibility",
+"value": "9.0 mi (14.5 km)"
+}
+],
+"fallback_text": "Current conditions for Toronto: Cloudy\nPrecipitation outlook: Rain starting in 20 min.\nTemperature: 60°F (15.6°C)\nVisibility: 9.0 mi (14.5 km)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Toronto",
+"periods": [
+{
+"name": "Today",
+"temperature": "64°F (17.8°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:30 AM EDT",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 AM EDT",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:30 AM EDT",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 AM EDT",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": null,
+"generated_at": null,
+"fallback_text": "Daily forecast for Toronto:\nToday: 64°F (17.8°C)\n\nHourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  8:30 AM EDT - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:00 AM EDT - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:30 AM EDT - 60°F (15.6°C) - Showers - Precip 70% chance\n  10:00 AM EDT - 60°F (15.6°C) - Showers - Precip 70% chance",
+"daily_section_text": "Daily forecast for Toronto:\nToday: 64°F (17.8°C)",
+"hourly_section_text": "Hourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  8:30 AM EDT - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:00 AM EDT - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:30 AM EDT - 60°F (15.6°C) - Showers - Precip 70% chance\n  10:00 AM EDT - 60°F (15.6°C) - Showers - Precip 70% chance",
+"mobility_briefing": "Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.",
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": {
+"contributing_sources": [
+"National Weather Service",
+"Pirate Weather"
+],
+"failed_sources": [
+"Open-Meteo"
+],
+"incomplete_sections": [],
+"summary_text": "Data from: National Weather Service, Pirate Weather. Unavailable: Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min.",
+"aria_label": "Weather data provided by National Weather Service, Pirate Weather. Data unavailable from Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "60F Cloudy",
+"preview": "60F Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 60F N/A N/A",
+"preview": "Toronto: 60F N/A N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "64F/18C/N/A N/A 70% UV N/A 9.0 mi (14.5 km) N/A",
+"preview": "64F/18C/N/A N/A 70% UV N/A 9.0 mi (14.5 km) N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "60F N/A N/A N/A {unknown}",
+"preview": "60F N/A N/A N/A {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "60F",
+"preview": "60F",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"preview": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"show_dewpoint": false,
+"show_visibility": false,
+"show_uv_index": false,
+"show_pressure_trend": false,
+"show_seasonal_data": false
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 60°F (16°C) - Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Cloudy",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Rain starting in 20 min."
+},
+{
+"label": "Temperature",
+"value": "60°F (15.6°C)"
+}
+],
+"fallback_text": "Current conditions for Toronto: Cloudy\nPrecipitation outlook: Rain starting in 20 min.\nTemperature: 60°F (15.6°C)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Toronto",
+"periods": [
+{
+"name": "Today",
+"temperature": "64°F (17.8°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:30 AM",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 AM",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:30 AM",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 AM",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": null,
+"generated_at": null,
+"fallback_text": "Daily forecast for Toronto:\nToday: 64°F (17.8°C)\n\nHourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  8:30 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:00 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:30 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  10:00 AM - 60°F (15.6°C) - Showers - Precip 70% chance",
+"daily_section_text": "Daily forecast for Toronto:\nToday: 64°F (17.8°C)",
+"hourly_section_text": "Hourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  8:30 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:00 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:30 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  10:00 AM - 60°F (15.6°C) - Showers - Precip 70% chance",
+"mobility_briefing": "Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.",
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": {
+"contributing_sources": [
+"National Weather Service",
+"Pirate Weather"
+],
+"failed_sources": [
+"Open-Meteo"
+],
+"incomplete_sections": [],
+"summary_text": "Data from: National Weather Service, Pirate Weather. Unavailable: Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min.",
+"aria_label": "Weather data provided by National Weather Service, Pirate Weather. Data unavailable from Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "60F Cloudy",
+"preview": "60F Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 60F N/A N/A",
+"preview": "Toronto: 60F N/A N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "64F/18C/N/A N/A 70% UV N/A 9.0 mi (14.5 km) N/A",
+"preview": "64F/18C/N/A N/A 70% UV N/A 9.0 mi (14.5 km) N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "60F N/A N/A N/A {unknown}",
+"preview": "60F N/A N/A N/A {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "60F",
+"preview": "60F",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"preview": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"severe_weather_override": true,
+"category_order": [
+"uv_index",
+"visibility_clouds",
+"humidity_pressure",
+"wind",
+"precipitation",
+"temperature"
+]
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 60°F (16°C) - Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Cloudy",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Rain starting in 20 min."
+},
+{
+"label": "Visibility",
+"value": "9.0 mi (14.5 km)"
+},
+{
+"label": "Temperature",
+"value": "60°F (15.6°C)"
+}
+],
+"fallback_text": "Current conditions for Toronto: Cloudy\nPrecipitation outlook: Rain starting in 20 min.\nVisibility: 9.0 mi (14.5 km)\nTemperature: 60°F (15.6°C)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Toronto",
+"periods": [
+{
+"name": "Today",
+"temperature": "64°F (17.8°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:30 AM",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 AM",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:30 AM",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 AM",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": null,
+"generated_at": null,
+"fallback_text": "Daily forecast for Toronto:\nToday: 64°F (17.8°C)\n\nHourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  8:30 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:00 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:30 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  10:00 AM - 60°F (15.6°C) - Showers - Precip 70% chance",
+"daily_section_text": "Daily forecast for Toronto:\nToday: 64°F (17.8°C)",
+"hourly_section_text": "Hourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  8:30 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:00 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:30 AM - 60°F (15.6°C) - Showers - Precip 70% chance\n  10:00 AM - 60°F (15.6°C) - Showers - Precip 70% chance",
+"mobility_briefing": "Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.",
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": {
+"contributing_sources": [
+"National Weather Service",
+"Pirate Weather"
+],
+"failed_sources": [
+"Open-Meteo"
+],
+"incomplete_sections": [],
+"summary_text": "Data from: National Weather Service, Pirate Weather. Unavailable: Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min.",
+"aria_label": "Weather data provided by National Weather Service, Pirate Weather. Data unavailable from Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "60F Cloudy",
+"preview": "60F Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 60F N/A N/A",
+"preview": "Toronto: 60F N/A N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "64F/18C/N/A N/A 70% UV N/A 9.0 mi (14.5 km) N/A",
+"preview": "64F/18C/N/A N/A 70% UV N/A 9.0 mi (14.5 km) N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "60F N/A N/A N/A {unknown}",
+"preview": "60F N/A N/A N/A {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "60F",
+"preview": "60F",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"preview": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"severe_weather_override": true,
+"show_impact_summaries": true,
+"temperature_unit": "celsius"
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 16°C - Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Cloudy",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Rain starting in 20 min."
+},
+{
+"label": "Temperature",
+"value": "15.6°C"
+},
+{
+"label": "Visibility",
+"value": "14.5 km"
+},
+{
+"label": "Impact: Outdoor",
+"value": "Comfortable - good conditions for outdoor activities"
+},
+{
+"label": "Impact: Driving",
+"value": "Normal driving conditions"
+}
+],
+"fallback_text": "Current conditions for Toronto: Cloudy\nPrecipitation outlook: Rain starting in 20 min.\nTemperature: 15.6°C\nVisibility: 14.5 km\nImpact: Outdoor: Comfortable - good conditions for outdoor activities\nImpact: Driving: Normal driving conditions",
+"trends": [],
+"impact_summary": {
+"outdoor": "Comfortable - good conditions for outdoor activities",
+"driving": "Normal driving conditions",
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Toronto",
+"periods": [
+{
+"name": "Today",
+"temperature": "17.8°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:30 AM",
+"temperature": "15.6°C",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 AM",
+"temperature": "15.6°C",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:30 AM",
+"temperature": "15.6°C",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 AM",
+"temperature": "15.6°C",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": null,
+"generated_at": null,
+"fallback_text": "Daily forecast for Toronto:\nToday: 17.8°C\n\nHourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  8:30 AM - 15.6°C - Showers - Precip 70% chance\n  9:00 AM - 15.6°C - Showers - Precip 70% chance\n  9:30 AM - 15.6°C - Showers - Precip 70% chance\n  10:00 AM - 15.6°C - Showers - Precip 70% chance",
+"daily_section_text": "Daily forecast for Toronto:\nToday: 17.8°C",
+"hourly_section_text": "Hourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 6 Hours:\n  8:30 AM - 15.6°C - Showers - Precip 70% chance\n  9:00 AM - 15.6°C - Showers - Precip 70% chance\n  9:30 AM - 15.6°C - Showers - Precip 70% chance\n  10:00 AM - 15.6°C - Showers - Precip 70% chance",
+"mobility_briefing": "Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.",
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": {
+"outdoor": "Comfortable - good conditions for outdoor activities",
+"driving": "Normal driving conditions",
+"allergy": null
+}
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": {
+"contributing_sources": [
+"National Weather Service",
+"Pirate Weather"
+],
+"failed_sources": [
+"Open-Meteo"
+],
+"incomplete_sections": [],
+"summary_text": "Data from: National Weather Service, Pirate Weather. Unavailable: Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min.",
+"aria_label": "Weather data provided by National Weather Service, Pirate Weather. Data unavailable from Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "N/A Cloudy",
+"preview": "N/A Cloudy",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: N/A N/A N/A",
+"preview": "Toronto: N/A N/A N/A",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 12.9 km/h 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "18C/N/A N/A 70% UV N/A 14.5 km N/A",
+"preview": "18C/N/A N/A 70% UV N/A 14.5 km N/A",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "60F N/A N/A N/A {unknown}",
+"preview": "60F N/A N/A N/A {unknown}",
+"sample_preview": "72F 22C NW 12.9 km/h {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "N/A",
+"preview": "N/A",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"preview": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"sample_preview": "Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW..."
+}
+}
+},
+{
+"settings": {
+"forecast_duration_days": 3,
+"hourly_forecast_hours": 12,
+"round_values": true
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 60°F (16°C) - Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Cloudy",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Rain starting in 20 min."
+},
+{
+"label": "Temperature",
+"value": "60°F (16°C)"
+},
+{
+"label": "Visibility",
+"value": "9 mi (14 km)"
+}
+],
+"fallback_text": "Current conditions for Toronto: Cloudy\nPrecipitation outlook: Rain starting in 20 min.\nTemperature: 60°F (16°C)\nVisibility: 9 mi (14 km)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Toronto",
+"periods": [
+{
+"name": "Today",
+"temperature": "64°F (18°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:30 AM",
+"temperature": "60°F (16°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 AM",
+"temperature": "60°F (16°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:30 AM",
+"temperature": "60°F (16°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 AM",
+"temperature": "60°F (16°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": null,
+"generated_at": null,
+"fallback_text": "Daily forecast for Toronto:\nToday: 64°F (18°C)\n\nHourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 12 Hours:\n  8:30 AM - 60°F (16°C) - Showers - Precip 70% chance\n  9:00 AM - 60°F (16°C) - Showers - Precip 70% chance\n  9:30 AM - 60°F (16°C) - Showers - Precip 70% chance\n  10:00 AM - 60°F (16°C) - Showers - Precip 70% chance",
+"daily_section_text": "Daily forecast for Toronto:\nToday: 64°F (18°C)",
+"hourly_section_text": "Hourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 12 Hours:\n  8:30 AM - 60°F (16°C) - Showers - Precip 70% chance\n  9:00 AM - 60°F (16°C) - Showers - Precip 70% chance\n  9:30 AM - 60°F (16°C) - Showers - Precip 70% chance\n  10:00 AM - 60°F (16°C) - Showers - Precip 70% chance",
+"mobility_briefing": "Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.",
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": {
+"contributing_sources": [
+"National Weather Service",
+"Pirate Weather"
+],
+"failed_sources": [
+"Open-Meteo"
+],
+"incomplete_sections": [],
+"summary_text": "Data from: National Weather Service, Pirate Weather. Unavailable: Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min.",
+"aria_label": "Weather data provided by National Weather Service, Pirate Weather. Data unavailable from Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "60F Cloudy",
+"preview": "60F Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 60F N/A N/A",
+"preview": "Toronto: 60F N/A N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8 mph (13 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "64F/18C/N/A N/A 70% UV N/A 9 mi (14 km) N/A",
+"preview": "64F/18C/N/A N/A 70% UV N/A 9 mi (14 km) N/A",
+"sample_preview": "78F/26C/61F/16C 0 in (0 mm) 20% UV 5 10 mi (16 km) 30 inHg (1019 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "60F N/A N/A N/A {unknown}",
+"preview": "60F N/A N/A N/A {unknown}",
+"sample_preview": "72F 22C NW 8 mph (13 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "60F",
+"preview": "60F",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"preview": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"sample_preview": "Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Part..."
+}
+}
+},
+{
+"settings": {
+"forecast_duration_days": 16,
+"hourly_forecast_hours": 48,
+"date_format": "eu",
+"time_display_mode": "both"
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 60°F (16°C) - Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Cloudy",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Rain starting in 20 min."
+},
+{
+"label": "Temperature",
+"value": "60°F (15.6°C)"
+},
+{
+"label": "Visibility",
+"value": "9.0 mi (14.5 km)"
+}
+],
+"fallback_text": "Current conditions for Toronto: Cloudy\nPrecipitation outlook: Rain starting in 20 min.\nTemperature: 60°F (15.6°C)\nVisibility: 9.0 mi (14.5 km)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Toronto",
+"periods": [
+{
+"name": "Today",
+"temperature": "64°F (17.8°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:30 AM (12:30 PM UTC)",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 AM (1:00 PM UTC)",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:30 AM (1:30 PM UTC)",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 AM (2:00 PM UTC)",
+"temperature": "60°F (15.6°C)",
+"conditions": "Showers",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": "70%",
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": null,
+"generated_at": null,
+"fallback_text": "Daily forecast for Toronto:\nToday: 64°F (17.8°C)\n\nHourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 48 Hours:\n  8:30 AM (12:30 PM UTC) - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:00 AM (1:00 PM UTC) - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:30 AM (1:30 PM UTC) - 60°F (15.6°C) - Showers - Precip 70% chance\n  10:00 AM (2:00 PM UTC) - 60°F (15.6°C) - Showers - Precip 70% chance",
+"daily_section_text": "Daily forecast for Toronto:\nToday: 64°F (17.8°C)",
+"hourly_section_text": "Hourly forecast:\nMobility briefing: Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.\nNext 48 Hours:\n  8:30 AM (12:30 PM UTC) - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:00 AM (1:00 PM UTC) - 60°F (15.6°C) - Showers - Precip 70% chance\n  9:30 AM (1:30 PM UTC) - 60°F (15.6°C) - Showers - Precip 70% chance\n  10:00 AM (2:00 PM UTC) - 60°F (15.6°C) - Showers - Precip 70% chance",
+"mobility_briefing": "Dry for 20 minutes, then rain likely; gusts increase within 90 minutes; visibility may drop to around 4 miles.",
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": {
+"contributing_sources": [
+"National Weather Service",
+"Pirate Weather"
+],
+"failed_sources": [
+"Open-Meteo"
+],
+"incomplete_sections": [],
+"summary_text": "Data from: National Weather Service, Pirate Weather. Unavailable: Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min.",
+"aria_label": "Weather data provided by National Weather Service, Pirate Weather. Data unavailable from Open-Meteo. Data note: current conditions from National Weather Service report Cloudy; hourly forecast from another source says Showers; minute-by-minute precipitation outlook from Pirate Weather says Rain starting in 20 min."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "60F Cloudy",
+"preview": "60F Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 60F N/A N/A",
+"preview": "Toronto: 60F N/A N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "64F/18C/N/A N/A 70% UV N/A 9.0 mi (14.5 km) N/A",
+"preview": "64F/18C/N/A N/A 70% UV N/A 9.0 mi (14.5 km) N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "60F N/A N/A N/A {unknown}",
+"preview": "60F N/A N/A N/A {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "60F",
+"preview": "60F",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"preview": "Toronto Cloudy N/A Toronto Cloudy N/A Toronto Cloudy N/A Toronto",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+}
+]
+}

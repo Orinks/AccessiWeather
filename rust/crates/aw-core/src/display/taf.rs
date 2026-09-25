@@ -107,7 +107,7 @@ fn format_from_time(token: &str) -> String {
 // ---------------------------------------------------------------------------
 
 /// `WIND_RE`: `^(\d{3}|VRB)(\d{2,3})(G\d{2,3})?(KT|MPS|KMH)$`.
-fn decode_wind(token: &str) -> Option<String> {
+pub fn decode_wind(token: &str) -> Option<String> {
     let dir = token.get(..3)?;
     if !(digits_n(dir, 3) || dir == "VRB") {
         return None;
@@ -164,7 +164,7 @@ fn parse_float(text: &str) -> Option<f64> {
     text.trim().parse().ok()
 }
 
-fn decode_visibility(token: &str) -> Option<String> {
+pub fn decode_visibility(token: &str) -> Option<String> {
     let working = token.trim();
     if working.is_empty() {
         return None;
@@ -299,7 +299,7 @@ pub fn infer_unknown_precipitation_label(
     }
 }
 
-fn decode_weather(token: &str) -> Option<String> {
+pub fn decode_weather(token: &str) -> Option<String> {
     if token.is_empty() {
         return None;
     }
@@ -398,7 +398,7 @@ fn match_cloud(token: &str) -> Option<(&str, Option<&str>, Option<&str>)> {
     None
 }
 
-fn decode_cloud(token: &str) -> Option<String> {
+pub fn decode_cloud(token: &str) -> Option<String> {
     if token.is_empty() {
         return None;
     }
