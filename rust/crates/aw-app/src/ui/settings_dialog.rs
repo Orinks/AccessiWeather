@@ -12,6 +12,7 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use aw_core::display::tray::TaskbarIconUpdater;
+use aw_services::import_export;
 use aw_services::update::{self, messages, UpdateService};
 use aw_store::secrets::{self, PORTABLE_PASSPHRASE_KEY};
 use serde_json::{Map, Value};
@@ -485,8 +486,8 @@ impl SettingsDialog {
     /// `_on_copy_installed_config_to_portable`.
     fn on_copy_installed_config_to_portable(&self) {
         let portable_dir = self.config_dir();
-        let installed_dir = actions::installed_config_dir();
-        if let Err(reason) = actions::installed_config_precheck(&installed_dir) {
+        let installed_dir = import_export::installed_config_dir().unwrap_or_default();
+        if let Err(reason) = import_export::check_installed_config(&installed_dir) {
             self.message(
                 &format!(
                     "Nothing to transfer from installed config.\n{}\n\nDetails: {reason}",
@@ -519,7 +520,9 @@ impl SettingsDialog {
         }
         let _ = save(&self.state.borrow());
 
-        let copied = match actions::copy_installed_config(&installed_dir, &portable_dir) {
+        let copied =
+            actions::copy_installed_config(&self.state.borrow(), &installed_dir, &portable_dir);
+        let copied = match copied {
             Ok(copied) => copied,
             Err(e) => {
                 tracing::error!("Failed to copy installed config to portable: {e}");
@@ -535,7 +538,8 @@ impl SettingsDialog {
             );
             return;
         }
-        if let Err(problems) = actions::validate_portable_copy(&installed_dir, &portable_dir) {
+        if let Err(problems) = import_export::validate_portable_copy(&installed_dir, &portable_dir)
+        {
             let details: Vec<String> = problems.iter().map(|m| format!("• {m}")).collect();
             self.message(
                 &format!(
@@ -548,7 +552,7 @@ impl SettingsDialog {
             return;
         }
         let reloaded = actions::reload_config(&mut self.state.borrow_mut())
-            .and_then(|()| actions::portable_copy_summary(&portable_dir));
+            .and_then(|()| import_export::portable_copy_summary(&portable_dir));
         let summary = match reloaded {
             Ok(summary) => summary,
             Err(e) => {
@@ -746,25 +750,23 @@ impl SettingsDialog {
         ) else {
             return;
         };
-        let exported = actions::export_settings(&path, &self.state.borrow().config);
-        match exported {
-            Ok(()) => self.message(
+        let exported = import_export::export_settings(&self.state.borrow().config, &path);
+        if exported {
+            self.message(
                 &format!(
                     "Settings exported successfully to:\n{}\n\nNote: {API_KEYS_TRANSFER_NOTE}",
                     path.display()
                 ),
                 "Export Complete",
                 INFO,
-            ),
-            Err(e) => {
-                tracing::error!("Failed to export settings: {e}");
-                self.message(
-                    "Failed to export settings. Please try again.",
-                    "Export Failed",
-                    ERROR,
-                )
-            }
-        };
+            );
+        } else {
+            self.message(
+                "Failed to export settings. Please try again.",
+                "Export Failed",
+                ERROR,
+            );
+        }
     }
 
     /// `_on_import_settings`.
@@ -782,28 +784,20 @@ impl SettingsDialog {
         if answer != ID_YES {
             return;
         }
-        let imported = {
-            let mut st = self.state.borrow_mut();
-            actions::import_settings(&path, &mut st.config)
-                .and_then(|()| save(&st).map_err(|e| e.to_string()))
-        };
-        match imported {
-            Ok(()) => {
-                self.load_settings();
-                self.message(
-                    &format!("Settings imported successfully!\n\nNote: {API_KEYS_TRANSFER_NOTE}"),
-                    "Import Complete",
-                    INFO,
-                );
-            }
-            Err(e) => {
-                tracing::error!("Failed to import settings: {e}");
-                self.message(
-                    "Failed to import settings.\n\nThe file may be invalid or corrupted.",
-                    "Import Failed",
-                    ERROR,
-                );
-            }
+        let imported = actions::import_settings(&mut self.state.borrow_mut(), &path);
+        if imported {
+            self.load_settings();
+            self.message(
+                &format!("Settings imported successfully!\n\nNote: {API_KEYS_TRANSFER_NOTE}"),
+                "Import Complete",
+                INFO,
+            );
+        } else {
+            self.message(
+                "Failed to import settings.\n\nThe file may be invalid or corrupted.",
+                "Import Failed",
+                ERROR,
+            );
         }
     }
 
@@ -1201,7 +1195,7 @@ impl SettingsDialog {
     fn on_open_config_dir(&self) {
         let dir = self.config_dir();
         if dir.exists() {
-            actions::open_folder(&dir);
+            aw_services::open_in_shell(&dir);
         } else {
             self.message(
                 &format!("Config directory not found: {}", dir.display()),
@@ -1213,9 +1207,9 @@ impl SettingsDialog {
 
     /// `_on_open_installed_config_dir`.
     fn on_open_installed_config_dir(&self) {
-        let dir = actions::installed_config_dir();
+        let dir = import_export::installed_config_dir().unwrap_or_default();
         if dir.exists() {
-            actions::open_folder(&dir);
+            aw_services::open_in_shell(&dir);
         } else {
             self.message(
                 &format!("Installed config directory not found: {}", dir.display()),
@@ -1229,7 +1223,7 @@ impl SettingsDialog {
     fn on_open_soundpacks_dir(&self) {
         let dir = aw_audio::player().soundpacks_dir();
         if dir.exists() {
-            actions::open_folder(dir);
+            aw_services::open_in_shell(dir);
         } else {
             self.message(
                 &format!("Sound packs directory not found: {}", dir.display()),
