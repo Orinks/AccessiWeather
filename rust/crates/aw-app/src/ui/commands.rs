@@ -33,8 +33,9 @@ pub(crate) fn toggle_event_center() {
 /// (`_on_discussion` -> `_on_forecast_products`).
 pub(crate) fn on_discussion() {
     let Some(w) = window() else { return };
+    // All Locations keeps the last current location, which is what opens.
     let current = with_state().and_then(|s| s.borrow().config.current_location.clone());
-    if current.is_none() {
+    let Some(current) = current else {
         message_box(
             &w.frame,
             MSG_SELECT_LOCATION_FIRST,
@@ -42,8 +43,8 @@ pub(crate) fn on_discussion() {
             MessageDialogStyle::OK | MessageDialogStyle::IconWarning,
         );
         return;
-    }
-    not_ported("Forecaster Notes");
+    };
+    super::forecast_products::open_forecaster_notes(&current);
 }
 
 /// View > Aviation Weather.

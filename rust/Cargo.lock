@@ -12,6 +12,7 @@ dependencies = [
  "chrono",
  "clap",
  "embed-manifest",
+ "libc",
  "prismer",
  "serde",
  "serde_json",

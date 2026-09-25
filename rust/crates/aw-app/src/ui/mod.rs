@@ -3,6 +3,7 @@
 
 mod commands;
 mod display;
+mod forecast_products;
 mod location_dialog;
 mod locations;
 mod main_window;
