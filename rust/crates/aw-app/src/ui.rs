@@ -11,6 +11,11 @@ use wxdragon::prelude::*;
 use crate::app::SMOKE_DURATION_MS;
 use crate::app::{post_to_ui, remember_weather, save, status_for, with_state, Shared, State};
 
+#[cfg(target_os = "macos")]
+const MOD_KEY: &str = "Cmd";
+#[cfg(not(target_os = "macos"))]
+const MOD_KEY: &str = "Ctrl";
+
 const ID_ADD_LOCATION: Id = ID_HIGHEST + 1;
 const ID_REMOVE_LOCATION: Id = ID_HIGHEST + 2;
 const ID_REFRESH: Id = ID_HIGHEST + 3;
@@ -186,7 +191,7 @@ pub(crate) fn build_main_window(state: &Shared, smoke: bool) {
     let current = text_box(
         &panel,
         "Current conditions",
-        "Current conditions (Ctrl+2)",
+        &format!("Current conditions ({MOD_KEY}+2)"),
         &root,
         2,
         110,
@@ -194,7 +199,7 @@ pub(crate) fn build_main_window(state: &Shared, smoke: bool) {
     let hourly = text_box(
         &panel,
         "Hourly forecast",
-        "Hourly forecast (Ctrl+3)",
+        &format!("Hourly forecast ({MOD_KEY}+3)"),
         &root,
         2,
         110,
@@ -202,7 +207,7 @@ pub(crate) fn build_main_window(state: &Shared, smoke: bool) {
     let daily = text_box(
         &panel,
         "Extended forecast",
-        "Extended forecast (Ctrl+4)",
+        &format!("Extended forecast ({MOD_KEY}+4)"),
         &root,
         3,
         150,
@@ -217,7 +222,9 @@ pub(crate) fn build_main_window(state: &Shared, smoke: bool) {
     label_control(
         &alerts,
         "Weather alerts",
-        Some("Active alerts; press Enter for details (Ctrl+5)"),
+        Some(&format!(
+            "Active alerts; press Enter for details ({MOD_KEY}+5)"
+        )),
     );
     alerts_sizer.add(&alerts, 1, SizerFlag::Expand | SizerFlag::All, 4);
 
@@ -239,7 +246,9 @@ pub(crate) fn build_main_window(state: &Shared, smoke: bool) {
     label_control(
         &discussion_button,
         "Forecast discussion",
-        Some("Read the NWS area forecast discussion (Ctrl+D)"),
+        Some(&format!(
+            "Read the NWS area forecast discussion ({MOD_KEY}+D)"
+        )),
     );
     let read_button = Button::builder(&panel)
         .with_id(ID_READ_ALOUD)
@@ -248,13 +257,19 @@ pub(crate) fn build_main_window(state: &Shared, smoke: bool) {
     label_control(
         &read_button,
         "Read aloud",
-        Some("Speak the summary and current conditions (Ctrl+Shift+S)"),
+        Some(&format!(
+            "Speak the summary and current conditions ({MOD_KEY}+Shift+S)"
+        )),
     );
     let settings_button = Button::builder(&panel)
         .with_id(ID_SETTINGS)
         .with_label("&Settings…")
         .build();
-    label_control(&settings_button, "Settings", Some("Open settings (Ctrl+,)"));
+    label_control(
+        &settings_button,
+        "Settings",
+        Some(&format!("Open settings ({MOD_KEY}+,)")),
+    );
     for b in [
         &details_button,
         &discussion_button,
@@ -352,7 +367,7 @@ fn build_menu_bar() -> MenuBar {
     let weather = Menu::builder()
         .append_item(
             ID_ALERT_DETAILS,
-            "Alert &Details\tCtrl+Shift+A",
+            "Alert &Details",
             "Show the selected alert",
         )
         .append_item(
@@ -1001,7 +1016,8 @@ fn spin_row(
         .with_max_value(max)
         .with_initial_value(value.clamp(min, max))
         .build();
-    label_control(&spin, name, None);
+    let hint = format!("{name}, {min} to {max}");
+    label_control(&spin, name, Some(&hint));
     row.add(
         &text,
         0,
