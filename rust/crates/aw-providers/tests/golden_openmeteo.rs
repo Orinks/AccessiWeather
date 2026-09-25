@@ -33,7 +33,13 @@ fn parsers_and_mapper_match_python() {
                 to_value(mapper::map_hourly_uv_index(input)).unwrap(),
             ),
         ];
-        for (key, actual) in checks {
+        for (key, mut actual) in checks {
+            // The golden file records Python's naive `datetime.now()` with
+            // the local offset; the model keeps it naive.
+            if let Some(g) = actual.get_mut("generated_at").filter(|g| !g.is_null()) {
+                assert_eq!(*g, to_value(now.naive_local()).unwrap(), "{name}.{key}");
+                *g = to_value(now).unwrap();
+            }
             assert_matches(&case[key], &actual, &format!("{name}.{key}"), &[]);
         }
     }
@@ -41,6 +47,10 @@ fn parsers_and_mapper_match_python() {
 
 fn nyc() -> Location {
     Location::new("New York", 40.7128, -74.006)
+}
+
+fn now() -> aw_core::model::Timestamp {
+    chrono::Local::now().fixed_offset()
 }
 
 fn london() -> Location {
@@ -58,12 +68,26 @@ fn fetchers_request_the_same_urls() {
                     .unwrap(),
             ),
             "fetch_forecast_model_clamped" => to_value(
-                openmeteo::get_openmeteo_forecast(&http, &london(), base, 30, "icon_seamless")
-                    .unwrap(),
+                openmeteo::get_openmeteo_forecast(
+                    &http,
+                    &london(),
+                    base,
+                    30,
+                    "icon_seamless",
+                    now(),
+                )
+                .unwrap(),
             ),
             "fetch_hourly_min_clamped" => to_value(
-                openmeteo::get_openmeteo_hourly_forecast(&http, &nyc(), base, 0, "best_match")
-                    .unwrap(),
+                openmeteo::get_openmeteo_hourly_forecast(
+                    &http,
+                    &nyc(),
+                    base,
+                    0,
+                    "best_match",
+                    now(),
+                )
+                .unwrap(),
             ),
             "fetch_dict_client_urls" => {
                 let client = OpenMeteoApiClient::new(&http);

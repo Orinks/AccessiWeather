@@ -58,6 +58,7 @@ impl NwsSource for Fakes {
             discussion_issuance_time,
             alerts,
             hourly_forecast,
+            timezone: None,
         })
     }
     fn get_forecast_and_discussion(
@@ -484,4 +485,99 @@ fn cached_weather_and_force_refresh_invalidation() {
         Some("Weather data not available.")
     );
     assert!(client.get_cached_weather(&location).is_none());
+}
+
+/// A source that reports /points' timezone, as the live NWS adapter does.
+struct TimezoneNws(Arc<Fakes>);
+
+impl NwsSource for TimezoneNws {
+    fn get_all_data(&self, location: &Location, radius: &str) -> SourceResult<NwsAllData> {
+        Ok(NwsAllData {
+            timezone: Some("America/New_York".into()),
+            ..NwsSource::get_all_data(&*self.0, location, radius)?
+        })
+    }
+    fn get_forecast_and_discussion(
+        &self,
+        location: &Location,
+    ) -> SourceResult<(Option<Forecast>, Option<String>, Option<Timestamp>)> {
+        self.0.get_forecast_and_discussion(location)
+    }
+    fn get_discussion_only(
+        &self,
+        location: &Location,
+    ) -> SourceResult<(Option<String>, Option<Timestamp>)> {
+        self.0.get_discussion_only(location)
+    }
+    fn get_alerts(&self, location: &Location, radius: &str) -> SourceResult<Option<WeatherAlerts>> {
+        NwsSource::get_alerts(&*self.0, location, radius)
+    }
+    fn fetch_cancel_references(&self, lookback_minutes: i64) -> HashSet<String> {
+        self.0.fetch_cancel_references(lookback_minutes)
+    }
+}
+
+#[test]
+fn nws_timezone_lands_on_the_weather_location() {
+    let current = json!({"value": {"temperature_f": 50.0}});
+    let fakes = fakes_with(json!({
+        "nws": {"all": {"value": [current["value"], null, null, null, null, null]},
+                "cancel_refs": {"value": []}},
+        "openmeteo": {"all": {"value": [null, null, null]}, "current": {"value": null}},
+        "aviation": {"station": {"value": [null, null]}},
+    }));
+    let mut client_sources = sources(&fakes, false, false);
+    client_sources.nws = Arc::new(TimezoneNws(fakes.clone()));
+    for data_source in ["nws", "auto"] {
+        let client = WeatherClient::new(
+            client_sources.clone(),
+            AppSettings::default(),
+            data_source,
+            None,
+        );
+        let weather = client.get_weather_data(&us(), false);
+        assert_eq!(
+            weather.location.timezone.as_deref(),
+            Some("America/New_York"),
+            "{data_source}"
+        );
+    }
+}
+
+#[test]
+fn reconfigure_swaps_sources_but_keeps_alert_history() {
+    let alert = json!({"title": "Wind Advisory", "description": "", "event": "Wind Advisory",
+                       "id": "a1", "severity": "Moderate", "urgency": "", "certainty": ""});
+    let nws = fakes_with(json!({
+        "nws": {"all": {"value": [{"temperature_f": 50.0}, null, null, null,
+                                  {"alerts": [alert]}, null]},
+                "cancel_refs": {"value": []}},
+        "aviation": {"station": {"value": [null, null]}},
+    }));
+    let client = WeatherClient::new(
+        sources(&nws, false, false),
+        AppSettings::default(),
+        "nws",
+        None,
+    );
+    let first = client.get_weather_data(&us(), false);
+    assert_eq!(first.alert_lifecycle_diff.unwrap().new_alerts.len(), 1);
+
+    let settings = AppSettings {
+        data_source: "openmeteo".into(),
+        ..AppSettings::default()
+    };
+    let openmeteo = fakes_with(json!({
+        "openmeteo": {"all": {"value": [{"temperature_f": 60.0}, null, null]}},
+        "aviation": {"station": {"value": [null, null]}},
+    }));
+    client.reconfigure(sources(&openmeteo, false, false), settings);
+    assert_eq!(client.data_source(), "openmeteo");
+    let second = client.get_weather_data(&us(), true);
+    assert_eq!(second.current.unwrap().temperature_f, Some(60.0));
+
+    // Back on NWS, the alert is already known.
+    client.reconfigure(sources(&nws, false, false), AppSettings::default());
+    let third = client.get_weather_data(&us(), true);
+    assert!(third.alert_lifecycle_diff.unwrap().new_alerts.is_empty());
 }

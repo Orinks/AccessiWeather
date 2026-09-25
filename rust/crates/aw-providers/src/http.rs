@@ -507,6 +507,27 @@ impl HttpClient for FixtureClient {
     }
 }
 
+/// Python's `async_retry_with_backoff(max_attempts, base_delay)`: retryable
+/// failures are tried again after `base_delay`, doubling each time.
+pub fn retry_with_backoff<T>(
+    max_attempts: u32,
+    base_delay: Duration,
+    mut attempt: impl FnMut() -> Result<T, HttpError>,
+) -> Result<T, HttpError> {
+    let mut n = 1;
+    loop {
+        match attempt() {
+            Err(e) if e.is_retryable() && n < max_attempts => {
+                let delay = base_delay * 2u32.pow(n - 1);
+                tracing::warn!("Attempt {n}/{max_attempts} failed with {e}. Retrying in {delay:?}");
+                std::thread::sleep(delay);
+                n += 1;
+            }
+            other => return other,
+        }
+    }
+}
+
 /// Fetch and deserialize JSON into a typed struct.
 pub fn get_typed<T: serde::de::DeserializeOwned>(
     client: &dyn HttpClient,

@@ -15,8 +15,8 @@ use std::path::PathBuf;
 
 use aw_core::model::{
     CurrentConditions, EnvironmentalConditions, Forecast, ForecastPeriod, HourlyForecast,
-    HourlyForecastPeriod, Location, SourceAttribution, Timestamp, TrendInsight, WeatherAlert,
-    WeatherAlerts, WeatherData,
+    HourlyForecastPeriod, Location, PyTimestamp, SourceAttribution, Timestamp, TrendInsight,
+    WeatherAlert, WeatherAlerts, WeatherData,
 };
 use chrono::{
     DateTime, Duration, FixedOffset, Local, NaiveDate, NaiveDateTime, SecondsFormat, TimeZone,
@@ -420,6 +420,11 @@ fn ts(value: &Option<Timestamp>) -> Value {
     serialize_datetime(value.as_ref())
 }
 
+/// Python stores a naive datetime as its wall time in UTC.
+fn py_ts(value: &Option<PyTimestamp>) -> Value {
+    serialize_datetime(value.map(|v| v.coerce_utc().fixed_offset()).as_ref())
+}
+
 fn serialize_current(c: &CurrentConditions) -> Value {
     obj(vec![
         ("temperature_f", json!(c.temperature_f)),
@@ -563,7 +568,7 @@ pub fn serialize_weather_data(w: &WeatherData) -> Value {
                         "periods",
                         Value::Array(f.periods.iter().map(serialize_forecast_period).collect()),
                     ),
-                    ("generated_at", ts(&f.generated_at)),
+                    ("generated_at", py_ts(&f.generated_at)),
                 ])
             })),
         ),
@@ -575,7 +580,7 @@ pub fn serialize_weather_data(w: &WeatherData) -> Value {
                         "periods",
                         Value::Array(h.periods.iter().map(serialize_hourly_period).collect()),
                     ),
-                    ("generated_at", ts(&h.generated_at)),
+                    ("generated_at", py_ts(&h.generated_at)),
                 ])
             })),
         ),
@@ -808,7 +813,7 @@ pub fn deserialize_weather_data(
                 .into_iter()
                 .map(|p| deserialize_forecast_period(&Fields(p, now)))
                 .collect(),
-            generated_at: d.time("generated_at"),
+            generated_at: d.time("generated_at").map(PyTimestamp::Aware),
             summary: None,
         }),
         hourly_forecast: with_periods("hourly_forecast").map(|d| HourlyForecast {
@@ -817,7 +822,7 @@ pub fn deserialize_weather_data(
                 .into_iter()
                 .map(|p| deserialize_hourly_period(&Fields(p, now)))
                 .collect(),
-            generated_at: d.time("generated_at"),
+            generated_at: d.time("generated_at").map(PyTimestamp::Aware),
             summary: None,
         }),
         discussion: top.string("discussion"),

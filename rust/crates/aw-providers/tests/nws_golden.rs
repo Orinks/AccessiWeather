@@ -62,6 +62,13 @@ fn first_difference(path: &str, got: &Value, want: &Value) -> Option<String> {
             .enumerate()
             .find_map(|(i, (g, w))| first_difference(&format!("{path}[{i}]"), g, w)),
         _ if got == want => None,
+        // The goldens freeze an aware UTC `now()`; the parsers stamp the
+        // app's naive `datetime.now()`, so only the wall time can match.
+        (Value::String(g), Value::String(w))
+            if path.ends_with(".generated_at") && w.strip_suffix('Z') == Some(g.as_str()) =>
+        {
+            None
+        }
         _ => Some(format!("{path}: got {got}, want {want}")),
     }
 }

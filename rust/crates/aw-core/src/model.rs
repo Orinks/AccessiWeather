@@ -10,7 +10,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use chrono::{DateTime, FixedOffset, Utc};
+use chrono::{DateTime, FixedOffset, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -19,6 +19,28 @@ pub use crate::location::Location;
 /// A point in time with the offset it was reported in (NWS and Open-Meteo
 /// report local offsets, which the presentation layer relies on).
 pub type Timestamp = DateTime<FixedOffset>;
+
+/// A Python `datetime` that may be naive. The NWS and Open-Meteo parsers
+/// stamp `generated_at` with a naive `datetime.now()` (local wall time),
+/// Pirate Weather with an aware UTC now. The presenter shows a naive value
+/// as it is; the mobility briefing and the offline cache read its wall time
+/// as UTC (`replace(tzinfo=UTC)`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum PyTimestamp {
+    Aware(Timestamp),
+    Naive(NaiveDateTime),
+}
+
+impl PyTimestamp {
+    /// Python's `dt.replace(tzinfo=UTC) if dt.tzinfo is None else dt.astimezone(UTC)`.
+    pub fn coerce_utc(&self) -> DateTime<Utc> {
+        match self {
+            PyTimestamp::Aware(t) => t.with_timezone(&Utc),
+            PyTimestamp::Naive(wall) => wall.and_utc(),
+        }
+    }
+}
 
 // ---------------------------------------------------------------------------
 // weather_core
@@ -353,7 +375,7 @@ impl Default for ForecastPeriod {
 #[serde(default)]
 pub struct Forecast {
     pub periods: Vec<ForecastPeriod>,
-    pub generated_at: Option<Timestamp>,
+    pub generated_at: Option<PyTimestamp>,
     pub summary: Option<String>,
 }
 
@@ -495,7 +517,7 @@ impl HourlyForecastPeriod {
 #[serde(default)]
 pub struct HourlyForecast {
     pub periods: Vec<HourlyForecastPeriod>,
-    pub generated_at: Option<Timestamp>,
+    pub generated_at: Option<PyTimestamp>,
     pub summary: Option<String>,
 }
 

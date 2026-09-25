@@ -121,7 +121,7 @@ fn test_weather() -> WeatherData {
                 short_forecast: Some("Sunny".into()),
                 ..Default::default()
             }],
-            generated_at: Some(Utc::now().fixed_offset()),
+            generated_at: Some(PyTimestamp::Aware(Utc::now().fixed_offset())),
             summary: None,
         }),
         alerts: Some(WeatherAlerts::default()),

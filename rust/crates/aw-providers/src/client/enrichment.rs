@@ -19,7 +19,7 @@ use serde_json::Value;
 
 use super::auto::should_enrich_nws_discussion;
 use super::sources::{AviationOptions, SourceResult};
-use super::WeatherClient;
+use super::{Config, WeatherClient};
 
 /// `_get_uv_category` (EPA/WHO bands).
 pub fn uv_category(uv_index: f64) -> &'static str {
@@ -210,20 +210,25 @@ fn joined<T>(name: &str, handle: Option<ScopedJoinHandle<'_, SourceResult<T>>>) 
 impl WeatherClient {
     /// `_launch_enrichment_tasks` + `_await_enrichments`: enrich, apply trend
     /// insights, then remember and cache the result.
-    pub(super) fn run_enrichments(&self, weather: &mut WeatherData, location: &Location) {
-        let auto = self.data_source == "auto";
+    pub(super) fn run_enrichments(
+        &self,
+        cfg: &Config,
+        weather: &mut WeatherData,
+        location: &Location,
+    ) {
+        let auto = cfg.data_source == "auto";
         let is_us = self.is_us(location);
         let want_sun = auto && weather.current.is_some();
         let want_discussion = auto && is_us && should_enrich_nws_discussion(weather);
-        let air_quality = self.settings.air_quality_enabled;
-        let pollen = self.settings.pollen_enabled;
+        let air_quality = cfg.settings.air_quality_enabled;
+        let pollen = cfg.settings.pollen_enabled;
 
         let results = std::thread::scope(|scope| {
             let sun = want_sun
-                .then(|| scope.spawn(|| self.sources.openmeteo.get_current_conditions(location)));
+                .then(|| scope.spawn(|| cfg.sources.openmeteo.get_current_conditions(location)));
             let discussion = want_discussion
-                .then(|| scope.spawn(|| self.sources.nws.get_forecast_and_discussion(location)));
-            let environmental = self
+                .then(|| scope.spawn(|| cfg.sources.nws.get_forecast_and_discussion(location)));
+            let environmental = cfg
                 .sources
                 .environmental
                 .as_ref()
@@ -239,9 +244,9 @@ impl WeatherClient {
                         )
                     })
                 });
-            let aviation = is_us.then(|| scope.spawn(|| self.fetch_aviation(location)));
+            let aviation = is_us.then(|| scope.spawn(|| self.fetch_aviation(cfg, location)));
             let marine = (location.marine_mode && is_us)
-                .then(|| scope.spawn(|| self.fetch_marine(location)));
+                .then(|| scope.spawn(|| Self::fetch_marine(cfg, location)));
 
             Enrichments {
                 sun: joined("sunrise_sunset", sun).flatten(),
@@ -256,9 +261,9 @@ impl WeatherClient {
 
         apply_trend_insights(
             weather,
-            self.settings.trend_insights_enabled,
-            self.trend_hours(),
-            self.settings.show_pressure_trend,
+            self.trends.enabled,
+            self.trends.hours,
+            self.trends.show_pressure,
             self.now(),
         );
         self.persist_weather_data(&weather.location.clone(), weather);
@@ -298,8 +303,12 @@ impl WeatherClient {
     }
 
     /// `enrich_with_aviation_data`: TAF for the location's primary station.
-    fn fetch_aviation(&self, location: &Location) -> SourceResult<Option<AviationData>> {
-        let (station_id, station_name) = self.sources.aviation.primary_station_info(location)?;
+    fn fetch_aviation(
+        &self,
+        cfg: &Config,
+        location: &Location,
+    ) -> SourceResult<Option<AviationData>> {
+        let (station_id, station_name) = cfg.sources.aviation.primary_station_info(location)?;
         let Some(station_id) = station_id.filter(|s| !s.is_empty()) else {
             return Ok(None);
         };
@@ -312,14 +321,14 @@ impl WeatherClient {
 
     /// `enrich_with_marine_data`: zone forecast summary and marine alerts.
     fn fetch_marine(
-        &self,
+        cfg: &Config,
         location: &Location,
     ) -> SourceResult<Option<(Option<MarineForecast>, WeatherAlerts)>> {
-        let zones = self.sources.marine.marine_zones(location)?;
+        let zones = cfg.sources.marine.marine_zones(location)?;
         let Some((zone_id, zone_properties)) = marine_zone(&zones) else {
             return Ok(None);
         };
-        let Some(forecast) = self
+        let Some(forecast) = cfg
             .sources
             .marine
             .marine_forecast(&zone_id)?
@@ -331,7 +340,7 @@ impl WeatherClient {
             .filter(MarineForecast::has_data);
         // Python sets the forecast before requesting alerts, so an alerts
         // failure keeps the forecast.
-        let alerts = match self.sources.marine.marine_alerts(&zone_id) {
+        let alerts = match cfg.sources.marine.marine_alerts(&zone_id) {
             Ok(alerts) => alerts,
             Err(e) => {
                 tracing::debug!(

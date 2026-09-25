@@ -4,7 +4,7 @@ use std::collections::HashSet;
 
 use aw_core::model::{
     CurrentConditions, Forecast, ForecastPeriod, HourlyForecast, HourlyForecastPeriod, Location,
-    Timestamp, WeatherAlert, WeatherAlerts, WindDirection,
+    PyTimestamp, Timestamp, WeatherAlert, WeatherAlerts, WindDirection,
 };
 use chrono::DateTime;
 use serde_json::Value;
@@ -209,7 +209,7 @@ pub fn parse_forecast(data: &Value, now: Timestamp) -> Forecast {
 
     Forecast {
         periods,
-        generated_at: Some(now),
+        generated_at: Some(PyTimestamp::Naive(now.naive_local())),
         summary: None,
     }
 }
@@ -377,7 +377,7 @@ pub fn parse_hourly_forecast(
 
     Ok(HourlyForecast {
         periods,
-        generated_at: Some(now),
+        generated_at: Some(PyTimestamp::Naive(now.naive_local())),
         summary: None,
     })
 }
@@ -590,7 +590,10 @@ mod tests {
         assert_eq!(monday.detailed_forecast.as_deref(), Some("Sunny."));
         assert_eq!(monday.wind_speed.as_deref(), Some("5 to 10 mph"));
         assert_eq!(monday.wind_speed_mph, Some(10.0));
-        assert_eq!(f.generated_at, Some(now()));
+        assert_eq!(
+            f.generated_at,
+            Some(PyTimestamp::Naive(now().naive_local()))
+        );
         assert!(
             parse_forecast(&json!({"properties": {"periods": []}}), now())
                 .periods

@@ -21,7 +21,7 @@ use crate::display::units::{
 };
 use crate::model::{
     Forecast, ForecastConfidence, ForecastConfidenceLevel, ForecastPeriod, HourlyForecast,
-    HourlyForecastPeriod, MarineForecast,
+    HourlyForecastPeriod, MarineForecast, PyTimestamp,
 };
 use crate::settings::AppSettings;
 
@@ -269,8 +269,12 @@ pub fn build_forecast(
     }
 
     let generated_at = forecast.generated_at.map(|g| {
+        let generated = match g {
+            PyTimestamp::Aware(t) => PyDateTime::aware(t, ctx.location_zone),
+            PyTimestamp::Naive(wall) => PyDateTime::naive(wall),
+        };
         let shown = resolve_forecast_display_time(
-            &PyDateTime::aware(g, ctx.location_zone),
+            &generated,
             &s.forecast_time_reference,
             ctx.location_zone,
             &ctx.clock,

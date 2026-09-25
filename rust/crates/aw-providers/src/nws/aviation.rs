@@ -28,7 +28,7 @@ pub enum AviationError {
 
 /// Optional extras for [`NwsClient::aviation_weather`]
 /// (`include_sigmets`, `atsu`, `include_cwas`, `cwsu_id`).
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct AviationOptions {
     pub include_sigmets: bool,
     pub atsu: Option<String>,

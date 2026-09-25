@@ -1,7 +1,9 @@
 //! Open-Meteo daily and hourly parsing, ported from the parse functions in
 //! `accessiweather.weather_client_openmeteo`.
 
-use aw_core::model::{Forecast, ForecastPeriod, HourlyForecast, HourlyForecastPeriod, Timestamp};
+use aw_core::model::{
+    Forecast, ForecastPeriod, HourlyForecast, HourlyForecastPeriod, PyTimestamp, Timestamp,
+};
 use aw_core::provider_normalization::{classify_apparent_temperature, normalize_dewpoint_pair};
 use aw_core::py;
 use aw_core::weather_client_parsers::{
@@ -87,7 +89,7 @@ pub fn parse_openmeteo_forecast(data: &Value, now: Timestamp) -> Forecast {
     }
     Forecast {
         periods,
-        generated_at: Some(now),
+        generated_at: Some(PyTimestamp::Naive(now.naive_local())),
         summary: None,
     }
 }
@@ -170,7 +172,7 @@ pub fn parse_openmeteo_hourly_forecast(data: &Value, now: Timestamp) -> HourlyFo
     }
     HourlyForecast {
         periods,
-        generated_at: Some(now),
+        generated_at: Some(PyTimestamp::Naive(now.naive_local())),
         summary: None,
     }
 }

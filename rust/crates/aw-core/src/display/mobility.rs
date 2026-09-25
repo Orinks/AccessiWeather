@@ -27,7 +27,7 @@ fn infer_reference_time(data: &WeatherData) -> Option<DateTime<Utc>> {
             candidates.push(p.start_time.with_timezone(&Utc));
         }
         if let Some(g) = h.generated_at {
-            candidates.push(g.with_timezone(&Utc));
+            candidates.push(g.coerce_utc());
         }
     }
     candidates.into_iter().min()
