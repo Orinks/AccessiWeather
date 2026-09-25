@@ -1,0 +1,619 @@
+{
+  "fixture": {
+    "default/pack.json": "{\"name\": \"Default\", \"author\": \"AccessiWeather Team\", \"sounds\": {\"alert\": \"alert.ogg\", \"notify\": \"notify.ogg\", \"tornado_warning\": \"alert.ogg\", \"wind2x_gust\": \"gone.ogg\"}}",
+    "default/alert.ogg": "a",
+    "default/notify.ogg": "n",
+    "custom/pack.json": "{\n    \"name\": \"Custom\",\n    \"author\": \"Me\",\n    \"description\": \"Mine\",\n    \"sounds\": {\n        \"notify\": \"n.wav\",\n        \"alert\": {\n            \"file\": \"a.wav\",\n            \"volume\": 0.29\n        },\n        \"startup\": \"missing.wav\"\n    },\n    \"volumes\": {\n        \"notify\": 0.25,\n        \"startup\": 0.5\n    },\n    \"extra_field\": [\n        1,\n        2\n    ]\n}",
+    "custom/n.wav": "n",
+    "custom/a.wav": "a",
+    "unicode/pack.json": "{\"name\": \"Caf\\u00e9 \\u2602\", \"author\": \"Zo\\u00eb\", \"sounds\": {\"alert\": \"a.ogg\"}}",
+    "unicode/a.ogg": "a",
+    "unicode/sub/deep.txt": "d",
+    "broken/pack.json": "{",
+    "external/siren.wav": "siren",
+    "external/chime.wav": "chime"
+  },
+  "loaded": [
+    {
+      "pack_id": "custom",
+      "name": "Custom",
+      "author": "Me",
+      "description": "Mine",
+      "sounds": {
+        "notify": "n.wav",
+        "alert": {
+          "file": "a.wav",
+          "volume": 0.29
+        },
+        "startup": "missing.wav"
+      }
+    },
+    {
+      "pack_id": "default",
+      "name": "Default",
+      "author": "AccessiWeather Team",
+      "description": "",
+      "sounds": {
+        "alert": "alert.ogg",
+        "notify": "notify.ogg",
+        "tornado_warning": "alert.ogg",
+        "wind2x_gust": "gone.ogg"
+      }
+    },
+    {
+      "pack_id": "unicode",
+      "name": "Café ☂",
+      "author": "Zoë",
+      "description": "",
+      "sounds": {
+        "alert": "a.ogg"
+      }
+    }
+  ],
+  "pack_list": [
+    "Café ☂ (by Zoë)",
+    "Custom (by Me)",
+    "Default (by AccessiWeather Team)"
+  ],
+  "details": {
+    "custom": {
+      "sounds": [
+        [
+          "General notification (n.wav) @ 25% - ✓",
+          [
+            "notify",
+            "n.wav",
+            0.25
+          ]
+        ],
+        [
+          "General alert (a.wav) @ 28% - ✓",
+          [
+            "alert",
+            "a.wav",
+            0.29
+          ]
+        ],
+        [
+          "App startup (missing.wav) @ 50% - ✗",
+          [
+            "startup",
+            "missing.wav",
+            0.5
+          ]
+        ]
+      ],
+      "categories": [
+        [
+          "alert",
+          "a.wav",
+          28,
+          true
+        ],
+        [
+          "notify",
+          "n.wav",
+          25,
+          true
+        ],
+        [
+          "error",
+          "",
+          100,
+          false
+        ],
+        [
+          "success",
+          "",
+          100,
+          false
+        ],
+        [
+          "data_updated",
+          "",
+          100,
+          false
+        ],
+        [
+          "fetch_error",
+          "",
+          100,
+          false
+        ],
+        [
+          "discussion_update",
+          "",
+          100,
+          false
+        ],
+        [
+          "severe_risk",
+          "",
+          100,
+          false
+        ],
+        [
+          "alert_updated",
+          "",
+          100,
+          false
+        ],
+        [
+          "startup",
+          "missing.wav",
+          50,
+          false
+        ],
+        [
+          "exit",
+          "",
+          100,
+          false
+        ],
+        [
+          "extreme",
+          "",
+          100,
+          false
+        ],
+        [
+          "severe",
+          "",
+          100,
+          false
+        ],
+        [
+          "moderate",
+          "",
+          100,
+          false
+        ],
+        [
+          "minor",
+          "",
+          100,
+          false
+        ],
+        [
+          "unknown",
+          "",
+          100,
+          false
+        ]
+      ]
+    },
+    "default": {
+      "sounds": [
+        [
+          "General alert (alert.ogg) @ 100% - ✓",
+          [
+            "alert",
+            "alert.ogg",
+            1.0
+          ]
+        ],
+        [
+          "General notification (notify.ogg) @ 100% - ✓",
+          [
+            "notify",
+            "notify.ogg",
+            1.0
+          ]
+        ],
+        [
+          "Tornado Warning (alert.ogg) @ 100% - ✓",
+          [
+            "tornado_warning",
+            "alert.ogg",
+            1.0
+          ]
+        ],
+        [
+          "Wind2X Gust (gone.ogg) @ 100% - ✗",
+          [
+            "wind2x_gust",
+            "gone.ogg",
+            1.0
+          ]
+        ]
+      ],
+      "categories": [
+        [
+          "alert",
+          "alert.ogg",
+          100,
+          true
+        ],
+        [
+          "notify",
+          "notify.ogg",
+          100,
+          true
+        ],
+        [
+          "error",
+          "",
+          100,
+          false
+        ],
+        [
+          "success",
+          "",
+          100,
+          false
+        ],
+        [
+          "data_updated",
+          "",
+          100,
+          false
+        ],
+        [
+          "fetch_error",
+          "",
+          100,
+          false
+        ],
+        [
+          "discussion_update",
+          "",
+          100,
+          false
+        ],
+        [
+          "severe_risk",
+          "",
+          100,
+          false
+        ],
+        [
+          "alert_updated",
+          "",
+          100,
+          false
+        ],
+        [
+          "startup",
+          "",
+          100,
+          false
+        ],
+        [
+          "exit",
+          "",
+          100,
+          false
+        ],
+        [
+          "extreme",
+          "",
+          100,
+          false
+        ],
+        [
+          "severe",
+          "",
+          100,
+          false
+        ],
+        [
+          "moderate",
+          "",
+          100,
+          false
+        ],
+        [
+          "minor",
+          "",
+          100,
+          false
+        ],
+        [
+          "unknown",
+          "",
+          100,
+          false
+        ]
+      ]
+    },
+    "unicode": {
+      "sounds": [
+        [
+          "General alert (a.ogg) @ 100% - ✓",
+          [
+            "alert",
+            "a.ogg",
+            1.0
+          ]
+        ]
+      ],
+      "categories": [
+        [
+          "alert",
+          "a.ogg",
+          100,
+          true
+        ],
+        [
+          "notify",
+          "",
+          100,
+          false
+        ],
+        [
+          "error",
+          "",
+          100,
+          false
+        ],
+        [
+          "success",
+          "",
+          100,
+          false
+        ],
+        [
+          "data_updated",
+          "",
+          100,
+          false
+        ],
+        [
+          "fetch_error",
+          "",
+          100,
+          false
+        ],
+        [
+          "discussion_update",
+          "",
+          100,
+          false
+        ],
+        [
+          "severe_risk",
+          "",
+          100,
+          false
+        ],
+        [
+          "alert_updated",
+          "",
+          100,
+          false
+        ],
+        [
+          "startup",
+          "",
+          100,
+          false
+        ],
+        [
+          "exit",
+          "",
+          100,
+          false
+        ],
+        [
+          "extreme",
+          "",
+          100,
+          false
+        ],
+        [
+          "severe",
+          "",
+          100,
+          false
+        ],
+        [
+          "moderate",
+          "",
+          100,
+          false
+        ],
+        [
+          "minor",
+          "",
+          100,
+          false
+        ],
+        [
+          "unknown",
+          "",
+          100,
+          false
+        ]
+      ]
+    }
+  },
+  "steps": [
+    [
+      "set_volume",
+      "custom",
+      "notify",
+      "n.wav",
+      0.55,
+      "{\n  \"name\": \"Custom\",\n  \"author\": \"Me\",\n  \"description\": \"Mine\",\n  \"sounds\": {\n    \"notify\": {\n      \"file\": \"n.wav\",\n      \"volume\": 0.55\n    },\n    \"alert\": {\n      \"file\": \"a.wav\",\n      \"volume\": 0.29\n    },\n    \"startup\": \"missing.wav\"\n  },\n  \"volumes\": {\n    \"notify\": 0.25,\n    \"startup\": 0.5\n  },\n  \"extra_field\": [\n    1,\n    2\n  ]\n}"
+    ],
+    [
+      "set_volume",
+      "custom",
+      "startup",
+      "missing.wav",
+      1.0,
+      "{\n  \"name\": \"Custom\",\n  \"author\": \"Me\",\n  \"description\": \"Mine\",\n  \"sounds\": {\n    \"notify\": {\n      \"file\": \"n.wav\",\n      \"volume\": 0.55\n    },\n    \"alert\": {\n      \"file\": \"a.wav\",\n      \"volume\": 0.29\n    },\n    \"startup\": \"missing.wav\"\n  },\n  \"volumes\": {\n    \"notify\": 0.25\n  },\n  \"extra_field\": [\n    1,\n    2\n  ]\n}"
+    ],
+    [
+      "apply_mapping",
+      "custom",
+      "severe",
+      "siren.wav",
+      0.4,
+      "Mapped 'severe' to 'siren.wav' at 40%.",
+      "{\n  \"name\": \"Custom\",\n  \"author\": \"Me\",\n  \"description\": \"Mine\",\n  \"sounds\": {\n    \"notify\": {\n      \"file\": \"n.wav\",\n      \"volume\": 0.55\n    },\n    \"alert\": {\n      \"file\": \"a.wav\",\n      \"volume\": 0.29\n    },\n    \"startup\": \"missing.wav\",\n    \"severe\": {\n      \"file\": \"siren.wav\",\n      \"volume\": 0.4\n    }\n  },\n  \"volumes\": {\n    \"notify\": 0.25\n  },\n  \"extra_field\": [\n    1,\n    2\n  ]\n}"
+    ],
+    [
+      "apply_mapping",
+      "custom",
+      "exit",
+      "chime.wav",
+      1.0,
+      "Mapped 'exit' to 'chime.wav'.",
+      "{\n  \"name\": \"Custom\",\n  \"author\": \"Me\",\n  \"description\": \"Mine\",\n  \"sounds\": {\n    \"notify\": {\n      \"file\": \"n.wav\",\n      \"volume\": 0.55\n    },\n    \"alert\": {\n      \"file\": \"a.wav\",\n      \"volume\": 0.29\n    },\n    \"startup\": \"missing.wav\",\n    \"severe\": {\n      \"file\": \"siren.wav\",\n      \"volume\": 0.4\n    },\n    \"exit\": \"chime.wav\"\n  },\n  \"volumes\": {\n    \"notify\": 0.25\n  },\n  \"extra_field\": [\n    1,\n    2\n  ]\n}"
+    ],
+    [
+      "apply_mapping",
+      "custom",
+      "tornado_warning",
+      "siren.wav",
+      1.0,
+      "Mapped 'tornado_warning' to 'siren.wav'.",
+      "{\n  \"name\": \"Custom\",\n  \"author\": \"Me\",\n  \"description\": \"Mine\",\n  \"sounds\": {\n    \"notify\": {\n      \"file\": \"n.wav\",\n      \"volume\": 0.55\n    },\n    \"alert\": {\n      \"file\": \"a.wav\",\n      \"volume\": 0.29\n    },\n    \"startup\": \"missing.wav\",\n    \"severe\": {\n      \"file\": \"siren.wav\",\n      \"volume\": 0.4\n    },\n    \"exit\": \"chime.wav\",\n    \"tornado_warning\": \"siren.wav\"\n  },\n  \"volumes\": {\n    \"notify\": 0.25\n  },\n  \"extra_field\": [\n    1,\n    2\n  ]\n}"
+    ],
+    [
+      "remove_mapping",
+      "custom",
+      "  Severe ",
+      "Removed mapping for 'severe'.",
+      "{\n  \"name\": \"Custom\",\n  \"author\": \"Me\",\n  \"description\": \"Mine\",\n  \"sounds\": {\n    \"notify\": {\n      \"file\": \"n.wav\",\n      \"volume\": 0.55\n    },\n    \"alert\": {\n      \"file\": \"a.wav\",\n      \"volume\": 0.29\n    },\n    \"startup\": \"missing.wav\",\n    \"exit\": \"chime.wav\",\n    \"tornado_warning\": \"siren.wav\"\n  },\n  \"volumes\": {\n    \"notify\": 0.25\n  },\n  \"extra_field\": [\n    1,\n    2\n  ]\n}"
+    ],
+    [
+      "remove_mapping",
+      "custom",
+      "nothere",
+      "No mapping exists for 'nothere'.",
+      "{\n  \"name\": \"Custom\",\n  \"author\": \"Me\",\n  \"description\": \"Mine\",\n  \"sounds\": {\n    \"notify\": {\n      \"file\": \"n.wav\",\n      \"volume\": 0.55\n    },\n    \"alert\": {\n      \"file\": \"a.wav\",\n      \"volume\": 0.29\n    },\n    \"startup\": \"missing.wav\",\n    \"exit\": \"chime.wav\",\n    \"tornado_warning\": \"siren.wav\"\n  },\n  \"volumes\": {\n    \"notify\": 0.25\n  },\n  \"extra_field\": [\n    1,\n    2\n  ]\n}"
+    ]
+  ],
+  "duplicate": [
+    [
+      "unicode_copy",
+      "Created 'Café ☂ (Copy)'.",
+      {
+        "a.ogg": "a",
+        "pack.json": "{\n  \"name\": \"Caf\\u00e9 \\u2602 (Copy)\",\n  \"author\": \"Zo\\u00eb\",\n  \"sounds\": {\n    \"alert\": \"a.ogg\"\n  }\n}",
+        "sub/deep.txt": "d"
+      }
+    ],
+    [
+      "unicode_copy2",
+      "Created 'Café ☂ (Copy)'.",
+      {
+        "a.ogg": "a",
+        "pack.json": "{\n  \"name\": \"Caf\\u00e9 \\u2602 (Copy)\",\n  \"author\": \"Zo\\u00eb\",\n  \"sounds\": {\n    \"alert\": \"a.ogg\"\n  }\n}",
+        "sub/deep.txt": "d"
+      }
+    ]
+  ],
+  "export": {
+    "a.ogg": "a",
+    "pack.json": "{\"name\": \"Caf\\u00e9 \\u2602\", \"author\": \"Zo\\u00eb\", \"sounds\": {\"alert\": \"a.ogg\"}}",
+    "sub/deep.txt": "d"
+  },
+  "import": [
+    [
+      "first",
+      [
+        [
+          "pack.json",
+          "{\"name\": \"Imported Pack-One\", \"sounds\": {\"alert\": \"a.wav\"}}"
+        ],
+        [
+          "a.wav",
+          "1"
+        ],
+        [
+          "sub/b.wav",
+          "b"
+        ]
+      ],
+      [
+        "Sound pack 'Imported Pack-One' imported successfully."
+      ]
+    ],
+    [
+      "overwrite",
+      [
+        [
+          "pack.json",
+          "{\"name\": \"Imported Pack-One\", \"sounds\": {}}"
+        ],
+        [
+          "c.wav",
+          "2"
+        ]
+      ],
+      [
+        "A sound pack named 'Imported Pack-One' already exists. Overwrite?",
+        "Sound pack 'Imported Pack-One' imported successfully."
+      ]
+    ],
+    [
+      "unnamed",
+      [
+        [
+          "pack.json",
+          "{\"sounds\": {}}"
+        ]
+      ],
+      [
+        "Sound pack 'Unknown Pack' imported successfully."
+      ]
+    ],
+    [
+      "nested",
+      [
+        [
+          "x/pack.json",
+          "{\"name\": \"Nested\"}"
+        ]
+      ],
+      [
+        "Invalid sound pack: missing pack.json file."
+      ]
+    ]
+  ],
+  "import_tree": {
+    "imported_pack_one": {
+      "c.wav": "2",
+      "pack.json": "{\"name\": \"Imported Pack-One\", \"sounds\": {}}"
+    },
+    "unknown_pack": {
+      "pack.json": "{\"sounds\": {}}"
+    }
+  },
+  "wizard": {
+    "state": {
+      "pack_name": "My Cool-Pack! é",
+      "author": "",
+      "description": "Desc é",
+      "sources": [
+        "exit=two.ogg",
+        "startup=one.wav",
+        "alert=gone.wav",
+        "notify=one.wav"
+      ]
+    },
+    "created": [
+      [
+        "my_cool_pack_é",
+        "Sound pack 'My Cool-Pack! é' created successfully!",
+        {
+          "one.wav": "1",
+          "pack.json": "{\n  \"name\": \"My Cool-Pack! \\u00e9\",\n  \"author\": \"Unknown\",\n  \"description\": \"Desc \\u00e9\",\n  \"version\": \"1.0.0\",\n  \"sounds\": {\n    \"exit\": \"two.ogg\",\n    \"startup\": \"one.wav\",\n    \"notify\": \"one.wav\"\n  }\n}",
+          "two.ogg": "2"
+        }
+      ],
+      [
+        "my_cool_pack_é_2",
+        "Sound pack 'My Cool-Pack! é' created successfully!",
+        {
+          "one.wav": "1",
+          "pack.json": "{\n  \"name\": \"My Cool-Pack! \\u00e9\",\n  \"author\": \"Unknown\",\n  \"description\": \"Desc \\u00e9\",\n  \"version\": \"1.0.0\",\n  \"sounds\": {\n    \"exit\": \"two.ogg\",\n    \"startup\": \"one.wav\",\n    \"notify\": \"one.wav\"\n  }\n}",
+          "two.ogg": "2"
+        }
+      ]
+    ]
+  }
+}
