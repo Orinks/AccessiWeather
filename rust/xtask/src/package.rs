@@ -495,8 +495,9 @@ const FORBIDDEN_BUNDLED_PREFIXES: &[&str] = &[
     "libatspi",
 ];
 
-/// Ubuntu sonames the binary links (wxWidgets' image handlers) that other
-/// distros name differently, so the AppImage must carry them.
+/// Ubuntu sonames that other distros name differently (Fedora ships
+/// libjpeg.so.62), so the AppImage must carry them whenever the binary
+/// links them (wxWidgets' image handlers).
 const REQUIRED_BUNDLED_SONAMES: &[&str] = &["libjpeg.so.8", "libtiff.so.6"];
 
 /// Download `url` to `target` with simple retries; keep an existing file.
@@ -589,7 +590,7 @@ fn appimage(stage: &Path, dist: &Path) -> Result<PathBuf> {
         .filter(|p| p.extension().is_some_and(|x| x == "AppImage"))
         .max_by_key(|p| fs::metadata(p).and_then(|m| m.modified()).ok())
         .ok_or("linuxdeploy did not produce an AppImage")?;
-    verify_bundled_libraries(&appdir.join("usr/lib"))?;
+    verify_bundled_libraries(&appdir.join("usr/lib"), &payload.join("AccessiWeather"))?;
 
     let out = dist.join(format!("AccessiWeather_Linux_v{VERSION}_x86_64.AppImage"));
     remove_file_if_exists(&out)?;
@@ -599,8 +600,21 @@ fn appimage(stage: &Path, dist: &Path) -> Result<PathBuf> {
     Ok(out)
 }
 
+/// The sonames `binary` links directly (`objdump -p`'s NEEDED entries).
+fn needed_libraries(binary: &Path) -> Result<Vec<String>> {
+    let output = Command::new("objdump").arg("-p").arg(binary).output()?;
+    if !output.status.success() {
+        return Err(format!("objdump -p {} failed", binary.display()).into());
+    }
+    Ok(String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .filter_map(|l| l.trim().strip_prefix("NEEDED"))
+        .map(|soname| soname.trim().to_string())
+        .collect())
+}
+
 /// Fail when usr/lib bundles host stacks or misses portability libraries.
-fn verify_bundled_libraries(lib_dir: &Path) -> Result<()> {
+fn verify_bundled_libraries(lib_dir: &Path, binary: &Path) -> Result<()> {
     let bundled: Vec<String> = fs::read_dir(lib_dir)
         .map(|entries| {
             entries
@@ -625,9 +639,11 @@ fn verify_bundled_libraries(lib_dir: &Path) -> Result<()> {
         )
         .into());
     }
+    let needed = needed_libraries(binary)?;
     let missing: Vec<&str> = REQUIRED_BUNDLED_SONAMES
         .iter()
         .copied()
+        .filter(|soname| needed.iter().any(|n| n == soname))
         .filter(|soname| !bundled.iter().any(|b| b == soname))
         .collect();
     if !missing.is_empty() {
