@@ -1,0 +1,477 @@
+name: Build
+
+# Nightly and tagged releases of AccessiWeather (the Rust edition in rust/).
+# Replaces the Python build.yml: same triggers, nightly gate, asset names,
+# checksums and release notes, so installed Python copies update into this
+# edition through their own updater. Everything runs without Python; the
+# tooling is `cargo xtask` (rust/xtask).
+
+on:
+  schedule:
+    # Nightly at 00:17 UTC (8:17 PM EDT / 7:17 PM EST).
+    # GitHub Actions schedules are UTC-only and can queue late, so avoid :00/:30.
+    - cron: "17 0 * * *"
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Skip release creation'
+        type: boolean
+        default: false
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  # Release-profile caches are saved only from dev (scheduled or dispatched)
+  # and tag runs, never from other branches.
+  SAVE_CACHE: ${{ github.event_name == 'schedule' || github.ref == 'refs/heads/dev' || startsWith(github.ref, 'refs/tags/v') }}
+
+jobs:
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      should_build: ${{ steps.check.outputs.should_build }}
+      version: ${{ steps.check.outputs.version }}
+      is_nightly: ${{ steps.check.outputs.is_nightly }}
+      tag: ${{ steps.check.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@stable
+        if: github.event_name == 'schedule'
+      - uses: Swatinem/rust-cache@v2
+        if: github.event_name == 'schedule'
+        with:
+          workspaces: rust
+          shared-key: xtask-${{ runner.os }}
+          save-if: ${{ env.SAVE_CACHE }}
+          cache-on-failure: false
+      - name: xtask build dependencies
+        if: github.event_name == 'schedule'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libasound2-dev pkg-config
+
+      - name: Check build conditions
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' rust/Cargo.toml | head -1)
+
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            # Tagged release
+            echo "is_nightly=false" >> "$GITHUB_OUTPUT"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+            echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+          elif [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            # Manual nightly dispatches are intentional force-builds.
+            echo "is_nightly=true" >> "$GITHUB_OUTPUT"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            echo "tag=nightly-$(date -u +%Y%m%d)" >> "$GITHUB_OUTPUT"
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          else
+            # Nightly build - check for changes
+            echo "is_nightly=true" >> "$GITHUB_OUTPUT"
+            echo "tag=nightly-$(date -u +%Y%m%d)" >> "$GITHUB_OUTPUT"
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+            LAST_TAG=$(git tag --list "nightly-*" --sort=-version:refname | head -1)
+
+            if [ -z "$LAST_TAG" ]; then
+              # No prior nightly: build once
+              echo "should_build=true" >> "$GITHUB_OUTPUT"
+            else
+              gh release view "$LAST_TAG" --json body -q .body > previous-notes.md || true
+              : > latest-stable-notes.md
+              LATEST_STABLE_TAG=$(gh api "repos/${GITHUB_REPOSITORY}/releases" \
+                --jq '[.[] | select(.draft == false and .prerelease == false)][0].tag_name // ""')
+              if [ -n "$LATEST_STABLE_TAG" ]; then
+                gh release view "$LATEST_STABLE_TAG" --json body -q .body > latest-stable-notes.md || true
+              fi
+              (cd rust && cargo xtask changelog should-build-nightly \
+                --previous-tag "$LAST_TAG" \
+                --exclude-notes ../previous-notes.md \
+                --latest-stable-tag "$LATEST_STABLE_TAG" \
+                --exclude-stable-notes ../latest-stable-notes.md) \
+                >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
+  build-windows:
+    name: Windows
+    needs: prepare
+    if: needs.prepare.outputs.should_build == 'true'
+    runs-on: windows-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: bash
+        working-directory: rust
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+          shared-key: release-${{ runner.os }}
+          save-if: ${{ env.SAVE_CACHE }}
+          cache-on-failure: false
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Build metadata
+        run: cargo xtask build-meta "${{ needs.prepare.outputs.is_nightly == 'true' && needs.prepare.outputs.tag || '' }}" >> "$GITHUB_ENV"
+
+      - name: Build and package
+        timeout-minutes: 60
+        run: |
+          cargo xtask icons
+          cargo xtask package windows-setup windows-portable
+
+      - name: Smoke test packaged app
+        timeout-minutes: 5
+        run: |
+          dist/AccessiWeather_dir/AccessiWeather.exe --check
+          dist/AccessiWeather_dir/AccessiWeather.exe --smoke
+
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: windows
+          path: |
+            rust/dist/AccessiWeather_Setup_*.exe*
+            rust/dist/AccessiWeather_Portable_*.zip*
+          if-no-files-found: error
+
+  build-macos:
+    name: macOS
+    needs: prepare
+    if: needs.prepare.outputs.should_build == 'true'
+    runs-on: macos-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: rust
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+          shared-key: release-${{ runner.os }}
+          save-if: ${{ env.SAVE_CACHE }}
+          cache-on-failure: false
+
+      - name: Build metadata
+        run: cargo xtask build-meta "${{ needs.prepare.outputs.is_nightly == 'true' && needs.prepare.outputs.tag || '' }}" >> "$GITHUB_ENV"
+
+      - name: Build and package
+        timeout-minutes: 40
+        run: |
+          cargo xtask icons
+          cargo xtask package macos macos-dmg
+
+      - name: Smoke test packaged app
+        timeout-minutes: 5
+        run: |
+          dist/AccessiWeather.app/Contents/MacOS/AccessiWeather --check
+          dist/AccessiWeather.app/Contents/MacOS/AccessiWeather --smoke
+
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: macos
+          path: |
+            rust/dist/AccessiWeather_macOS_*.zip*
+            rust/dist/AccessiWeather_v*.dmg*
+          if-no-files-found: error
+
+  build-linux:
+    name: Linux
+    needs: prepare
+    if: needs.prepare.outputs.should_build == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    defaults:
+      run:
+        working-directory: rust
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+          shared-key: release-${{ runner.os }}
+          save-if: ${{ env.SAVE_CACHE }}
+          cache-on-failure: false
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake build-essential libclang-dev pkg-config \
+            libglibmm-2.68-dev libgtk-3-dev libgl1-mesa-dev libglu1-mesa-dev \
+            libasound2-dev xvfb at-spi2-core
+
+      - name: Build metadata
+        run: cargo xtask build-meta "${{ needs.prepare.outputs.is_nightly == 'true' && needs.prepare.outputs.tag || '' }}" >> "$GITHUB_ENV"
+
+      - name: Build and package tarball
+        timeout-minutes: 45
+        run: |
+          cargo xtask icons
+          cargo xtask package linux
+
+      - name: Smoke test packaged app
+        env:
+          XDG_DATA_HOME: ${{ runner.temp }}/accessiweather-data
+          XDG_CONFIG_HOME: ${{ runner.temp }}/accessiweather-config
+        run: |
+          dist/AccessiWeather/AccessiWeather --check
+          set +e
+          timeout 25s xvfb-run -a dist/AccessiWeather/AccessiWeather --smoke > linux-smoke.log 2>&1
+          status=$?
+          set -e
+          cat linux-smoke.log
+          if grep -E "cannot register existing type 'G(Task|AsyncResult|InputStream|Seekable|PollableInputStream)'|GLib-GObject-CRITICAL" linux-smoke.log; then
+            echo "Packaged Linux app hit the GLib/GIO duplicate type-registration crash."
+            exit 1
+          fi
+          if [ "$status" -ne 0 ]; then
+            echo "Packaged Linux app exited unexpectedly with status $status."
+            exit "$status"
+          fi
+
+      - name: Package AppImage
+        timeout-minutes: 15
+        run: cargo xtask package linux-appimage
+
+      - name: Smoke test AppImage on Fedora
+        timeout-minutes: 15
+        run: |
+          cat > fedora-smoke.sh <<'EOF'
+          set -e
+          dnf install -y -q gtk3 libnotify alsa-lib xorg-x11-server-Xvfb dejavu-sans-fonts >/dev/null
+          cd /work
+          appimage=$(find dist -maxdepth 1 -name 'AccessiWeather_Linux_*.AppImage' -print -quit)
+          if [ -z "$appimage" ]; then
+            echo "AppImage was not created."
+            exit 1
+          fi
+          chmod +x "$appimage"
+          export XDG_DATA_HOME=/tmp/aw-data XDG_CONFIG_HOME=/tmp/aw-config
+          set +e
+          timeout 25s xvfb-run -a "$appimage" --appimage-extract-and-run --smoke > fedora-smoke.log 2>&1
+          status=$?
+          set -e
+          cat fedora-smoke.log
+          if grep -E "error while loading shared libraries|cannot open shared object file" fedora-smoke.log; then
+            echo "AppImage is missing a shared library on Fedora."
+            exit 1
+          fi
+          if grep -E "cannot register existing type 'G(Task|AsyncResult|InputStream|Seekable|PollableInputStream)'|GLib-GObject-CRITICAL" fedora-smoke.log; then
+            echo "AppImage hit the GLib/GIO duplicate type-registration crash on Fedora."
+            exit 1
+          fi
+          if [ "$status" -ne 0 ]; then
+            echo "AppImage exited unexpectedly with status $status on Fedora."
+            exit "$status"
+          fi
+          echo "Fedora smoke test passed."
+          EOF
+          docker run --rm -v "$PWD:/work" fedora:43 bash /work/fedora-smoke.sh
+
+      - name: Verify Linux tarball avoids bundled OpenSSL
+        run: |
+          tarball=$(find dist -maxdepth 1 -name 'AccessiWeather_Linux_*.tar.gz' -print -quit)
+          if [ -z "$tarball" ]; then
+            echo "Linux tarball was not created."
+            exit 1
+          fi
+          if tar -tzf "$tarball" | grep -E '(^|/)lib(ssl|crypto)\.so'; then
+            echo "Linux tarball must not bundle OpenSSL libraries; use the target system OpenSSL instead."
+            exit 1
+          fi
+
+      - name: Verify Linux tarball includes prism and the default sound pack
+        run: |
+          tarball=$(find dist -maxdepth 1 -name 'AccessiWeather_Linux_*.tar.gz' -print -quit)
+          if [ -z "$tarball" ]; then
+            echo "Linux tarball was not created."
+            exit 1
+          fi
+          listing=$(tar -tzf "$tarball")
+          if ! grep -qE '^AccessiWeather/libprism[^/]*\.so' <<< "$listing"; then
+            echo "Linux tarball is missing prism's shared library (screen reader speech)."
+            exit 1
+          fi
+          if ! grep -qx 'AccessiWeather/soundpacks/default/pack.json' <<< "$listing"; then
+            echo "Linux tarball is missing soundpacks/default/pack.json."
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: linux
+          path: |
+            rust/dist/AccessiWeather_Linux_*.tar.gz*
+            rust/dist/AccessiWeather_Linux_*.AppImage*
+          if-no-files-found: error
+
+  release:
+    name: Release
+    needs: [prepare, build-windows, build-macos, build-linux]
+    if: always() && needs.prepare.outputs.should_build == 'true' && (needs.build-windows.result == 'success' || needs.build-macos.result == 'success' || needs.build-linux.result == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+          shared-key: xtask-${{ runner.os }}
+          save-if: ${{ env.SAVE_CACHE }}
+          cache-on-failure: false
+      - name: xtask build dependencies
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libasound2-dev pkg-config
+
+      - name: Download artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --dir dist
+
+      - name: Prepare release
+        id: prep
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IS_NIGHTLY: ${{ needs.prepare.outputs.is_nightly }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          mkdir -p assets
+          TIMESTAMP=$(date -u +%Y%m%d)
+
+          # Rename assets to the release names both editions' updaters look for.
+          if [ "$IS_NIGHTLY" = "true" ]; then
+            PREFIX="AccessiWeather-nightly-${TIMESTAMP}"
+          else
+            PREFIX="AccessiWeather-${VERSION}"
+          fi
+          while IFS= read -r f; do
+            name=$(basename "$f")
+            case "$name" in
+              *Setup*.exe) mv "$f" "assets/${PREFIX}-windows-setup.exe" ;;
+              *Portable*.zip) mv "$f" "assets/${PREFIX}-windows-portable.zip" ;;
+              *macOS*.zip) mv "$f" "assets/${PREFIX}-macOS.zip" ;;
+              *.dmg) mv "$f" "assets/${PREFIX}-macOS.dmg" ;;
+              *Linux*.tar.gz) mv "$f" "assets/${PREFIX}-linux.tar.gz" ;;
+              *Linux*.AppImage) mv "$f" "assets/${PREFIX}-linux-x86_64.AppImage" ;;
+            esac
+          done < <(find dist -type f \( -name '*.exe' -o -name '*.zip' -o -name '*.dmg' -o -name '*.tar.gz' -o -name '*.AppImage' \))
+
+          # Generate checksums
+          (cd assets && sha256sum * > checksums.txt)
+
+          # Generate release notes from curated CHANGELOG.md entries.
+          cd rust
+          if [ "$IS_NIGHTLY" = "true" ]; then
+            LAST_TAG=$(git tag --list "nightly-*" --sort=-version:refname | head -1)
+            if [ -n "$LAST_TAG" ]; then
+              gh release view "$LAST_TAG" --json body -q .body > ../previous-notes.md || true
+              cargo xtask changelog notes \
+                --kind nightly \
+                --previous-tag "$LAST_TAG" \
+                --exclude-notes ../previous-notes.md \
+                --output ../notes.md
+            else
+              cargo xtask changelog notes --kind nightly --output ../notes.md
+            fi
+          else
+            cargo xtask changelog notes \
+              --kind stable \
+              --version "$TAG" \
+              --output ../notes.md
+          fi
+
+      - name: Create release
+        if: ${{ inputs.dry_run != true }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IS_NIGHTLY: ${{ needs.prepare.outputs.is_nightly }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          if [ "$IS_NIGHTLY" = "true" ]; then
+            # Nightly: always recreate
+            gh release delete "$TAG" -y --cleanup-tag 2>/dev/null || true
+            gh release create "$TAG" assets/* --notes-file notes.md \
+              --title "Nightly $(date -u +%Y-%m-%d)" --prerelease --target dev
+          else
+            # Stable: upload assets to existing release, or create new one
+            if gh release view "$TAG" &>/dev/null; then
+              # Release exists (created manually) — just upload assets
+              gh release upload "$TAG" assets/* --clobber
+              gh release edit "$TAG" --notes-file notes.md --title "AccessiWeather v${VERSION}"
+            else
+              gh release create "$TAG" assets/* --notes-file notes.md \
+                --title "AccessiWeather v${VERSION}"
+            fi
+          fi
+
+      - name: Send build notification
+        if: ${{ inputs.dry_run != true }}
+        env:
+          ORINKS_BUILD_NOTIFICATION_TOKEN: ${{ secrets.ORINKS_BUILD_NOTIFICATION_TOKEN }}
+          IS_NIGHTLY: ${{ needs.prepare.outputs.is_nightly }}
+        run: |
+          if [ -z "$ORINKS_BUILD_NOTIFICATION_TOKEN" ]; then
+            echo "ORINKS_BUILD_NOTIFICATION_TOKEN is not configured; skipping notification."
+            exit 0
+          fi
+
+          product="AccessiWeather"
+          if [ "$IS_NIGHTLY" = "true" ]; then
+            kind="nightly build"
+          else
+            kind="stable release"
+          fi
+          payload=$(jq -n --arg product "$product" --arg kind "$kind" '{
+            product: $product,
+            title: "\($product) \($kind) available",
+            body: "A new \($product) \($kind) is ready to download.",
+            url: "/accessiweather/downloads"
+          }')
+          curl --fail-with-body --silent --show-error --max-time 30 \
+            -X POST "https://www.orinks.net/api/notifications/send" \
+            -H "Authorization: Bearer ${ORINKS_BUILD_NOTIFICATION_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data "$payload"

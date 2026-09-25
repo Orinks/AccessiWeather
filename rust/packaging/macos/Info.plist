@@ -8,6 +8,7 @@
     <key>CFBundleVersion</key><string>@VERSION@</string>
     <key>CFBundleShortVersionString</key><string>@VERSION@</string>
     <key>CFBundleExecutable</key><string>AccessiWeather</string>
+    <key>CFBundleIconFile</key><string>app.icns</string>
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>LSMinimumSystemVersion</key><string>11.0</string>
     <key>NSHighResolutionCapable</key><true/>

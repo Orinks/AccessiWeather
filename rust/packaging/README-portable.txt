@@ -1,10 +1,11 @@
-AccessiWeather (native Rust edition)
+AccessiWeather
 
-Run the executable to start. Settings and saved locations are stored in your
-user profile and are shared with the Python edition of AccessiWeather.
+Run the AccessiWeather program to start.
 
-To keep everything next to the program instead (USB stick, etc.), start it
-with --portable; a "config" folder will be created beside the executable.
+The Windows portable download keeps its settings and saved locations in the
+"config" folder beside the program, so it can run from a USB stick. Other
+copies store them in your user profile; start one with --portable to keep
+everything beside the program instead.
 
 Command line:
   --portable        Store configuration next to the executable

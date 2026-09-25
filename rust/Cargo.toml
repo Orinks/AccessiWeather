@@ -10,6 +10,7 @@ members = [
     "crates/aw-notify",
     "crates/aw-app",
     "crates/aw-audio",
+    "xtask",
 ]
 
 [workspace.package]
