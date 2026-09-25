@@ -12,6 +12,7 @@ dependencies = [
  "aw-store",
  "chrono",
  "clap",
+ "embed-manifest",
  "serde_json",
  "thiserror 2.0.21",
  "tracing",
@@ -553,6 +554,12 @@ name = "either"
 version = "1.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "252afb9ae5eaa683babdc6a068b3f5726eb19e05070c731f9b2a23a7c3e8ed34"
+
+[[package]]
+name = "embed-manifest"
+version = "1.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ba92c8f4591bf29f89716b45e5f5f56577adbb81426e5620c6e994da7c88bb7a"
 
 [[package]]
 name = "equivalent"

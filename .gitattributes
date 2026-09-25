@@ -30,3 +30,6 @@ src/accessiweather/location_manager.py merge=ours
 # AppImage launcher runs on Linux; a CRLF checkout would break its shebang.
 installer/appimage/AppRun text eol=lf
 installer/appimage/*.desktop text eol=lf
+
+# Shell scripts run under bash on every platform, including Git Bash on Windows.
+*.sh text eol=lf

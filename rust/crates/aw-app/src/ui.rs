@@ -458,7 +458,8 @@ fn wire_commands(ui: &MainUi, state: &Shared) {
     }
 }
 
-/// Shortcuts that are not menu accelerators: Escape, Ctrl+R and Ctrl+1…5.
+/// Shortcuts that are not menu accelerators: Escape, Enter on the alerts
+/// list (wxMSW swallows it before the list box sees it), Ctrl+R and Ctrl+1…5.
 fn wire_keys(ui: &MainUi, state: &Shared) {
     let (ui, state) = (*ui, state.clone());
     ui.frame
@@ -469,6 +470,10 @@ fn wire_keys(ui: &MainUi, state: &Shared) {
                 (false, WXK_ESCAPE) => {
                     state.borrow().speaker.stop();
                     false
+                }
+                (false, WXK_RETURN) | (false, WXK_NUMPAD_ENTER) if ui.alerts.has_focus() => {
+                    show_alert_details(&ui, &state);
+                    true
                 }
                 (true, c) if c == 'R' as i32 || c == 'r' as i32 => {
                     start_refresh(&ui, &state);
