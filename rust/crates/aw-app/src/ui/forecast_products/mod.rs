@@ -320,11 +320,21 @@ impl NotesDialog {
     fn make_loader(&self, tab: ProductTab) -> Loader {
         let service = self.service.clone();
         let location = self.location.clone();
-        // Python pipes a loaded daily climate report through
-        // `_check_daily_climate_notification` here and passes the weather
-        // client for the Pirate Weather beach fallback; both need ports
-        // that are not in this workstream (notifications, Pirate Weather).
-        Arc::new(move || tabs::load_tab(&service, &location, &tab, None))
+        // Python also passes the weather client for the Pirate Weather
+        // beach fallback, which needs a port not in this workstream.
+        Arc::new(move || {
+            let result = tabs::load_tab(&service, &location, &tab, None);
+            // `_check_daily_climate_notification`.
+            if let (tabs::LoaderKind::DailyClimate, Ok(ProductResult::One(Some(product)))) =
+                (tab.loader_kind, &result)
+            {
+                super::weather_events::on_daily_climate_report_loaded(
+                    product.clone(),
+                    location.name.clone(),
+                );
+            }
+            result
+        })
     }
 
     /// Check the optional SPC/WPC tabs in the background and add only the

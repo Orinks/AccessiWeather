@@ -124,9 +124,10 @@ fn should_show_first_start_onboarding(state: &Shared, force_wizard: bool) -> boo
     )
 }
 
-/// `refresh_runtime_settings`: imported keys reach the weather client.
+/// `refresh_runtime_settings`: imported keys and settings reach the weather
+/// client, the notifier and the alert settings.
 fn refresh_runtime_settings() {
-    crate::lifecycle::refresh_runtime_settings();
+    super::settings_actions::refresh_runtime_settings();
 }
 
 /// `_maybe_auto_import_keys_file`: a portable copy imports its key bundle

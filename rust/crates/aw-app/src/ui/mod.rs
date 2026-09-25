@@ -42,10 +42,9 @@ mod golden_tests;
 #[cfg(test)]
 mod settings_golden_tests;
 
-#[allow(unused_imports)] // Entry points for toast activation and immediate alert popups.
+// Toast activation and immediate alert popups.
 pub(crate) use alert_dialog::{show_alert_details, show_alerts_summary};
-#[allow(unused_imports)]
-pub(crate) use commands::show_alert_details_at;
+pub(crate) use commands::show_alert_details_by_id;
 pub(crate) use main_window::{build_main_window, main_frame};
 pub(crate) use noaa_radio_dialog::close_noaa_radio_dialog;
 

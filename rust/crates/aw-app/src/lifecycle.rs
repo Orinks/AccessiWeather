@@ -419,8 +419,13 @@ pub(crate) fn handle_activation_request(request: ActivationRequest) {
     };
     match route {
         aw_notify::ActivationRoute::OpenDiscussion => ui::on_discussion(),
-        aw_notify::ActivationRoute::ShowAlertDetails(index) => ui::show_alert_details_at(index),
-        aw_notify::ActivationRoute::Ignore => {}
+        // By id in the list on screen: Python's index into the current
+        // location's alerts opens the wrong row in All Locations.
+        aw_notify::ActivationRoute::ShowAlertDetails(_) | aw_notify::ActivationRoute::Ignore => {
+            if let Some(id) = &request.alert_id {
+                ui::show_alert_details_by_id(id);
+            }
+        }
         aw_notify::ActivationRoute::RestoreMainWindow => {
             if tray::exists() {
                 tray::show_main_window();

@@ -562,17 +562,17 @@ pub(crate) fn refresh_runtime_settings() {
 }
 
 // ---------------------------------------------------------------------------
-// Hooks the notifications workstream fills in
+// Notification settings
 // ---------------------------------------------------------------------------
 
-/// Hook: `_notifier.sound_enabled / soundpack / muted_sound_events`.
+/// `_notifier.sound_enabled / soundpack / muted_sound_events`.
 fn refresh_notifier_settings() {
-    tracing::debug!("Notification sound settings refresh hook: nothing to refresh yet");
+    super::weather_events::refresh_notifier_settings();
 }
 
-/// Hook: `alert_notification_system.update_settings(settings.to_alert_settings())`.
+/// `alert_notification_system.update_settings(settings.to_alert_settings())`.
 fn refresh_alert_notification_settings() {
-    tracing::debug!("Alert notification settings refresh hook: nothing to refresh yet");
+    super::weather_events::refresh_alert_notification_settings();
 }
 
 // ---------------------------------------------------------------------------

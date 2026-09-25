@@ -2,6 +2,7 @@
 //! whose dialogs other workstreams port log and return for now; each has
 //! its own function so those ports have one place to fill in.
 
+use aw_core::model::WeatherAlert;
 use wxdragon::prelude::*;
 
 use super::display;
@@ -163,28 +164,47 @@ pub(crate) fn on_view_alert() {
     show_alert_details_at(index as usize);
 }
 
-/// `_show_alert_details`: the alert behind list row `alert_index`. In All
-/// Locations the rows are the aggregated (location, alert) pairs; otherwise
-/// they are the current location's active alerts. Toast activation also
-/// lands here with an index into the active alerts.
-pub(crate) fn show_alert_details_at(alert_index: usize) {
-    let alert = if window_state(|s| s.all_locations_active) {
-        window_state(|s| {
+/// The alerts behind the alerts list rows: in All Locations the aggregated
+/// (location, alert) pairs, otherwise the current location's active alerts.
+fn displayed_alerts() -> Vec<WeatherAlert> {
+    if window_state(|s| s.all_locations_active) {
+        return window_state(|s| {
             s.all_locations_alerts_data
-                .get(alert_index)
+                .iter()
                 .map(|(_, a)| a.clone())
-        })
-    } else {
-        with_state().and_then(|state| {
+                .collect()
+        });
+    }
+    with_state()
+        .and_then(|state| {
             let st = state.borrow();
             let alerts = st.current_weather_data.as_ref()?.alerts.as_ref()?;
-            alerts
-                .active(chrono::Utc::now())
-                .get(alert_index)
-                .map(|a| (*a).clone())
+            Some(
+                alerts
+                    .active(chrono::Utc::now())
+                    .into_iter()
+                    .cloned()
+                    .collect(),
+            )
         })
-    };
-    if let Some(alert) = alert {
-        super::alert_dialog::show_alert_details(&alert);
+        .unwrap_or_default()
+}
+
+/// `_show_alert_details`: the alert behind list row `alert_index`.
+pub(crate) fn show_alert_details_at(alert_index: usize) {
+    if let Some(alert) = displayed_alerts().get(alert_index) {
+        super::alert_dialog::show_alert_details(alert);
+    }
+}
+
+/// A clicked alert toast: the alert with that id in the list on screen.
+/// (Python reuses the alert's index in the current location's alerts, which
+/// opens the wrong row in All Locations.)
+pub(crate) fn show_alert_details_by_id(alert_id: &str) {
+    if let Some(alert) = displayed_alerts()
+        .iter()
+        .find(|a| a.unique_id() == alert_id)
+    {
+        super::alert_dialog::show_alert_details(alert);
     }
 }
