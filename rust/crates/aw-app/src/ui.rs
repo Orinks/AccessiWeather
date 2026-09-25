@@ -367,7 +367,7 @@ fn build_menu_bar() -> MenuBar {
     let weather = Menu::builder()
         .append_item(
             ID_ALERT_DETAILS,
-            "Alert &Details",
+            "&Alert Details",
             "Show the selected alert",
         )
         .append_item(
