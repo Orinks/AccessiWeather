@@ -5,12 +5,17 @@
 
 pub mod alerts;
 pub mod location;
+pub mod location_sorting;
 pub mod model;
 pub mod presenter;
+pub mod provider_normalization;
+pub mod py;
 pub mod settings;
 pub mod sources;
+pub mod thermal_comfort;
 pub mod units;
 pub mod weather;
+pub mod weather_client_parsers;
 
 pub use alerts::{WeatherAlert, WeatherAlerts};
 pub use location::{is_us_location, Location};
