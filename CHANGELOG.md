@@ -10,7 +10,6 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.
-- AI explanations and the Weather Assistant work again in installed builds, which were failing every request before it reached OpenRouter or Venice.
 - AI error messages now distinguish invalid keys, depleted credits, denied access, unavailable models, rate limits, connection or timeout failures, and model refusals across the Weather Assistant and explanation views, without displaying raw provider errors.
 - After an AI summary finishes, keyboard focus moves to the result when Explain was focused; failed Weather Assistant questions return to the input for editing, and key errors point to the correct AI settings tab.
 - AI explanations now use your updated custom prompt and instructions immediately, and the Weather Assistant checks alerts for the selected place even when a model supplies an ambiguous location. It also reports when an alert shown in the app is missing from the live point lookup.
@@ -22,6 +21,11 @@ All notable changes to this project will be documented in this file.
 - AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.
 - The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.
 - OpenRouter explanations stop on authentication, permission and credit errors, avoid logging response text, and limit free-model fallback attempts so a failing model does not leave the app waiting through a long chain of retries.
+
+## [0.10.2] - 2026-09-22
+
+### Fixed
+- Explain Weather and the Weather Assistant work again with OpenRouter and Venice after the update that broke every AI model.
 
 ## [0.10.1] - 2026-09-20
 

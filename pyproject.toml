@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "accessiweather"
-version = "0.10.1"
+version = "0.10.2"
 description = "A free desktop weather app for casual check-ins and detailed forecasts, alerts, and weather data"
 authors = [
     { name = "Orinks" }
@@ -22,7 +22,7 @@ dependencies = [
     "attrs>=22.2.0",
     "psutil",
     "keyring",
-    "openai>=1.0.0",
+    "openai>=1.40.0,<4",
     "prismatoid>=0.7.0",
     "tzdata",
     "cryptography>=42.0.0",
