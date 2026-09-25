@@ -83,7 +83,11 @@ pub fn build_current_weather_payload(
             wind_system,
         )),
     );
-    put("wind_direction", opt_str(&current.wind_direction));
+    // Raw degrees or text, as Python passes it.
+    put(
+        "wind_direction",
+        serde_json::to_value(&current.wind_direction).unwrap_or(Value::Null),
+    );
     put(
         "visibility",
         num(visibility_for_prompt(current, unit, system)),

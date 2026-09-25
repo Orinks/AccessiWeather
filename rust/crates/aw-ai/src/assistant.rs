@@ -10,6 +10,7 @@ use std::collections::HashSet;
 use std::sync::LazyLock;
 
 use aw_core::model::WeatherData;
+use aw_core::model::WindDirection;
 use aw_core::settings::AppSettings;
 use chrono::{DateTime, FixedOffset, Local};
 use regex::{Regex, RegexBuilder};
@@ -418,7 +419,17 @@ pub fn build_weather_context(weather: Option<&WeatherData>) -> String {
         }
         if let Some(mph) = cur.wind_speed_mph {
             let mut wind = format!("Wind: {mph:.0} mph");
-            if let Some(d) = cur.wind_direction.as_deref().filter(|d| !d.is_empty()) {
+            // `if cur.wind_direction:` then the raw value (degrees or text).
+            let direction = match &cur.wind_direction {
+                Some(WindDirection::Degrees(d)) if *d != 0.0 => Some(if d.fract() == 0.0 {
+                    format!("{d:.0}")
+                } else {
+                    d.to_string()
+                }),
+                Some(WindDirection::Text(s)) if !s.is_empty() => Some(s.clone()),
+                _ => None,
+            };
+            if let Some(d) = direction {
                 wind.push_str(&format!(" from {d}"));
             }
             parts.push(wind);
