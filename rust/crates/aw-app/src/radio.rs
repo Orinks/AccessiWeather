@@ -58,7 +58,6 @@ pub(crate) fn radio() -> Option<&'static Radio> {
 
 /// The alert auto-tuner, for the alert notification system
 /// (`tune_for_alerts`).
-#[allow(dead_code)] // Wired by the alert notification workstream.
 pub(crate) fn auto_tuner() -> Option<Arc<AlertRadioAutoTuner>> {
     radio().map(|r| r.auto_tuner.clone())
 }

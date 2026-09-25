@@ -122,12 +122,10 @@ pub(crate) fn on_debug_simulate_alert() {
 
 /// `_on_notification_event_data_received`: hands a lightweight poll result
 /// (alerts plus their lifecycle diff) to the alert notification pipeline.
-/// The notifications integration replaces this body with the real path.
 pub(crate) fn on_notification_event_data_received(data: WeatherData) {
-    tracing::info!(
-        "Alert event check for {} is not wired to notifications yet",
-        data.location.name
-    );
+    super::weather_events::weather_updated(super::weather_events::WeatherUpdate::EventPoll {
+        weather_data: &data,
+    });
 }
 
 /// Help > Debug > Run Notification Diagnostics.

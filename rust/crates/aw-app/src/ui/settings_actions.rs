@@ -558,12 +558,12 @@ fn not_ported(action: &str) {
 
 /// `_notifier.sound_enabled / soundpack / muted_sound_events`.
 fn refresh_notifier_settings() {
-    not_ported("Refreshing notification sound settings");
+    super::weather_events::refresh_notifier_settings();
 }
 
 /// `alert_notification_system.update_settings(settings.to_alert_settings())`.
 fn refresh_alert_notification_settings() {
-    not_ported("Refreshing alert notification settings");
+    super::weather_events::refresh_alert_notification_settings();
 }
 
 /// Account state for the Venice model browser (`VeniceBalance`).

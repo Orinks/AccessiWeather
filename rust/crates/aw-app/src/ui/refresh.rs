@@ -184,7 +184,7 @@ pub(crate) fn on_weather_error(error_message: &str) {
     if let Some(w) = window() {
         w.refresh_button.enable(true);
     }
-    // Python also plays the fetch_error sound here (sound port).
+    super::weather_events::on_fetch_error();
 }
 
 /// `_on_weather_data_received`.
