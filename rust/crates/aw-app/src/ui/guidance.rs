@@ -358,6 +358,9 @@ fn import_settings(state: &Shared, path: &Path) -> bool {
 /// `_write_keys_file_after_import`: keep `api-keys.keys` beside a portable copy.
 fn write_keys_file_after_import(state: &Shared, passphrase: &str) {
     let mut st = state.borrow_mut();
+    if st.offline {
+        return;
+    }
     let dest = st.paths.config_dir.join(BUNDLE_FILE_NAMES[0]);
     settings_actions::export_encrypted_api_keys(&mut st, &dest, passphrase);
 }
@@ -371,7 +374,7 @@ fn import_api_keys(state: &Shared, path: &Path, passphrase: &str) -> bool {
     }
     if portable {
         portable_keys::set_keys_imported_this_session();
-        secrets::set_password(PORTABLE_PASSPHRASE_KEY, passphrase);
+        remember_passphrase(state, passphrase);
         write_keys_file_after_import(state, passphrase);
     }
     refresh_after_onboarding_import(state);
@@ -388,14 +391,24 @@ fn write_key_bundle(state: &Shared, keys: Vec<(&'static str, String)>, passphras
                 *field = value;
             }
         }
-        let bundle = st.paths.config_dir.join(BUNDLE_FILE_NAMES[0]);
-        settings_actions::export_encrypted_api_keys(&mut st, &bundle, passphrase)
+        // Sample-data runs keep the keys in memory only.
+        st.offline || {
+            let bundle = st.paths.config_dir.join(BUNDLE_FILE_NAMES[0]);
+            settings_actions::export_encrypted_api_keys(&mut st, &bundle, passphrase)
+        }
     };
     if written {
         portable_keys::set_keys_imported_this_session();
-        secrets::set_password(PORTABLE_PASSPHRASE_KEY, passphrase);
+        remember_passphrase(state, passphrase);
     }
     written
+}
+
+/// Cache the bundle passphrase in the keyring (never for sample-data runs).
+fn remember_passphrase(state: &Shared, passphrase: &str) {
+    if !state.borrow().offline {
+        secrets::set_password(PORTABLE_PASSPHRASE_KEY, passphrase);
+    }
 }
 
 #[cfg(test)]
