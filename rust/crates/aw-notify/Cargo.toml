@@ -1,0 +1,38 @@
+[package]
+name = "aw-notify"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Alert and event notification decisions, runtime state and desktop toast delivery for AccessiWeather"
+
+[dependencies]
+aw-core.workspace = true
+aw-store.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+tracing.workspace = true
+tempfile.workspace = true
+regex = "1"
+sha2 = "0.10"
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.62", features = [
+    "Data_Xml_Dom",
+    "Foundation",
+    "UI_Notifications",
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_Storage_EnhancedStorage",
+    "Win32_Storage_FileSystem",
+    "Win32_System_Com",
+    "Win32_System_Com_StructuredStorage",
+    "Win32_System_Registry",
+    "Win32_System_Variant",
+    "Win32_System_WinRT",
+    "Win32_UI_Shell",
+    "Win32_UI_Shell_PropertiesSystem",
+] }
+
+[target.'cfg(not(windows))'.dependencies]
+notify-rust = "4"

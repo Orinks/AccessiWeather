@@ -16,6 +16,7 @@ NSAccessibility and AT-SPI respectively, like the wxPython edition.
 | `aw-audio` | Sound playback (rodio), sound packs, Sound Pack Manager/wizard logic, community packs and pack sharing |
 | `aw-radio` | NOAA Weather Radio: station finder, stream lookup, network playback (rodio + symphonia), hotkey toggle, alert auto-tune |
 | `aw-ai` | AI explanations, model catalogs, key validation and the Weather Assistant (OpenRouter, Venice) |
+| `aw-notify` | Alert and event notification decisions, `runtime_state.json` (shared with Python), toast delivery and click activation |
 | `aw-app` (`accessiweather`) | The executable: CLI, wxDragon windows and dialogs, refresh loop |
 
 ## Building

@@ -7,6 +7,7 @@ members = [
     "crates/aw-radio",
     "crates/aw-services",
     "crates/aw-ai",
+    "crates/aw-notify",
     "crates/aw-app",
     "crates/aw-audio",
 ]
@@ -23,6 +24,7 @@ aw-providers = { path = "crates/aw-providers" }
 aw-store = { path = "crates/aw-store" }
 aw-radio = { path = "crates/aw-radio" }
 aw-services = { path = "crates/aw-services" }
+aw-notify = { path = "crates/aw-notify" }
 
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
