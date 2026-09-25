@@ -39,8 +39,6 @@ default_fn!(
 default_fn!(d_tray_shortcut, String, s(DEFAULT_READ_TRAY_INFO_SHORTCUT));
 default_fn!(d_radio_hotkey, String, s(DEFAULT_NOAA_RADIO_HOTKEY));
 default_fn!(d_stable, String, s("stable"));
-// Python: `DEFAULT_MUTED_SOUND_EVENTS`.
-default_fn!(d_muted_sound_events, Vec<String>, vec![s("data_updated")]);
 default_fn!(d_24, i64, 24);
 default_fn!(d_default, String, s("default"));
 default_fn!(d_5, i64, 5);

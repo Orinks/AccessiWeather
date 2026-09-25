@@ -6,6 +6,7 @@ version = 4
 name = "accessiweather"
 version = "0.11.0-rust.1"
 dependencies = [
+ "aw-ai",
  "aw-audio",
  "aw-core",
  "aw-notify",
@@ -19,6 +20,7 @@ dependencies = [
  "prismer",
  "serde",
  "serde_json",
+ "tempfile",
  "thiserror 2.0.21",
  "tracing",
  "tracing-subscriber",
