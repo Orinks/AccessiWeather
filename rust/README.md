@@ -17,6 +17,7 @@ NSAccessibility and AT-SPI respectively, like the wxPython edition.
 | `aw-radio` | NOAA Weather Radio: station finder, stream lookup, network playback (rodio + symphonia), hotkey toggle, alert auto-tune |
 | `aw-ai` | AI explanations, model catalogs, key validation and the Weather Assistant (OpenRouter, Venice) |
 | `aw-notify` | Alert and event notification decisions, `runtime_state.json` (shared with Python), toast delivery and click activation |
+| `aw-services` | Update checks, launch at login, single instance, settings import/export, logging, onboarding |
 | `aw-app` (`accessiweather`) | The executable: CLI, wxDragon windows and dialogs, refresh loop |
 
 ## Building
@@ -83,9 +84,27 @@ three platforms in `.github/workflows/rust.yml`. Each package carries the
 repository's `soundpacks/default` (beside the executable, or in
 `Contents/Resources` on macOS), as the Python builds do.
 
-## Not yet ported
+## Parity with the Python edition
 
-Air quality, aviation (METAR/TAF), NOAA Weather Radio, AI explanations,
-weather history, the sound settings and Sound Pack Manager dialogs,
-system-tray/global hotkeys, and the update checker remain in the Python
-edition for now.
+Every window, dialog, menu, shortcut, setting and notification of the Python
+app is ported. Golden tests under `testdata/golden/` compare the Rust output
+with the Python app's own output for the same inputs; their generators are in
+`tools/golden/` and run against a checkout of the Python app
+(`uv run python rust/tools/golden/<area>.py` from its root).
+
+Both editions share the configuration, API keys, alert state, weather cache
+and NOAA radio preferences, and the same single-instance lock: while one is
+running, starting the other brings the running one to the front instead.
+
+Deliberate differences (mostly fixes for Python bugs):
+
+- Settings > Advanced "Reset settings to defaults" keeps saved locations, and
+  importing settings keeps the active API keys (Python wipes both).
+- NOAA Weather Radio keeps favorites and the playing station across failed
+  stream attempts, so alert auto-tune always stops the stream it started.
+- Clicking a toast in All Locations view opens the alert it named.
+- Advanced Text Product Lookup's date presets fill in the dates, and closing
+  it from the title bar doesn't run a lookup.
+- Forecaster Notes loads the tab it lands on after removing an empty one, and
+  reuses cached plain-language summaries (Regenerate asks again).
+- The About box names wxWidgets.
