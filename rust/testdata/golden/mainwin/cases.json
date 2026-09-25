@@ -1,0 +1,2058 @@
+{
+ "alert_items": {
+  "alerts": [
+   {
+    "title": "Dense Fog Advisory",
+    "description": "Details",
+    "severity": "Moderate",
+    "urgency": "Unknown",
+    "certainty": "Unknown",
+    "event": "Dense Fog Advisory",
+    "headline": null,
+    "instruction": null,
+    "onset": null,
+    "expires": null,
+    "sent": null,
+    "effective": null,
+    "areas": [],
+    "references": [],
+    "id": "a1",
+    "source": "NWS",
+    "message_type": "Alert",
+    "affected_zones": [],
+    "same_codes": [],
+    "same_event_codes": []
+   },
+   {
+    "title": "Wind Advisory",
+    "description": "Details",
+    "severity": "Minor",
+    "urgency": "Unknown",
+    "certainty": "Unknown",
+    "event": "Wind Advisory",
+    "headline": null,
+    "instruction": null,
+    "onset": null,
+    "expires": "2099-01-01T00:00:00+00:00",
+    "sent": null,
+    "effective": null,
+    "areas": [],
+    "references": [],
+    "id": "a2",
+    "source": "NWS",
+    "message_type": "Update",
+    "affected_zones": [],
+    "same_codes": [],
+    "same_event_codes": []
+   },
+   {
+    "title": "Heat Advisory",
+    "description": "Details",
+    "severity": "Severe",
+    "urgency": "Unknown",
+    "certainty": "Unknown",
+    "event": "Heat Advisory",
+    "headline": null,
+    "instruction": null,
+    "onset": null,
+    "expires": null,
+    "sent": null,
+    "effective": null,
+    "areas": [],
+    "references": [],
+    "id": "a3",
+    "source": "NWS",
+    "message_type": "Cancel",
+    "affected_zones": [],
+    "same_codes": [],
+    "same_event_codes": []
+   },
+   {
+    "title": "Flood Watch",
+    "description": "Details",
+    "severity": "Extreme",
+    "urgency": "Unknown",
+    "certainty": "Unknown",
+    "event": "Flood Watch",
+    "headline": null,
+    "instruction": null,
+    "onset": null,
+    "expires": null,
+    "sent": null,
+    "effective": null,
+    "areas": [],
+    "references": [],
+    "id": "a4",
+    "source": "VisualCrossing",
+    "message_type": "Alert",
+    "affected_zones": [],
+    "same_codes": [],
+    "same_event_codes": []
+   },
+   {
+    "title": "Old Warning",
+    "description": "Details",
+    "severity": "Severe",
+    "urgency": "Unknown",
+    "certainty": "Unknown",
+    "event": "Old Warning",
+    "headline": null,
+    "instruction": null,
+    "onset": null,
+    "expires": "2000-01-01T00:00:00+00:00",
+    "sent": null,
+    "effective": null,
+    "areas": [],
+    "references": [],
+    "id": "a5",
+    "source": "NWS",
+    "message_type": "Alert",
+    "affected_zones": [],
+    "same_codes": [],
+    "same_event_codes": []
+   },
+   {
+    "title": "No event",
+    "description": "Details",
+    "severity": "Unknown",
+    "urgency": "Unknown",
+    "certainty": "Unknown",
+    "event": null,
+    "headline": null,
+    "instruction": null,
+    "onset": null,
+    "expires": null,
+    "sent": null,
+    "effective": null,
+    "areas": [
+     "B",
+     "A"
+    ],
+    "references": [],
+    "id": null,
+    "source": "NWS",
+    "message_type": "alert",
+    "affected_zones": [],
+    "same_codes": [],
+    "same_event_codes": []
+   }
+  ],
+  "labels": {
+   "a1": "New",
+   "a2": "Updated",
+   "unknown-unknown-no_event-nws-a,b": "New"
+  },
+  "cases": [
+   {
+    "use_labels": true,
+    "items": [
+     "Dense Fog Advisory (Moderate) (New)",
+     "Wind Advisory (Minor) (Updated)",
+     "Heat Advisory (Severe)",
+     "Flood Watch (Extreme)",
+     "None (Unknown) (New)"
+    ],
+    "button_enabled": true
+   },
+   {
+    "use_labels": false,
+    "items": [
+     "Dense Fog Advisory (Moderate)",
+     "Wind Advisory (Minor)",
+     "Heat Advisory (Severe)",
+     "Flood Watch (Extreme)",
+     "None (Unknown)"
+    ],
+    "button_enabled": true
+   },
+   {
+    "use_labels": false,
+    "items": [],
+    "button_enabled": false,
+    "empty": true
+   }
+  ]
+ },
+ "all_locations": {
+  "locations": [
+   {
+    "name": "Philadelphia, PA",
+    "latitude": 39.95,
+    "longitude": -75.16,
+    "timezone": null,
+    "country_code": "US",
+    "marine_mode": false,
+    "forecast_zone_id": null,
+    "cwa_office": null,
+    "county_zone_id": null,
+    "fire_zone_id": null,
+    "radar_station": null
+   },
+   {
+    "name": "London",
+    "latitude": 51.5,
+    "longitude": -0.12,
+    "timezone": null,
+    "country_code": "GB",
+    "marine_mode": false,
+    "forecast_zone_id": null,
+    "cwa_office": null,
+    "county_zone_id": null,
+    "fire_zone_id": null,
+    "radar_station": null
+   },
+   {
+    "name": "austin",
+    "latitude": 30.27,
+    "longitude": -97.74,
+    "timezone": null,
+    "country_code": "US",
+    "marine_mode": false,
+    "forecast_zone_id": null,
+    "cwa_office": null,
+    "county_zone_id": null,
+    "fire_zone_id": null,
+    "radar_station": null
+   },
+   {
+    "name": "Zed",
+    "latitude": 10.0,
+    "longitude": 10.0,
+    "timezone": null,
+    "country_code": null,
+    "marine_mode": false,
+    "forecast_zone_id": null,
+    "cwa_office": null,
+    "county_zone_id": null,
+    "fire_zone_id": null,
+    "radar_station": null
+   }
+  ],
+  "current": {
+   "name": "Philadelphia, PA",
+   "latitude": 39.95,
+   "longitude": -75.16,
+   "timezone": null,
+   "country_code": "US",
+   "marine_mode": false,
+   "forecast_zone_id": null,
+   "cwa_office": null,
+   "county_zone_id": null,
+   "fire_zone_id": null,
+   "radar_station": null
+  },
+  "cached": {
+   "Philadelphia, PA": {
+    "location": {
+     "name": "Philadelphia, PA",
+     "latitude": 39.95,
+     "longitude": -75.16,
+     "timezone": null,
+     "country_code": "US",
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    "current": {
+     "temperature": 72.5,
+     "temperature_f": 72.5,
+     "temperature_c": 22.5,
+     "condition": "Sunny",
+     "humidity": null,
+     "wind_speed": null,
+     "dewpoint_f": null,
+     "dewpoint_c": null,
+     "wind_speed_mph": null,
+     "wind_speed_kph": null,
+     "wind_direction": null,
+     "pressure": null,
+     "pressure_in": null,
+     "pressure_mb": null,
+     "feels_like_f": null,
+     "feels_like_c": null,
+     "visibility_miles": null,
+     "visibility_km": null,
+     "uv_index": null,
+     "cloud_cover": null,
+     "wind_gust_mph": null,
+     "wind_gust_kph": null,
+     "precipitation_in": null,
+     "precipitation_mm": null,
+     "sunrise_time": null,
+     "sunset_time": null,
+     "moon_phase": null,
+     "moonrise_time": null,
+     "moonset_time": null,
+     "snow_depth_in": null,
+     "snow_depth_cm": null,
+     "snowfall_rate_in": null,
+     "wind_chill_f": null,
+     "wind_chill_c": null,
+     "freezing_level_ft": null,
+     "freezing_level_m": null,
+     "heat_index_f": null,
+     "heat_index_c": null,
+     "frost_risk": null,
+     "precipitation_type": null,
+     "severe_weather_risk": null
+    },
+    "forecast": null,
+    "hourly_forecast": null,
+    "daily_history": [],
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "minutely_precipitation": null,
+    "alerts": {
+     "alerts": [
+      {
+       "title": "Dense Fog Advisory",
+       "description": "Details",
+       "severity": "Moderate",
+       "urgency": "Unknown",
+       "certainty": "Unknown",
+       "event": "Dense Fog Advisory",
+       "headline": null,
+       "instruction": null,
+       "onset": null,
+       "expires": null,
+       "sent": null,
+       "effective": null,
+       "areas": [],
+       "references": [],
+       "id": "a1",
+       "source": "NWS",
+       "message_type": "Alert",
+       "affected_zones": [],
+       "same_codes": [],
+       "same_event_codes": []
+      },
+      {
+       "title": "Wind Advisory",
+       "description": "Details",
+       "severity": "Minor",
+       "urgency": "Unknown",
+       "certainty": "Unknown",
+       "event": "Wind Advisory",
+       "headline": null,
+       "instruction": null,
+       "onset": null,
+       "expires": "2099-01-01T00:00:00+00:00",
+       "sent": null,
+       "effective": null,
+       "areas": [],
+       "references": [],
+       "id": "a2",
+       "source": "NWS",
+       "message_type": "Update",
+       "affected_zones": [],
+       "same_codes": [],
+       "same_event_codes": []
+      },
+      {
+       "title": "Heat Advisory",
+       "description": "Details",
+       "severity": "Severe",
+       "urgency": "Unknown",
+       "certainty": "Unknown",
+       "event": "Heat Advisory",
+       "headline": null,
+       "instruction": null,
+       "onset": null,
+       "expires": null,
+       "sent": null,
+       "effective": null,
+       "areas": [],
+       "references": [],
+       "id": "a3",
+       "source": "NWS",
+       "message_type": "Cancel",
+       "affected_zones": [],
+       "same_codes": [],
+       "same_event_codes": []
+      }
+     ]
+    },
+    "environmental": null,
+    "aviation": null,
+    "marine": null,
+    "trend_insights": [],
+    "stale": false,
+    "stale_since": null,
+    "stale_reason": null,
+    "pending_enrichments": null,
+    "source_attribution": null,
+    "incomplete_sections": [],
+    "alert_lifecycle_diff": null,
+    "forecast_confidence": null,
+    "anomaly_callout": null
+   },
+   "London": {
+    "location": {
+     "name": "London",
+     "latitude": 51.5,
+     "longitude": -0.12,
+     "timezone": null,
+     "country_code": "GB",
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    "current": {
+     "temperature": 11.0,
+     "temperature_f": null,
+     "temperature_c": 11.0,
+     "condition": null,
+     "humidity": null,
+     "wind_speed": null,
+     "dewpoint_f": null,
+     "dewpoint_c": null,
+     "wind_speed_mph": null,
+     "wind_speed_kph": null,
+     "wind_direction": null,
+     "pressure": null,
+     "pressure_in": null,
+     "pressure_mb": null,
+     "feels_like_f": null,
+     "feels_like_c": null,
+     "visibility_miles": null,
+     "visibility_km": null,
+     "uv_index": null,
+     "cloud_cover": null,
+     "wind_gust_mph": null,
+     "wind_gust_kph": null,
+     "precipitation_in": null,
+     "precipitation_mm": null,
+     "sunrise_time": null,
+     "sunset_time": null,
+     "moon_phase": null,
+     "moonrise_time": null,
+     "moonset_time": null,
+     "snow_depth_in": null,
+     "snow_depth_cm": null,
+     "snowfall_rate_in": null,
+     "wind_chill_f": null,
+     "wind_chill_c": null,
+     "freezing_level_ft": null,
+     "freezing_level_m": null,
+     "heat_index_f": null,
+     "heat_index_c": null,
+     "frost_risk": null,
+     "precipitation_type": null,
+     "severe_weather_risk": null
+    },
+    "forecast": null,
+    "hourly_forecast": null,
+    "daily_history": [],
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "minutely_precipitation": null,
+    "alerts": {
+     "alerts": []
+    },
+    "environmental": null,
+    "aviation": null,
+    "marine": null,
+    "trend_insights": [],
+    "stale": true,
+    "stale_since": null,
+    "stale_reason": null,
+    "pending_enrichments": null,
+    "source_attribution": null,
+    "incomplete_sections": [],
+    "alert_lifecycle_diff": null,
+    "forecast_confidence": null,
+    "anomaly_callout": null
+   },
+   "austin": {
+    "location": {
+     "name": "austin",
+     "latitude": 30.27,
+     "longitude": -97.74,
+     "timezone": null,
+     "country_code": "US",
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    "current": {
+     "temperature": null,
+     "temperature_f": null,
+     "temperature_c": null,
+     "condition": null,
+     "humidity": null,
+     "wind_speed": null,
+     "dewpoint_f": null,
+     "dewpoint_c": null,
+     "wind_speed_mph": null,
+     "wind_speed_kph": null,
+     "wind_direction": null,
+     "pressure": null,
+     "pressure_in": null,
+     "pressure_mb": null,
+     "feels_like_f": null,
+     "feels_like_c": null,
+     "visibility_miles": null,
+     "visibility_km": null,
+     "uv_index": null,
+     "cloud_cover": null,
+     "wind_gust_mph": null,
+     "wind_gust_kph": null,
+     "precipitation_in": null,
+     "precipitation_mm": null,
+     "sunrise_time": null,
+     "sunset_time": null,
+     "moon_phase": null,
+     "moonrise_time": null,
+     "moonset_time": null,
+     "snow_depth_in": null,
+     "snow_depth_cm": null,
+     "snowfall_rate_in": null,
+     "wind_chill_f": null,
+     "wind_chill_c": null,
+     "freezing_level_ft": null,
+     "freezing_level_m": null,
+     "heat_index_f": null,
+     "heat_index_c": null,
+     "frost_risk": null,
+     "precipitation_type": null,
+     "severe_weather_risk": null
+    },
+    "forecast": null,
+    "hourly_forecast": null,
+    "daily_history": [],
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "minutely_precipitation": null,
+    "alerts": {
+     "alerts": [
+      {
+       "title": "Flood Watch",
+       "description": "Details",
+       "severity": "Extreme",
+       "urgency": "Unknown",
+       "certainty": "Unknown",
+       "event": "Flood Watch",
+       "headline": null,
+       "instruction": null,
+       "onset": null,
+       "expires": null,
+       "sent": null,
+       "effective": null,
+       "areas": [],
+       "references": [],
+       "id": "a4",
+       "source": "VisualCrossing",
+       "message_type": "Alert",
+       "affected_zones": [],
+       "same_codes": [],
+       "same_event_codes": []
+      }
+     ]
+    },
+    "environmental": null,
+    "aviation": null,
+    "marine": null,
+    "trend_insights": [],
+    "stale": false,
+    "stale_since": null,
+    "stale_reason": null,
+    "pending_enrichments": null,
+    "source_attribution": null,
+    "incomplete_sections": [],
+    "alert_lifecycle_diff": null,
+    "forecast_confidence": null,
+    "anomaly_callout": null
+   }
+  },
+  "cases": [
+   {
+    "temperature_unit": "both",
+    "round_values": false,
+    "location_sort_order": "alphabetical",
+    "text": "All Locations Summary\n\n--- austin ---\n  Temperature: N/A\n  Condition: Unknown\n  Active Alerts: 1\n    • Flood Watch (Extreme)\n\n--- London ---\n  Temperature: 51.8°F (11°C)\n  Condition: Unknown\n  Active Alerts: None\n  (Cached — data may be outdated)\n\n--- Philadelphia, PA ---\n  Temperature: 72.5°F (22.5°C)\n  Condition: Sunny\n  Active Alerts: 3\n    • Dense Fog Advisory (Moderate)\n    • Wind Advisory (Minor)\n    • Heat Advisory (Severe)\n\n--- Zed ---\n  (No cached data — select this location to load current conditions)\n",
+    "alert_items": [
+     "austin: Flood Watch (Extreme)",
+     "Philadelphia, PA: Dense Fog Advisory (Moderate)",
+     "Philadelphia, PA: Wind Advisory (Minor)",
+     "Philadelphia, PA: Heat Advisory (Severe)"
+    ],
+    "button_enabled": true
+   },
+   {
+    "temperature_unit": "f",
+    "round_values": true,
+    "location_sort_order": "manual",
+    "text": "All Locations Summary\n\n--- Philadelphia, PA ---\n  Temperature: 72°F\n  Condition: Sunny\n  Active Alerts: 3\n    • Dense Fog Advisory (Moderate)\n    • Wind Advisory (Minor)\n    • Heat Advisory (Severe)\n\n--- London ---\n  Temperature: 52°F\n  Condition: Unknown\n  Active Alerts: None\n  (Cached — data may be outdated)\n\n--- austin ---\n  Temperature: N/A\n  Condition: Unknown\n  Active Alerts: 1\n    • Flood Watch (Extreme)\n\n--- Zed ---\n  (No cached data — select this location to load current conditions)\n",
+    "alert_items": [
+     "Philadelphia, PA: Dense Fog Advisory (Moderate)",
+     "Philadelphia, PA: Wind Advisory (Minor)",
+     "Philadelphia, PA: Heat Advisory (Severe)",
+     "austin: Flood Watch (Extreme)"
+    ],
+    "button_enabled": true
+   },
+   {
+    "temperature_unit": "auto",
+    "round_values": false,
+    "location_sort_order": "alphabetical",
+    "text": "All Locations Summary\n\n--- austin ---\n  Temperature: N/A\n  Condition: Unknown\n  Active Alerts: 1\n    • Flood Watch (Extreme)\n\n--- London ---\n  Temperature: 11°C\n  Condition: Unknown\n  Active Alerts: None\n  (Cached — data may be outdated)\n\n--- Philadelphia, PA ---\n  Temperature: 72.5°F\n  Condition: Sunny\n  Active Alerts: 3\n    • Dense Fog Advisory (Moderate)\n    • Wind Advisory (Minor)\n    • Heat Advisory (Severe)\n\n--- Zed ---\n  (No cached data — select this location to load current conditions)\n",
+    "alert_items": [
+     "austin: Flood Watch (Extreme)",
+     "Philadelphia, PA: Dense Fog Advisory (Moderate)",
+     "Philadelphia, PA: Wind Advisory (Minor)",
+     "Philadelphia, PA: Heat Advisory (Severe)"
+    ],
+    "button_enabled": true
+   },
+   {
+    "temperature_unit": "celsius",
+    "round_values": false,
+    "location_sort_order": "manual",
+    "text": "All Locations Summary\n\n--- Philadelphia, PA ---\n  Temperature: 22.5°C\n  Condition: Sunny\n  Active Alerts: 3\n    • Dense Fog Advisory (Moderate)\n    • Wind Advisory (Minor)\n    • Heat Advisory (Severe)\n\n--- London ---\n  Temperature: 11°C\n  Condition: Unknown\n  Active Alerts: None\n  (Cached — data may be outdated)\n\n--- austin ---\n  Temperature: N/A\n  Condition: Unknown\n  Active Alerts: 1\n    • Flood Watch (Extreme)\n\n--- Zed ---\n  (No cached data — select this location to load current conditions)\n",
+    "alert_items": [
+     "Philadelphia, PA: Dense Fog Advisory (Moderate)",
+     "Philadelphia, PA: Wind Advisory (Minor)",
+     "Philadelphia, PA: Heat Advisory (Severe)",
+     "austin: Flood Watch (Extreme)"
+    ],
+    "button_enabled": true
+   }
+  ],
+  "empty_text": "No locations configured.\nUse the Add button or Ctrl+L to add a location."
+ },
+ "panels": [
+  {
+   "presentation": {
+    "current_conditions": {
+     "fallback_text": "Sunny, 72F"
+    },
+    "source_attribution": {
+     "summary_text": "Data from NWS."
+    },
+    "status_messages": [
+     "Showing cached data.",
+     "Refresh failed."
+    ],
+    "forecast": {
+     "daily_section_text": "Today: Sunny.\n",
+     "hourly_section_text": "Next hours...",
+     "marine_section_text": "Marine: calm.",
+     "mobility_briefing": "Rain starts at 5 PM."
+    }
+   },
+   "current": "Sunny, 72F\n\nData from NWS.",
+   "stale_warning": "Showing cached data. Refresh failed.",
+   "daily": "Today: Sunny.\n\n\nMarine: calm.",
+   "hourly": "Next hours...",
+   "event_center": [
+    "[5:04 PM] Briefing: Rain starts at 5 PM.\n"
+   ]
+  },
+  {
+   "presentation": {
+    "current_conditions": {
+     "fallback_text": ""
+    },
+    "source_attribution": {
+     "summary_text": ""
+    },
+    "status_messages": [],
+    "forecast": {
+     "daily_section_text": "",
+     "hourly_section_text": "",
+     "marine_section_text": "",
+     "mobility_briefing": null
+    }
+   },
+   "current": "",
+   "stale_warning": "",
+   "daily": "No daily forecast available.",
+   "hourly": "No hourly forecast available.",
+   "event_center": []
+  },
+  {
+   "presentation": {
+    "current_conditions": null,
+    "source_attribution": null,
+    "status_messages": [
+     "Stale."
+    ],
+    "forecast": null
+   },
+   "current": "No current conditions available.",
+   "stale_warning": "Stale.",
+   "daily": "No daily forecast available.",
+   "hourly": "No hourly forecast available.",
+   "event_center": []
+  },
+  {
+   "presentation": {
+    "current_conditions": {
+     "fallback_text": "Cloudy"
+    },
+    "source_attribution": null,
+    "status_messages": [],
+    "forecast": {
+     "daily_section_text": "",
+     "hourly_section_text": "H",
+     "marine_section_text": "Marine only  \n\n",
+     "mobility_briefing": ""
+    }
+   },
+   "current": "Cloudy",
+   "stale_warning": "",
+   "daily": "Marine only",
+   "hourly": "H",
+   "event_center": []
+  }
+ ],
+ "sections": [
+  {
+   "event_center_visible": true,
+   "sections": [
+    "Location",
+    "Current conditions",
+    "Hourly / near-term",
+    "Daily forecast",
+    "Alerts",
+    "Event Center"
+   ],
+   "numbers": {
+    "1": "Current conditions",
+    "2": "Hourly / near-term",
+    "3": "Daily forecast",
+    "4": "Alerts",
+    "5": "Event Center"
+   },
+   "cycle": [
+    "Location",
+    "Current conditions",
+    "Hourly / near-term",
+    "Daily forecast",
+    "Alerts",
+    "Event Center",
+    "Location",
+    "Current conditions"
+   ]
+  },
+  {
+   "event_center_visible": false,
+   "sections": [
+    "Location",
+    "Current conditions",
+    "Hourly / near-term",
+    "Daily forecast",
+    "Alerts"
+   ],
+   "numbers": {
+    "1": "Current conditions",
+    "2": "Hourly / near-term",
+    "3": "Daily forecast",
+    "4": "Alerts",
+    "5": null
+   },
+   "cycle": [
+    "Location",
+    "Current conditions",
+    "Hourly / near-term",
+    "Daily forecast",
+    "Alerts",
+    "Location",
+    "Current conditions",
+    "Hourly / near-term"
+   ]
+  }
+ ],
+ "clock": [
+  {
+   "hour": 9,
+   "minute": 5,
+   "entries": [
+    {
+     "text": "Hello",
+     "category": null,
+     "entry": "[9:05 AM] Hello\n"
+    },
+    {
+     "text": "Rain soon",
+     "category": "Briefing",
+     "entry": "[9:05 AM] Briefing: Rain soon\n"
+    },
+    {
+     "text": "",
+     "category": "X",
+     "entry": null
+    }
+   ],
+   "last_updated": "Last updated 9:05 AM"
+  },
+  {
+   "hour": 12,
+   "minute": 30,
+   "entries": [
+    {
+     "text": "Hello",
+     "category": null,
+     "entry": "[12:30 PM] Hello\n"
+    },
+    {
+     "text": "Rain soon",
+     "category": "Briefing",
+     "entry": "[12:30 PM] Briefing: Rain soon\n"
+    },
+    {
+     "text": "",
+     "category": "X",
+     "entry": null
+    }
+   ],
+   "last_updated": "Last updated 12:30 PM"
+  },
+  {
+   "hour": 0,
+   "minute": 15,
+   "entries": [
+    {
+     "text": "Hello",
+     "category": null,
+     "entry": "[12:15 AM] Hello\n"
+    },
+    {
+     "text": "Rain soon",
+     "category": "Briefing",
+     "entry": "[12:15 AM] Briefing: Rain soon\n"
+    },
+    {
+     "text": "",
+     "category": "X",
+     "entry": null
+    }
+   ],
+   "last_updated": "Last updated 12:15 AM"
+  },
+  {
+   "hour": 23,
+   "minute": 59,
+   "entries": [
+    {
+     "text": "Hello",
+     "category": null,
+     "entry": "[11:59 PM] Hello\n"
+    },
+    {
+     "text": "Rain soon",
+     "category": "Briefing",
+     "entry": "[11:59 PM] Briefing: Rain soon\n"
+    },
+    {
+     "text": "",
+     "category": "X",
+     "entry": null
+    }
+   ],
+   "last_updated": "Last updated 11:59 PM"
+  },
+  {
+   "hour": 13,
+   "minute": 0,
+   "entries": [
+    {
+     "text": "Hello",
+     "category": null,
+     "entry": "[1:00 PM] Hello\n"
+    },
+    {
+     "text": "Rain soon",
+     "category": "Briefing",
+     "entry": "[1:00 PM] Briefing: Rain soon\n"
+    },
+    {
+     "text": "",
+     "category": "X",
+     "entry": null
+    }
+   ],
+   "last_updated": "Last updated 1:00 PM"
+  }
+ ],
+ "titles": [
+  {
+   "name": null,
+   "title": "AccessiWeather"
+  },
+  {
+   "name": "",
+   "title": "AccessiWeather"
+  },
+  {
+   "name": "All Locations",
+   "title": "AccessiWeather"
+  },
+  {
+   "name": "Philadelphia, PA",
+   "title": "AccessiWeather — Philadelphia, PA"
+  }
+ ],
+ "sorting": {
+  "locations": [
+   {
+    "name": "boston",
+    "latitude": 42.36,
+    "longitude": -71.06,
+    "timezone": null,
+    "country_code": null,
+    "marine_mode": false,
+    "forecast_zone_id": null,
+    "cwa_office": null,
+    "county_zone_id": null,
+    "fire_zone_id": null,
+    "radar_station": null
+   },
+   {
+    "name": "Austin",
+    "latitude": 30.27,
+    "longitude": -97.74,
+    "timezone": null,
+    "country_code": null,
+    "marine_mode": false,
+    "forecast_zone_id": null,
+    "cwa_office": null,
+    "county_zone_id": null,
+    "fire_zone_id": null,
+    "radar_station": null
+   },
+   {
+    "name": "Chicago",
+    "latitude": 41.88,
+    "longitude": -87.63,
+    "timezone": null,
+    "country_code": null,
+    "marine_mode": false,
+    "forecast_zone_id": null,
+    "cwa_office": null,
+    "county_zone_id": null,
+    "fire_zone_id": null,
+    "radar_station": null
+   },
+   {
+    "name": "austin",
+    "latitude": 30.0,
+    "longitude": -97.0,
+    "timezone": null,
+    "country_code": null,
+    "marine_mode": false,
+    "forecast_zone_id": null,
+    "cwa_office": null,
+    "county_zone_id": null,
+    "fire_zone_id": null,
+    "radar_station": null
+   },
+   {
+    "name": "Denver",
+    "latitude": 39.74,
+    "longitude": -104.99,
+    "timezone": null,
+    "country_code": null,
+    "marine_mode": false,
+    "forecast_zone_id": null,
+    "cwa_office": null,
+    "county_zone_id": null,
+    "fire_zone_id": null,
+    "radar_station": null
+   }
+  ],
+  "anchor": {
+   "name": "Chicago",
+   "latitude": 41.88,
+   "longitude": -87.63,
+   "timezone": null,
+   "country_code": null,
+   "marine_mode": false,
+   "forecast_zone_id": null,
+   "cwa_office": null,
+   "county_zone_id": null,
+   "fire_zone_id": null,
+   "radar_station": null
+  },
+  "cases": [
+   {
+    "order": "alphabetical",
+    "anchor": true,
+    "names": [
+     "Austin",
+     "austin",
+     "boston",
+     "Chicago",
+     "Denver"
+    ]
+   },
+   {
+    "order": "alphabetical",
+    "anchor": false,
+    "names": [
+     "Austin",
+     "austin",
+     "boston",
+     "Chicago",
+     "Denver"
+    ]
+   },
+   {
+    "order": "manual",
+    "anchor": true,
+    "names": [
+     "boston",
+     "Austin",
+     "Chicago",
+     "austin",
+     "Denver"
+    ]
+   },
+   {
+    "order": "manual",
+    "anchor": false,
+    "names": [
+     "boston",
+     "Austin",
+     "Chicago",
+     "austin",
+     "Denver"
+    ]
+   },
+   {
+    "order": "nearest_current",
+    "anchor": true,
+    "names": [
+     "Chicago",
+     "boston",
+     "Denver",
+     "austin",
+     "Austin"
+    ]
+   },
+   {
+    "order": "nearest_current",
+    "anchor": false,
+    "names": [
+     "Austin",
+     "austin",
+     "boston",
+     "Chicago",
+     "Denver"
+    ]
+   },
+   {
+    "order": "bogus",
+    "anchor": true,
+    "names": [
+     "Austin",
+     "austin",
+     "boston",
+     "Chicago",
+     "Denver"
+    ]
+   },
+   {
+    "order": "bogus",
+    "anchor": false,
+    "names": [
+     "Austin",
+     "austin",
+     "boston",
+     "Chicago",
+     "Denver"
+    ]
+   },
+   {
+    "order": null,
+    "anchor": true,
+    "names": [
+     "Austin",
+     "austin",
+     "boston",
+     "Chicago",
+     "Denver"
+    ]
+   },
+   {
+    "order": null,
+    "anchor": false,
+    "names": [
+     "Austin",
+     "austin",
+     "boston",
+     "Chicago",
+     "Denver"
+    ]
+   }
+  ]
+ },
+ "location_manager": {
+  "formatted": [
+   {
+    "lat": 39.9526,
+    "lon": -75.1652,
+    "text": "39.9526°N, 75.1652°W"
+   },
+   {
+    "lat": -33.8688,
+    "lon": 151.2093,
+    "text": "33.8688°S, 151.2093°E"
+   },
+   {
+    "lat": 0.0,
+    "lon": 0.0,
+    "text": "0.0000°N, 0.0000°E"
+   },
+   {
+    "lat": 51.123456,
+    "lon": -4e-05,
+    "text": "51.1235°N, 0.0000°W"
+   }
+  ],
+  "distances": [
+   {
+    "a": {
+     "name": "A",
+     "latitude": 39.9526,
+     "longitude": -75.1652,
+     "timezone": null,
+     "country_code": null,
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    "b": {
+     "name": "B",
+     "latitude": 40.7128,
+     "longitude": -74.006,
+     "timezone": null,
+     "country_code": null,
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    "miles": "80.54"
+   },
+   {
+    "a": {
+     "name": "A",
+     "latitude": 39.9526,
+     "longitude": -75.1652,
+     "timezone": null,
+     "country_code": null,
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    "b": {
+     "name": "C",
+     "latitude": -33.8688,
+     "longitude": 151.2093,
+     "timezone": null,
+     "country_code": null,
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    "miles": "9870.32"
+   },
+   {
+    "a": {
+     "name": "A",
+     "latitude": 39.9526,
+     "longitude": -75.1652,
+     "timezone": null,
+     "country_code": null,
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    "b": {
+     "name": "A",
+     "latitude": 39.9526,
+     "longitude": -75.1652,
+     "timezone": null,
+     "country_code": null,
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    "miles": "0.00"
+   }
+  ],
+  "is_us": [
+   {
+    "location": {
+     "name": "x",
+     "latitude": 45.0,
+     "longitude": -75.0,
+     "timezone": null,
+     "country_code": "US",
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    "is_us": true
+   },
+   {
+    "location": {
+     "name": "x",
+     "latitude": 40.0,
+     "longitude": -100.0,
+     "timezone": null,
+     "country_code": "CA",
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    "is_us": false
+   },
+   {
+    "location": {
+     "name": "Victoria",
+     "latitude": 48.43,
+     "longitude": -123.37,
+     "timezone": null,
+     "country_code": null,
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    "is_us": true
+   },
+   {
+    "location": {
+     "name": "Toronto",
+     "latitude": 43.65,
+     "longitude": -79.38,
+     "timezone": null,
+     "country_code": null,
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    "is_us": true
+   },
+   {
+    "location": {
+     "name": "Anchorage",
+     "latitude": 61.2,
+     "longitude": -149.9,
+     "timezone": null,
+     "country_code": null,
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    "is_us": true
+   },
+   {
+    "location": {
+     "name": "Honolulu",
+     "latitude": 21.3,
+     "longitude": -157.8,
+     "timezone": null,
+     "country_code": null,
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    "is_us": true
+   },
+   {
+    "location": {
+     "name": "London",
+     "latitude": 51.5,
+     "longitude": -0.12,
+     "timezone": null,
+     "country_code": null,
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    "is_us": false
+   }
+  ]
+ },
+ "location_ops": {
+  "initial": {
+   "locations": [
+    {
+     "name": "Home",
+     "latitude": 39.95,
+     "longitude": -75.16,
+     "country_code": "US",
+     "timezone": "America/New_York",
+     "forecast_zone_id": "PAZ106",
+     "cwa_office": "PHI",
+     "county_zone_id": "PAC101",
+     "fire_zone_id": "PAZ106",
+     "radar_station": "KDIX"
+    }
+   ],
+   "current_location": null
+  },
+  "steps": [
+   {
+    "step": [
+     "add_location",
+     "Work",
+     40.0,
+     -75.0,
+     "us",
+     false
+    ],
+    "result": true,
+    "locations": [
+     {
+      "name": "Home",
+      "latitude": 39.95,
+      "longitude": -75.16,
+      "country_code": "US",
+      "timezone": "America/New_York",
+      "forecast_zone_id": "PAZ106",
+      "cwa_office": "PHI",
+      "county_zone_id": "PAC101",
+      "fire_zone_id": "PAZ106",
+      "radar_station": "KDIX"
+     },
+     {
+      "name": "Work",
+      "latitude": 40.0,
+      "longitude": -75.0,
+      "country_code": "US"
+     }
+    ],
+    "current_location": {
+     "name": "Work",
+     "latitude": 40.0,
+     "longitude": -75.0,
+     "country_code": "US"
+    }
+   },
+   {
+    "step": [
+     "add_location",
+     "Beach",
+     39.3,
+     -74.5,
+     null,
+     true
+    ],
+    "result": true,
+    "locations": [
+     {
+      "name": "Home",
+      "latitude": 39.95,
+      "longitude": -75.16,
+      "country_code": "US",
+      "timezone": "America/New_York",
+      "forecast_zone_id": "PAZ106",
+      "cwa_office": "PHI",
+      "county_zone_id": "PAC101",
+      "fire_zone_id": "PAZ106",
+      "radar_station": "KDIX"
+     },
+     {
+      "name": "Work",
+      "latitude": 40.0,
+      "longitude": -75.0,
+      "country_code": "US"
+     },
+     {
+      "name": "Beach",
+      "latitude": 39.3,
+      "longitude": -74.5,
+      "marine_mode": true
+     }
+    ],
+    "current_location": {
+     "name": "Work",
+     "latitude": 40.0,
+     "longitude": -75.0,
+     "country_code": "US"
+    }
+   },
+   {
+    "step": [
+     "add_location",
+     "Work",
+     1.0,
+     1.0,
+     null,
+     false
+    ],
+    "result": false,
+    "locations": [
+     {
+      "name": "Home",
+      "latitude": 39.95,
+      "longitude": -75.16,
+      "country_code": "US",
+      "timezone": "America/New_York",
+      "forecast_zone_id": "PAZ106",
+      "cwa_office": "PHI",
+      "county_zone_id": "PAC101",
+      "fire_zone_id": "PAZ106",
+      "radar_station": "KDIX"
+     },
+     {
+      "name": "Work",
+      "latitude": 40.0,
+      "longitude": -75.0,
+      "country_code": "US"
+     },
+     {
+      "name": "Beach",
+      "latitude": 39.3,
+      "longitude": -74.5,
+      "marine_mode": true
+     }
+    ],
+    "current_location": {
+     "name": "Work",
+     "latitude": 40.0,
+     "longitude": -75.0,
+     "country_code": "US"
+    }
+   },
+   {
+    "step": [
+     "add_location",
+     "Bad",
+     95.0,
+     0.0,
+     null,
+     false
+    ],
+    "result": false,
+    "locations": [
+     {
+      "name": "Home",
+      "latitude": 39.95,
+      "longitude": -75.16,
+      "country_code": "US",
+      "timezone": "America/New_York",
+      "forecast_zone_id": "PAZ106",
+      "cwa_office": "PHI",
+      "county_zone_id": "PAC101",
+      "fire_zone_id": "PAZ106",
+      "radar_station": "KDIX"
+     },
+     {
+      "name": "Work",
+      "latitude": 40.0,
+      "longitude": -75.0,
+      "country_code": "US"
+     },
+     {
+      "name": "Beach",
+      "latitude": 39.3,
+      "longitude": -74.5,
+      "marine_mode": true
+     }
+    ],
+    "current_location": {
+     "name": "Work",
+     "latitude": 40.0,
+     "longitude": -75.0,
+     "country_code": "US"
+    }
+   },
+   {
+    "step": [
+     "set_current_location",
+     "Home"
+    ],
+    "result": true,
+    "locations": [
+     {
+      "name": "Home",
+      "latitude": 39.95,
+      "longitude": -75.16,
+      "country_code": "US",
+      "timezone": "America/New_York",
+      "forecast_zone_id": "PAZ106",
+      "cwa_office": "PHI",
+      "county_zone_id": "PAC101",
+      "fire_zone_id": "PAZ106",
+      "radar_station": "KDIX"
+     },
+     {
+      "name": "Work",
+      "latitude": 40.0,
+      "longitude": -75.0,
+      "country_code": "US"
+     },
+     {
+      "name": "Beach",
+      "latitude": 39.3,
+      "longitude": -74.5,
+      "marine_mode": true
+     }
+    ],
+    "current_location": {
+     "name": "Home",
+     "latitude": 39.95,
+     "longitude": -75.16,
+     "country_code": "US",
+     "timezone": "America/New_York",
+     "forecast_zone_id": "PAZ106",
+     "cwa_office": "PHI",
+     "county_zone_id": "PAC101",
+     "fire_zone_id": "PAZ106",
+     "radar_station": "KDIX"
+    }
+   },
+   {
+    "step": [
+     "set_current_location",
+     "Nowhere"
+    ],
+    "result": false,
+    "locations": [
+     {
+      "name": "Home",
+      "latitude": 39.95,
+      "longitude": -75.16,
+      "country_code": "US",
+      "timezone": "America/New_York",
+      "forecast_zone_id": "PAZ106",
+      "cwa_office": "PHI",
+      "county_zone_id": "PAC101",
+      "fire_zone_id": "PAZ106",
+      "radar_station": "KDIX"
+     },
+     {
+      "name": "Work",
+      "latitude": 40.0,
+      "longitude": -75.0,
+      "country_code": "US"
+     },
+     {
+      "name": "Beach",
+      "latitude": 39.3,
+      "longitude": -74.5,
+      "marine_mode": true
+     }
+    ],
+    "current_location": {
+     "name": "Home",
+     "latitude": 39.95,
+     "longitude": -75.16,
+     "country_code": "US",
+     "timezone": "America/New_York",
+     "forecast_zone_id": "PAZ106",
+     "cwa_office": "PHI",
+     "county_zone_id": "PAC101",
+     "fire_zone_id": "PAZ106",
+     "radar_station": "KDIX"
+    }
+   },
+   {
+    "step": [
+     "update_location_details",
+     "Home",
+     39.95,
+     -75.16,
+     "US",
+     true,
+     "Home Sweet Home"
+    ],
+    "result": true,
+    "locations": [
+     {
+      "name": "Home Sweet Home",
+      "latitude": 39.95,
+      "longitude": -75.16,
+      "country_code": "US",
+      "marine_mode": true,
+      "timezone": "America/New_York",
+      "forecast_zone_id": "PAZ106",
+      "cwa_office": "PHI",
+      "county_zone_id": "PAC101",
+      "fire_zone_id": "PAZ106",
+      "radar_station": "KDIX"
+     },
+     {
+      "name": "Work",
+      "latitude": 40.0,
+      "longitude": -75.0,
+      "country_code": "US"
+     },
+     {
+      "name": "Beach",
+      "latitude": 39.3,
+      "longitude": -74.5,
+      "marine_mode": true
+     }
+    ],
+    "current_location": {
+     "name": "Home Sweet Home",
+     "latitude": 39.95,
+     "longitude": -75.16,
+     "country_code": "US",
+     "marine_mode": true,
+     "timezone": "America/New_York",
+     "forecast_zone_id": "PAZ106",
+     "cwa_office": "PHI",
+     "county_zone_id": "PAC101",
+     "fire_zone_id": "PAZ106",
+     "radar_station": "KDIX"
+    }
+   },
+   {
+    "step": [
+     "update_location_details",
+     "Home Sweet Home",
+     40.5,
+     -75.5,
+     null,
+     false,
+     "Home Sweet Home"
+    ],
+    "result": true,
+    "locations": [
+     {
+      "name": "Home Sweet Home",
+      "latitude": 40.5,
+      "longitude": -75.5
+     },
+     {
+      "name": "Work",
+      "latitude": 40.0,
+      "longitude": -75.0,
+      "country_code": "US"
+     },
+     {
+      "name": "Beach",
+      "latitude": 39.3,
+      "longitude": -74.5,
+      "marine_mode": true
+     }
+    ],
+    "current_location": {
+     "name": "Home Sweet Home",
+     "latitude": 40.5,
+     "longitude": -75.5
+    }
+   },
+   {
+    "step": [
+     "update_location_details",
+     "Work",
+     40.0,
+     -75.0,
+     "US",
+     false,
+     "Beach"
+    ],
+    "result": false,
+    "locations": [
+     {
+      "name": "Home Sweet Home",
+      "latitude": 40.5,
+      "longitude": -75.5
+     },
+     {
+      "name": "Work",
+      "latitude": 40.0,
+      "longitude": -75.0,
+      "country_code": "US"
+     },
+     {
+      "name": "Beach",
+      "latitude": 39.3,
+      "longitude": -74.5,
+      "marine_mode": true
+     }
+    ],
+    "current_location": {
+     "name": "Home Sweet Home",
+     "latitude": 40.5,
+     "longitude": -75.5
+    }
+   },
+   {
+    "step": [
+     "update_location_details",
+     "Work",
+     40.0,
+     -75.0,
+     "US",
+     false,
+     "  "
+    ],
+    "result": false,
+    "locations": [
+     {
+      "name": "Home Sweet Home",
+      "latitude": 40.5,
+      "longitude": -75.5
+     },
+     {
+      "name": "Work",
+      "latitude": 40.0,
+      "longitude": -75.0,
+      "country_code": "US"
+     },
+     {
+      "name": "Beach",
+      "latitude": 39.3,
+      "longitude": -74.5,
+      "marine_mode": true
+     }
+    ],
+    "current_location": {
+     "name": "Home Sweet Home",
+     "latitude": 40.5,
+     "longitude": -75.5
+    }
+   },
+   {
+    "step": [
+     "reorder_locations",
+     [
+      "Beach",
+      "Home Sweet Home",
+      "Work"
+     ]
+    ],
+    "result": true,
+    "locations": [
+     {
+      "name": "Beach",
+      "latitude": 39.3,
+      "longitude": -74.5,
+      "marine_mode": true
+     },
+     {
+      "name": "Home Sweet Home",
+      "latitude": 40.5,
+      "longitude": -75.5
+     },
+     {
+      "name": "Work",
+      "latitude": 40.0,
+      "longitude": -75.0,
+      "country_code": "US"
+     }
+    ],
+    "current_location": {
+     "name": "Home Sweet Home",
+     "latitude": 40.5,
+     "longitude": -75.5
+    }
+   },
+   {
+    "step": [
+     "reorder_locations",
+     [
+      "Beach",
+      "Work"
+     ]
+    ],
+    "result": false,
+    "locations": [
+     {
+      "name": "Beach",
+      "latitude": 39.3,
+      "longitude": -74.5,
+      "marine_mode": true
+     },
+     {
+      "name": "Home Sweet Home",
+      "latitude": 40.5,
+      "longitude": -75.5
+     },
+     {
+      "name": "Work",
+      "latitude": 40.0,
+      "longitude": -75.0,
+      "country_code": "US"
+     }
+    ],
+    "current_location": {
+     "name": "Home Sweet Home",
+     "latitude": 40.5,
+     "longitude": -75.5
+    }
+   },
+   {
+    "step": [
+     "reorder_locations",
+     [
+      "Beach",
+      "Home Sweet Home",
+      "Work"
+     ]
+    ],
+    "result": true,
+    "locations": [
+     {
+      "name": "Beach",
+      "latitude": 39.3,
+      "longitude": -74.5,
+      "marine_mode": true
+     },
+     {
+      "name": "Home Sweet Home",
+      "latitude": 40.5,
+      "longitude": -75.5
+     },
+     {
+      "name": "Work",
+      "latitude": 40.0,
+      "longitude": -75.0,
+      "country_code": "US"
+     }
+    ],
+    "current_location": {
+     "name": "Home Sweet Home",
+     "latitude": 40.5,
+     "longitude": -75.5
+    }
+   },
+   {
+    "step": [
+     "remove_location",
+     "Home Sweet Home"
+    ],
+    "result": true,
+    "locations": [
+     {
+      "name": "Beach",
+      "latitude": 39.3,
+      "longitude": -74.5,
+      "marine_mode": true
+     },
+     {
+      "name": "Work",
+      "latitude": 40.0,
+      "longitude": -75.0,
+      "country_code": "US"
+     }
+    ],
+    "current_location": {
+     "name": "Beach",
+     "latitude": 39.3,
+     "longitude": -74.5,
+     "marine_mode": true
+    }
+   },
+   {
+    "step": [
+     "remove_location",
+     "Missing"
+    ],
+    "result": false,
+    "locations": [
+     {
+      "name": "Beach",
+      "latitude": 39.3,
+      "longitude": -74.5,
+      "marine_mode": true
+     },
+     {
+      "name": "Work",
+      "latitude": 40.0,
+      "longitude": -75.0,
+      "country_code": "US"
+     }
+    ],
+    "current_location": {
+     "name": "Beach",
+     "latitude": 39.3,
+     "longitude": -74.5,
+     "marine_mode": true
+    }
+   },
+   {
+    "step": [
+     "remove_location",
+     "Beach"
+    ],
+    "result": true,
+    "locations": [
+     {
+      "name": "Work",
+      "latitude": 40.0,
+      "longitude": -75.0,
+      "country_code": "US"
+     }
+    ],
+    "current_location": {
+     "name": "Work",
+     "latitude": 40.0,
+     "longitude": -75.0,
+     "country_code": "US"
+    }
+   },
+   {
+    "step": [
+     "remove_location",
+     "Work"
+    ],
+    "result": true,
+    "locations": [],
+    "current_location": null
+   },
+   {
+    "step": [
+     "add_location",
+     "Solo",
+     10.0,
+     10.0,
+     null,
+     false
+    ],
+    "result": true,
+    "locations": [
+     {
+      "name": "Solo",
+      "latitude": 10.0,
+      "longitude": 10.0
+     }
+    ],
+    "current_location": {
+     "name": "Solo",
+     "latitude": 10.0,
+     "longitude": 10.0
+    }
+   }
+  ]
+ },
+ "messages": {
+  "version": "0.9.0",
+  "boxes": [
+   {
+    "message": "Please select a specific location to edit.",
+    "caption": "No Location Selected",
+    "style": [
+     "warning"
+    ]
+   },
+   {
+    "message": "Please select a specific location to remove.",
+    "caption": "No Location Selected",
+    "style": [
+     "warning"
+    ]
+   },
+   {
+    "message": "Cannot remove the last location. Add another location first.",
+    "caption": "Cannot Remove",
+    "style": [
+     "warning"
+    ]
+   },
+   {
+    "message": "Are you sure you want to remove 'Work'?",
+    "caption": "Confirm Removal",
+    "style": [
+     "yes_no",
+     "question"
+    ]
+   },
+   {
+    "message": "Add at least two saved locations before reordering them.",
+    "caption": "Not Enough Locations",
+    "style": [
+     "information"
+    ]
+   },
+   {
+    "message": "Please select a location first.",
+    "caption": "No Location Selected",
+    "style": [
+     "warning"
+    ]
+   },
+   {
+    "message": "AccessiWeather v0.9.0\n\nAn accessible weather application with NOAA and Open-Meteo support.\n\nBuilt with wxPython for screen reader compatibility.\n\nMode: Portable\nConfig path: C:\\Config\n\nhttps://github.com/Orinks/AccessiWeather",
+    "caption": "About AccessiWeather",
+    "style": [
+     "information"
+    ]
+   },
+   {
+    "message": "AccessiWeather v0.9.0\n\nAn accessible weather application with NOAA and Open-Meteo support.\n\nBuilt with wxPython for screen reader compatibility.\n\nMode: Installed\nConfig path: C:\\Config\n\nhttps://github.com/Orinks/AccessiWeather",
+    "caption": "About AccessiWeather",
+    "style": [
+     "information"
+    ]
+   }
+  ]
+ },
+ "check_updates": [
+  {
+   "channel": "stable",
+   "label": "Check for &Updates (Stable)..."
+  },
+  {
+   "channel": "nightly",
+   "label": "Check for &Updates (Nightly)..."
+  },
+  {
+   "channel": "dev",
+   "label": "Check for &Updates (Dev)..."
+  },
+  {
+   "channel": "beta-test",
+   "label": "Check for &Updates (Beta-Test)..."
+  },
+  {
+   "channel": "rc2x",
+   "label": "Check for &Updates (Rc2X)..."
+  }
+ ]
+}
