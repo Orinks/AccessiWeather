@@ -31,10 +31,23 @@ toolchain; allow several minutes). Linux build dependencies (Debian/Ubuntu):
 `cmake build-essential libclang-dev pkg-config libglibmm-2.68-dev libgtk-3-dev
 libgl1-mesa-dev libglu1-mesa-dev`.
 
-Keyboard shortcuts: F5 / Ctrl+R refresh, Alt+A add location, Ctrl+, settings,
-Ctrl+D forecast discussion, Ctrl+Shift+S read aloud, Escape stop speaking or
-close a dialog, Ctrl+1..5 jump to the location, current, hourly, extended and
-alerts panels, Ctrl+Q quit. On macOS use Command in place of Ctrl.
+Keyboard shortcuts (the same as the Python app):
+
+- F5 or Ctrl+R: Refresh weather
+- Ctrl+L: Add location
+- F2: Edit the selected location
+- Ctrl+D: Remove location
+- Ctrl+S: Open Settings
+- Ctrl+H: Open Weather History
+- Ctrl+E: Explain Weather
+- Ctrl+T: Open Weather Assistant
+- Ctrl+N: Open NOAA Weather Radio
+- Ctrl+1 to Ctrl+5: Current Conditions, Hourly Forecast, Daily Forecast,
+  Weather Alerts, Event Center
+- F6: Cycle through the visible sections
+- Ctrl+Q: Quit
+
+On macOS use Command in place of Ctrl.
 
 ## Configuration
 

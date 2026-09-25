@@ -5,9 +5,8 @@ use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
-use aw_core::presenter::{WeatherPresentation, WeatherPresenter};
+use aw_core::presenter::WeatherPresenter;
 use aw_core::settings::AppConfig;
-use aw_core::weather::WeatherData;
 use aw_core::Location;
 use aw_providers::{HttpClient, ReqwestClient, WeatherClient};
 use aw_store::Paths;
@@ -57,12 +56,15 @@ pub(crate) struct State {
     pub paths: Paths,
     pub config: AppConfig,
     pub client: WeatherClient,
-    pub last_data: Option<WeatherData>,
-    pub last_presentation: Option<WeatherPresentation>,
-    pub busy: bool,
+    /// `app.current_weather_data`: what the main window shows.
+    pub current_weather_data: Option<aw_core::model::WeatherData>,
+    /// `app.is_updating`: a full refresh is in flight.
+    pub is_updating: bool,
     pub smoke: bool,
     /// Sample data runs never write the user's configuration.
     pub offline: bool,
+    /// `--debug`: adds the Help > Debug menu.
+    pub debug: bool,
 }
 
 pub(crate) type Shared = Rc<RefCell<State>>;
@@ -123,20 +125,25 @@ pub fn run(args: Args) -> Result<(), AppError> {
     }
 
     if (args.smoke || args.offline) && config.locations.is_empty() {
-        config.upsert_location(
+        config.add_location(
             Location::new("Philadelphia, Pennsylvania", 39.9526, -75.1652).with_country("US"),
         );
+    }
+    // Smoke runs must show weather; a config without a current location
+    // would (as in Python) start on "All Locations" and fetch nothing.
+    if args.smoke && config.current_location.is_none() {
+        config.current_location = config.locations.first().cloned();
     }
 
     let state: Shared = Rc::new(RefCell::new(State {
         paths,
         config,
         client,
-        last_data: None,
-        last_presentation: None,
-        busy: false,
+        current_weather_data: None,
+        is_updating: false,
         smoke: args.smoke,
         offline,
+        debug: args.debug,
     }));
     APP_STATE.with(|s| *s.borrow_mut() = Some(state.clone()));
 
@@ -156,7 +163,7 @@ pub fn run(args: Args) -> Result<(), AppError> {
                     return;
                 };
                 if crate::portable_keys::prompt(&frame, &state) {
-                    ui::refresh_now(&state);
+                    ui::refresh_now();
                 }
             }));
         }
@@ -164,7 +171,7 @@ pub fn run(args: Args) -> Result<(), AppError> {
     .map_err(|e| AppError::Ui(e.to_string()))?;
     crate::screen_reader::shutdown();
 
-    if state.borrow().smoke && state.borrow().last_data.is_none() {
+    if state.borrow().smoke && state.borrow().current_weather_data.is_none() {
         return Err(AppError::Check(
             "smoke run never received weather data".into(),
         ));
@@ -227,47 +234,4 @@ pub(crate) fn save_api_key(st: &mut State, name: &str, value: &str) -> bool {
     secrets::write_bundle(&bundle, &keys, passphrase.trim())
         .inspect_err(|e| tracing::error!("Failed to update {}: {e}", bundle.display()))
         .is_ok()
-}
-
-/// Build the status line for a completed fetch.
-pub(crate) fn status_for(data: &WeatherData, presentation: &WeatherPresentation) -> String {
-    if !data.has_any_data() {
-        return format!(
-            "Could not load weather for {}. {}",
-            data.location.name,
-            data.failed_sources
-                .iter()
-                .map(|(s, e)| format!("{s}: {e}"))
-                .collect::<Vec<_>>()
-                .join("; ")
-        );
-    }
-    let mut status = presentation.summary_text.clone();
-    if !presentation.status_messages.is_empty() {
-        status.push_str(" — ");
-        status.push_str(&presentation.status_messages.join("; "));
-    }
-    status
-}
-
-/// Store fetched weather and persist NWS metadata (zones, office) learned during the fetch.
-pub(crate) fn remember_weather(
-    st: &mut State,
-    data: WeatherData,
-    presentation: WeatherPresentation,
-) {
-    if let Some(saved) = st
-        .config
-        .locations
-        .iter_mut()
-        .find(|l| l.name == data.location.name)
-    {
-        if saved.forecast_zone_id.is_none() && data.location.forecast_zone_id.is_some() {
-            *saved = data.location.clone();
-            st.config.current_location = Some(data.location.clone());
-            let _ = save(st);
-        }
-    }
-    st.last_data = Some(data);
-    st.last_presentation = Some(presentation);
 }

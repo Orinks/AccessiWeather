@@ -13,6 +13,7 @@ dependencies = [
  "clap",
  "embed-manifest",
  "prismer",
+ "serde",
  "serde_json",
  "thiserror",
  "tracing",

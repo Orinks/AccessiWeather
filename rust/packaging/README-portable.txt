@@ -11,13 +11,20 @@ Command line:
   --config-dir DIR  Use a specific configuration folder
   --offline         Use bundled sample data (no network)
   --print-paths     Show where configuration is stored
+  --debug           Enable debug logging
   --version         Show the version
 
 Keyboard shortcuts:
   F5 / Ctrl+R       Refresh weather
-  Alt+A             Add a location
-  Ctrl+,            Settings
-  Ctrl+D            Forecast discussion
-  Ctrl+Shift+S      Read current conditions aloud (Escape stops speech)
-  Ctrl+1 .. Ctrl+5  Jump to location, current, hourly, daily, alerts
+  Ctrl+L            Add location
+  F2                Edit the selected location
+  Ctrl+D            Remove location
+  Ctrl+S            Open Settings
+  Ctrl+H            Open Weather History
+  Ctrl+E            Explain Weather
+  Ctrl+T            Open Weather Assistant
+  Ctrl+N            Open NOAA Weather Radio
+  Ctrl+1 .. Ctrl+5  Current Conditions, Hourly Forecast, Daily Forecast,
+                    Weather Alerts, Event Center
+  F6                Cycle through the visible sections
   Ctrl+Q            Quit
