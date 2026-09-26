@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - AccessiWeather no longer opens a terminal window alongside the app on Windows.
+- Portable updates on Windows no longer open a command window while they install.
 - NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.
 - AI error messages now distinguish invalid keys, depleted credits, denied access, unavailable models, rate limits, connection or timeout failures, and model refusals across the Weather Assistant and explanation views, without displaying raw provider errors.
 - After an AI summary finishes, keyboard focus moves to the result when Explain was focused; failed Weather Assistant questions return to the input for editing, and key errors point to the correct AI settings tab.

@@ -7,7 +7,7 @@
 //! tarball run) is a manual install.
 
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RestartKind {
@@ -26,7 +26,9 @@ pub struct RestartPlan {
 }
 
 /// Python's `build_portable_update_script`: wait for `pid` to exit, unzip over
-/// `target_dir` and relaunch `exe_path --updated`.
+/// `target_dir` and relaunch `exe_path --updated`. It runs without a console,
+/// so it waits with `ping`: `timeout` exits at once without console input.
+/// `find` is spelled out because Git's Unix tools can shadow it on PATH.
 pub fn build_portable_update_script(
     zip_path: &Path,
     target_dir: &Path,
@@ -47,14 +49,14 @@ set "EXE_PATH={exe}"
 set "EXTRACT_DIR={extract}"
 
 :WAIT_LOOP
-tasklist /FI "PID eq %PID%" 2>NUL | find /I /N "%PID%" >NUL
+tasklist /FI "PID eq %PID%" 2>NUL | "%SystemRoot%\System32\find.exe" /I /N "%PID%" >NUL
 if "%ERRORLEVEL%"=="0" (
-    timeout /t 1 /nobreak >NUL
+    ping -n 2 127.0.0.1 >NUL
     goto WAIT_LOOP
 )
 
 if exist "%EXTRACT_DIR%" rd /s /q "%EXTRACT_DIR%"
-powershell -Command "Expand-Archive -Path '%ZIP_PATH%' -DestinationPath '%EXTRACT_DIR%' -Force"
+powershell -NoProfile -NonInteractive -Command "Expand-Archive -Path '%ZIP_PATH%' -DestinationPath '%EXTRACT_DIR%' -Force"
 
 REM Find actual content dir (zip may have a subfolder)
 set "COPY_SRC=%EXTRACT_DIR%"
@@ -67,7 +69,7 @@ if not exist "%EXTRACT_DIR%\AccessiWeather.exe" (
 xcopy "%COPY_SRC%\*" "%TARGET_DIR%\" /E /H /Y /Q
 rd /s /q "%EXTRACT_DIR%"
 del "%ZIP_PATH%"
-timeout /t 2 /nobreak >NUL
+ping -n 3 127.0.0.1 >NUL
 start "" "%EXE_PATH%" --updated
 (goto) 2>nul & del "%~f0""#
     )
@@ -247,7 +249,7 @@ pub fn apply_update(update_path: &Path, portable: bool) -> std::io::Result<bool>
                 build_portable_update_script(update_path, target_dir, &exe, std::process::id());
             // Python's write_text translates newlines; cmd needs CRLF for labels.
             std::fs::write(&script, text.replace('\n', "\r\n"))?;
-            Command::new(&script).current_dir(target_dir).spawn()?;
+            spawn_portable_script(&script, target_dir)?;
             std::process::exit(0);
         }
         (RestartKind::MacosScript, Some(script)) => {
@@ -276,6 +278,24 @@ pub fn apply_update(update_path: &Path, portable: bool) -> std::io::Result<bool>
         }
         _ => Ok(needs_manual_install(update_path)),
     }
+}
+
+/// The app is a GUI program, so cmd would open a console window of its own
+/// for the whole update; run the script without one.
+fn spawn_portable_script(script: &Path, dir: &Path) -> std::io::Result<std::process::Child> {
+    let mut command = Command::new(script);
+    command
+        .current_dir(dir)
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        command.creation_flags(CREATE_NO_WINDOW);
+    }
+    command.spawn()
 }
 
 fn needs_manual_install(update_path: &Path) -> bool {
@@ -363,5 +383,7 @@ mod tests {
         );
         assert!(bat.starts_with("@echo off\nset \"PID=42\""));
         assert!(bat.contains("Expand-Archive") && bat.contains("--updated"));
+        // It runs without a console, where `timeout` exits at once.
+        assert!(!bat.contains("timeout") && bat.contains("ping -n 2 127.0.0.1"));
     }
 }
