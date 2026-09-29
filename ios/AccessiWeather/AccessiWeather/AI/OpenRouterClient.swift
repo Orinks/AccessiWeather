@@ -31,7 +31,7 @@ struct OpenRouterClient {
         }
     }
 
-    func complete(system: String, user: String, model: String, key: String) async throws -> String {
+    func makeRequest(system: String, user: String, model: String, key: String) throws -> URLRequest {
         var request = URLRequest(url: Self.endpoint)
         request.httpMethod = "POST"
         request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
@@ -45,6 +45,11 @@ struct OpenRouterClient {
                 max_tokens: 4000
             )
         )
+        return request
+    }
+
+    func complete(system: String, user: String, model: String, key: String) async throws -> String {
+        let request = try makeRequest(system: system, user: user, model: model, key: key)
         let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse else {
             throw WeatherError.invalidResponse("OpenRouter")

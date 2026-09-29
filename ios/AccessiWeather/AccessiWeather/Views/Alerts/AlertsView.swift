@@ -8,7 +8,11 @@ struct AlertsView: View {
         NavigationStack {
             Group {
                 if model.selectedLocation == nil {
-                    EmptyStateView(title: "No Locations Yet", systemImage: "mappin.slash", description: "Add a location on the Locations tab to see its alerts.")
+                    EmptyStateView(
+                        title: "No active alerts",
+                        systemImage: "mappin.slash",
+                        description: "No location is selected. Add a location on the Locations tab to check for alerts."
+                    )
                 } else if let report = model.report {
                     if report.alerts.isEmpty {
                         EmptyStateView(

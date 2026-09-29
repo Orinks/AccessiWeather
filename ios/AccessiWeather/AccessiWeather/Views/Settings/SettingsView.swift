@@ -9,6 +9,7 @@ struct SettingsView: View {
     @State private var avwxKey = KeychainStore.read(.avwx)
     @State private var openRouterKey = KeychainStore.read(.openRouter)
     @State private var notificationPermissionDenied = false
+    @State private var isShowingSoundEvents = false
 
     private var appVersion: String {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.0"
@@ -29,6 +30,9 @@ struct SettingsView: View {
                 aboutSection
             }
             .navigationTitle("Settings")
+            .navigationDestination(isPresented: $isShowingSoundEvents) {
+                SoundEventsView()
+            }
             .onChange(of: settings.weatherSource) { _, _ in
                 Task { await model.refresh(force: true) }
             }
@@ -117,16 +121,23 @@ struct SettingsView: View {
     private var soundsSection: some View {
         Section {
             Toggle("Play sounds", isOn: $settings.soundEnabled)
+            Button {
+                isShowingSoundEvents = true
+            } label: {
+                HStack {
+                    Text("Muted events")
+                    Spacer()
+                    Text("\(settings.mutedSoundEvents.count)")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .accessibilityLabel("Muted events")
+            .accessibilityValue("\(settings.mutedSoundEvents.count)")
+            .accessibilityHint("Choose which events play a sound")
+            .disabled(!settings.soundEnabled)
             ForEach(model.sounds.packs) { pack in
                 soundPackRow(pack)
             }
-            NavigationLink {
-                SoundEventsView()
-            } label: {
-                LabeledContent("Muted events", value: "\(settings.mutedSoundEvents.count)")
-            }
-            .accessibilityHint("Choose which events play a sound")
-            .disabled(!settings.soundEnabled)
         } header: {
             SectionHeader("Sounds")
         } footer: {

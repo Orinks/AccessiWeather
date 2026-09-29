@@ -72,6 +72,12 @@ final class FeatureParityTests: XCTestCase {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [URLProtocolStub.self]
         let client = OpenRouterClient(session: URLSession(configuration: configuration))
+        let request = try client.makeRequest(
+            system: "System prompt",
+            user: "User prompt",
+            model: "openrouter/free",
+            key: "unit-test-key"
+        )
         var capturedRequest: URLRequest?
         URLProtocolStub.handler = { request in
             capturedRequest = request
@@ -95,7 +101,7 @@ final class FeatureParityTests: XCTestCase {
         }
         XCTAssertEqual(capturedRequest?.value(forHTTPHeaderField: "HTTP-Referer"), "https://accessiweather.orinks.net")
         XCTAssertEqual(capturedRequest?.value(forHTTPHeaderField: "X-Title"), "AccessiWeather")
-        let body = try XCTUnwrap(capturedRequest?.httpBody)
+        let body = try XCTUnwrap(request.httpBody)
         let json = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
         XCTAssertEqual(json["model"] as? String, "openrouter/free")
 
