@@ -137,6 +137,12 @@ struct WeatherView: View {
                 Label("Aviation Weather", systemImage: "airplane")
             }
             .accessibilityHint("Shows airport METAR observations and TAF forecasts")
+            NavigationLink {
+                EventCenterView()
+            } label: {
+                Label("Event Center", systemImage: "tray.full")
+            }
+            .accessibilityHint("Shows saved weather alert and discussion events")
             if !KeychainStore.read(.pirateWeather).isEmpty {
                 NavigationLink {
                     PrecipitationTimelineView()

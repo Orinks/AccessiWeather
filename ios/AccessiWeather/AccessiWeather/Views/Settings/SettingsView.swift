@@ -106,6 +106,7 @@ struct SettingsView: View {
                 Toggle("Minor alerts", isOn: $settings.notifyMinor)
             }
             .disabled(!settings.alertNotificationsEnabled)
+            Toggle("Tune NOAA Weather Radio for new warnings", isOn: $settings.radioAutoTuneEnabled)
         } header: {
             SectionHeader("Alerts")
         } footer: {

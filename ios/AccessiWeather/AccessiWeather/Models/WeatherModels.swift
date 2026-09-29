@@ -139,6 +139,7 @@ struct WeatherReport: Equatable {
     var fetchedAt: Date
     var forecastOfficeID: String?
     var observationStationID: String? = nil
+    var alertsAreCurrent: Bool = true
     var minutely: [MinutelyPoint]? = nil
 }
 

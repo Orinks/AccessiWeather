@@ -11,6 +11,7 @@ final class AppModel: ObservableObject {
     let sounds: SoundManager
     let radio: RadioPlayer
     let radioStations: RadioStationDirectory
+    let eventLog: EventLog
 
     @Published private(set) var report: WeatherReport?
     @Published private(set) var isLoading = false
@@ -18,15 +19,21 @@ final class AppModel: ObservableObject {
     @Published var hasOpenRouterKey = !KeychainStore.read(.openRouter).isEmpty
 
     private var notifiedAlertIDs: Set<String> = []
-    private var seenAlertIDs: Set<String> = []
+    private var previousAlertsByLocation: [UUID: [String: WeatherAlert]] = [:]
 
-    init(settings: SettingsStore? = nil, locationStore: LocationStore? = nil, weatherService: WeatherService = WeatherService()) {
+    init(
+        settings: SettingsStore? = nil,
+        locationStore: LocationStore? = nil,
+        weatherService: WeatherService = WeatherService(),
+        eventLog: EventLog? = nil
+    ) {
         self.settings = settings ?? SettingsStore()
         self.locationStore = locationStore ?? LocationStore()
         self.weatherService = weatherService
         sounds = SoundManager(settings: self.settings)
         radio = RadioPlayer()
         radioStations = RadioStationDirectory()
+        self.eventLog = eventLog ?? EventLog()
     }
 
     var selectedLocation: SavedLocation? {
@@ -61,6 +68,20 @@ final class AppModel: ObservableObject {
         hasOpenRouterKey = !KeychainStore.read(.openRouter).isEmpty
     }
 
+    func recordDiscussionIssuance(_ issuanceTime: Date, officeID: String, locationName: String) {
+        let key = "lastAFDIssuanceTime.\(officeID.uppercased())"
+        let defaults = UserDefaults.standard
+        if let previous = defaults.object(forKey: key) as? Date, previous != issuanceTime {
+            eventLog.record(
+                kind: .discussionUpdated,
+                locationName: locationName,
+                title: "Area Forecast Discussion",
+                detail: "A new discussion was issued by the \(officeID) office."
+            )
+        }
+        defaults.set(issuanceTime, forKey: key)
+    }
+
     /// Fetches weather for the selected location. Announces completion to VoiceOver.
     func refresh(force: Bool = false, announce: Bool = true) async {
         guard let location = selectedLocation else {
@@ -77,14 +98,53 @@ final class AppModel: ObservableObject {
                 forceRefresh: force,
                 pirateWeatherKey: KeychainStore.read(.pirateWeather)
             )
-            let newAlertIDs = Set(fresh.alerts.map(\.id)).subtracting(seenAlertIDs)
-            seenAlertIDs.formUnion(newAlertIDs)
-            let hadReport = report != nil
+            let hadReport = report?.location.id == location.id
+            let previousAlerts = previousAlertsByLocation[location.id].map { Array($0.values) }
+                ?? (hadReport ? report?.alerts ?? [] : [])
+            let changes = fresh.alertsAreCurrent
+                ? EventLog.diff(previous: previousAlerts, current: fresh.alerts)
+                : AlertChanges(new: [], updated: [], ended: [])
+            let newAlertIDs = Set(changes.new.map(\.id))
+            var alertToTune: WeatherAlert?
+            var stationToTune: RadioStation?
+            if hadReport, settings.radioAutoTuneEnabled, !radio.isPlaying,
+               let severeAlert = changes.new.first(where: {
+                   ["extreme", "severe"].contains($0.severity.lowercased())
+               }),
+               let station = radioStations.nearest(
+                   latitude: location.latitude,
+                   longitude: location.longitude,
+                   limit: 1
+               ).first?.station {
+                alertToTune = severeAlert
+                stationToTune = station
+            }
+            var additionalDetails: [String: String] = [:]
+            if let alertToTune, let stationToTune {
+                additionalDetails[alertToTune.id] = "NOAA Weather Radio tuned to \(stationToTune.callSign)."
+            }
+            if fresh.alertsAreCurrent {
+                _ = eventLog.recordAlertChanges(
+                    previous: previousAlerts,
+                    current: fresh.alerts,
+                    locationName: location.name,
+                    additionalDetails: additionalDetails
+                )
+                previousAlertsByLocation[location.id] = Dictionary(
+                    uniqueKeysWithValues: fresh.alerts.map { ($0.id, $0) }
+                )
+            }
             report = fresh
             if hadReport, let strongest = fresh.alerts.first(where: { newAlertIDs.contains($0.id) }) {
                 sounds.play(SoundEvent.forSeverity(strongest.severity))
             } else {
                 sounds.play(.dataUpdated)
+            }
+            if let alertToTune, let stationToTune {
+                radio.play(stationToTune)
+                AccessibilityNotification.Announcement(
+                    "Tuning NOAA Weather Radio \(stationToTune.callSign) for \(alertToTune.event)"
+                ).post()
             }
             if announce {
                 let summary = fresh.current.description.map { ", \($0)" } ?? ""

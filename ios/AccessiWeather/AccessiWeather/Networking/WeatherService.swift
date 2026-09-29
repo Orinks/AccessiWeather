@@ -228,7 +228,8 @@ actor WeatherService {
 
         let dailyPeriods = try await dailyTask
         let hourlyPeriods = try await hourlyTask
-        let alerts = (try? await alertsTask) ?? []
+        let alertsResult = try? await alertsTask
+        let alerts = alertsResult ?? []
         let observationResult = try? await observationTask
         let observation = observationResult?.observation
 
@@ -308,7 +309,8 @@ actor WeatherService {
             timeZone: timeZone,
             fetchedAt: Date(),
             forecastOfficeID: point.cwa ?? point.gridId,
-            observationStationID: observationResult?.stationID
+            observationStationID: observationResult?.stationID,
+            alertsAreCurrent: alertsResult != nil
         )
     }
 
@@ -383,7 +385,8 @@ actor WeatherService {
             sourceDescription: "Open-Meteo",
             timeZone: timeZone,
             fetchedAt: Date(),
-            forecastOfficeID: nil
+            forecastOfficeID: nil,
+            alertsAreCurrent: false
         )
         WeatherService.applyOpenMeteoExtras(response, to: &report)
         return report

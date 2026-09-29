@@ -116,6 +116,13 @@ struct ForecasterNotesView: View {
                 noProduct = productResponse == nil
                 if selectedProduct == .afd, productResponse != nil {
                     model.sounds.play(.discussionUpdate)
+                    if let issuanceTime = productResponse?.issuanceTime {
+                        model.recordDiscussionIssuance(
+                            issuanceTime,
+                            officeID: officeID,
+                            locationName: model.report?.location.name ?? officeID
+                        )
+                    }
                 }
             } catch {
                 model.sounds.play(.fetchError)

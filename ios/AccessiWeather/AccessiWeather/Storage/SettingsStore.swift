@@ -48,6 +48,7 @@ final class SettingsStore: ObservableObject {
         notifySevere = defaults.object(forKey: "notifySevere") as? Bool ?? true
         notifyModerate = defaults.object(forKey: "notifyModerate") as? Bool ?? true
         notifyMinor = defaults.bool(forKey: "notifyMinor")
+        radioAutoTuneEnabled = defaults.bool(forKey: "radioAutoTuneEnabled")
         weatherSource = WeatherSource(rawValue: defaults.string(forKey: "weatherSource") ?? "") ?? .automatic
         selectedLocationID = defaults.string(forKey: "selectedLocationID").flatMap(UUID.init(uuidString:))
         soundEnabled = defaults.object(forKey: "soundEnabled") as? Bool ?? true
@@ -74,6 +75,7 @@ final class SettingsStore: ObservableObject {
     @Published var notifySevere: Bool { didSet { defaults.set(notifySevere, forKey: "notifySevere") } }
     @Published var notifyModerate: Bool { didSet { defaults.set(notifyModerate, forKey: "notifyModerate") } }
     @Published var notifyMinor: Bool { didSet { defaults.set(notifyMinor, forKey: "notifyMinor") } }
+    @Published var radioAutoTuneEnabled: Bool { didSet { defaults.set(radioAutoTuneEnabled, forKey: "radioAutoTuneEnabled") } }
     @Published var weatherSource: WeatherSource { didSet { defaults.set(weatherSource.rawValue, forKey: "weatherSource") } }
     @Published var selectedLocationID: UUID? { didSet { defaults.set(selectedLocationID?.uuidString, forKey: "selectedLocationID") } }
     @Published var soundEnabled: Bool { didSet { defaults.set(soundEnabled, forKey: "soundEnabled") } }
