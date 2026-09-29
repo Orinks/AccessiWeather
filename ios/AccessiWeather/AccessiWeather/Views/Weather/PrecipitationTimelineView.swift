@@ -23,7 +23,11 @@ enum PrecipitationTimelineText {
     }
 
     static func row(_ point: MinutelyPoint, offset: Int, timeZone: TimeZone) -> String {
-        let time = DateFormatter.localizedString(from: point.time, timeZone: timeZone, dateStyle: .none, timeStyle: .short)
+        let formatter = DateFormatter()
+        formatter.timeZone = timeZone
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+        let time = formatter.string(from: point.time)
         var parts = [offset == 0 ? "Now" : String(format: "+%02dm", offset), time, condition(point)]
         if let probability = point.precipitationProbability, probability > 0 {
             parts.append("\(Int((probability * 100).rounded()))% chance")

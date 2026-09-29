@@ -353,7 +353,7 @@ private final class URLProtocolStub: URLProtocol {
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
 
     override func startLoading() {
-        guard let handler, let url = request.url else {
+        guard let handler = Self.handler, let url = request.url else {
             client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse))
             return
         }
