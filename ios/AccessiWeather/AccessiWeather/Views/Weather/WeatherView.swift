@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct WeatherView: View {
     @EnvironmentObject private var model: AppModel
@@ -117,6 +118,12 @@ struct WeatherView: View {
     @ViewBuilder
     private func moreSection(report: WeatherReport, formatter: WeatherFormatter) -> some View {
         Section {
+            NavigationLink {
+                WeatherHistoryView(report: report)
+            } label: {
+                Label("Weather History", systemImage: "clock.arrow.circlepath")
+            }
+            .accessibilityHint("Compares current conditions with the last 7 days")
             if let officeID = report.forecastOfficeID {
                 NavigationLink {
                     ForecasterNotesView(officeID: officeID)
@@ -124,6 +131,26 @@ struct WeatherView: View {
                     Label("Forecaster Notes", systemImage: "text.book.closed")
                 }
                 .accessibilityHint("Opens the National Weather Service Area Forecast Discussion")
+            }
+            NavigationLink {
+                AviationWeatherView(report: report)
+            } label: {
+                Label("Aviation Weather", systemImage: "airplane")
+            }
+            .accessibilityHint("Shows airport METAR observations and TAF forecasts")
+            NavigationLink {
+                EventCenterView()
+            } label: {
+                Label("Event Center", systemImage: "tray.full")
+            }
+            .accessibilityHint("Shows saved weather alert and discussion events")
+            if !KeychainStore.read(.pirateWeather).isEmpty {
+                NavigationLink {
+                    PrecipitationTimelineView()
+                } label: {
+                    Label("Precipitation Timeline", systemImage: "cloud.rain")
+                }
+                .accessibilityHint("Shows minute-by-minute precipitation guidance")
             }
             NavigationLink {
                 RadioView(radio: model.radio, directory: model.radioStations)
@@ -157,6 +184,9 @@ struct SectionHeader: View {
 
     var body: some View {
         Text(title)
+            .font(.headline)
+            .foregroundColor(Color(uiColor: .label))
+            .fixedSize(horizontal: false, vertical: true)
             .accessibilityAddTraits(.isHeader)
     }
 }
@@ -170,9 +200,11 @@ struct MeasurementRow: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
             Text(label)
+                .foregroundColor(Color(uiColor: .label))
             Spacer()
             Text(value)
-                .foregroundStyle(.secondary)
+                .foregroundColor(Color(uiColor: .label))
+                .fixedSize(horizontal: false, vertical: true)
                 .multilineTextAlignment(.trailing)
         }
         .accessibilityElement(children: .ignore)
@@ -213,7 +245,18 @@ struct CurrentConditionsSection: View {
                 MeasurementRow(label: "Visibility", value: visibility, spokenValue: formatter.spokenVisibility(current.visibilityKm))
             }
             if settings.showUVIndex, let uv = current.uvIndex {
-                MeasurementRow(label: "UV Index", value: formatter.uvIndex(uv) ?? "", spokenValue: "\(String(format: "%.1f", uv)), \(WeatherFormatter.uvCategory(uv))")
+                let roundedIndex = WeatherFormatter.roundedUVIndex(uv)
+                let category = WeatherFormatter.uvCategory(forRoundedIndex: roundedIndex)
+                NavigationLink {
+                    UVIndexDetailView(report: report, formatter: formatter)
+                } label: {
+                    MeasurementRow(
+                        label: "UV Index",
+                        value: "\(roundedIndex) (\(category))",
+                        spokenValue: "\(roundedIndex), \(category)"
+                    )
+                }
+                .accessibilityHint("Shows UV health guidance, hourly levels, and sun safety recommendations")
             }
             if let sunrise = formatter.time(current.sunrise) {
                 MeasurementRow(label: "Sunrise", value: sunrise)
@@ -223,7 +266,7 @@ struct CurrentConditionsSection: View {
             }
             if settings.showAirQuality, let aq = current.airQuality {
                 NavigationLink {
-                    AirQualityDetailView(airQuality: aq)
+                    AirQualityDetailView(airQuality: aq, formatter: formatter)
                 } label: {
                     MeasurementRow(
                         label: "Air Quality",
@@ -402,6 +445,7 @@ struct DailyRow: View {
 
 struct AirQualityDetailView: View {
     let airQuality: AirQuality
+    let formatter: WeatherFormatter
 
     var body: some View {
         List {
@@ -415,6 +459,41 @@ struct AirQualityDetailView: View {
                 SectionHeader("Air Quality")
             }
             Section {
+                if let pm25 = airQuality.pollutantLevels.pm25 {
+                    pollutantRow("PM2.5", value: pm25)
+                }
+                if let pm10 = airQuality.pollutantLevels.pm10 {
+                    pollutantRow("PM10", value: pm10)
+                }
+                if let ozone = airQuality.pollutantLevels.ozone {
+                    pollutantRow("Ozone", value: ozone)
+                }
+                if airQuality.pollutantLevels.pm25 == nil,
+                   airQuality.pollutantLevels.pm10 == nil,
+                   airQuality.pollutantLevels.ozone == nil {
+                    Text("Pollutant data is not available.")
+                        .foregroundStyle(.secondary)
+                }
+            } header: {
+                SectionHeader("Current Pollutant Levels")
+            }
+            Section {
+                if airQuality.hourly.isEmpty {
+                    Text("Hourly air quality forecast is not available.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(airQuality.hourly) { hour in
+                        let time = formatter.hour(hour.time)
+                        let category = AirQuality(aqi: hour.aqi, dominantPollutant: nil).category
+                        Text("\(time), AQI \(hour.aqi), \(category)")
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel("\(formatter.spokenHour(hour.time)), AQI \(hour.aqi), \(category)")
+                    }
+                }
+            } header: {
+                SectionHeader("Hourly Forecast")
+            }
+            Section {
                 Text(airQuality.advice)
             } header: {
                 SectionHeader("Advice")
@@ -422,5 +501,14 @@ struct AirQualityDetailView: View {
         }
         .navigationTitle("Air Quality")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func pollutantRow(_ name: String, value: Double) -> some View {
+        let amount = String(format: "%.1f", value)
+        return MeasurementRow(
+            label: name,
+            value: "\(amount) µg/m³",
+            spokenValue: "\(amount) micrograms per cubic meter"
+        )
     }
 }

@@ -21,6 +21,8 @@ enum WeatherSource: String, Codable, CaseIterable, Identifiable {
 struct AirQuality: Equatable {
     var aqi: Int
     var dominantPollutant: String?
+    var pollutantLevels = AirQualityPollutantLevels()
+    var hourly: [AirQualityHour] = []
 
     var category: String {
         switch aqi {
@@ -43,6 +45,18 @@ struct AirQuality: Equatable {
         default: return "Health emergency: everyone is more likely to be affected. Stay indoors."
         }
     }
+}
+
+struct AirQualityPollutantLevels: Equatable {
+    var pm25: Double? = nil
+    var pm10: Double? = nil
+    var ozone: Double? = nil
+}
+
+struct AirQualityHour: Identifiable, Equatable {
+    var id: Date { time }
+    var time: Date
+    var aqi: Int
 }
 
 struct CurrentConditions: Equatable {
@@ -69,6 +83,7 @@ struct HourlyPeriod: Identifiable, Equatable {
     var windSpeedKph: Double?
     var windDirectionDegrees: Double?
     var precipitationChance: Int?
+    var uvIndex: Double? = nil
 }
 
 struct DailyPeriod: Identifiable, Equatable {
@@ -86,6 +101,18 @@ struct DailyPeriod: Identifiable, Equatable {
     var precipitationChance: Int?
 }
 
+struct MinutelyPoint: Identifiable, Equatable {
+    var id: Date { time }
+    var time: Date
+    var precipitationIntensity: Double?
+    var precipitationProbability: Double?
+    var precipitationType: String?
+
+    var isWet: Bool {
+        (precipitationIntensity ?? 0) > 0 || (precipitationProbability ?? 0) > 0
+    }
+}
+
 struct WeatherAlert: Identifiable, Equatable, Hashable {
     var id: String
     var event: String
@@ -99,6 +126,12 @@ struct WeatherAlert: Identifiable, Equatable, Hashable {
     var sender: String?
     var effective: Date?
     var expires: Date?
+    var sameCountyCodes: [String] = []
+    var sameEventCodes: [String] = []
+
+    var wouldWakeSAMERadio: Bool {
+        !sameCountyCodes.isEmpty && !sameEventCodes.isEmpty
+    }
 }
 
 struct WeatherReport: Equatable {
@@ -111,6 +144,9 @@ struct WeatherReport: Equatable {
     var timeZone: TimeZone
     var fetchedAt: Date
     var forecastOfficeID: String?
+    var observationStationID: String? = nil
+    var alertsAreCurrent: Bool = true
+    var minutely: [MinutelyPoint]? = nil
 }
 
 enum WeatherError: LocalizedError {

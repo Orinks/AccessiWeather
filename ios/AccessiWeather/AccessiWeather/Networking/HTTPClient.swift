@@ -13,8 +13,8 @@ struct HTTPClient {
             self.session = session
         } else {
             let config = URLSessionConfiguration.default
-            config.timeoutIntervalForRequest = 20
-            config.timeoutIntervalForResource = 40
+            config.timeoutIntervalForRequest = 10
+            config.timeoutIntervalForResource = 15
             config.httpAdditionalHeaders = ["User-Agent": HTTPClient.userAgent]
             self.session = URLSession(configuration: config)
         }
@@ -26,7 +26,12 @@ struct HTTPClient {
         if let accept {
             request.setValue(accept, forHTTPHeaderField: "Accept")
         }
-        let (data, response) = try await session.data(for: request)
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch {
+            throw WeatherError.unsupported("The \(serviceName) request failed.")
+        }
         guard let http = response as? HTTPURLResponse else {
             throw WeatherError.invalidResponse(serviceName)
         }
