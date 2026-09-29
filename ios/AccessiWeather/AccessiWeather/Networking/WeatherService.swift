@@ -15,7 +15,7 @@ actor WeatherService {
     }
 
     private var reportCache: [String: CacheEntry] = [:]
-    private var discussionCache: [String: (text: String, storedAt: Date)] = [:]
+    private var productCache: [String: (product: NWSClient.ProductResponse?, storedAt: Date)] = [:]
 
     init(
         nws: NWSClient = NWSClient(),
@@ -97,13 +97,14 @@ actor WeatherService {
         return report
     }
 
-    func forecastDiscussion(officeID: String) async throws -> String {
-        if let cached = discussionCache[officeID], Date().timeIntervalSince(cached.storedAt) < WeatherService.cacheLifetime {
-            return cached.text
+    func latestProduct(type: String, officeID: String) async throws -> NWSClient.ProductResponse? {
+        let key = "\(type.uppercased())|\(officeID.uppercased())"
+        if let cached = productCache[key], Date().timeIntervalSince(cached.storedAt) < WeatherService.cacheLifetime {
+            return cached.product
         }
-        let product = try await nws.areaForecastDiscussion(officeID: officeID)
-        discussionCache[officeID] = (product.productText, Date())
-        return product.productText
+        let product = try await nws.latestProduct(type: type, officeID: officeID)
+        productCache[key] = (product, Date())
+        return product
     }
 
     // MARK: - NWS

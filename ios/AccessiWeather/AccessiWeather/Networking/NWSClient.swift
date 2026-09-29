@@ -164,13 +164,10 @@ struct NWSClient {
         return try await http.json(AlertsResponse.self, from: components.url!, accept: NWSClient.geoJSON, serviceName: "NWS alerts", decoder: .iso8601Flexible).features.map(\.properties)
     }
 
-    /// Latest Area Forecast Discussion for a forecast office (for example "PHI").
-    func areaForecastDiscussion(officeID: String) async throws -> ProductResponse {
-        let listURL = NWSClient.baseURL.appendingPathComponent("products/types/AFD/locations/\(officeID)")
+    func latestProduct(type: String, officeID: String) async throws -> ProductResponse? {
+        let listURL = NWSClient.baseURL.appendingPathComponent("products/types/\(type)/locations/\(officeID)")
         let list = try await http.json(ProductListResponse.self, from: listURL, accept: NWSClient.ldJSON, serviceName: "NWS products", decoder: .iso8601Flexible)
-        guard let latest = list.graph.first else {
-            throw WeatherError.noData("forecast discussion")
-        }
+        guard let latest = list.graph.first else { return nil }
         let productURL = NWSClient.baseURL.appendingPathComponent("products/\(latest.id)")
         return try await http.json(ProductResponse.self, from: productURL, accept: NWSClient.ldJSON, serviceName: "NWS product", decoder: .iso8601Flexible)
     }
