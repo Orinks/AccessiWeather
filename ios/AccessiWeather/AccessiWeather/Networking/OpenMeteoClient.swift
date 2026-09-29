@@ -52,7 +52,9 @@ struct OpenMeteoClient {
     }
 
     struct AirQualityResponse: Decodable {
+        var timezone: String?
         var current: Current?
+        var hourly: Hourly?
 
         struct Current: Decodable {
             var us_aqi: Int?
@@ -62,6 +64,14 @@ struct OpenMeteoClient {
             var nitrogen_dioxide: Double?
             var sulphur_dioxide: Double?
             var carbon_monoxide: Double?
+        }
+
+        struct Hourly: Decodable {
+            var time: [String]
+            var us_aqi: [Int?]?
+            var pm2_5: [Double?]?
+            var pm10: [Double?]?
+            var ozone: [Double?]?
         }
     }
 
@@ -98,6 +108,8 @@ struct OpenMeteoClient {
             .init(name: "latitude", value: String(latitude)),
             .init(name: "longitude", value: String(longitude)),
             .init(name: "current", value: "us_aqi,pm2_5,pm10,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide"),
+            .init(name: "hourly", value: "us_aqi,pm2_5,pm10,ozone"),
+            .init(name: "forecast_days", value: "1"),
             .init(name: "timezone", value: "auto"),
         ]
         return try await http.json(AirQualityResponse.self, from: components.url!, serviceName: "Open-Meteo air quality")

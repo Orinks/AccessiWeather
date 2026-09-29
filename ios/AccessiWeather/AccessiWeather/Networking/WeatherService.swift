@@ -87,10 +87,31 @@ actor WeatherService {
                 WeatherService.applyOpenMeteoExtras(extras, to: &report)
             }
         }
-        if resolved != .pirateWeather,
-           let aq = try? await openMeteo.airQuality(latitude: location.latitude, longitude: location.longitude),
+        if let aq = try? await openMeteo.airQuality(latitude: location.latitude, longitude: location.longitude),
            let current = aq.current, let aqi = current.us_aqi {
-            report.current.airQuality = AirQuality(aqi: aqi, dominantPollutant: OpenMeteoClient.dominantPollutant(current))
+            let timeZone = aq.timezone.flatMap(TimeZone.init(identifier:)) ?? report.timeZone
+            let now = Date()
+            var hourly: [AirQualityHour] = []
+            if let responseHourly = aq.hourly {
+                for index in responseHourly.time.indices {
+                    guard let time = OpenMeteoClient.date(from: responseHourly.time[index], in: timeZone),
+                          time.addingTimeInterval(3600) > now,
+                          let hourlyAQI = responseHourly.us_aqi?[safe: index] ?? nil else {
+                        continue
+                    }
+                    hourly.append(AirQualityHour(time: time, aqi: hourlyAQI))
+                }
+            }
+            report.current.airQuality = AirQuality(
+                aqi: aqi,
+                dominantPollutant: OpenMeteoClient.dominantPollutant(current),
+                pollutantLevels: AirQualityPollutantLevels(
+                    pm25: current.pm2_5,
+                    pm10: current.pm10,
+                    ozone: current.ozone
+                ),
+                hourly: Array(hourly.prefix(12))
+            )
         }
 
         reportCache[key] = CacheEntry(report: report, storedAt: Date())
@@ -301,7 +322,8 @@ actor WeatherService {
                     condition: OpenMeteoClient.condition(forCode: h.weather_code[safe: index] ?? nil),
                     windSpeedKph: h.wind_speed_10m?[safe: index] ?? nil,
                     windDirectionDegrees: h.wind_direction_10m?[safe: index] ?? nil,
-                    precipitationChance: h.precipitation_probability?[safe: index] ?? nil
+                    precipitationChance: h.precipitation_probability?[safe: index] ?? nil,
+                    uvIndex: h.uv_index?[safe: index] ?? nil
                 ))
             }
         }
@@ -364,6 +386,15 @@ actor WeatherService {
                 if report.current.visibilityKm == nil, let meters = h.visibility?[safe: index] ?? nil {
                     report.current.visibilityKm = meters / 1000
                 }
+            }
+            for index in report.hourly.indices {
+                guard let sourceIndex = h.time.indices.first(where: { sourceIndex in
+                    guard let date = OpenMeteoClient.date(from: h.time[sourceIndex], in: timeZone) else { return false }
+                    return abs(date.timeIntervalSince(report.hourly[index].time)) < 1800
+                }) else {
+                    continue
+                }
+                report.hourly[index].uvIndex = h.uv_index?[safe: sourceIndex] ?? nil
             }
         }
         if let d = response.daily, let sunrise = d.sunrise?.first, let sunset = d.sunset?.first {

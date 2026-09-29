@@ -21,6 +21,8 @@ enum WeatherSource: String, Codable, CaseIterable, Identifiable {
 struct AirQuality: Equatable {
     var aqi: Int
     var dominantPollutant: String?
+    var pollutantLevels = AirQualityPollutantLevels()
+    var hourly: [AirQualityHour] = []
 
     var category: String {
         switch aqi {
@@ -43,6 +45,18 @@ struct AirQuality: Equatable {
         default: return "Health emergency: everyone is more likely to be affected. Stay indoors."
         }
     }
+}
+
+struct AirQualityPollutantLevels: Equatable {
+    var pm25: Double? = nil
+    var pm10: Double? = nil
+    var ozone: Double? = nil
+}
+
+struct AirQualityHour: Identifiable, Equatable {
+    var id: Date { time }
+    var time: Date
+    var aqi: Int
 }
 
 struct CurrentConditions: Equatable {
@@ -69,6 +83,7 @@ struct HourlyPeriod: Identifiable, Equatable {
     var windSpeedKph: Double?
     var windDirectionDegrees: Double?
     var precipitationChance: Int?
+    var uvIndex: Double? = nil
 }
 
 struct DailyPeriod: Identifiable, Equatable {
