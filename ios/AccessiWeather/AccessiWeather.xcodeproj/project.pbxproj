@@ -23,6 +23,7 @@
 		591F716D22A6C0DAAB1AB9E5 /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAD1D3FBAF4C10FA8A48D93B /* HTTPClient.swift */; };
 		722CE8EA2C42CC94229E1774 /* PirateWeatherClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30F430B52BDF4602B71DEF2B /* PirateWeatherClient.swift */; };
 		74E266D4F22B9BC0D336ADD8 /* RadioStation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E73DA258E106B22101E681E2 /* RadioStation.swift */; };
+		7651C98132BCFAE37AD8CA29 /* AviationWeatherClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8ECD154CBAB03C5C28892E9 /* AviationWeatherClient.swift */; };
 		77FBF005A073E09017271B6A /* WeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCF5C264FEBBE7E646BCA596 /* WeatherService.swift */; };
 		7AAEF732D40677A98295E89F /* SoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 597D393ECBA0BE80D01F8515 /* SoundManager.swift */; };
 		7BA79F3F3C7667BD9785640B /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D29787C66A3B3F9FAA38CC /* SettingsStore.swift */; };
@@ -38,12 +39,14 @@
 		ADD15F70C4ADFCFE01D9A76F /* AccessiWeatherApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1168368B7ED01825573BAF87 /* AccessiWeatherApp.swift */; };
 		B064C32DC463F2FFD5D886D4 /* OpenMeteoClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B995A72838023DA7FCE61B /* OpenMeteoClient.swift */; };
 		B0F97CA4333EB0418686F81C /* LocationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE652BCF2C70FFAD2FA7AFFF /* LocationsView.swift */; };
+		C35943C081EF6955833D7C58 /* AviationWeatherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D6E19F5CE7034B8512AB26 /* AviationWeatherView.swift */; };
 		C5A3016174F0EC127FB374BA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B903DF096C04E8E4D82417D2 /* Assets.xcassets */; };
 		D4212F100FD014AB9EAC4C17 /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9151A3F728621A99AEC44597 /* EmptyStateView.swift */; };
 		D6643431DF6EEDE05693128F /* SavedLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24D76D65A2E556F18207BDE /* SavedLocation.swift */; };
 		D71C60F605A756DCAAE5008E /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23758312FA0ECCA217CDD140 /* AppModel.swift */; };
 		DBABA4A6440828F4F1597228 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE1AFFB80923871CD62B2C94 /* KeychainStore.swift */; };
 		DC8EDAFD37192C8FBA11F085 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E82C5008F4EB544AED124F5E /* SettingsView.swift */; };
+		E191E3F0548AF2633B796FF1 /* AviationWeather.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A573C63DF82A852AFB2503E /* AviationWeather.swift */; };
 		E511DC0522F4BC6C735353FA /* WeatherIndexClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 088FD883D33B252AFA156931 /* WeatherIndexClient.swift */; };
 		EDE768F5F9A7FDE3CCB3D0A2 /* WeatherHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D77ADA9695BE02792263DF1 /* WeatherHistoryView.swift */; };
 		EE548E752443C4D702A0BFD1 /* RadioView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A67E4B3B1FFE0829C3645B0F /* RadioView.swift */; };
@@ -62,6 +65,7 @@
 /* Begin PBXFileReference section */
 		04660824EE13265A2361774A /* AccessibilityAuditTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityAuditTests.swift; sourceTree = "<group>"; };
 		088FD883D33B252AFA156931 /* WeatherIndexClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherIndexClient.swift; sourceTree = "<group>"; };
+		0A573C63DF82A852AFB2503E /* AviationWeather.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AviationWeather.swift; sourceTree = "<group>"; };
 		0BBD71AC9C09179E87896975 /* RadioStationDirectory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadioStationDirectory.swift; sourceTree = "<group>"; };
 		1168368B7ED01825573BAF87 /* AccessiWeatherApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessiWeatherApp.swift; sourceTree = "<group>"; };
 		1DEC5A91EB8A0EF035907628 /* UVIndexDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UVIndexDetailView.swift; sourceTree = "<group>"; };
@@ -79,6 +83,7 @@
 		5EFDA068BCDBAA00C3BFCC03 /* SoundPacks */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SoundPacks; path = AccessiWeather/Resources/SoundPacks; sourceTree = SOURCE_ROOT; };
 		5F70CB60315A88138AC4181A /* AccessiWeather.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AccessiWeather.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F05642757BEA77C4EBF3611 /* LocationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationStore.swift; sourceTree = "<group>"; };
+		84D6E19F5CE7034B8512AB26 /* AviationWeatherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AviationWeatherView.swift; sourceTree = "<group>"; };
 		88B995A72838023DA7FCE61B /* OpenMeteoClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMeteoClient.swift; sourceTree = "<group>"; };
 		8C29B15EFB79555145A20E01 /* WeatherHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherHistory.swift; sourceTree = "<group>"; };
 		8EE44AD03EB21F60BEFA4B13 /* AccessiWeatherUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AccessiWeatherUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -88,6 +93,7 @@
 		A67E4B3B1FFE0829C3645B0F /* RadioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadioView.swift; sourceTree = "<group>"; };
 		AE1AFFB80923871CD62B2C94 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		AEC40E5B1F2D5D61C205DE5A /* SoundPack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundPack.swift; sourceTree = "<group>"; };
+		B8ECD154CBAB03C5C28892E9 /* AviationWeatherClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AviationWeatherClient.swift; sourceTree = "<group>"; };
 		B903DF096C04E8E4D82417D2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		BAD1D3FBAF4C10FA8A48D93B /* HTTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPClient.swift; sourceTree = "<group>"; };
 		BB397FDEDABEAF0EB4320B54 /* OpenRouterClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenRouterClient.swift; sourceTree = "<group>"; };
@@ -158,6 +164,7 @@
 		5BB46E6121CA6282CB0BF6CB /* Weather */ = {
 			isa = PBXGroup;
 			children = (
+				84D6E19F5CE7034B8512AB26 /* AviationWeatherView.swift */,
 				FADAD4D87F192EB27276BC2B /* ForecasterNotesView.swift */,
 				3E953A01E8EC6314DEE39ED0 /* PrecipitationTimelineView.swift */,
 				1DEC5A91EB8A0EF035907628 /* UVIndexDetailView.swift */,
@@ -245,6 +252,7 @@
 		AFCCCBAC020FE37E159E1EA0 /* Networking */ = {
 			isa = PBXGroup;
 			children = (
+				B8ECD154CBAB03C5C28892E9 /* AviationWeatherClient.swift */,
 				D39AC64E51F119B2D5161506 /* GeocodingClient.swift */,
 				BAD1D3FBAF4C10FA8A48D93B /* HTTPClient.swift */,
 				40BAE1D24DE1D07829758ADB /* NWSClient.swift */,
@@ -258,6 +266,7 @@
 		B9390EF7FCEB5DAD8D5ACAD3 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				0A573C63DF82A852AFB2503E /* AviationWeather.swift */,
 				C24D76D65A2E556F18207BDE /* SavedLocation.swift */,
 				8C29B15EFB79555145A20E01 /* WeatherHistory.swift */,
 				1FF7DBFB874C4A60A503135A /* WeatherModels.swift */,
@@ -414,6 +423,9 @@
 				58DE942DB663DF4482CC21E6 /* AddLocationView.swift in Sources */,
 				95FF86FB517991C2918A427D /* AlertsView.swift in Sources */,
 				D71C60F605A756DCAAE5008E /* AppModel.swift in Sources */,
+				E191E3F0548AF2633B796FF1 /* AviationWeather.swift in Sources */,
+				7651C98132BCFAE37AD8CA29 /* AviationWeatherClient.swift in Sources */,
+				C35943C081EF6955833D7C58 /* AviationWeatherView.swift in Sources */,
 				23D38E31A8A37AC12AF07120 /* ContentView.swift in Sources */,
 				D4212F100FD014AB9EAC4C17 /* EmptyStateView.swift in Sources */,
 				A5944A1BDCFCE4CBF1404BFC /* ForecasterNotesView.swift in Sources */,

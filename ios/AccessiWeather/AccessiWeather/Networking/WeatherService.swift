@@ -8,6 +8,7 @@ actor WeatherService {
     private let nws: NWSClient
     private let openMeteo: OpenMeteoClient
     private let pirateWeather: PirateWeatherClient
+    private let aviationWeatherClient: AviationWeatherClient
 
     private struct CacheEntry {
         var report: WeatherReport
@@ -16,15 +17,18 @@ actor WeatherService {
 
     private var reportCache: [String: CacheEntry] = [:]
     private var productCache: [String: (product: NWSClient.ProductResponse?, storedAt: Date)] = [:]
+    private var aviationCache: [String: (weather: AviationWeather, storedAt: Date)] = [:]
 
     init(
         nws: NWSClient = NWSClient(),
         openMeteo: OpenMeteoClient = OpenMeteoClient(),
-        pirateWeather: PirateWeatherClient = PirateWeatherClient()
+        pirateWeather: PirateWeatherClient = PirateWeatherClient(),
+        aviationWeatherClient: AviationWeatherClient = AviationWeatherClient()
     ) {
         self.nws = nws
         self.openMeteo = openMeteo
         self.pirateWeather = pirateWeather
+        self.aviationWeatherClient = aviationWeatherClient
     }
 
     private func cacheKey(_ location: SavedLocation, source: WeatherSource) -> String {
@@ -128,6 +132,19 @@ actor WeatherService {
         return product
     }
 
+    func aviationWeather(icao: String) async throws -> AviationWeather {
+        let code = ICAOCodeValidation.normalized(icao)
+        if let cached = aviationCache[code],
+           Date().timeIntervalSince(cached.storedAt) < WeatherService.cacheLifetime {
+            return cached.weather
+        }
+        async let metars = aviationWeatherClient.metars(icao: code)
+        async let tafs = aviationWeatherClient.tafs(icao: code)
+        let weather = AviationWeather(metars: try await metars, tafs: try await tafs)
+        aviationCache[code] = (weather, Date())
+        return weather
+    }
+
     func history(for report: WeatherReport, temperatureUnit: TemperatureUnit) async throws -> WeatherHistory {
         let response = try await openMeteo.history(
             latitude: report.location.latitude,
@@ -197,13 +214,13 @@ actor WeatherService {
         async let dailyTask = nws.forecast(url: forecastURL)
         async let hourlyTask = nws.forecast(url: hourlyURL)
         async let alertsTask = nws.activeAlerts(latitude: location.latitude, longitude: location.longitude)
-        async let observationTask: NWSClient.ObservationProperties? = {
+        async let observationTask: (stationID: String, observation: NWSClient.ObservationProperties)? = {
             guard let stationsURL = point.observationStations else { return nil }
             let stations = try await nws.stations(url: stationsURL)
             for station in stations.prefix(3) {
                 if let observation = try? await nws.latestObservation(stationID: station.stationIdentifier),
                    observation.temperature?.value != nil || observation.textDescription != nil {
-                    return observation
+                    return (station.stationIdentifier, observation)
                 }
             }
             return nil
@@ -212,7 +229,8 @@ actor WeatherService {
         let dailyPeriods = try await dailyTask
         let hourlyPeriods = try await hourlyTask
         let alerts = (try? await alertsTask) ?? []
-        let observation = try? await observationTask
+        let observationResult = try? await observationTask
+        let observation = observationResult?.observation
 
         let now = Date()
         let hourly: [HourlyPeriod] = hourlyPeriods
@@ -289,7 +307,8 @@ actor WeatherService {
             sourceDescription: "National Weather Service",
             timeZone: timeZone,
             fetchedAt: Date(),
-            forecastOfficeID: point.cwa ?? point.gridId
+            forecastOfficeID: point.cwa ?? point.gridId,
+            observationStationID: observationResult?.stationID
         )
     }
 

@@ -131,6 +131,12 @@ struct WeatherView: View {
                 }
                 .accessibilityHint("Opens the National Weather Service Area Forecast Discussion")
             }
+            NavigationLink {
+                AviationWeatherView(report: report)
+            } label: {
+                Label("Aviation Weather", systemImage: "airplane")
+            }
+            .accessibilityHint("Shows airport METAR observations and TAF forecasts")
             if !KeychainStore.read(.pirateWeather).isEmpty {
                 NavigationLink {
                     PrecipitationTimelineView()

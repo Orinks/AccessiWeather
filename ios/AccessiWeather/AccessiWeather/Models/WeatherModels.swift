@@ -138,6 +138,7 @@ struct WeatherReport: Equatable {
     var timeZone: TimeZone
     var fetchedAt: Date
     var forecastOfficeID: String?
+    var observationStationID: String? = nil
     var minutely: [MinutelyPoint]? = nil
 }
 
