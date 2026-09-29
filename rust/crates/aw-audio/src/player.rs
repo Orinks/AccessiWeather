@@ -30,10 +30,28 @@ pub fn player() -> &'static SoundPlayer {
 struct Output {
     mixer: Mixer,
     failed: Arc<AtomicBool>,
+    /// The default device this output opened on. rodio binds to a device id,
+    /// so it keeps playing there after Windows switches the default.
+    device_id: Option<String>,
     _keep_open: mpsc::Sender<()>,
 }
 
+impl Output {
+    /// The device errored, or Windows' default output is no longer ours.
+    fn is_stale(&self) -> bool {
+        self.failed.load(Ordering::SeqCst)
+            || default_device_id().is_some_and(|now| self.device_id.as_ref() != Some(&now))
+    }
+}
+
+fn default_device_id() -> Option<String> {
+    use rodio::cpal::traits::{DeviceTrait, HostTrait};
+    let device = rodio::cpal::default_host().default_output_device()?;
+    device.id().ok().map(|id| id.to_string())
+}
+
 fn open_output() -> Result<Output, String> {
+    let device_id = default_device_id();
     let (result_tx, result_rx) = mpsc::channel();
     let (keep_tx, keep_rx) = mpsc::channel::<()>();
     let failed = Arc::new(AtomicBool::new(false));
@@ -70,6 +88,7 @@ fn open_output() -> Result<Output, String> {
     Ok(Output {
         mixer,
         failed,
+        device_id,
         _keep_open: keep_tx,
     })
 }
@@ -89,6 +108,12 @@ impl Backend {
     fn mixer(&mut self) -> Option<Mixer> {
         if self.unavailable {
             return None;
+        }
+        if self.output.as_ref().is_some_and(Output::is_stale) {
+            self.reinitialize();
+            if self.unavailable {
+                return None;
+            }
         }
         if self.output.is_none() {
             match open_output() {
@@ -176,16 +201,6 @@ impl SoundPlayer {
         if volume <= 0.0 {
             tracing::debug!("Skipping silent sound playback: {}", file.display());
             return true;
-        }
-        let device_failed = {
-            let backend = self.backend();
-            backend
-                .output
-                .as_ref()
-                .is_some_and(|o| o.failed.load(Ordering::SeqCst))
-        };
-        if device_failed && !self.backend().reinitialize() {
-            return false;
         }
         if self.try_play(file, volume, block) {
             return true;

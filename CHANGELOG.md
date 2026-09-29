@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - The OpenRouter model picker drops the retired Llama 3.3 70B option; choose the free router, the paid auto router, or browse models.
 
 ### Fixed
+- Sounds now follow your default output device when you switch between headphones and speakers, instead of staying on the old one.
 - AccessiWeather no longer opens a terminal window alongside the app on Windows.
 - Portable updates on Windows no longer open a command window while they install.
 - NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.
