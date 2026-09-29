@@ -107,6 +107,63 @@ actor WeatherService {
         return product
     }
 
+    func history(for report: WeatherReport, temperatureUnit: TemperatureUnit) async throws -> WeatherHistory {
+        let response = try await openMeteo.history(
+            latitude: report.location.latitude,
+            longitude: report.location.longitude
+        )
+        guard let daily = response.daily else {
+            throw WeatherError.noData("weather history")
+        }
+        let timeZone = TimeZone(identifier: response.timezone) ?? report.timeZone
+        let todayFormatter = DateFormatter()
+        todayFormatter.locale = Locale(identifier: "en_US_POSIX")
+        todayFormatter.timeZone = timeZone
+        todayFormatter.dateFormat = "yyyy-MM-dd"
+        let today = todayFormatter.string(from: Date())
+        let days = daily.time.indices.compactMap { index -> WeatherHistoryDay? in
+            let dateString = daily.time[index]
+            guard dateString < today,
+                  let date = OpenMeteoClient.date(from: dateString, in: timeZone) else {
+                return nil
+            }
+            return WeatherHistoryDay(
+                date: date,
+                highC: daily.temperature_2m_max[safe: index] ?? nil,
+                lowC: daily.temperature_2m_min[safe: index] ?? nil,
+                meanC: daily.temperature_2m_mean?[safe: index] ?? nil,
+                condition: OpenMeteoClient.condition(forCode: daily.weather_code[safe: index] ?? nil)
+            )
+        }
+        let calendar = Calendar(identifier: .gregorian)
+        var localCalendar = calendar
+        localCalendar.timeZone = timeZone
+        let now = Date()
+        func day(from date: Date, daysAgo: Int) -> WeatherHistoryDay? {
+            guard let target = localCalendar.date(byAdding: .day, value: -daysAgo, to: localCalendar.startOfDay(for: date)) else {
+                return nil
+            }
+            return days.first { localCalendar.isDate($0.date, inSameDayAs: target) }
+        }
+        return WeatherHistory(
+            days: days.sorted { $0.date > $1.date },
+            yesterdayComparison: WeatherHistory.comparison(
+                currentTemperatureC: report.current.temperatureC,
+                currentCondition: report.current.description,
+                historicalDay: day(from: now, daysAgo: 1),
+                daysAgo: 1,
+                unit: temperatureUnit
+            ),
+            lastWeekComparison: WeatherHistory.comparison(
+                currentTemperatureC: report.current.temperatureC,
+                currentCondition: report.current.description,
+                historicalDay: day(from: now, daysAgo: 7),
+                daysAgo: 7,
+                unit: temperatureUnit
+            )
+        )
+    }
+
     // MARK: - NWS
 
     private func fetchNWS(location: SavedLocation) async throws -> WeatherReport {

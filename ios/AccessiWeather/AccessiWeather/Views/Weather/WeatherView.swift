@@ -117,6 +117,12 @@ struct WeatherView: View {
     @ViewBuilder
     private func moreSection(report: WeatherReport, formatter: WeatherFormatter) -> some View {
         Section {
+            NavigationLink {
+                WeatherHistoryView(report: report)
+            } label: {
+                Label("Weather History", systemImage: "clock.arrow.circlepath")
+            }
+            .accessibilityHint("Compares current conditions with the last 7 days")
             if let officeID = report.forecastOfficeID {
                 NavigationLink {
                     ForecasterNotesView(officeID: officeID)

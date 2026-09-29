@@ -41,6 +41,7 @@ struct OpenMeteoClient {
             var weather_code: [Int?]
             var temperature_2m_max: [Double?]
             var temperature_2m_min: [Double?]
+            var temperature_2m_mean: [Double?]?
             var precipitation_probability_max: [Int?]?
             var wind_speed_10m_max: [Double?]?
             var wind_direction_10m_dominant: [Double?]?
@@ -76,6 +77,19 @@ struct OpenMeteoClient {
             .init(name: "forecast_days", value: String(max(1, min(days, 16)))),
         ]
         return try await http.json(ForecastResponse.self, from: components.url!, serviceName: "Open-Meteo")
+    }
+
+    func history(latitude: Double, longitude: Double) async throws -> ForecastResponse {
+        var components = URLComponents(string: "https://api.open-meteo.com/v1/forecast")!
+        components.queryItems = [
+            .init(name: "latitude", value: String(latitude)),
+            .init(name: "longitude", value: String(longitude)),
+            .init(name: "daily", value: "weather_code,temperature_2m_max,temperature_2m_min,temperature_2m_mean"),
+            .init(name: "past_days", value: "7"),
+            .init(name: "forecast_days", value: "1"),
+            .init(name: "timezone", value: "auto"),
+        ]
+        return try await http.json(ForecastResponse.self, from: components.url!, serviceName: "Open-Meteo history")
     }
 
     func airQuality(latitude: Double, longitude: Double) async throws -> AirQualityResponse {
