@@ -1,0 +1,62 @@
+{
+  "timezone": "America/Chicago",
+  "currently": {
+    "time": 1790683200,
+    "summary": "Light Rain",
+    "temperature": 24,
+    "humidity": 0.5,
+    "windSpeed": 5,
+    "windBearing": 180,
+    "pressure": 1012.4,
+    "visibility": 9.5,
+    "uvIndex": 4,
+    "precipProbability": 0.35
+  },
+  "minutely": {
+    "summary": "Light rain for the next hour",
+    "data": [
+      {
+        "time": 1790683200,
+        "precipIntensity": 0.5,
+        "precipProbability": 0.4,
+        "precipType": "rain"
+      }
+    ]
+  },
+  "hourly": {
+    "data": [
+      {
+        "time": 1790683200,
+        "summary": "Light Rain",
+        "temperature": 24,
+        "windSpeed": 5,
+        "windBearing": 180,
+        "precipProbability": 0.62
+      }
+    ]
+  },
+  "daily": {
+    "data": [
+      {
+        "time": 1790640000,
+        "temperatureHigh": 29,
+        "temperatureLow": 18,
+        "summary": "Rain",
+        "precipProbability": 0.7,
+        "sunriseTime": 1790661000,
+        "sunsetTime": 1790706000
+      }
+    ]
+  },
+  "alerts": [
+    {
+      "title": "Severe Thunderstorm Warning",
+      "severity": "severe",
+      "time": 1790680000,
+      "expires": 1790686800,
+      "description": "Damaging winds are possible.",
+      "uri": "https://example.test/alerts/1",
+      "regions": ["Springdale"]
+    }
+  ]
+}

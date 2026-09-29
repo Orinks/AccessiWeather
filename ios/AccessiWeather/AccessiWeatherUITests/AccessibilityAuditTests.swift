@@ -124,6 +124,88 @@ final class AccessibilityAuditTests: XCTestCase {
         if app.buttons["Stop"].exists { app.buttons["Stop"].tap() }
     }
 
+    func testWeatherHistoryAndUVScreensAreAccessible() throws {
+        app.tabBars.buttons["Weather"].tap()
+        try XCTSkipUnless(
+            app.otherElements["Temperature"].firstMatch.waitForExistence(timeout: 20),
+            "No live weather; add a location first"
+        )
+
+        let history = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Weather History'")).firstMatch
+        var tries = 0
+        while !history.isHittable && tries < 6 { app.swipeUp(); tries += 1 }
+        try XCTSkipUnless(history.exists, "Weather History is unavailable without a selected location")
+        history.tap()
+        XCTAssertTrue(app.navigationBars["Weather History"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Compared to Previous Days"].exists)
+        try app.performAccessibilityAudit(for: .all)
+        app.navigationBars.buttons.firstMatch.tap()
+
+        let uv = app.buttons.matching(NSPredicate(format: "label CONTAINS 'UV Index'")).firstMatch
+        try XCTSkipUnless(uv.waitForExistence(timeout: 5), "UV data is unavailable for this location")
+        uv.tap()
+        XCTAssertTrue(app.navigationBars["UV Index"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Current UV Index"].exists)
+        XCTAssertTrue(app.staticTexts["Sun Safety Recommendations"].exists)
+        try app.performAccessibilityAudit(for: .all)
+    }
+
+    func testAviationWeatherKXNAAndEventCenterAreAccessible() throws {
+        app.tabBars.buttons["Weather"].tap()
+        try XCTSkipUnless(
+            app.otherElements["Temperature"].firstMatch.waitForExistence(timeout: 20),
+            "No live weather; add a location first"
+        )
+
+        let aviation = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Aviation Weather'")).firstMatch
+        var tries = 0
+        while !aviation.isHittable && tries < 6 { app.swipeUp(); tries += 1 }
+        try XCTSkipUnless(aviation.exists, "Aviation Weather is unavailable without a selected location")
+        aviation.tap()
+        XCTAssertTrue(app.navigationBars["Aviation Weather"].waitForExistence(timeout: 5))
+        let airportCode = app.textFields["ICAO airport code"]
+        XCTAssertTrue(airportCode.waitForExistence(timeout: 5))
+        airportCode.tap()
+        let existingValue = airportCode.value as? String ?? ""
+        if existingValue != "ICAO airport code" {
+            airportCode.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: existingValue.count))
+        }
+        airportCode.typeText("KXNA")
+        app.buttons["Get Aviation Weather"].tap()
+        let metar = app.staticTexts["Current Observation (METAR)"]
+        let error = app.staticTexts["Aviation Weather"]
+        XCTAssertTrue(metar.waitForExistence(timeout: 30) || error.waitForExistence(timeout: 1))
+        try app.performAccessibilityAudit(for: .all)
+        app.navigationBars.buttons.firstMatch.tap()
+
+        let eventCenter = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Event Center'")).firstMatch
+        tries = 0
+        while !eventCenter.isHittable && tries < 6 { app.swipeUp(); tries += 1 }
+        try XCTSkipUnless(eventCenter.exists, "Event Center is unavailable without a selected location")
+        eventCenter.tap()
+        XCTAssertTrue(app.navigationBars["Event Center"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["No events yet."].exists || app.cells.firstMatch.exists)
+        XCTAssertTrue(app.navigationBars.buttons["Clear"].exists)
+        try app.performAccessibilityAudit(for: .all)
+    }
+
+    func testForecasterNotesProductPickerIsAccessible() throws {
+        app.tabBars.buttons["Weather"].tap()
+        try XCTSkipUnless(
+            app.otherElements["Temperature"].firstMatch.waitForExistence(timeout: 20),
+            "No live weather; add a location first"
+        )
+        let notes = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Forecaster Notes'")).firstMatch
+        var tries = 0
+        while !notes.isHittable && tries < 6 { app.swipeUp(); tries += 1 }
+        try XCTSkipUnless(notes.exists, "Forecaster Notes requires an NWS forecast office")
+        notes.tap()
+        XCTAssertTrue(app.navigationBars["Forecaster Notes"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Forecaster Product"].exists)
+        XCTAssertTrue(app.segmentedControls["Product"].exists)
+        try app.performAccessibilityAudit(for: .all)
+    }
+
     /// Xcode's built-in audit (same checks as the Accessibility Inspector Audit tab) on every screen.
     func testPerformAccessibilityAuditOnAllScreens() throws {
         // Contrast, Dynamic Type and clipping checks are heuristics that the auditor cannot

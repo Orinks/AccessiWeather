@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-enum EventKind: String, Codable {
+enum EventKind: String, Codable, Hashable {
     case newAlert
     case updatedAlert
     case alertEnded

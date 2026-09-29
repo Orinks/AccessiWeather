@@ -58,6 +58,20 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: net.orinks.AccessiWeatherUITests
         GENERATE_INFOPLIST_FILE: "YES"
         TEST_TARGET_NAME: AccessiWeather
+  AccessiWeatherTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: AccessiWeatherTests
+    resources:
+      - path: AccessiWeatherTests/Fixtures
+    dependencies:
+      - target: AccessiWeather
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: net.orinks.AccessiWeatherTests
+        GENERATE_INFOPLIST_FILE: "YES"
+        TEST_TARGET_NAME: AccessiWeather
 schemes:
   AccessiWeather:
     build:
@@ -68,6 +82,7 @@ schemes:
     test:
       config: Debug
       targets:
+        - AccessiWeatherTests
         - AccessiWeatherUITests
     archive:
       config: Release
