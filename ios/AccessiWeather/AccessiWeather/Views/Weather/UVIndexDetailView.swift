@@ -4,8 +4,10 @@ struct UVIndexDetailView: View {
     let report: WeatherReport
     let formatter: WeatherFormatter
 
-    private var category: String? {
-        report.current.uvIndex.map(WeatherFormatter.uvCategory)
+    private var currentUVIndex: (value: Int, category: String)? {
+        guard let index = report.current.uvIndex else { return nil }
+        let roundedIndex = WeatherFormatter.roundedUVIndex(index)
+        return (roundedIndex, WeatherFormatter.uvCategory(forRoundedIndex: roundedIndex))
     }
 
     private var hourlyForecast: [HourlyPeriod] {
@@ -15,15 +17,15 @@ struct UVIndexDetailView: View {
     var body: some View {
         List {
             Section {
-                if let uvIndex = report.current.uvIndex, let category {
+                if let currentUVIndex {
                     MeasurementRow(
                         label: "UV Index",
-                        value: "\(Int(uvIndex.rounded())) (\(category))",
-                        spokenValue: "\(Int(uvIndex.rounded())), \(category)"
+                        value: "\(currentUVIndex.value) (\(currentUVIndex.category))",
+                        spokenValue: "\(currentUVIndex.value), \(currentUVIndex.category)"
                     )
-                    Text("Health guidance: \(UVIndexGuidance.guidance(for: category))")
+                    Text("Health guidance: \(UVIndexGuidance.guidance(for: currentUVIndex.category))")
                         .accessibilityElement(children: .ignore)
-                        .accessibilityLabel("Health guidance: \(UVIndexGuidance.guidance(for: category))")
+                        .accessibilityLabel("Health guidance: \(UVIndexGuidance.guidance(for: currentUVIndex.category))")
                 } else {
                     Text("UV index data is not available for this location.")
                         .foregroundStyle(.secondary)
@@ -39,17 +41,19 @@ struct UVIndexDetailView: View {
                     ForEach(hourlyForecast) { period in
                         let uvIndex = period.uvIndex ?? 0
                         let hour = formatter.hour(period.time)
-                        let category = WeatherFormatter.uvCategory(uvIndex)
-                        Text("\(hour), UV \(Int(uvIndex.rounded())), \(category)")
+                        let roundedIndex = WeatherFormatter.roundedUVIndex(uvIndex)
+                        let category = WeatherFormatter.uvCategory(forRoundedIndex: roundedIndex)
+                        Text("\(hour), UV \(roundedIndex), \(category)")
                             .accessibilityElement(children: .ignore)
-                            .accessibilityLabel("\(formatter.spokenHour(period.time)), UV Index \(Int(uvIndex.rounded())), \(category)")
+                            .accessibilityLabel("\(formatter.spokenHour(period.time)), UV Index \(roundedIndex), \(category)")
                     }
                 }
             } header: {
                 SectionHeader("Hourly Forecast")
             }
             Section {
-                if let category, let recommendations = UVIndexGuidance.recommendations(for: category) {
+                if let currentUVIndex,
+                   let recommendations = UVIndexGuidance.recommendations(for: currentUVIndex.category) {
                     ForEach(Array(recommendations.enumerated()), id: \.offset) { item in
                         Text(item.element)
                             .accessibilityElement(children: .ignore)

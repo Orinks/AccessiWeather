@@ -146,7 +146,15 @@ struct WeatherFormatter {
         percent.map { "\(Int($0.rounded())) percent" }
     }
 
+    static func roundedUVIndex(_ index: Double) -> Int {
+        Int(index.rounded())
+    }
+
     static func uvCategory(_ index: Double) -> String {
+        uvCategory(forRoundedIndex: roundedUVIndex(index))
+    }
+
+    static func uvCategory(forRoundedIndex index: Int) -> String {
         switch index {
         case ..<3: return "Low"
         case 3..<6: return "Moderate"
@@ -157,7 +165,10 @@ struct WeatherFormatter {
     }
 
     func uvIndex(_ index: Double?) -> String? {
-        index.map { String(format: "%.1f (%@)", $0, WeatherFormatter.uvCategory($0)) }
+        index.map {
+            let roundedIndex = Self.roundedUVIndex($0)
+            return "\(roundedIndex) (\(Self.uvCategory(forRoundedIndex: roundedIndex)))"
+        }
     }
 
     func precipitationChance(_ percent: Int?) -> String? {

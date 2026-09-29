@@ -204,10 +204,13 @@ struct SettingsView: View {
     private var aiSection: some View {
         Section {
             apiKeyField("OpenRouter API key", text: $openRouterKey, key: .openRouter)
-            TextField("Model", text: $settings.aiModel)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .accessibilityHint("OpenRouter model identifier; defaults to openrouter/free")
+            LabeledContent("Model") {
+                TextField("openrouter/free", text: $settings.aiModel)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .accessibilityLabel("Model")
+                    .accessibilityHint("OpenRouter model identifier; defaults to openrouter/free")
+            }
             Picker("Explanation length", selection: $settings.aiExplanationStyle) {
                 ForEach(ExplanationStyle.allCases) { style in
                     Text(style.rawValue).tag(style)

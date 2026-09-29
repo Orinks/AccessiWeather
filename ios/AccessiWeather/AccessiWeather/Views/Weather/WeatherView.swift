@@ -239,13 +239,15 @@ struct CurrentConditionsSection: View {
                 MeasurementRow(label: "Visibility", value: visibility, spokenValue: formatter.spokenVisibility(current.visibilityKm))
             }
             if settings.showUVIndex, let uv = current.uvIndex {
+                let roundedIndex = WeatherFormatter.roundedUVIndex(uv)
+                let category = WeatherFormatter.uvCategory(forRoundedIndex: roundedIndex)
                 NavigationLink {
                     UVIndexDetailView(report: report, formatter: formatter)
                 } label: {
                     MeasurementRow(
                         label: "UV Index",
-                        value: "\(Int(uv.rounded())) (\(WeatherFormatter.uvCategory(uv)))",
-                        spokenValue: "\(Int(uv.rounded())), \(WeatherFormatter.uvCategory(uv))"
+                        value: "\(roundedIndex) (\(category))",
+                        spokenValue: "\(roundedIndex), \(category)"
                     )
                 }
                 .accessibilityHint("Shows UV health guidance, hourly levels, and sun safety recommendations")

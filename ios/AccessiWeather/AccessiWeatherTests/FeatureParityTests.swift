@@ -175,13 +175,17 @@ final class FeatureParityTests: XCTestCase {
 
     func testUVCategoriesAndSafetyGuidance() {
         let cases: [(Double, String)] = [
-            (2.99, "Low"), (3, "Moderate"), (5.99, "Moderate"),
-            (6, "High"), (7.99, "High"), (8, "Very High"),
-            (10.99, "Very High"), (11, "Extreme"),
+            (2.49, "Low"), (2.5, "Moderate"), (5.49, "Moderate"),
+            (5.5, "High"), (6, "High"), (7.49, "High"),
+            (7.5, "Very High"), (8, "Very High"),
+            (10.49, "Very High"), (10.5, "Extreme"), (11, "Extreme"),
         ]
         for (index, expected) in cases {
             XCTAssertEqual(WeatherFormatter.uvCategory(index), expected)
         }
+        let roundedIndex = WeatherFormatter.roundedUVIndex(2.6)
+        XCTAssertEqual("\(roundedIndex)", "3")
+        XCTAssertEqual(WeatherFormatter.uvCategory(forRoundedIndex: roundedIndex), "Moderate")
         XCTAssertEqual(UVIndexGuidance.guidance(for: "Extreme"), "Try to avoid sun exposure between 10am and 4pm. Shirt, sunscreen, and hat are essential.")
         XCTAssertTrue(UVIndexGuidance.recommendations(for: "High")?.contains("Stay hydrated") == true)
         XCTAssertNil(UVIndexGuidance.recommendations(for: "Unknown"))
