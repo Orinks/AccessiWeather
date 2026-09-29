@@ -24,6 +24,7 @@ struct SettingsView: View {
                 displaySection
                 alertsSection
                 soundsSection
+                aiSection
                 dataSourcesSection
                 aboutSection
             }
@@ -181,11 +182,29 @@ struct SettingsView: View {
             apiKeyField("Pirate Weather API key", text: $pirateWeatherKey, key: .pirateWeather)
             apiKeyField("AirNow API key", text: $airNowKey, key: .airNow)
             apiKeyField("AVWX API key", text: $avwxKey, key: .avwx)
-            apiKeyField("OpenRouter API key", text: $openRouterKey, key: .openRouter)
         } header: {
             SectionHeader("Data Sources")
         } footer: {
-            Text("Automatic uses the National Weather Service inside the United States and Open-Meteo elsewhere. API keys are stored in the iOS Keychain. Pirate Weather, AirNow, AVWX, and OpenRouter features are coming in a later version.")
+            Text("Automatic uses the National Weather Service inside the United States and Open-Meteo elsewhere. API keys are stored in the iOS Keychain. AirNow and AVWX integrations are coming in a later version.")
+        }
+    }
+
+    private var aiSection: some View {
+        Section {
+            apiKeyField("OpenRouter API key", text: $openRouterKey, key: .openRouter)
+            TextField("Model", text: $settings.aiModel)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .accessibilityHint("OpenRouter model identifier; defaults to openrouter/free")
+            Picker("Explanation length", selection: $settings.aiExplanationStyle) {
+                ForEach(ExplanationStyle.allCases) { style in
+                    Text(style.rawValue).tag(style)
+                }
+            }
+        } header: {
+            SectionHeader("AI")
+        } footer: {
+            Text("Get a free OpenRouter API key at openrouter.ai/keys.")
         }
     }
 

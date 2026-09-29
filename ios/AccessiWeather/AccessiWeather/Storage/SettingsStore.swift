@@ -54,6 +54,8 @@ final class SettingsStore: ObservableObject {
         soundPackID = defaults.string(forKey: "soundPackID") ?? "default"
         mutedSoundEvents = Set(defaults.stringArray(forKey: "mutedSoundEvents") ?? Array(SoundEvent.defaultMuted))
         lastRadioStationCallSign = defaults.string(forKey: "lastRadioStationCallSign")
+        aiModel = defaults.string(forKey: "aiModel") ?? "openrouter/free"
+        aiExplanationStyle = ExplanationStyle(rawValue: defaults.string(forKey: "aiExplanationStyle") ?? "") ?? .standard
     }
 
     @Published var temperatureUnit: TemperatureUnit { didSet { defaults.set(temperatureUnit.rawValue, forKey: "temperatureUnit") } }
@@ -78,6 +80,8 @@ final class SettingsStore: ObservableObject {
     @Published var soundPackID: String { didSet { defaults.set(soundPackID, forKey: "soundPackID") } }
     @Published var mutedSoundEvents: Set<String> { didSet { defaults.set(Array(mutedSoundEvents).sorted(), forKey: "mutedSoundEvents") } }
     @Published var lastRadioStationCallSign: String? { didSet { defaults.set(lastRadioStationCallSign, forKey: "lastRadioStationCallSign") } }
+    @Published var aiModel: String { didSet { defaults.set(aiModel, forKey: "aiModel") } }
+    @Published var aiExplanationStyle: ExplanationStyle { didSet { defaults.set(aiExplanationStyle.rawValue, forKey: "aiExplanationStyle") } }
 
     func isMuted(_ event: SoundEvent) -> Bool {
         mutedSoundEvents.contains(event.rawValue)
