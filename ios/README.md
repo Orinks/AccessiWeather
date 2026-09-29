@@ -46,7 +46,6 @@ After editing `project.yml`, regenerate with `xcodegen generate` and commit both
 | `Resources/` | `SoundPacks/<pack>/pack.json` plus clips (folder reference), `noaa_radio_stations.json` |
 | `Views/` | Weather (history, UV, air quality, precipitation and aviation details, Event Center, Forecaster Notes), Alerts, Locations (+ Add Location sheet), Settings (+ Sound Events), Radio, shared views |
 | `../AccessiWeatherUITests/` | XCUITest accessibility audit |
-| `AccessiWeatherTests/` | Unit tests and recorded API fixtures |
 
 Data sources: NWS (`api.weather.gov`) for US coordinates, Open-Meteo elsewhere, with
 Open-Meteo filling in UV, sunrise/sunset, historical weather and air quality for US
