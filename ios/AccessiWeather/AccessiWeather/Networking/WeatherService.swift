@@ -138,10 +138,26 @@ actor WeatherService {
            Date().timeIntervalSince(cached.storedAt) < WeatherService.cacheLifetime {
             return cached.weather
         }
-        async let metars = aviationWeatherClient.metars(icao: code)
-        async let tafs = aviationWeatherClient.tafs(icao: code)
-        let weather = AviationWeather(metars: try await metars, tafs: try await tafs)
-        aviationCache[code] = (weather, Date())
+        async let metarResult = captureAviationProduct {
+            try await aviationWeatherClient.metars(icao: code)
+        }
+        async let tafResult = captureAviationProduct {
+            try await aviationWeatherClient.tafs(icao: code)
+        }
+        let (metars, metarError) = await metarResult
+        let (tafs, tafError) = await tafResult
+        if let metarError, let tafError {
+            throw WeatherError.unsupported("METAR and TAF requests failed. \(metarError) \(tafError)")
+        }
+        let weather = AviationWeather(
+            metars: metars ?? [],
+            tafs: tafs ?? [],
+            metarError: metarError,
+            tafError: tafError
+        )
+        if metarError == nil, tafError == nil {
+            aviationCache[code] = (weather, Date())
+        }
         return weather
     }
 
@@ -282,22 +298,7 @@ actor WeatherService {
             current.temperatureC = current.temperatureC ?? first.temperatureC
         }
 
-        let mappedAlerts = alerts.map { alert in
-            WeatherAlert(
-                id: alert.id,
-                event: alert.event,
-                severity: alert.severity ?? "Unknown",
-                urgency: alert.urgency,
-                certainty: alert.certainty,
-                headline: alert.headline,
-                description: alert.description,
-                instruction: alert.instruction,
-                areaDescription: alert.areaDesc,
-                sender: alert.senderName,
-                effective: alert.effective,
-                expires: alert.expires
-            )
-        }
+        let mappedAlerts = alerts.map(NWSClient.weatherAlert(from:))
 
         return WeatherReport(
             location: location,
@@ -423,6 +424,16 @@ actor WeatherService {
             report.current.sunrise = OpenMeteoClient.date(from: sunrise, in: timeZone)
             report.current.sunset = OpenMeteoClient.date(from: sunset, in: timeZone)
         }
+    }
+}
+
+private func captureAviationProduct<Value>(
+    _ operation: () async throws -> Value
+) async -> (value: Value?, error: String?) {
+    do {
+        return (try await operation(), nil)
+    } catch {
+        return (nil, error.localizedDescription)
     }
 }
 

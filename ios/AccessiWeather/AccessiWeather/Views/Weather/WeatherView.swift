@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct WeatherView: View {
     @EnvironmentObject private var model: AppModel
@@ -183,6 +184,9 @@ struct SectionHeader: View {
 
     var body: some View {
         Text(title)
+            .font(.headline)
+            .foregroundColor(Color(uiColor: .label))
+            .fixedSize(horizontal: false, vertical: true)
             .accessibilityAddTraits(.isHeader)
     }
 }
@@ -196,9 +200,11 @@ struct MeasurementRow: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
             Text(label)
+                .foregroundColor(Color(uiColor: .label))
             Spacer()
             Text(value)
-                .foregroundStyle(.secondary)
+                .foregroundColor(Color(uiColor: .label))
+                .fixedSize(horizontal: false, vertical: true)
                 .multilineTextAlignment(.trailing)
         }
         .accessibilityElement(children: .ignore)

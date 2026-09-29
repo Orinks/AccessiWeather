@@ -113,15 +113,51 @@ final class WeatherExplanationCache {
     static let shared = WeatherExplanationCache()
     private var values: [String: String] = [:]
 
-    func value(locationID: UUID, fetchedAt: Date, style: ExplanationStyle, model: String) -> String? {
-        values[key(locationID: locationID, fetchedAt: fetchedAt, style: style, model: model)]
+    func value(
+        locationID: UUID,
+        fetchedAt: Date,
+        style: ExplanationStyle,
+        model: String,
+        temperatureUnit: TemperatureUnit,
+        windSpeedUnit: WindSpeedUnit
+    ) -> String? {
+        values[key(
+            locationID: locationID,
+            fetchedAt: fetchedAt,
+            style: style,
+            model: model,
+            temperatureUnit: temperatureUnit,
+            windSpeedUnit: windSpeedUnit
+        )]
     }
 
-    func store(_ text: String, locationID: UUID, fetchedAt: Date, style: ExplanationStyle, model: String) {
-        values[key(locationID: locationID, fetchedAt: fetchedAt, style: style, model: model)] = text
+    func store(
+        _ text: String,
+        locationID: UUID,
+        fetchedAt: Date,
+        style: ExplanationStyle,
+        model: String,
+        temperatureUnit: TemperatureUnit,
+        windSpeedUnit: WindSpeedUnit
+    ) {
+        values[key(
+            locationID: locationID,
+            fetchedAt: fetchedAt,
+            style: style,
+            model: model,
+            temperatureUnit: temperatureUnit,
+            windSpeedUnit: windSpeedUnit
+        )] = text
     }
 
-    private func key(locationID: UUID, fetchedAt: Date, style: ExplanationStyle, model: String) -> String {
-        "\(locationID.uuidString)|\(fetchedAt.timeIntervalSince1970)|\(style.rawValue)|\(model)"
+    private func key(
+        locationID: UUID,
+        fetchedAt: Date,
+        style: ExplanationStyle,
+        model: String,
+        temperatureUnit: TemperatureUnit,
+        windSpeedUnit: WindSpeedUnit
+    ) -> String {
+        "\(locationID.uuidString)|\(fetchedAt.timeIntervalSince1970)|\(style.rawValue)|\(model)|\(temperatureUnit.rawValue)|\(windSpeedUnit.rawValue)"
     }
 }

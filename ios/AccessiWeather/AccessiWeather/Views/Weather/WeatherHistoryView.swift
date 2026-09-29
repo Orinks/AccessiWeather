@@ -19,25 +19,28 @@ struct WeatherHistoryView: View {
                 if let history {
                     if let yesterday = history.yesterdayComparison {
                         Text(yesterday)
+                            .foregroundStyle(.primary)
                             .accessibilityElement(children: .ignore)
                             .accessibilityLabel(yesterday)
                     } else {
                         Text("Comparison with yesterday is unavailable.")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.primary)
                     }
                     if let lastWeek = history.lastWeekComparison {
                         Text(lastWeek)
+                            .foregroundStyle(.primary)
                             .accessibilityElement(children: .ignore)
                             .accessibilityLabel(lastWeek)
                     } else {
                         Text("Comparison with last week is unavailable.")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.primary)
                     }
                 } else if let errorMessage {
                     Text(errorMessage)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.primary)
                 } else {
                     ProgressView("Loading weather history…")
+                        .foregroundStyle(.primary)
                         .accessibilityElement(children: .combine)
                 }
             } header: {
@@ -51,6 +54,7 @@ struct WeatherHistoryView: View {
                     }
                 } else if isLoading {
                     ProgressView("Loading the last 7 days…")
+                        .foregroundStyle(.primary)
                         .accessibilityElement(children: .combine)
                 }
             } header: {

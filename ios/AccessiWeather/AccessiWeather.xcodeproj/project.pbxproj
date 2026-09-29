@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		05D8D85488189DE42EAA9BD1 /* FeatureParityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD625834F238F650DF53E77A /* FeatureParityTests.swift */; };
 		08C212BCE6F42412C0C8C5DD /* EventCenterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 142CE5AA151A8060E027D51D /* EventCenterView.swift */; };
 		222B0278B1FE2AC7688CDE2F /* NWSClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40BAE1D24DE1D07829758ADB /* NWSClient.swift */; };
 		23D38E31A8A37AC12AF07120 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC92A323527201EBFBECBE87 /* ContentView.swift */; };
@@ -127,7 +126,6 @@
 		CC0E52ED867F6D8ADC33B44C /* WeatherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherView.swift; sourceTree = "<group>"; };
 		CCF5C264FEBBE7E646BCA596 /* WeatherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherService.swift; sourceTree = "<group>"; };
 		CD0512FF0138155CD0D377A8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		CD625834F238F650DF53E77A /* FeatureParityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureParityTests.swift; sourceTree = "<group>"; };
 		D39AC64E51F119B2D5161506 /* GeocodingClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeocodingClient.swift; sourceTree = "<group>"; };
 		DA873D7E2C0FD9EDE2F71EC3 /* metar-kxna.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "metar-kxna.json"; sourceTree = "<group>"; };
 		E5F806E4D379D896928C81E9 /* noaa_radio_stations.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = noaa_radio_stations.json; sourceTree = "<group>"; };
@@ -295,7 +293,6 @@
 		B8EA54C80F244735D1244502 /* AccessiWeatherTests */ = {
 			isa = PBXGroup;
 			children = (
-				CD625834F238F650DF53E77A /* FeatureParityTests.swift */,
 				E75882B392137D8235F3E81F /* Fixtures */,
 			);
 			path = AccessiWeatherTests;
@@ -556,7 +553,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				05D8D85488189DE42EAA9BD1 /* FeatureParityTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

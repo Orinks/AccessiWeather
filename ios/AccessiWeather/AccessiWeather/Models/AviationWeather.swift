@@ -115,6 +115,8 @@ struct TAFProduct: Decodable, Equatable {
 struct AviationWeather: Equatable {
     var metars: [METARObservation]
     var tafs: [TAFProduct]
+    var metarError: String? = nil
+    var tafError: String? = nil
 }
 
 enum AviationWeatherFormatting {

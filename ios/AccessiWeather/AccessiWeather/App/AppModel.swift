@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 import SwiftUI
 import UserNotifications
 
@@ -20,6 +21,10 @@ final class AppModel: ObservableObject {
 
     private var notifiedAlertIDs: Set<String> = []
     private var previousAlertsByLocation: [UUID: [String: WeatherAlert]] = [:]
+    private var autoTunePlaybackOwnership: RadioAutoTunePlaybackOwnership?
+    private var autoTuneStopTask: Task<Void, Never>?
+    private var radioGenerationCancellable: AnyCancellable?
+    private var radioAutoTuneSettingCancellable: AnyCancellable?
 
     init(
         settings: SettingsStore? = nil,
@@ -34,6 +39,17 @@ final class AppModel: ObservableObject {
         radio = RadioPlayer()
         radioStations = RadioStationDirectory()
         self.eventLog = eventLog ?? EventLog()
+        radioGenerationCancellable = radio.$playbackGeneration
+            .dropFirst()
+            .sink { [weak self] generation in
+                Task { @MainActor in self?.radioPlaybackGenerationDidChange(generation) }
+            }
+        radioAutoTuneSettingCancellable = self.settings.$radioAutoTuneEnabled
+            .dropFirst()
+            .sink { [weak self] enabled in
+                guard !enabled else { return }
+                Task { @MainActor in self?.stopAutoTunedPlaybackIfOwned() }
+            }
     }
 
     var selectedLocation: SavedLocation? {
@@ -98,6 +114,12 @@ final class AppModel: ObservableObject {
                 forceRefresh: force,
                 pirateWeatherKey: KeychainStore.read(.pirateWeather)
             )
+            if fresh.alertsAreCurrent,
+               let ownership = autoTunePlaybackOwnership,
+               ownership.locationID == location.id,
+               !fresh.alerts.contains(where: { $0.id == ownership.alertID }) {
+                stopAutoTunedPlaybackIfOwned()
+            }
             let hadReport = report?.location.id == location.id
             let previousAlerts = previousAlertsByLocation[location.id].map { Array($0.values) }
                 ?? (hadReport ? report?.alerts ?? [] : [])
@@ -107,17 +129,23 @@ final class AppModel: ObservableObject {
             let newAlertIDs = Set(changes.new.map(\.id))
             var alertToTune: WeatherAlert?
             var stationToTune: RadioStation?
-            if hadReport, settings.radioAutoTuneEnabled, !radio.isPlaying,
-               let severeAlert = changes.new.first(where: {
-                   ["extreme", "severe"].contains($0.severity.lowercased())
-               }),
-               let station = radioStations.nearest(
-                   latitude: location.latitude,
-                   longitude: location.longitude,
-                   limit: 1
-               ).first?.station {
-                alertToTune = severeAlert
-                stationToTune = station
+            let tunableAlerts = changes.new.filter {
+                ["extreme", "severe"].contains($0.severity.lowercased()) && $0.wouldWakeSAMERadio
+            }
+            if hadReport, settings.radioAutoTuneEnabled, !radio.isPlaying, !tunableAlerts.isEmpty {
+                let sameCountyCodes = Array(Set(tunableAlerts.flatMap(\.sameCountyCodes))).sorted()
+                if let coverage = await radioStations.nearestCoveringStation(
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    sameCountyCodes: sameCountyCodes
+                ) {
+                    alertToTune = tunableAlerts.first {
+                        !Set($0.sameCountyCodes).isDisjoint(with: coverage.matchedCountyCodes)
+                    }
+                    if alertToTune != nil {
+                        stationToTune = coverage.station
+                    }
+                }
             }
             var additionalDetails: [String: String] = [:]
             if let alertToTune, let stationToTune {
@@ -142,6 +170,11 @@ final class AppModel: ObservableObject {
             }
             if let alertToTune, let stationToTune {
                 radio.play(stationToTune)
+                startAutoTuneStopTimer(
+                    alertID: alertToTune.id,
+                    locationID: location.id,
+                    durationMinutes: settings.radioAutoTuneDurationMinutes
+                )
                 AccessibilityNotification.Announcement(
                     "Tuning NOAA Weather Radio \(stationToTune.callSign) for \(alertToTune.event)"
                 ).post()
@@ -158,6 +191,49 @@ final class AppModel: ObservableObject {
                 AccessibilityNotification.Announcement("Weather update failed. \(error.localizedDescription)").post()
             }
         }
+    }
+
+    private func startAutoTuneStopTimer(alertID: String, locationID: UUID, durationMinutes: Int) {
+        autoTuneStopTask?.cancel()
+        let ownership = RadioAutoTunePlaybackOwnership(
+            generation: radio.playbackGeneration,
+            alertID: alertID,
+            locationID: locationID
+        )
+        autoTunePlaybackOwnership = ownership
+        autoTuneStopTask = Task { [weak self] in
+            do {
+                try await Task.sleep(nanoseconds: UInt64(durationMinutes) * 60 * 1_000_000_000)
+            } catch {
+                return
+            }
+            guard let self, self.autoTunePlaybackOwnership == ownership else { return }
+            self.stopAutoTunedPlaybackIfOwned()
+        }
+    }
+
+    private func stopAutoTunedPlaybackIfOwned() {
+        guard let ownership = autoTunePlaybackOwnership else {
+            autoTuneStopTask?.cancel()
+            autoTuneStopTask = nil
+            return
+        }
+        autoTuneStopTask?.cancel()
+        autoTuneStopTask = nil
+        autoTunePlaybackOwnership = nil
+        if ownership.ownsPlayback(generation: radio.playbackGeneration) {
+            radio.stop()
+        }
+    }
+
+    private func radioPlaybackGenerationDidChange(_ generation: Int) {
+        guard let ownership = autoTunePlaybackOwnership,
+              !ownership.ownsPlayback(generation: generation) else {
+            return
+        }
+        autoTuneStopTask?.cancel()
+        autoTuneStopTask = nil
+        autoTunePlaybackOwnership = nil
     }
 
     // MARK: - Notifications
@@ -189,5 +265,15 @@ final class AppModel: ObservableObject {
             let request = UNNotificationRequest(identifier: alert.id, content: content, trigger: nil)
             try? await center.add(request)
         }
+    }
+}
+
+struct RadioAutoTunePlaybackOwnership: Equatable {
+    let generation: Int
+    let alertID: String
+    let locationID: UUID
+
+    func ownsPlayback(generation currentGeneration: Int) -> Bool {
+        generation == currentGeneration
     }
 }

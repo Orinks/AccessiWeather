@@ -16,6 +16,23 @@ enum ForecasterProduct: String, CaseIterable, Identifiable {
     }
 }
 
+private struct ForecasterProductIdentity: Equatable {
+    let productType: String
+    let officeID: String
+    let issuanceTime: Date?
+
+    init(productType: String, officeID: String, issuanceTime: Date?) {
+        self.productType = productType.uppercased()
+        self.officeID = officeID.uppercased()
+        self.issuanceTime = issuanceTime
+    }
+}
+
+private struct WeatherReportIdentity: Equatable {
+    let locationID: UUID
+    let fetchedAt: Date
+}
+
 struct ForecasterNotesView: View {
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var settings: SettingsStore
@@ -35,15 +52,27 @@ struct ForecasterNotesView: View {
         !KeychainStore.read(.openRouter).isEmpty
     }
 
+    private var currentExplanationIdentity: ForecasterProductIdentity? {
+        guard let productResponse else { return nil }
+        return ForecasterProductIdentity(
+            productType: selectedProduct.rawValue,
+            officeID: officeID,
+            issuanceTime: productResponse.issuanceTime
+        )
+    }
+
     var body: some View {
         List {
             Section {
                 Picker("Product", selection: $selectedProduct) {
                     ForEach(ForecasterProduct.allCases) { product in
-                        Text(product.fullName).tag(product)
+                        Text(product.rawValue)
+                            .accessibilityLabel(product.fullName)
+                            .tag(product)
                     }
                 }
                 .pickerStyle(.segmented)
+                .tint(.primary)
                 .accessibilityLabel("Product")
             } header: {
                 SectionHeader("Forecaster Product")
@@ -101,6 +130,11 @@ struct ForecasterNotesView: View {
         }
         .navigationTitle("Forecaster Notes")
         .navigationBarTitleDisplayMode(.inline)
+        .onChange(of: currentExplanationIdentity) { _, _ in
+            productSummary = nil
+            summaryError = nil
+            isSummarizing = false
+        }
         .task(id: selectedProduct) {
             isLoading = true
             productResponse = nil
@@ -134,6 +168,12 @@ struct ForecasterNotesView: View {
 
     @MainActor
     private func explain(product: NWSClient.ProductResponse) async {
+        let identity = ForecasterProductIdentity(
+            productType: selectedProduct.rawValue,
+            officeID: officeID,
+            issuanceTime: product.issuanceTime
+        )
+        guard currentExplanationIdentity == identity else { return }
         let key = KeychainStore.read(.openRouter)
         guard !key.isEmpty else {
             summaryError = "Add an OpenRouter API key in Settings > AI to explain this product."
@@ -142,7 +182,7 @@ struct ForecasterNotesView: View {
         let modelName = settings.aiModel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             ? "openrouter/free"
             : settings.aiModel
-        let cacheKey = "\(product.id)|\(selectedProduct.rawValue)|\(settings.aiExplanationStyle.rawValue)|\(modelName)|\(product.productText)"
+        let cacheKey = "\(identity.productType)|\(identity.officeID)|\(identity.issuanceTime?.timeIntervalSince1970 ?? 0)|\(product.id)|\(settings.aiExplanationStyle.rawValue)|\(modelName)|\(product.productText)"
         if let cached = summaryCache[cacheKey] {
             productSummary = cached
             summaryError = nil
@@ -150,7 +190,11 @@ struct ForecasterNotesView: View {
         }
         isSummarizing = true
         summaryError = nil
-        defer { isSummarizing = false }
+        defer {
+            if currentExplanationIdentity == identity {
+                isSummarizing = false
+            }
+        }
         do {
             let response = try await OpenRouterClient().complete(
                 system: "\(WeatherExplainer.defaultSystemPrompt)\n\n\(settings.aiExplanationStyle.systemInstruction)",
@@ -163,11 +207,13 @@ struct ForecasterNotesView: View {
                 model: modelName,
                 key: key
             )
+            guard currentExplanationIdentity == identity else { return }
             let plainText = WeatherExplainer.stripMarkdown(response)
             productSummary = plainText
             summaryCache[cacheKey] = plainText
             AccessibilityNotification.Announcement("Explanation ready").post()
         } catch {
+            guard currentExplanationIdentity == identity else { return }
             summaryError = error.localizedDescription
         }
     }
@@ -179,6 +225,11 @@ struct ExplainConditionsView: View {
     @State private var explanation: String?
     @State private var errorMessage: String?
     @State private var isLoading = false
+
+    private var reportIdentity: WeatherReportIdentity? {
+        guard let report = model.report else { return nil }
+        return WeatherReportIdentity(locationID: report.location.id, fetchedAt: report.fetchedAt)
+    }
 
     var body: some View {
         List {
@@ -206,6 +257,11 @@ struct ExplainConditionsView: View {
         }
         .navigationTitle("Explain Conditions")
         .navigationBarTitleDisplayMode(.inline)
+        .onChange(of: reportIdentity) { _, _ in
+            explanation = nil
+            errorMessage = nil
+            isLoading = false
+        }
     }
 
     @MainActor
@@ -214,6 +270,7 @@ struct ExplainConditionsView: View {
             errorMessage = "Weather data is not available yet. Refresh and try again."
             return
         }
+        let identity = WeatherReportIdentity(locationID: report.location.id, fetchedAt: report.fetchedAt)
         let key = KeychainStore.read(.openRouter)
         guard !key.isEmpty else {
             errorMessage = "Add an OpenRouter API key in Settings > AI to explain weather."
@@ -226,7 +283,9 @@ struct ExplainConditionsView: View {
             locationID: report.location.id,
             fetchedAt: report.fetchedAt,
             style: settings.aiExplanationStyle,
-            model: modelName
+            model: modelName,
+            temperatureUnit: settings.temperatureUnit,
+            windSpeedUnit: settings.windSpeedUnit
         ) {
             explanation = cached
             errorMessage = nil
@@ -234,7 +293,11 @@ struct ExplainConditionsView: View {
         }
         isLoading = true
         errorMessage = nil
-        defer { isLoading = false }
+        defer {
+            if reportIdentity == identity {
+                isLoading = false
+            }
+        }
         do {
             let formatter = WeatherFormatter(settings: settings, timeZone: report.timeZone)
             let messages = WeatherExplainer.messages(
@@ -248,6 +311,7 @@ struct ExplainConditionsView: View {
                 model: modelName,
                 key: key
             )
+            guard reportIdentity == identity else { return }
             let plainText = WeatherExplainer.stripMarkdown(response)
             explanation = plainText
             WeatherExplanationCache.shared.store(
@@ -255,10 +319,13 @@ struct ExplainConditionsView: View {
                 locationID: report.location.id,
                 fetchedAt: report.fetchedAt,
                 style: settings.aiExplanationStyle,
-                model: modelName
+                model: modelName,
+                temperatureUnit: settings.temperatureUnit,
+                windSpeedUnit: settings.windSpeedUnit
             )
             AccessibilityNotification.Announcement("Explanation ready").post()
         } catch {
+            guard reportIdentity == identity else { return }
             errorMessage = error.localizedDescription
         }
     }

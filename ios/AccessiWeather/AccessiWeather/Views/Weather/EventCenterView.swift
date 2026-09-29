@@ -9,7 +9,7 @@ struct EventCenterView: View {
             Section {
                 if model.eventLog.entries.isEmpty {
                     Text("No events yet.")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.primary)
                 } else {
                     ForEach(model.eventLog.entries) { entry in
                         VStack(alignment: .leading, spacing: 4) {
@@ -18,7 +18,7 @@ struct EventCenterView: View {
                             if !entry.detail.isEmpty {
                                 Text(entry.detail)
                                     .font(.subheadline)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(.primary)
                             }
                         }
                         .accessibilityElement(children: .ignore)
@@ -34,10 +34,14 @@ struct EventCenterView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button("Clear", role: .destructive) {
+                Button {
                     showingClearConfirmation = true
+                } label: {
+                    Image(systemName: "trash")
                 }
+                .foregroundStyle(.primary)
                 .disabled(model.eventLog.entries.isEmpty)
+                .accessibilityLabel("Clear")
                 .accessibilityHint("Removes all saved events")
             }
         }

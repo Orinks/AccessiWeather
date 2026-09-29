@@ -111,6 +111,12 @@ struct SettingsView: View {
             }
             .disabled(!settings.alertNotificationsEnabled)
             Toggle("Tune NOAA Weather Radio for new warnings", isOn: $settings.radioAutoTuneEnabled)
+            Stepper(
+                "Stop weather radio after \(settings.radioAutoTuneDurationMinutes) minutes",
+                value: $settings.radioAutoTuneDurationMinutes,
+                in: 1...60
+            )
+            .disabled(!settings.radioAutoTuneEnabled)
         } header: {
             SectionHeader("Alerts")
         } footer: {

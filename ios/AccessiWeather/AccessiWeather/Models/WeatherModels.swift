@@ -126,6 +126,12 @@ struct WeatherAlert: Identifiable, Equatable, Hashable {
     var sender: String?
     var effective: Date?
     var expires: Date?
+    var sameCountyCodes: [String] = []
+    var sameEventCodes: [String] = []
+
+    var wouldWakeSAMERadio: Bool {
+        !sameCountyCodes.isEmpty && !sameEventCodes.isEmpty
+    }
 }
 
 struct WeatherReport: Equatable {

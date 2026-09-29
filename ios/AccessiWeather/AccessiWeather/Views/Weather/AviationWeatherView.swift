@@ -25,16 +25,18 @@ struct AviationWeatherView: View {
     var body: some View {
         List {
             Section {
-                TextField("ICAO airport code", text: $icao)
+                TextField("ICAO code", text: $icao)
                     .textInputAutocapitalization(.characters)
                     .autocorrectionDisabled()
                     .accessibilityLabel("ICAO airport code")
                 Button {
                     Task { await fetchWeather() }
                 } label: {
-                    Label("Get Aviation Weather", systemImage: "airplane")
+                    Label("Get", systemImage: "airplane")
                 }
+                .foregroundStyle(.primary)
                 .disabled(isLoading)
+                .accessibilityLabel("Get Aviation Weather")
                 .accessibilityHint("Fetches current METAR observations and TAF forecasts for this airport")
             } header: {
                 SectionHeader("Airport")
@@ -50,7 +52,7 @@ struct AviationWeatherView: View {
             if let errorMessage {
                 Section {
                     Text(errorMessage)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.primary)
                         .accessibilityLabel(errorMessage)
                 } header: {
                     SectionHeader("Aviation Weather")
@@ -62,7 +64,7 @@ struct AviationWeatherView: View {
                     if let observation = weather.metars.first {
                         metarRows(observation)
                     } else {
-                        Text("No METAR available for \(ICAOCodeValidation.normalized(icao)).")
+                        Text(weather.metarError ?? "No METAR available for \(ICAOCodeValidation.normalized(icao)).")
                             .accessibilityElement(children: .ignore)
                     }
                 } header: {
@@ -71,7 +73,7 @@ struct AviationWeatherView: View {
 
                 Section {
                     if weather.tafs.isEmpty {
-                        Text("No TAF available for \(ICAOCodeValidation.normalized(icao)).")
+                        Text(weather.tafError ?? "No TAF available for \(ICAOCodeValidation.normalized(icao)).")
                             .accessibilityElement(children: .ignore)
                     } else {
                         ForEach(Array(weather.tafs.enumerated()), id: \.offset) { item in
@@ -181,6 +183,7 @@ struct AviationWeatherView: View {
         let detailText = details.isEmpty ? "Forecast details unavailable." : details.joined(separator: ", ")
         let row = "\(change)From \(start) to \(end): \(detailText)"
         return Text(row)
+            .fixedSize(horizontal: false, vertical: true)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(row)
     }

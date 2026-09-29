@@ -1,15 +1,21 @@
 import SwiftUI
 
 enum PrecipitationTimelineText {
+    static func points(_ points: [MinutelyPoint], from now: Date) -> [MinutelyPoint] {
+        let minute = Date(timeIntervalSince1970: floor(now.timeIntervalSince1970 / 60) * 60)
+        return points.filter { $0.time >= minute }
+    }
+
     static func summary(_ points: [MinutelyPoint]) -> String {
         guard let firstWet = points.firstIndex(where: \.isWet) else {
             return "No precipitation expected in the next hour."
         }
+        let precipitation = condition(points[firstWet])
         if firstWet == 0,
            let firstDry = points[firstWet...].firstIndex(where: { !$0.isWet }) {
-            return "Rain ending in about \(firstDry) minutes."
+            return "\(precipitation) ending in about \(firstDry) minutes."
         }
-        return "Rain starting in about \(firstWet) minutes."
+        return "\(precipitation) starting in about \(firstWet) minutes."
     }
 
     static func condition(_ point: MinutelyPoint) -> String {
@@ -93,8 +99,8 @@ struct PrecipitationTimelineView: View {
         if let report = model.report,
            report.sourceDescription == "Pirate Weather",
            let minutely = report.minutely {
-            points = minutely
-            unavailable = false
+            points = PrecipitationTimelineText.points(minutely, from: Date())
+            unavailable = points.isEmpty
             isLoading = false
             return
         }
@@ -104,7 +110,7 @@ struct PrecipitationTimelineView: View {
                 source: .pirateWeather,
                 pirateWeatherKey: KeychainStore.read(.pirateWeather)
             )
-            points = report.minutely ?? []
+            points = PrecipitationTimelineText.points(report.minutely ?? [], from: Date())
             unavailable = points.isEmpty
         } catch {
             points = []

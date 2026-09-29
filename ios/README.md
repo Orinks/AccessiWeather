@@ -89,8 +89,13 @@ noaa_radio_stations.json`. If WeatherIndex is unreachable and there is no cache,
 still falls back to `broadcastify.cdnstream1.com/noaa/<call sign>`. The Radio screen opens from the
 Weather tab toolbar or the "NOAA Weather Radio" row and lists the eight stations nearest the
 selected location with call sign, frequency and distance. With "Tune NOAA Weather Radio for new
-warnings" enabled in Settings > Alerts, a newly detected severe or extreme warning tunes the
-nearest available station when a previous report exists and the radio is not already playing.
+warnings" enabled in Settings > Alerts, a newly detected severe or extreme NWS warning with SAME
+county and event codes tunes the nearest of up to ten stations whose served counties cover that
+alert. Station coverage comes from `https://api.wxindex.org/v1/stations/<call sign>` and is cached
+per call sign for 30 minutes; missing metadata or a station with no matching county skips auto-tune.
+The "Stop weather radio after" setting bounds auto-tuned playback from 1 to 60 minutes (5 by
+default), and turning auto-tune off stops playback it still owns. Manually starting or stopping
+the radio hands playback control back to you.
 The Event Center keeps alert and forecaster-discussion event history in Application Support,
 newest first, up to 200 entries. Tapping a station streams it with
 `AVPlayer` (playback category, `audio` background mode, so it keeps playing when the screen
