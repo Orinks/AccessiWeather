@@ -86,6 +86,18 @@ struct DailyPeriod: Identifiable, Equatable {
     var precipitationChance: Int?
 }
 
+struct MinutelyPoint: Identifiable, Equatable {
+    var id: Date { time }
+    var time: Date
+    var precipitationIntensity: Double?
+    var precipitationProbability: Double?
+    var precipitationType: String?
+
+    var isWet: Bool {
+        (precipitationIntensity ?? 0) > 0 || (precipitationProbability ?? 0) > 0
+    }
+}
+
 struct WeatherAlert: Identifiable, Equatable, Hashable {
     var id: String
     var event: String
@@ -111,6 +123,7 @@ struct WeatherReport: Equatable {
     var timeZone: TimeZone
     var fetchedAt: Date
     var forecastOfficeID: String?
+    var minutely: [MinutelyPoint]? = nil
 }
 
 enum WeatherError: LocalizedError {

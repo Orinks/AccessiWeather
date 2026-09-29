@@ -71,7 +71,12 @@ final class AppModel: ObservableObject {
         errorMessage = nil
         defer { isLoading = false }
         do {
-            let fresh = try await weatherService.report(for: location, source: settings.weatherSource, forceRefresh: force)
+            let fresh = try await weatherService.report(
+                for: location,
+                source: settings.weatherSource,
+                forceRefresh: force,
+                pirateWeatherKey: KeychainStore.read(.pirateWeather)
+            )
             let newAlertIDs = Set(fresh.alerts.map(\.id)).subtracting(seenAlertIDs)
             seenAlertIDs.formUnion(newAlertIDs)
             let hadReport = report != nil

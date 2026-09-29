@@ -125,6 +125,14 @@ struct WeatherView: View {
                 }
                 .accessibilityHint("Opens the National Weather Service Area Forecast Discussion")
             }
+            if !KeychainStore.read(.pirateWeather).isEmpty {
+                NavigationLink {
+                    PrecipitationTimelineView()
+                } label: {
+                    Label("Precipitation Timeline", systemImage: "cloud.rain")
+                }
+                .accessibilityHint("Shows minute-by-minute precipitation guidance")
+            }
             NavigationLink {
                 RadioView(radio: model.radio, directory: model.radioStations)
             } label: {

@@ -7,6 +7,7 @@ actor WeatherService {
 
     private let nws: NWSClient
     private let openMeteo: OpenMeteoClient
+    private let pirateWeather: PirateWeatherClient
 
     private struct CacheEntry {
         var report: WeatherReport
@@ -16,9 +17,14 @@ actor WeatherService {
     private var reportCache: [String: CacheEntry] = [:]
     private var discussionCache: [String: (text: String, storedAt: Date)] = [:]
 
-    init(nws: NWSClient = NWSClient(), openMeteo: OpenMeteoClient = OpenMeteoClient()) {
+    init(
+        nws: NWSClient = NWSClient(),
+        openMeteo: OpenMeteoClient = OpenMeteoClient(),
+        pirateWeather: PirateWeatherClient = PirateWeatherClient()
+    ) {
         self.nws = nws
         self.openMeteo = openMeteo
+        self.pirateWeather = pirateWeather
     }
 
     private func cacheKey(_ location: SavedLocation, source: WeatherSource) -> String {
@@ -31,7 +37,12 @@ actor WeatherService {
         }
     }
 
-    func report(for location: SavedLocation, source: WeatherSource, forceRefresh: Bool = false) async throws -> WeatherReport {
+    func report(
+        for location: SavedLocation,
+        source: WeatherSource,
+        forceRefresh: Bool = false,
+        pirateWeatherKey: String = ""
+    ) async throws -> WeatherReport {
         let key = cacheKey(location, source: source)
         if !forceRefresh, let entry = reportCache[key], Date().timeIntervalSince(entry.storedAt) < WeatherService.cacheLifetime {
             return entry.report
@@ -49,13 +60,23 @@ actor WeatherService {
         case .openMeteo:
             resolved = .openMeteo
         case .pirateWeather:
-            throw WeatherError.unsupported("Pirate Weather is not available in this version of the iOS app yet. Choose Automatic, National Weather Service, or Open-Meteo in Settings.")
+            guard !pirateWeatherKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw WeatherError.unsupported("Add a Pirate Weather API key in Settings to use Pirate Weather.")
+            }
+            resolved = .pirateWeather
         }
 
         var report: WeatherReport
         switch resolved {
         case .nws:
             report = try await fetchNWS(location: location)
+        case .pirateWeather:
+            let response = try await pirateWeather.forecast(
+                latitude: location.latitude,
+                longitude: location.longitude,
+                key: pirateWeatherKey
+            )
+            report = PirateWeatherClient.report(from: response, location: location)
         default:
             report = try await fetchOpenMeteo(location: location)
         }
@@ -66,7 +87,8 @@ actor WeatherService {
                 WeatherService.applyOpenMeteoExtras(extras, to: &report)
             }
         }
-        if let aq = try? await openMeteo.airQuality(latitude: location.latitude, longitude: location.longitude),
+        if resolved != .pirateWeather,
+           let aq = try? await openMeteo.airQuality(latitude: location.latitude, longitude: location.longitude),
            let current = aq.current, let aqi = current.us_aqi {
             report.current.airQuality = AirQuality(aqi: aqi, dominantPollutant: OpenMeteoClient.dominantPollutant(current))
         }
