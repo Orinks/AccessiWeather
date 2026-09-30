@@ -1,0 +1,669 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		222B0278B1FE2AC7688CDE2F /* NWSClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40BAE1D24DE1D07829758ADB /* NWSClient.swift */; };
+		23D38E31A8A37AC12AF07120 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC92A323527201EBFBECBE87 /* ContentView.swift */; };
+		29560D01E87981F827E54075 /* WeatherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0E52ED867F6D8ADC33B44C /* WeatherView.swift */; };
+		29C7EDA978B6482D0346BF03 /* WeatherModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF7DBFB874C4A60A503135A /* WeatherModels.swift */; };
+		2C6FF80DA2F48E59CA63FF66 /* SoundPacks in Resources */ = {isa = PBXBuildFile; fileRef = 5EFDA068BCDBAA00C3BFCC03 /* SoundPacks */; };
+		3AF94EC2AA6EE32B9941BFD7 /* GeocodingClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39AC64E51F119B2D5161506 /* GeocodingClient.swift */; };
+		408EAE16A4E316DA3EFF61B2 /* WeatherFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31FFA52604C3336368C506A9 /* WeatherFormatter.swift */; };
+		4AFC10D7EC28E7D63C207364 /* AccessibilityAuditTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04660824EE13265A2361774A /* AccessibilityAuditTests.swift */; };
+		5404B393B0F557BCA921DCC3 /* RadioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F59557B3DEECAAD3F949B1C1 /* RadioPlayer.swift */; };
+		58DE942DB663DF4482CC21E6 /* AddLocationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41CD548CD1A9C150BD6E3C3C /* AddLocationView.swift */; };
+		591F716D22A6C0DAAB1AB9E5 /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAD1D3FBAF4C10FA8A48D93B /* HTTPClient.swift */; };
+		74E266D4F22B9BC0D336ADD8 /* RadioStation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E73DA258E106B22101E681E2 /* RadioStation.swift */; };
+		77FBF005A073E09017271B6A /* WeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCF5C264FEBBE7E646BCA596 /* WeatherService.swift */; };
+		7AAEF732D40677A98295E89F /* SoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 597D393ECBA0BE80D01F8515 /* SoundManager.swift */; };
+		7BA79F3F3C7667BD9785640B /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D29787C66A3B3F9FAA38CC /* SettingsStore.swift */; };
+		95FF86FB517991C2918A427D /* AlertsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2662C743328DA0610DD9057D /* AlertsView.swift */; };
+		9A14419705A7658D822CBEA8 /* SoundEventsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56077A9395A2C06C1C278D9B /* SoundEventsView.swift */; };
+		A3A238E5C39E8DE315829870 /* LocationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F05642757BEA77C4EBF3611 /* LocationStore.swift */; };
+		A5944A1BDCFCE4CBF1404BFC /* ForecasterNotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FADAD4D87F192EB27276BC2B /* ForecasterNotesView.swift */; };
+		AB52F8114AFBADE4F8D9C4DB /* SoundPack.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEC40E5B1F2D5D61C205DE5A /* SoundPack.swift */; };
+		ADA329501DF651B8BAB48949 /* noaa_radio_stations.json in Resources */ = {isa = PBXBuildFile; fileRef = E5F806E4D379D896928C81E9 /* noaa_radio_stations.json */; };
+		ADD15F70C4ADFCFE01D9A76F /* AccessiWeatherApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1168368B7ED01825573BAF87 /* AccessiWeatherApp.swift */; };
+		B064C32DC463F2FFD5D886D4 /* OpenMeteoClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B995A72838023DA7FCE61B /* OpenMeteoClient.swift */; };
+		B0F97CA4333EB0418686F81C /* LocationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE652BCF2C70FFAD2FA7AFFF /* LocationsView.swift */; };
+		C5A3016174F0EC127FB374BA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B903DF096C04E8E4D82417D2 /* Assets.xcassets */; };
+		D4212F100FD014AB9EAC4C17 /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9151A3F728621A99AEC44597 /* EmptyStateView.swift */; };
+		D6643431DF6EEDE05693128F /* SavedLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24D76D65A2E556F18207BDE /* SavedLocation.swift */; };
+		D71C60F605A756DCAAE5008E /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23758312FA0ECCA217CDD140 /* AppModel.swift */; };
+		DBABA4A6440828F4F1597228 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE1AFFB80923871CD62B2C94 /* KeychainStore.swift */; };
+		DC8EDAFD37192C8FBA11F085 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E82C5008F4EB544AED124F5E /* SettingsView.swift */; };
+		EE548E752443C4D702A0BFD1 /* RadioView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A67E4B3B1FFE0829C3645B0F /* RadioView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		5774BCD32C749966C321D614 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 057E43626E1F5258EC7FAA4E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DE8FDDBA604DCF66366C4870;
+			remoteInfo = AccessiWeather;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		04660824EE13265A2361774A /* AccessibilityAuditTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityAuditTests.swift; sourceTree = "<group>"; };
+		1168368B7ED01825573BAF87 /* AccessiWeatherApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessiWeatherApp.swift; sourceTree = "<group>"; };
+		1FF7DBFB874C4A60A503135A /* WeatherModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherModels.swift; sourceTree = "<group>"; };
+		23758312FA0ECCA217CDD140 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		2662C743328DA0610DD9057D /* AlertsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertsView.swift; sourceTree = "<group>"; };
+		31FFA52604C3336368C506A9 /* WeatherFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherFormatter.swift; sourceTree = "<group>"; };
+		40BAE1D24DE1D07829758ADB /* NWSClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NWSClient.swift; sourceTree = "<group>"; };
+		41CD548CD1A9C150BD6E3C3C /* AddLocationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddLocationView.swift; sourceTree = "<group>"; };
+		56077A9395A2C06C1C278D9B /* SoundEventsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundEventsView.swift; sourceTree = "<group>"; };
+		597D393ECBA0BE80D01F8515 /* SoundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundManager.swift; sourceTree = "<group>"; };
+		5EFDA068BCDBAA00C3BFCC03 /* SoundPacks */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SoundPacks; path = AccessiWeather/Resources/SoundPacks; sourceTree = SOURCE_ROOT; };
+		5F70CB60315A88138AC4181A /* AccessiWeather.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AccessiWeather.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6F05642757BEA77C4EBF3611 /* LocationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationStore.swift; sourceTree = "<group>"; };
+		88B995A72838023DA7FCE61B /* OpenMeteoClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMeteoClient.swift; sourceTree = "<group>"; };
+		8EE44AD03EB21F60BEFA4B13 /* AccessiWeatherUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AccessiWeatherUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9151A3F728621A99AEC44597 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
+		98D29787C66A3B3F9FAA38CC /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
+		A67E4B3B1FFE0829C3645B0F /* RadioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadioView.swift; sourceTree = "<group>"; };
+		AE1AFFB80923871CD62B2C94 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
+		AEC40E5B1F2D5D61C205DE5A /* SoundPack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundPack.swift; sourceTree = "<group>"; };
+		B903DF096C04E8E4D82417D2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		BAD1D3FBAF4C10FA8A48D93B /* HTTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPClient.swift; sourceTree = "<group>"; };
+		BC92A323527201EBFBECBE87 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		BE652BCF2C70FFAD2FA7AFFF /* LocationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationsView.swift; sourceTree = "<group>"; };
+		C24D76D65A2E556F18207BDE /* SavedLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedLocation.swift; sourceTree = "<group>"; };
+		CC0E52ED867F6D8ADC33B44C /* WeatherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherView.swift; sourceTree = "<group>"; };
+		CCF5C264FEBBE7E646BCA596 /* WeatherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherService.swift; sourceTree = "<group>"; };
+		CD0512FF0138155CD0D377A8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		D39AC64E51F119B2D5161506 /* GeocodingClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeocodingClient.swift; sourceTree = "<group>"; };
+		E5F806E4D379D896928C81E9 /* noaa_radio_stations.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = noaa_radio_stations.json; sourceTree = "<group>"; };
+		E73DA258E106B22101E681E2 /* RadioStation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadioStation.swift; sourceTree = "<group>"; };
+		E82C5008F4EB544AED124F5E /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		F59557B3DEECAAD3F949B1C1 /* RadioPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadioPlayer.swift; sourceTree = "<group>"; };
+		FADAD4D87F192EB27276BC2B /* ForecasterNotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecasterNotesView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		05373F15E5ADFA5798F10600 /* Radio */ = {
+			isa = PBXGroup;
+			children = (
+				A67E4B3B1FFE0829C3645B0F /* RadioView.swift */,
+			);
+			path = Radio;
+			sourceTree = "<group>";
+		};
+		0A6DF04C125C113994A28289 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				1168368B7ED01825573BAF87 /* AccessiWeatherApp.swift */,
+				23758312FA0ECCA217CDD140 /* AppModel.swift */,
+				BC92A323527201EBFBECBE87 /* ContentView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		3B3CF26E65228362D45442B3 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				CD6DB002540F3CC4D23F4A73 /* Alerts */,
+				4786A32FF1E456712A256343 /* Locations */,
+				05373F15E5ADFA5798F10600 /* Radio */,
+				65326C7B867CC29910A4C92B /* Settings */,
+				E57E9CCC69D6AFE366D9BA10 /* Shared */,
+				5BB46E6121CA6282CB0BF6CB /* Weather */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		4786A32FF1E456712A256343 /* Locations */ = {
+			isa = PBXGroup;
+			children = (
+				41CD548CD1A9C150BD6E3C3C /* AddLocationView.swift */,
+				BE652BCF2C70FFAD2FA7AFFF /* LocationsView.swift */,
+			);
+			path = Locations;
+			sourceTree = "<group>";
+		};
+		5BB46E6121CA6282CB0BF6CB /* Weather */ = {
+			isa = PBXGroup;
+			children = (
+				FADAD4D87F192EB27276BC2B /* ForecasterNotesView.swift */,
+				CC0E52ED867F6D8ADC33B44C /* WeatherView.swift */,
+			);
+			path = Weather;
+			sourceTree = "<group>";
+		};
+		5CC9235737A5C633577C8842 /* Storage */ = {
+			isa = PBXGroup;
+			children = (
+				AE1AFFB80923871CD62B2C94 /* KeychainStore.swift */,
+				6F05642757BEA77C4EBF3611 /* LocationStore.swift */,
+				98D29787C66A3B3F9FAA38CC /* SettingsStore.swift */,
+			);
+			path = Storage;
+			sourceTree = "<group>";
+		};
+		5F671E4B82F8783CA7467B09 /* AccessiWeatherUITests */ = {
+			isa = PBXGroup;
+			children = (
+				04660824EE13265A2361774A /* AccessibilityAuditTests.swift */,
+			);
+			path = AccessiWeatherUITests;
+			sourceTree = "<group>";
+		};
+		65326C7B867CC29910A4C92B /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				E82C5008F4EB544AED124F5E /* SettingsView.swift */,
+				56077A9395A2C06C1C278D9B /* SoundEventsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		76E37F4FDD8D99DA129F3BA1 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				E5F806E4D379D896928C81E9 /* noaa_radio_stations.json */,
+				5EFDA068BCDBAA00C3BFCC03 /* SoundPacks */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		89C00E26166179ACBFB28BD1 /* AccessiWeather */ = {
+			isa = PBXGroup;
+			children = (
+				B903DF096C04E8E4D82417D2 /* Assets.xcassets */,
+				CD0512FF0138155CD0D377A8 /* Info.plist */,
+				0A6DF04C125C113994A28289 /* App */,
+				F5375DC1D9487E0BEBFA4E60 /* Audio */,
+				C4DDD7AD7529BBB6235E3448 /* Formatting */,
+				B9390EF7FCEB5DAD8D5ACAD3 /* Models */,
+				AFCCCBAC020FE37E159E1EA0 /* Networking */,
+				965CFE7369490EC704D87FC8 /* Radio */,
+				76E37F4FDD8D99DA129F3BA1 /* Resources */,
+				5CC9235737A5C633577C8842 /* Storage */,
+				3B3CF26E65228362D45442B3 /* Views */,
+			);
+			path = AccessiWeather;
+			sourceTree = "<group>";
+		};
+		965CFE7369490EC704D87FC8 /* Radio */ = {
+			isa = PBXGroup;
+			children = (
+				F59557B3DEECAAD3F949B1C1 /* RadioPlayer.swift */,
+				E73DA258E106B22101E681E2 /* RadioStation.swift */,
+			);
+			path = Radio;
+			sourceTree = "<group>";
+		};
+		AE10D2E268701AB32E30070D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				5F70CB60315A88138AC4181A /* AccessiWeather.app */,
+				8EE44AD03EB21F60BEFA4B13 /* AccessiWeatherUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AFCCCBAC020FE37E159E1EA0 /* Networking */ = {
+			isa = PBXGroup;
+			children = (
+				D39AC64E51F119B2D5161506 /* GeocodingClient.swift */,
+				BAD1D3FBAF4C10FA8A48D93B /* HTTPClient.swift */,
+				40BAE1D24DE1D07829758ADB /* NWSClient.swift */,
+				88B995A72838023DA7FCE61B /* OpenMeteoClient.swift */,
+				CCF5C264FEBBE7E646BCA596 /* WeatherService.swift */,
+			);
+			path = Networking;
+			sourceTree = "<group>";
+		};
+		B9390EF7FCEB5DAD8D5ACAD3 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				C24D76D65A2E556F18207BDE /* SavedLocation.swift */,
+				1FF7DBFB874C4A60A503135A /* WeatherModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		C2DCAFD2B131118A1051DF4D = {
+			isa = PBXGroup;
+			children = (
+				89C00E26166179ACBFB28BD1 /* AccessiWeather */,
+				5F671E4B82F8783CA7467B09 /* AccessiWeatherUITests */,
+				AE10D2E268701AB32E30070D /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		C4DDD7AD7529BBB6235E3448 /* Formatting */ = {
+			isa = PBXGroup;
+			children = (
+				31FFA52604C3336368C506A9 /* WeatherFormatter.swift */,
+			);
+			path = Formatting;
+			sourceTree = "<group>";
+		};
+		CD6DB002540F3CC4D23F4A73 /* Alerts */ = {
+			isa = PBXGroup;
+			children = (
+				2662C743328DA0610DD9057D /* AlertsView.swift */,
+			);
+			path = Alerts;
+			sourceTree = "<group>";
+		};
+		E57E9CCC69D6AFE366D9BA10 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				9151A3F728621A99AEC44597 /* EmptyStateView.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		F5375DC1D9487E0BEBFA4E60 /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				597D393ECBA0BE80D01F8515 /* SoundManager.swift */,
+				AEC40E5B1F2D5D61C205DE5A /* SoundPack.swift */,
+			);
+			path = Audio;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		DE8FDDBA604DCF66366C4870 /* AccessiWeather */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 69A3BD778CCE12BC5A16C61C /* Build configuration list for PBXNativeTarget "AccessiWeather" */;
+			buildPhases = (
+				1EA6D7742AA4620018FE46F1 /* Sources */,
+				619CB6E2E2FBB4A094B484C8 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AccessiWeather;
+			packageProductDependencies = (
+			);
+			productName = AccessiWeather;
+			productReference = 5F70CB60315A88138AC4181A /* AccessiWeather.app */;
+			productType = "com.apple.product-type.application";
+		};
+		F8655C81A1431C7AEE661BEA /* AccessiWeatherUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7EB7CB4878030E93C2EAD41A /* Build configuration list for PBXNativeTarget "AccessiWeatherUITests" */;
+			buildPhases = (
+				1D839EE5CBE83160A2BA1EBB /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				615D775585717F355F8185AC /* PBXTargetDependency */,
+			);
+			name = AccessiWeatherUITests;
+			packageProductDependencies = (
+			);
+			productName = AccessiWeatherUITests;
+			productReference = 8EE44AD03EB21F60BEFA4B13 /* AccessiWeatherUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		057E43626E1F5258EC7FAA4E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					DE8FDDBA604DCF66366C4870 = {
+						ProvisioningStyle = Automatic;
+					};
+					F8655C81A1431C7AEE661BEA = {
+						ProvisioningStyle = Automatic;
+						TestTargetID = DE8FDDBA604DCF66366C4870;
+					};
+				};
+			};
+			buildConfigurationList = D85217EFABAA0D466E7E8FF8 /* Build configuration list for PBXProject "AccessiWeather" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = C2DCAFD2B131118A1051DF4D;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = AE10D2E268701AB32E30070D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				DE8FDDBA604DCF66366C4870 /* AccessiWeather */,
+				F8655C81A1431C7AEE661BEA /* AccessiWeatherUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		619CB6E2E2FBB4A094B484C8 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C5A3016174F0EC127FB374BA /* Assets.xcassets in Resources */,
+				2C6FF80DA2F48E59CA63FF66 /* SoundPacks in Resources */,
+				ADA329501DF651B8BAB48949 /* noaa_radio_stations.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1D839EE5CBE83160A2BA1EBB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4AFC10D7EC28E7D63C207364 /* AccessibilityAuditTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1EA6D7742AA4620018FE46F1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ADD15F70C4ADFCFE01D9A76F /* AccessiWeatherApp.swift in Sources */,
+				58DE942DB663DF4482CC21E6 /* AddLocationView.swift in Sources */,
+				95FF86FB517991C2918A427D /* AlertsView.swift in Sources */,
+				D71C60F605A756DCAAE5008E /* AppModel.swift in Sources */,
+				23D38E31A8A37AC12AF07120 /* ContentView.swift in Sources */,
+				D4212F100FD014AB9EAC4C17 /* EmptyStateView.swift in Sources */,
+				A5944A1BDCFCE4CBF1404BFC /* ForecasterNotesView.swift in Sources */,
+				3AF94EC2AA6EE32B9941BFD7 /* GeocodingClient.swift in Sources */,
+				591F716D22A6C0DAAB1AB9E5 /* HTTPClient.swift in Sources */,
+				DBABA4A6440828F4F1597228 /* KeychainStore.swift in Sources */,
+				A3A238E5C39E8DE315829870 /* LocationStore.swift in Sources */,
+				B0F97CA4333EB0418686F81C /* LocationsView.swift in Sources */,
+				222B0278B1FE2AC7688CDE2F /* NWSClient.swift in Sources */,
+				B064C32DC463F2FFD5D886D4 /* OpenMeteoClient.swift in Sources */,
+				5404B393B0F557BCA921DCC3 /* RadioPlayer.swift in Sources */,
+				74E266D4F22B9BC0D336ADD8 /* RadioStation.swift in Sources */,
+				EE548E752443C4D702A0BFD1 /* RadioView.swift in Sources */,
+				D6643431DF6EEDE05693128F /* SavedLocation.swift in Sources */,
+				7BA79F3F3C7667BD9785640B /* SettingsStore.swift in Sources */,
+				DC8EDAFD37192C8FBA11F085 /* SettingsView.swift in Sources */,
+				9A14419705A7658D822CBEA8 /* SoundEventsView.swift in Sources */,
+				7AAEF732D40677A98295E89F /* SoundManager.swift in Sources */,
+				AB52F8114AFBADE4F8D9C4DB /* SoundPack.swift in Sources */,
+				408EAE16A4E316DA3EFF61B2 /* WeatherFormatter.swift in Sources */,
+				29C7EDA978B6482D0346BF03 /* WeatherModels.swift in Sources */,
+				77FBF005A073E09017271B6A /* WeatherService.swift in Sources */,
+				29560D01E87981F827E54075 /* WeatherView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		615D775585717F355F8185AC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DE8FDDBA604DCF66366C4870 /* AccessiWeather */;
+			targetProxy = 5774BCD32C749966C321D614 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		2A9200213ECDBB199A6A8B97 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		48959E872BF91F720C8700C2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AccessiWeather/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = AccessiWeather;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "AccessiWeather uses your location to find weather for where you are when you choose Use Current Location.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = net.orinks.AccessiWeather;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		6A7922B0CD6997AC9363088E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = net.orinks.AccessiWeatherUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = AccessiWeather;
+			};
+			name = Release;
+		};
+		9B6B4AD420D0BE2463790CDD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = net.orinks.AccessiWeatherUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = AccessiWeather;
+			};
+			name = Debug;
+		};
+		C913AD1F504793799BC55514 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		F6AE8691D7CD3F729C5BC5D4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AccessiWeather/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = AccessiWeather;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "AccessiWeather uses your location to find weather for where you are when you choose Use Current Location.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = net.orinks.AccessiWeather;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		69A3BD778CCE12BC5A16C61C /* Build configuration list for PBXNativeTarget "AccessiWeather" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				48959E872BF91F720C8700C2 /* Debug */,
+				F6AE8691D7CD3F729C5BC5D4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		7EB7CB4878030E93C2EAD41A /* Build configuration list for PBXNativeTarget "AccessiWeatherUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9B6B4AD420D0BE2463790CDD /* Debug */,
+				6A7922B0CD6997AC9363088E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D85217EFABAA0D466E7E8FF8 /* Build configuration list for PBXProject "AccessiWeather" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C913AD1F504793799BC55514 /* Debug */,
+				2A9200213ECDBB199A6A8B97 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 057E43626E1F5258EC7FAA4E /* Project object */;
+}
