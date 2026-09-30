@@ -88,6 +88,18 @@ Use the location selector near the top of the main window to switch between save
 
 When you switch locations, AccessiWeather may show cached weather first and then refresh in the background.
 
+### Reorder saved locations
+
+With at least two saved locations, you can choose a custom order:
+
+1. Open Location > Reorder Locations…. On Windows, press Alt+L to open the Location menu, use the arrow keys to select Reorder Locations…, and press Enter.
+2. In the Saved locations order list, use Up Arrow or Down Arrow to select the city you want to move. These keys select a city; they do not change its position.
+3. Press Tab or Shift+Tab to reach Move Up or Move Down, then press Space to move the city one position. A screen reader may announce these buttons as “Move selected saved location up” and “Move selected saved location down.”
+4. Focus returns to the list with the moved city still selected. Repeat step 3 to move it again, or use the arrow keys to select another city. Move Up is unavailable for the first city, and Move Down is unavailable for the last.
+5. Tab to OK and press Space to save, or choose Cancel to discard the changes.
+
+Saving automatically sets Settings > Display > Saved location order to Manual (custom); you do not need to select Manual first. The custom order is kept when you restart AccessiWeather. Selecting Manual alone uses the stored order; use the reorder dialog to change it.
+
 ### Refresh weather now
 
 To refresh the selected location immediately:
