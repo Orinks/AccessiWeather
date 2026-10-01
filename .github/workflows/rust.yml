@@ -37,7 +37,7 @@ jobs:
       run:
         working-directory: rust
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # The CHANGELOG gate compares against the base branch.
           fetch-depth: ${{ matrix.os == 'ubuntu-latest' && 0 || 1 }}
