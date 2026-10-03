@@ -69,6 +69,19 @@ final class RadioStationDirectory: ObservableObject {
         RadioStationDatabase(stations: availableStations).nearest(latitude: latitude, longitude: longitude, limit: limit)
     }
 
+    func nearestCoveringStation(
+        latitude: Double,
+        longitude: Double,
+        sameCountyCodes: [String]
+    ) async -> (station: RadioStation, matchedCountyCodes: Set<String>)? {
+        let candidates = nearest(latitude: latitude, longitude: longitude, limit: 10).map(\.station)
+        return await WeatherIndexCoverageResolver.firstCoveringStation(
+            candidates: candidates,
+            sameCountyCodes: sameCountyCodes,
+            metadataFor: { callSign in await client.stationMetadata(callSign: callSign) }
+        )
+    }
+
     func station(withCallSign callSign: String) -> RadioStation? {
         database.station(withCallSign: callSign)
     }

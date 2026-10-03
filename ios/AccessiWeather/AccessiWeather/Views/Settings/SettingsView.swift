@@ -9,6 +9,7 @@ struct SettingsView: View {
     @State private var avwxKey = KeychainStore.read(.avwx)
     @State private var openRouterKey = KeychainStore.read(.openRouter)
     @State private var notificationPermissionDenied = false
+    @State private var isShowingSoundEvents = false
 
     private var appVersion: String {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.0"
@@ -24,10 +25,14 @@ struct SettingsView: View {
                 displaySection
                 alertsSection
                 soundsSection
+                aiSection
                 dataSourcesSection
                 aboutSection
             }
             .navigationTitle("Settings")
+            .navigationDestination(isPresented: $isShowingSoundEvents) {
+                SoundEventsView()
+            }
             .onChange(of: settings.weatherSource) { _, _ in
                 Task { await model.refresh(force: true) }
             }
@@ -105,6 +110,13 @@ struct SettingsView: View {
                 Toggle("Minor alerts", isOn: $settings.notifyMinor)
             }
             .disabled(!settings.alertNotificationsEnabled)
+            Toggle("Tune NOAA Weather Radio for new warnings", isOn: $settings.radioAutoTuneEnabled)
+            Stepper(
+                "Stop weather radio after \(settings.radioAutoTuneDurationMinutes) minutes",
+                value: $settings.radioAutoTuneDurationMinutes,
+                in: 1...60
+            )
+            .disabled(!settings.radioAutoTuneEnabled)
         } header: {
             SectionHeader("Alerts")
         } footer: {
@@ -115,16 +127,23 @@ struct SettingsView: View {
     private var soundsSection: some View {
         Section {
             Toggle("Play sounds", isOn: $settings.soundEnabled)
+            Button {
+                isShowingSoundEvents = true
+            } label: {
+                HStack {
+                    Text("Muted events")
+                    Spacer()
+                    Text("\(settings.mutedSoundEvents.count)")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .accessibilityLabel("Muted events")
+            .accessibilityValue("\(settings.mutedSoundEvents.count)")
+            .accessibilityHint("Choose which events play a sound")
+            .disabled(!settings.soundEnabled)
             ForEach(model.sounds.packs) { pack in
                 soundPackRow(pack)
             }
-            NavigationLink {
-                SoundEventsView()
-            } label: {
-                LabeledContent("Muted events", value: "\(settings.mutedSoundEvents.count)")
-            }
-            .accessibilityHint("Choose which events play a sound")
-            .disabled(!settings.soundEnabled)
         } header: {
             SectionHeader("Sounds")
         } footer: {
@@ -181,11 +200,32 @@ struct SettingsView: View {
             apiKeyField("Pirate Weather API key", text: $pirateWeatherKey, key: .pirateWeather)
             apiKeyField("AirNow API key", text: $airNowKey, key: .airNow)
             apiKeyField("AVWX API key", text: $avwxKey, key: .avwx)
-            apiKeyField("OpenRouter API key", text: $openRouterKey, key: .openRouter)
         } header: {
             SectionHeader("Data Sources")
         } footer: {
-            Text("Automatic uses the National Weather Service inside the United States and Open-Meteo elsewhere. API keys are stored in the iOS Keychain. Pirate Weather, AirNow, AVWX, and OpenRouter features are coming in a later version.")
+            Text("Automatic uses the National Weather Service inside the United States and Open-Meteo elsewhere. API keys are stored in the iOS Keychain. AirNow and AVWX integrations are coming in a later version.")
+        }
+    }
+
+    private var aiSection: some View {
+        Section {
+            apiKeyField("OpenRouter API key", text: $openRouterKey, key: .openRouter)
+            LabeledContent("Model") {
+                TextField("openrouter/free", text: $settings.aiModel)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .accessibilityLabel("Model")
+                    .accessibilityHint("OpenRouter model identifier; defaults to openrouter/free")
+            }
+            Picker("Explanation length", selection: $settings.aiExplanationStyle) {
+                ForEach(ExplanationStyle.allCases) { style in
+                    Text(style.rawValue).tag(style)
+                }
+            }
+        } header: {
+            SectionHeader("AI")
+        } footer: {
+            Text("Get a free OpenRouter API key at openrouter.ai/keys.")
         }
     }
 

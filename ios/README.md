@@ -39,17 +39,19 @@ After editing `project.yml`, regenerate with `xcodegen generate` and commit both
 | `App/` | `AccessiWeatherApp` entry point, `ContentView` tab bar, `AppModel` (selected location, current report, refresh, notifications) |
 | `Models/` | `SavedLocation`, `WeatherReport`, `CurrentConditions`, `HourlyPeriod`, `DailyPeriod`, `WeatherAlert`, `AirQuality` |
 | `Networking/` | `HTTPClient` (User-Agent `AccessiWeather-iOS (github.com/Orinks/AccessiWeather)`), `NWSClient`, `OpenMeteoClient`, `GeocodingClient` (Nominatim), `WeatherService` (source selection + 5-minute cache) |
-| `Storage/` | `SettingsStore` (UserDefaults), `LocationStore` (JSON in Application Support), `KeychainStore` (API keys) |
+| `Storage/` | `SettingsStore` (UserDefaults), `LocationStore` and `EventLog` (JSON in Application Support), `KeychainStore` (API keys) |
 | `Formatting/` | `WeatherFormatter`: compact visible strings plus spoken strings with expanded units |
 | `Audio/` | `SoundPack` (reads the desktop `pack.json` format), `SoundManager` (AVAudioPlayer cues, notification sound install) |
 | `Radio/` | `WeatherIndexClient` (`api.wxindex.org/v1/stations/all`), `RadioStationDirectory` (live list with disk cache and bundled fallback), `RadioStation` + `RadioStationDatabase` (nearest-station search), `RadioPlayer` (AVPlayer streaming, lock screen, interruptions) |
 | `Resources/` | `SoundPacks/<pack>/pack.json` plus clips (folder reference), `noaa_radio_stations.json` |
-| `Views/` | Weather, Alerts, Locations (+ Add Location sheet), Settings (+ Sound Events), Radio, shared views |
+| `Views/` | Weather (history, UV, air quality, precipitation and aviation details, Event Center, Forecaster Notes), Alerts, Locations (+ Add Location sheet), Settings (+ Sound Events), Radio, shared views |
 | `../AccessiWeatherUITests/` | XCUITest accessibility audit |
 
 Data sources: NWS (`api.weather.gov`) for US coordinates, Open-Meteo elsewhere, with
-Open-Meteo filling in UV, sunrise/sunset and air quality for US locations. Pirate
-Weather can be selected and its key stored, but fetching from it is not implemented yet.
+Open-Meteo filling in UV, sunrise/sunset, historical weather and air quality for US
+locations. Pirate Weather is available as a keyed forecast source with a precipitation
+timeline. OpenRouter can explain forecasts and NWS text products when a key is saved.
+The Aviation Weather API provides airport METAR and TAF reports.
 
 ## Sound packs
 
@@ -85,13 +87,21 @@ noaa_radio_stations.json`. If WeatherIndex is unreachable and there is no cache,
 `Resources/noaa_radio_stations.json` snapshot is used and the footer says so. Every station
 still falls back to `broadcastify.cdnstream1.com/noaa/<call sign>`. The Radio screen opens from the
 Weather tab toolbar or the "NOAA Weather Radio" row and lists the eight stations nearest the
-selected location with call sign, frequency and distance. Tapping a station streams it with
+selected location with call sign, frequency and distance. With "Tune NOAA Weather Radio for new
+warnings" enabled in Settings > Alerts, a newly detected severe or extreme NWS warning with SAME
+county and event codes tunes the nearest of up to ten stations whose served counties cover that
+alert. Station coverage comes from `https://api.wxindex.org/v1/stations/<call sign>` and is cached
+per call sign for 30 minutes; missing metadata or a station with no matching county skips auto-tune.
+The "Stop weather radio after" setting bounds auto-tuned playback from 1 to 60 minutes (5 by
+default), and turning auto-tune off stops playback it still owns. Manually starting or stopping
+the radio hands playback control back to you.
+The Event Center keeps alert and forecaster-discussion event history in Application Support,
+newest first, up to 200 entries. Tapping a station streams it with
 `AVPlayer` (playback category, `audio` background mode, so it keeps playing when the screen
 locks) and tries each stream URL in turn before reporting "Stream unavailable". Lock Screen
 and headphone controls work through `MPRemoteCommandCenter`; `MPNowPlayingInfoCenter` shows
 the station name. Interruptions pause and resume, and unplugging headphones stops playback.
-Play, stop, resume and error states are announced to VoiceOver. The desktop auto-tune-on-alert
-feature is not ported. Known gap: in the iOS Simulator the KIH28 relays reached "Stream
+Play, stop, resume and error states are announced to VoiceOver. Known gap: in the iOS Simulator the KIH28 relays reached "Stream
 unavailable" even though `curl` returned `200 audio/mpeg` (the WeatherUSA relay fails the TLS
 handshake with `NSURLErrorDomain -1200`); playback on a physical device has not been verified.
 
@@ -109,13 +119,11 @@ handshake with `NSURLErrorDomain -1200`); playback on a physical device has not 
 | GitHub backend / pack submission | Dropped. |
 | Debug menu | Dropped. Use Xcode and Console.app. |
 | Single-instance logic | Dropped. iOS runs one instance. |
-| NOAA Weather Radio auto-tune on alert | Not ported; streaming itself is available from the Weather tab. |
-| Weather Assistant chat and AI Explain Conditions | Explain Conditions shows only when an OpenRouter key is saved and is a placeholder; chat is future work. |
-| Aviation weather, Weather History, Precipitation Timeline, Event Center | Not in the first version. |
+| Weather Assistant chat | Future work; forecast and NWS text-product explanations are available when an OpenRouter key is saved. |
 
 ## Known gaps
 
-- Pirate Weather fetching, AirNow and AVWX are not wired up; keys can be stored in the Keychain.
+- AirNow and AVWX are not wired up.
 - Alert notifications are scheduled locally when a refresh finds new alerts; there is no background refresh yet.
 - No widgets or Live Activities yet.
 - Radio streams come from volunteer relays and some stations are offline; the app tries every known URL before giving up.
