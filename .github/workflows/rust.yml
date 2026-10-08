@@ -40,7 +40,7 @@ jobs:
       run:
         working-directory: rust
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # The CHANGELOG gate compares against the base branch. Quoted: a bare 0
           # is falsy in expressions, so `&& 0 || 1` always picked 1.
