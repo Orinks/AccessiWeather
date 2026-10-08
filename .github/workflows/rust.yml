@@ -42,8 +42,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # The CHANGELOG gate compares against the base branch.
-          fetch-depth: ${{ matrix.os == 'ubuntu-latest' && 0 || 1 }}
+          # The CHANGELOG gate compares against the base branch. Quoted: a bare 0
+          # is falsy in expressions, so `&& 0 || 1` always picked 1.
+          fetch-depth: ${{ matrix.os == 'ubuntu-latest' && '0' || '1' }}
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
