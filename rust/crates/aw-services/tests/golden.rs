@@ -343,6 +343,12 @@ fn settings_and_locations_export_documents() {
     let mut doc = import_export::settings_export(&config, "now");
     assert_eq!(doc["exported_at"], "now");
     doc.as_object_mut().unwrap().remove("exported_at");
+    // Rust-only settings are not in the Python-generated fixture.
+    let exported = doc["settings"].as_object_mut().unwrap();
+    assert_eq!(
+        exported.remove("alert_notifications_all_locations"),
+        Some(json!(false))
+    );
     assert_json_eq(&doc, &g["settings_export"], "settings export");
     let mut doc = import_export::locations_export(&config, "now");
     doc.as_object_mut().unwrap().remove("exported_at");
