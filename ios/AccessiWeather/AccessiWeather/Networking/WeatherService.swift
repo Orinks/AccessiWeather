@@ -120,6 +120,17 @@ actor WeatherService {
             )
         }
 
+        let airNowKey = KeychainStore.read(.airNow)
+        if location.isInUnitedStates, !airNowKey.isEmpty,
+           let observation = try? await AirNowClient().current(latitude: location.latitude, longitude: location.longitude, key: airNowKey) {
+            var airQuality = report.current.airQuality ?? AirQuality(aqi: observation.aqi)
+            airQuality.aqi = observation.aqi
+            airQuality.dominantPollutant = observation.pollutant
+            airQuality.reportingArea = observation.reportingArea
+            airQuality.source = AirNowClient.source
+            report.current.airQuality = airQuality
+        }
+
         reportCache[key] = CacheEntry(report: report, storedAt: Date())
         return report
     }

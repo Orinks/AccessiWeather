@@ -19,6 +19,7 @@
 		324274536DB5AF7E52A4F898 /* UVIndexDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DEC5A91EB8A0EF035907628 /* UVIndexDetailView.swift */; };
 		3AF94EC2AA6EE32B9941BFD7 /* GeocodingClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39AC64E51F119B2D5161506 /* GeocodingClient.swift */; };
 		408EAE16A4E316DA3EFF61B2 /* WeatherFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31FFA52604C3336368C506A9 /* WeatherFormatter.swift */; };
+		430421759B883C9513FCF5EB /* AirNowClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EF26D2E2231040AE07CFD1B /* AirNowClient.swift */; };
 		4AE1E7E22B0265C852B4E36C /* OpenRouterClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB397FDEDABEAF0EB4320B54 /* OpenRouterClient.swift */; };
 		4AFC10D7EC28E7D63C207364 /* AccessibilityAuditTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04660824EE13265A2361774A /* AccessibilityAuditTests.swift */; };
 		5404B393B0F557BCA921DCC3 /* RadioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F59557B3DEECAAD3F949B1C1 /* RadioPlayer.swift */; };
@@ -27,6 +28,7 @@
 		5A31069D342DC65F253A57FC /* IEMClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91B78119A095D819B10A7965 /* IEMClientTests.swift */; };
 		5BFAF1F4D97719210BFBB0A4 /* MarineForecast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A44DC65794A3C4814560DC2 /* MarineForecast.swift */; };
 		69AF91C7E44E4492676B5582 /* NotificationRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95196A37303B9A87BB851BA4 /* NotificationRouter.swift */; };
+		6A557E18626DA8F988C51FAE /* AirNowClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCB6F23A9338D3BD57222E16 /* AirNowClientTests.swift */; };
 		722CE8EA2C42CC94229E1774 /* PirateWeatherClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30F430B52BDF4602B71DEF2B /* PirateWeatherClient.swift */; };
 		744CBD0449B620631000D0A5 /* NotificationEventChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C7787EE033C34CFDC064A76 /* NotificationEventChecker.swift */; };
 		74E266D4F22B9BC0D336ADD8 /* RadioStation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E73DA258E106B22101E681E2 /* RadioStation.swift */; };
@@ -89,6 +91,7 @@
 		0A573C63DF82A852AFB2503E /* AviationWeather.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AviationWeather.swift; sourceTree = "<group>"; };
 		0B1B9097EF5572BB376B4E1D /* EventLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLog.swift; sourceTree = "<group>"; };
 		0BBD71AC9C09179E87896975 /* RadioStationDirectory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadioStationDirectory.swift; sourceTree = "<group>"; };
+		0EF26D2E2231040AE07CFD1B /* AirNowClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirNowClient.swift; sourceTree = "<group>"; };
 		1168368B7ED01825573BAF87 /* AccessiWeatherApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessiWeatherApp.swift; sourceTree = "<group>"; };
 		142CE5AA151A8060E027D51D /* EventCenterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventCenterView.swift; sourceTree = "<group>"; };
 		1DEC5A91EB8A0EF035907628 /* UVIndexDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UVIndexDetailView.swift; sourceTree = "<group>"; };
@@ -139,6 +142,7 @@
 		CD0512FF0138155CD0D377A8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		D39AC64E51F119B2D5161506 /* GeocodingClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeocodingClient.swift; sourceTree = "<group>"; };
 		D6ADD2A900C3B84666D83875 /* AlertNotificationGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertNotificationGate.swift; sourceTree = "<group>"; };
+		DCB6F23A9338D3BD57222E16 /* AirNowClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirNowClientTests.swift; sourceTree = "<group>"; };
 		E5F806E4D379D896928C81E9 /* noaa_radio_stations.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = noaa_radio_stations.json; sourceTree = "<group>"; };
 		E73DA258E106B22101E681E2 /* RadioStation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadioStation.swift; sourceTree = "<group>"; };
 		E82C5008F4EB544AED124F5E /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -304,6 +308,7 @@
 		AFCCCBAC020FE37E159E1EA0 /* Networking */ = {
 			isa = PBXGroup;
 			children = (
+				0EF26D2E2231040AE07CFD1B /* AirNowClient.swift */,
 				B8ECD154CBAB03C5C28892E9 /* AviationWeatherClient.swift */,
 				ADB03B4912525D27332C4100 /* DataFusion.swift */,
 				D39AC64E51F119B2D5161506 /* GeocodingClient.swift */,
@@ -320,6 +325,7 @@
 		B8EA54C80F244735D1244502 /* AccessiWeatherTests */ = {
 			isa = PBXGroup;
 			children = (
+				DCB6F23A9338D3BD57222E16 /* AirNowClientTests.swift */,
 				1FA0F256BFA9900D2396839A /* AlertNotificationGateTests.swift */,
 				7E4FC8F7CF48A0E225242C5C /* DataFusionTests.swift */,
 				91B78119A095D819B10A7965 /* IEMClientTests.swift */,
@@ -510,6 +516,7 @@
 			files = (
 				ADD15F70C4ADFCFE01D9A76F /* AccessiWeatherApp.swift in Sources */,
 				58DE942DB663DF4482CC21E6 /* AddLocationView.swift in Sources */,
+				430421759B883C9513FCF5EB /* AirNowClient.swift in Sources */,
 				932497DD366E8DC6547FC0E7 /* AlertNotificationGate.swift in Sources */,
 				95FF86FB517991C2918A427D /* AlertsView.swift in Sources */,
 				7D2078965DC9080F4FCE47D9 /* AppModel+Notifications.swift in Sources */,
@@ -564,6 +571,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6A557E18626DA8F988C51FAE /* AirNowClientTests.swift in Sources */,
 				984AA31C2FE402C39B31DEBC /* AlertNotificationGateTests.swift in Sources */,
 				FF5C5DE5179E413CA7DE41ED /* DataFusionTests.swift in Sources */,
 				5A31069D342DC65F253A57FC /* IEMClientTests.swift in Sources */,

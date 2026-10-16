@@ -461,6 +461,12 @@ struct AirQualityDetailView: View {
             Section {
                 MeasurementRow(label: "US AQI", value: "\(airQuality.aqi)")
                 MeasurementRow(label: "Category", value: airQuality.category)
+                if let area = airQuality.reportingArea {
+                    MeasurementRow(label: "Reporting area", value: area)
+                }
+                if let source = airQuality.source {
+                    MeasurementRow(label: "Source", value: source)
+                }
                 if let pollutant = airQuality.dominantPollutant {
                     MeasurementRow(label: "Dominant pollutant", value: pollutant)
                 }

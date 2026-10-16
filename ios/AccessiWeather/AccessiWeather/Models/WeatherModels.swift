@@ -23,6 +23,8 @@ struct AirQuality: Equatable {
     var dominantPollutant: String?
     var pollutantLevels = AirQualityPollutantLevels()
     var hourly: [AirQualityHour] = []
+    var reportingArea: String? = nil
+    var source: String? = nil
 
     var category: String {
         switch aqi {
