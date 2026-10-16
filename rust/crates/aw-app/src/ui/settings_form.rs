@@ -361,6 +361,7 @@ pub(crate) struct SettingsForm {
     pub notify_moderate: bool,
     pub notify_minor: bool,
     pub notify_unknown: bool,
+    pub alerts_all_locations: bool,
     pub notify_discussion_update: bool,
     pub notify_daily_climate_report_update: bool,
     pub notify_hwo_update: bool,
@@ -503,6 +504,7 @@ impl SettingsForm {
         self.notify_moderate = s.alert_notify_moderate;
         self.notify_minor = s.alert_notify_minor;
         self.notify_unknown = s.alert_notify_unknown;
+        self.alerts_all_locations = s.alert_notifications_all_locations;
         self.immediate_alert_details_popups = s.immediate_alert_details_popups;
         self.auto_tune_weather_radio_alerts = s.auto_tune_weather_radio_alerts;
         self.auto_tune_weather_radio_duration_minutes =
@@ -817,6 +819,7 @@ impl SettingsForm {
                 "alert_notify_moderate": self.notify_moderate,
                 "alert_notify_minor": self.notify_minor,
                 "alert_notify_unknown": self.notify_unknown,
+                "alert_notifications_all_locations": self.alerts_all_locations,
                 "immediate_alert_details_popups": self.immediate_alert_details_popups,
                 "auto_tune_weather_radio_alerts": self.auto_tune_weather_radio_alerts,
                 "auto_tune_weather_radio_duration_minutes": self.auto_tune_weather_radio_duration_minutes,

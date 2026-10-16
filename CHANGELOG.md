@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- You can now get alert notifications for all saved locations, not just the selected one, and each names its location. Turn it on in Settings, Alerts tab.
+
 ### Changed
 - AccessiWeather is now rebuilt in Rust as a native app for Windows, macOS and Linux, and updating keeps your saved locations and settings.
 - The OpenRouter model picker drops the retired Llama 3.3 70B option; choose the free router, the paid auto router, or browse models.
