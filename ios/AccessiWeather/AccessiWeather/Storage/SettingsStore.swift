@@ -49,6 +49,7 @@ final class SettingsStore: ObservableObject {
         notifyModerate = defaults.object(forKey: "notifyModerate") as? Bool ?? true
         notifyMinor = defaults.bool(forKey: "notifyMinor")
         notifyUnknown = defaults.bool(forKey: "notifyUnknown")
+        alertsForAllLocations = defaults.object(forKey: "alertsForAllLocations") as? Bool ?? true
         updateIntervalMinutes = defaults.object(forKey: "updateIntervalMinutes") as? Int ?? 10
         notifyDiscussionUpdates = defaults.bool(forKey: "notifyDiscussionUpdates")
         notifyHazardousWeatherOutlook = defaults.bool(forKey: "notifyHazardousWeatherOutlook")
@@ -86,6 +87,8 @@ final class SettingsStore: ObservableObject {
     @Published var notifyModerate: Bool { didSet { defaults.set(notifyModerate, forKey: "notifyModerate") } }
     @Published var notifyMinor: Bool { didSet { defaults.set(notifyMinor, forKey: "notifyMinor") } }
     @Published var notifyUnknown: Bool { didSet { defaults.set(notifyUnknown, forKey: "notifyUnknown") } }
+    /// Alert notifications for every saved location, or only the selected one.
+    @Published var alertsForAllLocations: Bool { didSet { defaults.set(alertsForAllLocations, forKey: "alertsForAllLocations") } }
     @Published var updateIntervalMinutes: Int { didSet { defaults.set(updateIntervalMinutes, forKey: "updateIntervalMinutes") } }
     @Published var notifyDiscussionUpdates: Bool { didSet { defaults.set(notifyDiscussionUpdates, forKey: "notifyDiscussionUpdates") } }
     @Published var notifyHazardousWeatherOutlook: Bool { didSet { defaults.set(notifyHazardousWeatherOutlook, forKey: "notifyHazardousWeatherOutlook") } }

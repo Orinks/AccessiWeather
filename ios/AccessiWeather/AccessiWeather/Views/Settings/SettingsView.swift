@@ -105,6 +105,10 @@ struct SettingsView: View {
                     }
                 }
             Group {
+                Picker("Notify for", selection: $settings.alertsForAllLocations) {
+                    Text("All saved locations").tag(true)
+                    Text("Selected location only").tag(false)
+                }
                 Toggle("Extreme alerts", isOn: $settings.notifyExtreme)
                 Toggle("Severe alerts", isOn: $settings.notifySevere)
                 Toggle("Moderate alerts", isOn: $settings.notifyModerate)
@@ -126,7 +130,7 @@ struct SettingsView: View {
         } header: {
             SectionHeader("Alerts")
         } footer: {
-            Text("Alerts for every saved location are checked on this schedule while AccessiWeather is open. In the background, iOS decides when to check, usually every 15 to 60 minutes; it won't check after you close the app from the app switcher or when Background App Refresh is off. Notifications play the selected sound pack's alert cue when Sounds are on.")
+            Text("Alerts for the locations chosen in Notify for are checked on this schedule while AccessiWeather is open. In the background, iOS decides when to check, usually every 15 to 60 minutes; it won't check after you close the app from the app switcher or when Background App Refresh is off. Notifications play the selected sound pack's alert cue when Sounds are on.")
         }
     }
 

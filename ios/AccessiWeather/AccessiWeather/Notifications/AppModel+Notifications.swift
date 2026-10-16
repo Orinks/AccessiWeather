@@ -74,13 +74,16 @@ extension AppModel {
         return status == .authorized || status == .provisional || status == .ephemeral
     }
 
-    /// Checks alerts for every saved location (reusing the selected location's fresh report) and
+    /// Checks alerts for the selected location, plus every other saved location when
+    /// `alertsForAllLocations` is on (reusing the selected location's fresh report), and
     /// posts notifications for new, updated and escalated alerts. Returns the selected location's
     /// notified alert IDs.
     func checkAlerts(selectedReport: WeatherReport?) async -> Set<String> {
         guard settings.alertNotificationsEnabled, await notificationsAuthorized() else { return [] }
         let service = weatherService
-        let others = locationStore.locations.filter { $0.id != selectedReport?.location.id }
+        let others = settings.alertsForAllLocations
+            ? locationStore.locations.filter { $0.id != selectedReport?.location.id }
+            : []
         var fetched: [UUID: [WeatherAlert]] = [:]
         await withTaskGroup(of: (UUID, [WeatherAlert]?).self) { group in
             for location in others {
