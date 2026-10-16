@@ -3,9 +3,10 @@ import SwiftUI
 struct AlertsView: View {
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var settings: SettingsStore
+    @State private var path: [WeatherAlert] = []
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             Group {
                 if model.selectedLocation == nil {
                     EmptyStateView(
@@ -43,6 +44,17 @@ struct AlertsView: View {
             .navigationTitle("Alerts")
             .refreshable {
                 await model.refresh(force: true)
+            }
+        }
+        .onChange(of: model.alertToOpen, initial: true) { _, request in
+            guard let request else { return }
+            model.alertToOpen = nil
+            if let report = model.report, report.location.id == request.locationID,
+               let alert = report.alerts.first(where: { $0.id == request.alertID }) {
+                path = [alert]
+            } else {
+                path = []
+                AccessibilityNotification.Announcement("That alert is no longer active.").post()
             }
         }
     }

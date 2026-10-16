@@ -24,6 +24,7 @@ struct SettingsView: View {
                 forecastSection
                 displaySection
                 alertsSection
+                eventNotificationsSection
                 soundsSection
                 aiSection
                 dataSourcesSection
@@ -108,8 +109,13 @@ struct SettingsView: View {
                 Toggle("Severe alerts", isOn: $settings.notifySevere)
                 Toggle("Moderate alerts", isOn: $settings.notifyModerate)
                 Toggle("Minor alerts", isOn: $settings.notifyMinor)
+                Toggle("Alerts with unknown severity", isOn: $settings.notifyUnknown)
             }
             .disabled(!settings.alertNotificationsEnabled)
+            Stepper(value: $settings.updateIntervalMinutes, in: 5...120, step: 5) {
+                LabeledContent("Check for updates every", value: "\(settings.updateIntervalMinutes) minutes")
+            }
+            .accessibilityValue("\(settings.updateIntervalMinutes) minutes")
             Toggle("Tune NOAA Weather Radio for new warnings", isOn: $settings.radioAutoTuneEnabled)
             Stepper(
                 "Stop weather radio after \(settings.radioAutoTuneDurationMinutes) minutes",
@@ -120,8 +126,39 @@ struct SettingsView: View {
         } header: {
             SectionHeader("Alerts")
         } footer: {
-            Text("Notifications play the selected sound pack's alert cue when Sounds are on. Alerts are checked whenever weather is refreshed.")
+            Text("Alerts for every saved location are checked on this schedule while AccessiWeather is open. In the background, iOS decides when to check, usually every 15 to 60 minutes; it won't check after you close the app from the app switcher or when Background App Refresh is off. Notifications play the selected sound pack's alert cue when Sounds are on.")
         }
+    }
+
+    private var eventNotificationsSection: some View {
+        Section {
+            Toggle("Area Forecast Discussion updates", isOn: notificationToggle($settings.notifyDiscussionUpdates))
+            Toggle("Hazardous Weather Outlook updates", isOn: notificationToggle($settings.notifyHazardousWeatherOutlook))
+            Toggle("New Special Weather Statements", isOn: notificationToggle($settings.notifySpecialWeatherStatements))
+            Toggle("Precipitation starting soon", isOn: notificationToggle($settings.notifyPrecipitationStart))
+            Toggle("Precipitation stopping soon", isOn: notificationToggle($settings.notifyPrecipitationStop))
+        } header: {
+            SectionHeader("Event Notifications")
+        } footer: {
+            Text("Event notifications are for the selected location. Forecast products come from the National Weather Service for US locations. Precipitation starting or stopping within the next 10 minutes needs a Pirate Weather API key.")
+        }
+    }
+
+    /// A toggle binding that asks for notification permission when switched on.
+    private func notificationToggle(_ binding: Binding<Bool>) -> Binding<Bool> {
+        Binding(
+            get: { binding.wrappedValue },
+            set: { enabled in
+                binding.wrappedValue = enabled
+                guard enabled else { return }
+                Task {
+                    if !(await model.requestNotificationPermission()) {
+                        binding.wrappedValue = false
+                        notificationPermissionDenied = true
+                    }
+                }
+            }
+        )
     }
 
     private var soundsSection: some View {

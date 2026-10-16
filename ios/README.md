@@ -124,6 +124,6 @@ handshake with `NSURLErrorDomain -1200`); playback on a physical device has not 
 ## Known gaps
 
 - AirNow and AVWX are not wired up.
-- Alert notifications are scheduled locally when a refresh finds new alerts; there is no background refresh yet.
+- Alert and event notifications are local, not server push. While the app is open it checks every saved location on the "Check for updates every" interval; in the background it relies on iOS Background App Refresh (`BGAppRefreshTask` `net.orinks.AccessiWeather.refresh`), which iOS schedules at its discretion (usually every 15 to 60 minutes) and never runs after the app is swiped away. Notification history lives in `Application Support/AccessiWeather/notification_state.json` so relaunches don't repeat notifications.
 - No widgets or Live Activities yet.
 - Radio streams come from volunteer relays and some stations are offline; the app tries every known URL before giving up.

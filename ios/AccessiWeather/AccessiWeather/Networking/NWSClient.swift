@@ -214,10 +214,17 @@ struct NWSClient {
     }
 
     func latestProduct(type: String, officeID: String) async throws -> ProductResponse? {
+        guard let latest = try await productList(type: type, officeID: officeID).first else { return nil }
+        return try await product(id: latest.id)
+    }
+
+    func productList(type: String, officeID: String) async throws -> [ProductListItem] {
         let listURL = NWSClient.baseURL.appendingPathComponent("products/types/\(type)/locations/\(officeID)")
-        let list = try await http.json(ProductListResponse.self, from: listURL, accept: NWSClient.ldJSON, serviceName: "NWS products", decoder: .iso8601Flexible)
-        guard let latest = list.graph.first else { return nil }
-        let productURL = NWSClient.baseURL.appendingPathComponent("products/\(latest.id)")
+        return try await http.json(ProductListResponse.self, from: listURL, accept: NWSClient.ldJSON, serviceName: "NWS products", decoder: .iso8601Flexible).graph
+    }
+
+    func product(id: String) async throws -> ProductResponse {
+        let productURL = NWSClient.baseURL.appendingPathComponent("products/\(id)")
         return try await http.json(ProductResponse.self, from: productURL, accept: NWSClient.ldJSON, serviceName: "NWS product", decoder: .iso8601Flexible)
     }
 

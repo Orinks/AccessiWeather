@@ -132,6 +132,38 @@ actor WeatherService {
         return product
     }
 
+    private var officeCache: [String: String] = [:]
+
+    /// Active NWS alerts only, for background checks of every saved location.
+    func activeAlerts(for location: SavedLocation) async throws -> [WeatherAlert] {
+        guard location.isInUnitedStates else { return [] }
+        return try await nws.activeAlerts(latitude: location.latitude, longitude: location.longitude)
+            .map(NWSClient.weatherAlert(from:))
+    }
+
+    /// The NWS forecast office (CWA) for a US location, cached for the life of the process.
+    func forecastOfficeID(for location: SavedLocation) async throws -> String? {
+        guard location.isInUnitedStates else { return nil }
+        let key = NWSClient.pointPath(latitude: location.latitude, longitude: location.longitude)
+        if let cached = officeCache[key] { return cached }
+        let point = try await nws.point(latitude: location.latitude, longitude: location.longitude)
+        guard let office = point.cwa ?? point.gridId else { return nil }
+        officeCache[key] = office
+        return office
+    }
+
+    func productItems(type: String, officeID: String) async throws -> [NWSClient.ProductListItem] {
+        try await nws.productList(type: type, officeID: officeID)
+    }
+
+    func product(id: String) async throws -> NWSClient.ProductResponse {
+        try await nws.product(id: id)
+    }
+
+    func minutely(for location: SavedLocation, pirateWeatherKey: String) async throws -> [MinutelyPoint]? {
+        try await report(for: location, source: .pirateWeather, pirateWeatherKey: pirateWeatherKey).minutely
+    }
+
     func aviationWeather(icao: String) async throws -> AviationWeather {
         let code = ICAOCodeValidation.normalized(icao)
         if let cached = aviationCache[code],

@@ -14,12 +14,15 @@ final class AppModel: ObservableObject {
     let radioStations: RadioStationDirectory
     let eventLog: EventLog
 
-    @Published private(set) var report: WeatherReport?
+    @Published internal(set) var report: WeatherReport?
     @Published private(set) var isLoading = false
     @Published private(set) var errorMessage: String?
     @Published var hasOpenRouterKey = !KeychainStore.read(.openRouter).isEmpty
 
-    private var notifiedAlertIDs: Set<String> = []
+    @Published var alertToOpen: AlertOpenRequest?
+    var notificationState: NotificationState
+    let notificationStateURL: URL
+    var autoRefreshTask: Task<Void, Never>?
     private var previousAlertsByLocation: [UUID: [String: WeatherAlert]] = [:]
     private var autoTunePlaybackOwnership: RadioAutoTunePlaybackOwnership?
     private var autoTuneStopTask: Task<Void, Never>?
@@ -30,8 +33,11 @@ final class AppModel: ObservableObject {
         settings: SettingsStore? = nil,
         locationStore: LocationStore? = nil,
         weatherService: WeatherService = WeatherService(),
-        eventLog: EventLog? = nil
+        eventLog: EventLog? = nil,
+        notificationStateURL: URL = NotificationState.defaultURL
     ) {
+        self.notificationStateURL = notificationStateURL
+        notificationState = NotificationState.load(from: notificationStateURL)
         self.settings = settings ?? SettingsStore()
         self.locationStore = locationStore ?? LocationStore()
         self.weatherService = weatherService
@@ -163,8 +169,12 @@ final class AppModel: ObservableObject {
                 )
             }
             report = fresh
+            let notifiedAlertIDs = await checkAlerts(selectedReport: fresh)
             if hadReport, let strongest = fresh.alerts.first(where: { newAlertIDs.contains($0.id) }) {
-                sounds.play(SoundEvent.forSeverity(strongest.severity))
+                // The notification already plays this alert's cue.
+                if !notifiedAlertIDs.contains(strongest.id) {
+                    sounds.play(SoundEvent.forSeverity(strongest.severity))
+                }
             } else {
                 sounds.play(.dataUpdated)
             }
@@ -183,7 +193,7 @@ final class AppModel: ObservableObject {
                 let summary = fresh.current.description.map { ", \($0)" } ?? ""
                 AccessibilityNotification.Announcement("Weather updated for \(location.name)\(summary)").post()
             }
-            await scheduleAlertNotifications(for: fresh)
+            await checkEvents(for: location, report: fresh)
         } catch {
             errorMessage = error.localizedDescription
             sounds.play(.fetchError)
@@ -244,26 +254,6 @@ final class AppModel: ObservableObject {
             return try await center.requestAuthorization(options: [.alert, .sound, .badge])
         } catch {
             return false
-        }
-    }
-
-    private func scheduleAlertNotifications(for report: WeatherReport) async {
-        guard settings.alertNotificationsEnabled else { return }
-        let center = UNUserNotificationCenter.current()
-        let status = await center.notificationSettings().authorizationStatus
-        guard status == .authorized || status == .provisional else { return }
-        for alert in report.alerts where !notifiedAlertIDs.contains(alert.id) && settings.wantsNotification(forSeverity: alert.severity) {
-            notifiedAlertIDs.insert(alert.id)
-            let content = UNMutableNotificationContent()
-            content.title = "\(alert.severity) alert: \(alert.event)"
-            content.body = alert.headline ?? alert.areaDescription ?? report.location.name
-            if let name = sounds.notificationSoundName(forSeverity: alert.severity) {
-                content.sound = UNNotificationSound(named: UNNotificationSoundName(name))
-            } else {
-                content.sound = .default
-            }
-            let request = UNNotificationRequest(identifier: alert.id, content: content, trigger: nil)
-            try? await center.add(request)
         }
     }
 }
