@@ -10,6 +10,7 @@
 		08C212BCE6F42412C0C8C5DD /* EventCenterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 142CE5AA151A8060E027D51D /* EventCenterView.swift */; };
 		222B0278B1FE2AC7688CDE2F /* NWSClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40BAE1D24DE1D07829758ADB /* NWSClient.swift */; };
 		23D38E31A8A37AC12AF07120 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC92A323527201EBFBECBE87 /* ContentView.swift */; };
+		270F57AE3F960053181D4B9D /* MarineForecastTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D046FF5238253314F7DAF1 /* MarineForecastTests.swift */; };
 		29560D01E87981F827E54075 /* WeatherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0E52ED867F6D8ADC33B44C /* WeatherView.swift */; };
 		29C7EDA978B6482D0346BF03 /* WeatherModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF7DBFB874C4A60A503135A /* WeatherModels.swift */; };
 		2C6FF80DA2F48E59CA63FF66 /* SoundPacks in Resources */ = {isa = PBXBuildFile; fileRef = 5EFDA068BCDBAA00C3BFCC03 /* SoundPacks */; };
@@ -23,6 +24,7 @@
 		58DE942DB663DF4482CC21E6 /* AddLocationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41CD548CD1A9C150BD6E3C3C /* AddLocationView.swift */; };
 		591F716D22A6C0DAAB1AB9E5 /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAD1D3FBAF4C10FA8A48D93B /* HTTPClient.swift */; };
 		5A31069D342DC65F253A57FC /* IEMClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91B78119A095D819B10A7965 /* IEMClientTests.swift */; };
+		5BFAF1F4D97719210BFBB0A4 /* MarineForecast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A44DC65794A3C4814560DC2 /* MarineForecast.swift */; };
 		69AF91C7E44E4492676B5582 /* NotificationRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95196A37303B9A87BB851BA4 /* NotificationRouter.swift */; };
 		722CE8EA2C42CC94229E1774 /* PirateWeatherClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30F430B52BDF4602B71DEF2B /* PirateWeatherClient.swift */; };
 		744CBD0449B620631000D0A5 /* NotificationEventChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C7787EE033C34CFDC064A76 /* NotificationEventChecker.swift */; };
@@ -103,6 +105,7 @@
 		5EFDA068BCDBAA00C3BFCC03 /* SoundPacks */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SoundPacks; path = AccessiWeather/Resources/SoundPacks; sourceTree = SOURCE_ROOT; };
 		5F70CB60315A88138AC4181A /* AccessiWeather.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AccessiWeather.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F05642757BEA77C4EBF3611 /* LocationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationStore.swift; sourceTree = "<group>"; };
+		7A44DC65794A3C4814560DC2 /* MarineForecast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarineForecast.swift; sourceTree = "<group>"; };
 		7A9DD5159D1B8FD9742DBDF2 /* IEMClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IEMClient.swift; sourceTree = "<group>"; };
 		7C7787EE033C34CFDC064A76 /* NotificationEventChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationEventChecker.swift; sourceTree = "<group>"; };
 		84D6E19F5CE7034B8512AB26 /* AviationWeatherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AviationWeatherView.swift; sourceTree = "<group>"; };
@@ -125,6 +128,7 @@
 		BC92A323527201EBFBECBE87 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		BE652BCF2C70FFAD2FA7AFFF /* LocationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationsView.swift; sourceTree = "<group>"; };
 		C24D76D65A2E556F18207BDE /* SavedLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedLocation.swift; sourceTree = "<group>"; };
+		C9D046FF5238253314F7DAF1 /* MarineForecastTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarineForecastTests.swift; sourceTree = "<group>"; };
 		CC0E52ED867F6D8ADC33B44C /* WeatherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherView.swift; sourceTree = "<group>"; };
 		CCF5C264FEBBE7E646BCA596 /* WeatherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherService.swift; sourceTree = "<group>"; };
 		CD034C7A87C055DD9A85E638 /* NationalProductsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NationalProductsView.swift; sourceTree = "<group>"; };
@@ -313,6 +317,7 @@
 			children = (
 				1FA0F256BFA9900D2396839A /* AlertNotificationGateTests.swift */,
 				91B78119A095D819B10A7965 /* IEMClientTests.swift */,
+				C9D046FF5238253314F7DAF1 /* MarineForecastTests.swift */,
 			);
 			path = AccessiWeatherTests;
 			sourceTree = "<group>";
@@ -321,6 +326,7 @@
 			isa = PBXGroup;
 			children = (
 				0A573C63DF82A852AFB2503E /* AviationWeather.swift */,
+				7A44DC65794A3C4814560DC2 /* MarineForecast.swift */,
 				C24D76D65A2E556F18207BDE /* SavedLocation.swift */,
 				8C29B15EFB79555145A20E01 /* WeatherHistory.swift */,
 				1FF7DBFB874C4A60A503135A /* WeatherModels.swift */,
@@ -516,6 +522,7 @@
 				DBABA4A6440828F4F1597228 /* KeychainStore.swift in Sources */,
 				A3A238E5C39E8DE315829870 /* LocationStore.swift in Sources */,
 				B0F97CA4333EB0418686F81C /* LocationsView.swift in Sources */,
+				5BFAF1F4D97719210BFBB0A4 /* MarineForecast.swift in Sources */,
 				222B0278B1FE2AC7688CDE2F /* NWSClient.swift in Sources */,
 				7CD92841B2B103319EB7538E /* NationalProductsView.swift in Sources */,
 				744CBD0449B620631000D0A5 /* NotificationEventChecker.swift in Sources */,
@@ -552,6 +559,7 @@
 			files = (
 				984AA31C2FE402C39B31DEBC /* AlertNotificationGateTests.swift in Sources */,
 				5A31069D342DC65F253A57FC /* IEMClientTests.swift in Sources */,
+				270F57AE3F960053181D4B9D /* MarineForecastTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

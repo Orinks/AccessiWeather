@@ -174,6 +174,26 @@ struct NWSClient {
         return try await http.json(AlertsResponse.self, from: components.url!, accept: NWSClient.geoJSON, serviceName: "NWS alerts", decoder: .iso8601Flexible).features.map(\.properties)
     }
 
+    /// Marine Mode: the nearest marine zone's forecast and that zone's active alerts.
+    func marine(latitude: Double, longitude: Double) async throws -> (forecast: MarineForecast?, alerts: [AlertProperties])? {
+        var zonesURL = URLComponents(url: NWSClient.baseURL.appendingPathComponent("zones"), resolvingAgainstBaseURL: false)!
+        zonesURL.queryItems = [
+            URLQueryItem(name: "type", value: "marine"),
+            URLQueryItem(name: "point", value: NWSClient.pointPath(latitude: latitude, longitude: longitude)),
+        ]
+        let zonesData = try await http.data(from: zonesURL.url!, accept: NWSClient.geoJSON, serviceName: "NWS marine zones")
+        guard let zones = try JSONSerialization.jsonObject(with: zonesData) as? [String: Any],
+              let zone = MarineForecast.zone(from: zones) else { return nil }
+        let forecastURL = NWSClient.baseURL.appendingPathComponent("zones/marine/\(zone.id)/forecast")
+        let forecastData = try await http.data(from: forecastURL, accept: NWSClient.geoJSON, serviceName: "NWS marine forecast")
+        guard let forecast = try JSONSerialization.jsonObject(with: forecastData) as? [String: Any], !forecast.isEmpty else { return nil }
+        let summary = MarineForecast.build(zoneID: zone.id, zoneName: zone.name, forecast: forecast)
+        var alertsURL = URLComponents(url: NWSClient.baseURL.appendingPathComponent("alerts/active"), resolvingAgainstBaseURL: false)!
+        alertsURL.queryItems = [URLQueryItem(name: "zone", value: zone.id), URLQueryItem(name: "status", value: "actual")]
+        let alerts = (try? await http.json(AlertsResponse.self, from: alertsURL.url!, accept: NWSClient.geoJSON, serviceName: "NWS marine alerts", decoder: .iso8601Flexible).features.map(\.properties)) ?? []
+        return (summary.hasData ? summary : nil, alerts)
+    }
+
     static func weatherAlert(from alert: AlertProperties) -> WeatherAlert {
         WeatherAlert(
             id: alert.id,

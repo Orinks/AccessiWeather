@@ -32,7 +32,7 @@ actor WeatherService {
     }
 
     private func cacheKey(_ location: SavedLocation, source: WeatherSource) -> String {
-        "\(source.rawValue)|\(NWSClient.pointPath(latitude: location.latitude, longitude: location.longitude))"
+        "\(source.rawValue)|\(NWSClient.pointPath(latitude: location.latitude, longitude: location.longitude))|\(location.marineMode)"
     }
 
     func invalidate(location: SavedLocation) {
@@ -330,7 +330,15 @@ actor WeatherService {
             current.temperatureC = current.temperatureC ?? first.temperatureC
         }
 
-        let mappedAlerts = alerts.map(NWSClient.weatherAlert(from:))
+        var mappedAlerts = alerts.map(NWSClient.weatherAlert(from:))
+        var marine: MarineForecast?
+        if location.marineMode,
+           let result = try? await nws.marine(latitude: location.latitude, longitude: location.longitude) {
+            marine = result.forecast
+            for alert in result.alerts.map(NWSClient.weatherAlert(from:)) where !mappedAlerts.contains(where: { $0.id == alert.id }) {
+                mappedAlerts.append(alert)
+            }
+        }
 
         return WeatherReport(
             location: location,
@@ -343,7 +351,8 @@ actor WeatherService {
             fetchedAt: Date(),
             forecastOfficeID: point.cwa ?? point.gridId,
             observationStationID: observationResult?.stationID,
-            alertsAreCurrent: alertsResult != nil
+            alertsAreCurrent: alertsResult != nil,
+            marine: marine
         )
     }
 

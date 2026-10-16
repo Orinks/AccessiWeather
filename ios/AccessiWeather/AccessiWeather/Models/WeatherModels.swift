@@ -147,6 +147,7 @@ struct WeatherReport: Equatable {
     var observationStationID: String? = nil
     var alertsAreCurrent: Bool = true
     var minutely: [MinutelyPoint]? = nil
+    var marine: MarineForecast? = nil
 }
 
 enum WeatherError: LocalizedError {
