@@ -135,6 +135,15 @@ struct WeatherView: View {
                 }
                 .accessibilityHint("Opens the National Weather Service Area Forecast Discussion")
             }
+            if model.hasOpenRouterKey {
+                NavigationLink {
+                    WeatherAssistantView(model: model)
+                } label: {
+                    Label("Weather Assistant", systemImage: "bubble.left.and.bubble.right")
+                }
+                .accessibilityHint("Chat about the weather using live weather data")
+            }
+
             NavigationLink {
                 NationalProductsView()
             } label: {
