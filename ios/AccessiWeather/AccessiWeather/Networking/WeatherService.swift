@@ -189,8 +189,18 @@ actor WeatherService {
         async let tafResult = captureAviationProduct {
             try await aviationWeatherClient.tafs(icao: code)
         }
+        async let advisoriesResult = nws.aviationAdvisories(icao: code)
         let (metars, metarError) = await metarResult
-        let (tafs, tafError) = await tafResult
+        var (tafs, tafError) = await tafResult
+        var tafSummary: String?
+        let avwxKey = KeychainStore.read(.avwx)
+        if !AviationAdvisories.isUSStation(code), !avwxKey.isEmpty,
+           let avwx = try? await AVWXClient().taf(icao: code, key: avwxKey) {
+            tafs = [TAFProduct(rawTAF: avwx.raw, fcsts: nil)]
+            tafError = nil
+            tafSummary = avwx.speech
+        }
+        let advisories = await advisoriesResult
         if let metarError, let tafError {
             throw WeatherError.unsupported("METAR and TAF requests failed. \(metarError) \(tafError)")
         }
@@ -198,7 +208,10 @@ actor WeatherService {
             metars: metars ?? [],
             tafs: tafs ?? [],
             metarError: metarError,
-            tafError: tafError
+            tafError: tafError,
+            tafSummary: tafSummary,
+            sigmets: advisories.sigmets,
+            cwas: advisories.cwas
         )
         if metarError == nil, tafError == nil {
             aviationCache[code] = (weather, Date())
