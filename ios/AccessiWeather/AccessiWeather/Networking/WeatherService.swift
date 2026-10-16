@@ -1,6 +1,6 @@
 import Foundation
 
-/// Fetches and merges weather data. Automatic mode uses NWS inside the United States and Open-Meteo elsewhere;
+/// Fetches and merges weather data. Automatic mode fuses NWS (US only), Open-Meteo and Pirate Weather (with a key);
 /// Open-Meteo always supplies air quality, UV, sunrise and sunset because NWS does not offer them.
 actor WeatherService {
     static let cacheLifetime: TimeInterval = 5 * 60
@@ -55,7 +55,7 @@ actor WeatherService {
         let resolved: WeatherSource
         switch source {
         case .automatic:
-            resolved = location.isInUnitedStates ? .nws : .openMeteo
+            resolved = .automatic
         case .nws:
             guard location.isInUnitedStates else {
                 throw WeatherError.unsupported("The National Weather Service only covers United States locations. Choose Automatic or Open-Meteo in Settings for this location.")
@@ -81,6 +81,8 @@ actor WeatherService {
                 key: pirateWeatherKey
             )
             report = PirateWeatherClient.report(from: response, location: location)
+        case .automatic:
+            report = try await fetchAutomatic(location: location, pirateWeatherKey: pirateWeatherKey)
         default:
             report = try await fetchOpenMeteo(location: location)
         }
@@ -251,6 +253,36 @@ actor WeatherService {
     }
 
     // MARK: - NWS
+
+    /// Fetches every available source at once and fuses them; any one source failing is not fatal.
+    private func fetchAutomatic(location: SavedLocation, pirateWeatherKey: String) async throws -> WeatherReport {
+        let key = pirateWeatherKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        let pirateWeather = pirateWeather
+        async let nwsResult: Result<WeatherReport, Error>? = location.isInUnitedStates
+            ? await WeatherService.capture { try await self.fetchNWS(location: location) }
+            : nil
+        async let openMeteoResult = WeatherService.capture { try await self.fetchOpenMeteo(location: location) }
+        async let pirateResult: Result<WeatherReport, Error>? = key.isEmpty ? nil : await WeatherService.capture {
+            let response = try await pirateWeather.forecast(latitude: location.latitude, longitude: location.longitude, key: key)
+            return PirateWeatherClient.report(from: response, location: location)
+        }
+        let (nws, openMeteo, pirate) = await (nwsResult, openMeteoResult, pirateResult)
+        if let fused = DataFusion.merge(
+            location: location,
+            nws: try? nws?.get(),
+            openMeteo: try? openMeteo.get(),
+            pirateWeather: try? pirate?.get()
+        ) {
+            return fused
+        }
+        if let nws { _ = try nws.get() }
+        _ = try openMeteo.get()
+        throw WeatherError.noData("weather")
+    }
+
+    private static func capture<T>(_ body: () async throws -> T) async -> Result<T, Error> {
+        do { return .success(try await body()) } catch { return .failure(error) }
+    }
 
     private func fetchNWS(location: SavedLocation) async throws -> WeatherReport {
         let point = try await nws.point(latitude: location.latitude, longitude: location.longitude)

@@ -244,7 +244,7 @@ struct SettingsView: View {
         } header: {
             SectionHeader("Data Sources")
         } footer: {
-            Text("Automatic uses the National Weather Service inside the United States and Open-Meteo elsewhere. API keys are stored in the iOS Keychain. AirNow and AVWX integrations are coming in a later version.")
+            Text("Automatic combines the National Weather Service (United States only), Open-Meteo and, when you add a key, Pirate Weather, using the best available value from each. API keys are stored in the iOS Keychain. AirNow and AVWX integrations are coming in a later version.")
         }
     }
 
