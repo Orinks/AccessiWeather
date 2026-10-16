@@ -133,6 +133,12 @@ struct WeatherView: View {
                 .accessibilityHint("Opens the National Weather Service Area Forecast Discussion")
             }
             NavigationLink {
+                NationalProductsView()
+            } label: {
+                Label("National Products", systemImage: "map")
+            }
+            .accessibilityHint("Shows national forecast discussions and SPC, WPC, NHC and CPC outlooks")
+            NavigationLink {
                 AviationWeatherView(report: report)
             } label: {
                 Label("Aviation Weather", systemImage: "airplane")
