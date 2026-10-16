@@ -9,6 +9,7 @@ from accessiweather.noaa_radio.stations import Station
 from accessiweather.noaa_radio.weatherindex_client import WeatherIndexClient
 
 TEMPORARILY_UNAVAILABLE = "temporarily unavailable"
+OUT_OF_SERVICE = "out of service"
 
 
 @dataclass(frozen=True)
@@ -46,6 +47,18 @@ class StationAvailabilityService:
                 continue
 
             label = self._base_label(station)
+            if station.is_out_of_service:
+                if not show_unavailable:
+                    continue
+                entries.append(
+                    StationAvailabilityEntry(
+                        station=station,
+                        available=False,
+                        label=f"{label} - Out of service",
+                        unavailable_reason=OUT_OF_SERVICE,
+                    )
+                )
+                continue
             if self._availability_cache.is_suppressed(station.call_sign):
                 if not show_unavailable:
                     continue

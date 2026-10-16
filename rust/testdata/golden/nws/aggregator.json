@@ -1,0 +1,231 @@
+{
+ "now": "2026-01-20T18:21:00+00:00",
+ "call": "aggregator",
+ "result": {
+  "nws": {
+   "alerts": [
+    {
+     "title": "Flood",
+     "description": "d",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": "short",
+     "instruction": null,
+     "onset": "2026-01-20T12:00:00+00:00",
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [
+      "Kings"
+     ],
+     "references": [],
+     "id": "urn:1",
+     "source": "NWS",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "Wind",
+     "description": "d",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Wind Advisory",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [
+      "Queens"
+     ],
+     "references": [],
+     "id": null,
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "secondary": {
+   "alerts": [
+    {
+     "title": "Flood PW",
+     "description": "much longer description",
+     "severity": "Severe",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": "a longer headline",
+     "instruction": "go",
+     "onset": "2026-01-20T12:45:00+00:00",
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [
+      "kings "
+     ],
+     "references": [],
+     "id": null,
+     "source": "pirateweather",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "Flood later",
+     "description": "d",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": "2026-01-20T14:00:00+00:00",
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [
+      "Kings"
+     ],
+     "references": [],
+     "id": null,
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "Heat",
+     "description": "d",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Heat Advisory",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "merged": {
+   "alerts": [
+    {
+     "title": "Flood",
+     "description": "much longer description",
+     "severity": "Severe",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": "a longer headline",
+     "instruction": "go",
+     "onset": "2026-01-20T12:00:00+00:00",
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [
+      "Kings",
+      "kings "
+     ],
+     "references": [],
+     "id": "urn:1",
+     "source": "NWS, pirateweather",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "Wind",
+     "description": "d",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Wind Advisory",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [
+      "Queens"
+     ],
+     "references": [],
+     "id": null,
+     "source": "nws",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "Flood later",
+     "description": "d",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Flood Warning",
+     "headline": null,
+     "instruction": null,
+     "onset": "2026-01-20T14:00:00+00:00",
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [
+      "Kings"
+     ],
+     "references": [],
+     "id": null,
+     "source": "pirateweather",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "Heat",
+     "description": "d",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Heat Advisory",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": "pirateweather",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  }
+ }
+}

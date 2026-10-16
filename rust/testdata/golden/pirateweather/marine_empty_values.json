@@ -1,0 +1,11 @@
+{
+ "input": {
+  "current": {
+   "time": "2026-06-07T12:00",
+   "wave_height": null,
+   "wave_period": []
+  }
+ },
+ "now": "2025-01-15T12:30:00-05:00",
+ "product": null
+}

@@ -1,0 +1,78 @@
+{
+ "now": "2026-01-20T18:21:00+00:00",
+ "call": "aviation_weather",
+ "station": "KBAD",
+ "include_sigmets": false,
+ "include_cwas": false,
+ "avwx_api_key": "",
+ "responses": [
+  {
+   "url": "https://api.weather.gov/stations/KBAD",
+   "status": 404,
+   "body": ""
+  },
+  {
+   "url": "https://api.weather.gov/stations/KBAD/tafs",
+   "status": 404,
+   "body": ""
+  },
+  {
+   "url": "https://aviationweather.gov/api/data/taf?ids=KBAD&format=json",
+   "status": 200,
+   "body": "<html>"
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://api.weather.gov/stations/KBAD",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/stations/KBAD/tafs",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://aviationweather.gov/api/data/taf",
+   "params": [
+    [
+     "ids",
+     "KBAD"
+    ],
+    [
+     "format",
+     "json"
+    ]
+   ],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ],
+    [
+     "Accept",
+     "application/json"
+    ]
+   ]
+  }
+ ],
+ "result": {
+  "raw_taf": null,
+  "decoded_taf": null,
+  "station_id": "KBAD",
+  "airport_name": "KBAD",
+  "active_sigmets": [],
+  "active_cwas": []
+ }
+}

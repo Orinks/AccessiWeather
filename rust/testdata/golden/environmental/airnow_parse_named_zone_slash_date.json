@@ -1,0 +1,19 @@
+{
+ "input": [
+  {
+   "DateObserved": "07/04/2026",
+   "HourObserved": 23.0,
+   "LocalTimeZone": "America/Denver",
+   "ParameterName": "",
+   "AQI": 301.5,
+   "Category": "  "
+  }
+ ],
+ "output": {
+  "aqi": 302,
+  "category": "Hazardous",
+  "pollutant": "Unknown",
+  "observed_at": "2026-07-04T23:00:00-06:00",
+  "reporting_area": null
+ }
+}

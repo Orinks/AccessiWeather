@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from accessiweather.config.secure_storage import LazySecureStorage, SecureStorage
 
 
@@ -317,3 +319,23 @@ class TestKeyringModule:
         # Restore state for other tests
         secure_storage._keyring_module = None
         secure_storage._keyring_checked = False
+
+
+@pytest.mark.parametrize(
+    "operation, expected",
+    [("set_password", False), ("get_password", None), ("delete_password", False)],
+)
+def test_backend_exception_details_are_never_logged(operation, expected, caplog):
+    backend = MagicMock()
+    backend.get_password.return_value = "test-secret"
+    getattr(backend, operation).side_effect = RuntimeError("test-secret in backend details")
+    with patch("accessiweather.config.secure_storage._get_keyring", return_value=backend):
+        args = (
+            ("openrouter_api_key", "test-secret")
+            if operation == "set_password"
+            else ("openrouter_api_key",)
+        )
+        assert getattr(SecureStorage, operation)(*args) is expected
+    assert "Failed to" in caplog.text
+    assert "test-secret" not in caplog.text
+    assert "backend details" not in caplog.text

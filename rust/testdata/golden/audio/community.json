@@ -1,0 +1,722 @@
+{
+  "scenarios": {
+    "index": {
+      "routes": {
+        "https://api.github.com/repos/orinks/accessiweather-soundpacks/contents/index.json": [
+          200,
+          "{\"content\": \"eyJwYWNrcyI6IFt7Im5hbWUiOiAiU3Rvcm0iLCAiYXV0aG9yIjogIkFubiIs\\nICJkZXNjcmlwdGlvbiI6ICJMb3VkIiwgInZlcnNpb24iOiAiMi4xIiwgImRv\\nd25sb2FkX3VybCI6ICJodHRwczovL2V4YW1wbGUuY29tL3N0b3JtLnppcCIs\\nICJmaWxlX3NpemUiOiAyNjIxNDQsICJob21lcGFnZSI6ICJodHRwczovL2V4\\nYW1wbGUuY29tL3N0b3JtIiwgInJlbGVhc2VfdGFnIjogInYyLjEiLCAiZG93\\nbmxvYWRfY291bnQiOiA3LCAiY3JlYXRlZF9kYXRlIjogIjIwMjUtMDEtMDIi\\nLCAicHJldmlld19pbWFnZV91cmwiOiAiaHR0cHM6Ly9leGFtcGxlLmNvbS9z\\nLnBuZyJ9LCB7ImlkIjogIm9ubHktaWQifSwgeyJuYW1lIjogIiIsICJpZCI6\\nICIiLCAidmVyc2lvbiI6IDIsICJmaWxlX3NpemUiOiAxNTcyODY0fSwgeyJu\\nYW1lIjogIlRpbnkiLCAiZmlsZV9zaXplIjogNzg2NDMyLCAicmVsZWFzZV90\\nYWciOiAzfV19\\n\"}"
+        ]
+      },
+      "packs": [
+        {
+          "name": "Storm",
+          "author": "Ann",
+          "description": "Loud",
+          "version": "2.1",
+          "download_url": "https://example.com/storm.zip",
+          "file_size": 262144,
+          "repository_url": "https://example.com/storm",
+          "release_tag": "v2.1",
+          "download_count": 7,
+          "created_date": "2025-01-02",
+          "preview_image_url": "https://example.com/s.png",
+          "repo_path": null,
+          "tree_sha": null,
+          "ref": "main"
+        },
+        {
+          "name": "only-id",
+          "author": "Unknown",
+          "description": "",
+          "version": "1.0",
+          "download_url": "",
+          "file_size": null,
+          "repository_url": "https://github.com/orinks/accessiweather-soundpacks",
+          "release_tag": "",
+          "download_count": null,
+          "created_date": null,
+          "preview_image_url": null,
+          "repo_path": null,
+          "tree_sha": null,
+          "ref": "main"
+        },
+        {
+          "name": "unknown",
+          "author": "Unknown",
+          "description": "",
+          "version": "2",
+          "download_url": "",
+          "file_size": 1572864,
+          "repository_url": "https://github.com/orinks/accessiweather-soundpacks",
+          "release_tag": "",
+          "download_count": null,
+          "created_date": null,
+          "preview_image_url": null,
+          "repo_path": null,
+          "tree_sha": null,
+          "ref": "main"
+        },
+        {
+          "name": "Tiny",
+          "author": "Unknown",
+          "description": "",
+          "version": "1.0",
+          "download_url": "",
+          "file_size": 786432,
+          "repository_url": "https://github.com/orinks/accessiweather-soundpacks",
+          "release_tag": "3",
+          "download_count": null,
+          "created_date": null,
+          "preview_image_url": null,
+          "repo_path": null,
+          "tree_sha": null,
+          "ref": "main"
+        }
+      ],
+      "requests": [
+        "https://api.github.com/repos/orinks/accessiweather-soundpacks/contents/index.json"
+      ]
+    },
+    "releases": {
+      "routes": {
+        "https://api.github.com/repos/orinks/accessiweather-soundpacks/contents/index.json": [
+          404,
+          "{\"message\": \"Not Found\"}"
+        ],
+        "https://api.github.com/repos/orinks/accessiweather-soundpacks/releases?per_page=50": [
+          200,
+          "[{\"tag_name\": \"vv1.2\", \"body\": \"  Release notes \\n\", \"author\": {\"login\": \"bob\"}, \"published_at\": \"2025-03-04T00:00:00Z\", \"html_url\": \"https://github.com/x/releases/1\", \"assets\": [{\"name\": \"alpha.zip\", \"browser_download_url\": \"https://dl/alpha.zip\", \"size\": 1048576, \"download_count\": 3}, {\"name\": \"Beta.ZIP\", \"browser_download_url\": \"https://dl/beta\", \"size\": 0}, {\"name\": \"readme.txt\"}]}, {\"tag_name\": \"\", \"body\": null, \"author\": null, \"assets\": [{\"name\": \"c.zip.zip\", \"size\": 52428, \"browser_download_url\": \"https://dl/c\"}]}, {\"tag_name\": \"v\", \"assets\": null}]"
+        ]
+      },
+      "packs": [
+        {
+          "name": "alpha",
+          "author": "bob",
+          "description": "Release notes",
+          "version": "1.2",
+          "download_url": "https://dl/alpha.zip",
+          "file_size": 1048576,
+          "repository_url": "https://github.com/x/releases/1",
+          "release_tag": "vv1.2",
+          "download_count": 3,
+          "created_date": "2025-03-04T00:00:00Z",
+          "preview_image_url": null,
+          "repo_path": null,
+          "tree_sha": null,
+          "ref": "main"
+        },
+        {
+          "name": "Beta.ZIP",
+          "author": "bob",
+          "description": "Release notes",
+          "version": "1.2",
+          "download_url": "https://dl/beta",
+          "file_size": 0,
+          "repository_url": "https://github.com/x/releases/1",
+          "release_tag": "vv1.2",
+          "download_count": null,
+          "created_date": "2025-03-04T00:00:00Z",
+          "preview_image_url": null,
+          "repo_path": null,
+          "tree_sha": null,
+          "ref": "main"
+        },
+        {
+          "name": "c.zip",
+          "author": "Unknown",
+          "description": "",
+          "version": "1.0",
+          "download_url": "https://dl/c",
+          "file_size": 52428,
+          "repository_url": "https://github.com/orinks/accessiweather-soundpacks/releases",
+          "release_tag": "",
+          "download_count": null,
+          "created_date": null,
+          "preview_image_url": null,
+          "repo_path": null,
+          "tree_sha": null,
+          "ref": "main"
+        }
+      ],
+      "requests": [
+        "https://api.github.com/repos/orinks/accessiweather-soundpacks/contents/index.json",
+        "https://api.github.com/repos/orinks/accessiweather-soundpacks/releases?per_page=50"
+      ]
+    },
+    "repo": {
+      "routes": {
+        "https://api.github.com/repos/orinks/accessiweather-soundpacks/contents/index.json": [
+          200,
+          "{\"content\": \"\"}"
+        ],
+        "https://api.github.com/repos/orinks/accessiweather-soundpacks/releases?per_page=50": [
+          403,
+          "{\"message\": \"rate limited\"}"
+        ],
+        "https://api.github.com/repos/orinks/accessiweather-soundpacks/contents/packs?ref=main": [
+          200,
+          "[{\"type\": \"dir\", \"name\": \"alpha\", \"path\": \"packs/alpha\", \"sha\": \"a1\"}, {\"type\": \"dir\", \"name\": \"beta\", \"path\": \"packs/beta\"}, {\"type\": \"file\", \"name\": \"README.md\", \"path\": \"packs/README.md\"}, {\"type\": \"dir\", \"name\": \"gamma\", \"path\": \"packs/gamma\", \"sha\": \"g1\"}, {\"type\": \"dir\", \"name\": \"delta\", \"sha\": \"d1\"}]"
+        ],
+        "https://raw.githubusercontent.com/orinks/accessiweather-soundpacks/main/packs/alpha/pack.json": [
+          200,
+          "{\"name\": \"Alpha\", \"author\": \"A\", \"version\": 1.5, \"description\": \"First\", \"preview_image_url\": \"http://p\"}"
+        ],
+        "https://raw.githubusercontent.com/orinks/accessiweather-soundpacks/main/packs/beta/pack.json": [
+          200,
+          "{}"
+        ],
+        "https://raw.githubusercontent.com/orinks/accessiweather-soundpacks/main/packs/gamma/pack.json": [
+          404,
+          "Not Found"
+        ],
+        "https://raw.githubusercontent.com/orinks/accessiweather-soundpacks/main/packs/delta/pack.json": [
+          200,
+          "{\"name\": \"Delta\"}"
+        ],
+        "https://api.github.com/repos/orinks/accessiweather-soundpacks/git/trees/a1?recursive=1": [
+          200,
+          "{\"tree\": [{\"type\": \"blob\", \"path\": \"pack.json\", \"size\": 40}, {\"type\": \"tree\", \"path\": \"sounds\"}, {\"type\": \"blob\", \"path\": \"sounds/a.wav\", \"size\": 5}, {\"type\": \"blob\", \"path\": \"sounds/b.wav\"}]}"
+        ],
+        "https://api.github.com/repos/orinks/accessiweather-soundpacks/git/trees/d1?recursive=1": [
+          500,
+          "{\"message\": \"oops\"}"
+        ]
+      },
+      "packs": [
+        {
+          "name": "Alpha",
+          "author": "A",
+          "description": "First",
+          "version": "1.5",
+          "download_url": "",
+          "file_size": 45,
+          "repository_url": "https://github.com/orinks/accessiweather-soundpacks/tree/main/packs/alpha",
+          "release_tag": "main",
+          "download_count": null,
+          "created_date": null,
+          "preview_image_url": "http://p",
+          "repo_path": "packs/alpha",
+          "tree_sha": "a1",
+          "ref": "main"
+        },
+        {
+          "name": "beta",
+          "author": "Unknown",
+          "description": "",
+          "version": "1.0",
+          "download_url": "",
+          "file_size": null,
+          "repository_url": "https://github.com/orinks/accessiweather-soundpacks/tree/main/packs/beta",
+          "release_tag": "main",
+          "download_count": null,
+          "created_date": null,
+          "preview_image_url": null,
+          "repo_path": "packs/beta",
+          "tree_sha": null,
+          "ref": "main"
+        },
+        {
+          "name": "Delta",
+          "author": "Unknown",
+          "description": "",
+          "version": "1.0",
+          "download_url": "",
+          "file_size": null,
+          "repository_url": "https://github.com/orinks/accessiweather-soundpacks/tree/main/packs/delta",
+          "release_tag": "main",
+          "download_count": null,
+          "created_date": null,
+          "preview_image_url": null,
+          "repo_path": "packs/delta",
+          "tree_sha": "d1",
+          "ref": "main"
+        }
+      ],
+      "requests": [
+        "https://api.github.com/repos/orinks/accessiweather-soundpacks/contents/index.json",
+        "https://api.github.com/repos/orinks/accessiweather-soundpacks/releases?per_page=50",
+        "https://api.github.com/repos/orinks/accessiweather-soundpacks/contents/packs?ref=main",
+        "https://raw.githubusercontent.com/orinks/accessiweather-soundpacks/main/packs/alpha/pack.json",
+        "https://api.github.com/repos/orinks/accessiweather-soundpacks/git/trees/a1?recursive=1",
+        "https://raw.githubusercontent.com/orinks/accessiweather-soundpacks/main/packs/beta/pack.json",
+        "https://raw.githubusercontent.com/orinks/accessiweather-soundpacks/main/packs/gamma/pack.json",
+        "https://raw.githubusercontent.com/orinks/accessiweather-soundpacks/main/packs/delta/pack.json",
+        "https://api.github.com/repos/orinks/accessiweather-soundpacks/git/trees/d1?recursive=1"
+      ]
+    },
+    "empty": {
+      "routes": {
+        "https://api.github.com/repos/orinks/accessiweather-soundpacks/contents/index.json": [
+          200,
+          "{\"content\": \"eyJwYWNrcyI6IFtdfQ==\\n\"}"
+        ],
+        "https://api.github.com/repos/orinks/accessiweather-soundpacks/releases?per_page=50": [
+          200,
+          "[]"
+        ],
+        "https://api.github.com/repos/orinks/accessiweather-soundpacks/contents/packs?ref=main": [
+          404,
+          "{\"message\": \"Not Found\"}"
+        ]
+      },
+      "packs": [],
+      "requests": [
+        "https://api.github.com/repos/orinks/accessiweather-soundpacks/contents/index.json",
+        "https://api.github.com/repos/orinks/accessiweather-soundpacks/releases?per_page=50",
+        "https://api.github.com/repos/orinks/accessiweather-soundpacks/contents/packs?ref=main"
+      ]
+    }
+  },
+  "display": {
+    "keys": [
+      "Storm|Ann|2.1",
+      "only-id|Unknown|1.0",
+      "unknown|Unknown|2",
+      "Tiny|Unknown|1.0",
+      "alpha|bob|1.2",
+      "Beta.ZIP|bob|1.2",
+      "c.zip|Unknown|1.0",
+      "Alpha|A|1.5",
+      "beta|Unknown|1.0",
+      "Delta|Unknown|1.0"
+    ],
+    "installable": [
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "filters": {
+      "": [
+        "Storm v2.1 by Ann (0.2 MB)",
+        "only-id v1.0 by Unknown (?)",
+        "unknown v2 by Unknown (1.5 MB)",
+        "Tiny v1.0 by Unknown (0.8 MB)",
+        "alpha v1.2 by bob (1.0 MB)",
+        "Beta.ZIP v1.2 by bob (?)",
+        "c.zip v1.0 by Unknown (0.0 MB)",
+        "Alpha v1.5 by A (0.0 MB)",
+        "beta v1.0 by Unknown (?)",
+        "Delta v1.0 by Unknown (?)"
+      ],
+      "  ALPHA ": [
+        "alpha v1.2 by bob (1.0 MB)",
+        "Alpha v1.5 by A (0.0 MB)"
+      ],
+      "bob": [
+        "alpha v1.2 by bob (1.0 MB)",
+        "Beta.ZIP v1.2 by bob (?)"
+      ],
+      "zzz": [
+        "No packs found"
+      ]
+    },
+    "details": [
+      [
+        "Storm",
+        "Author: Ann",
+        "Version: 2.1",
+        "Size: 0.2 MB",
+        "Loud"
+      ],
+      [
+        "only-id",
+        "Author: Unknown",
+        "Version: 1.0",
+        "Size: Unknown",
+        "No description provided."
+      ],
+      [
+        "unknown",
+        "Author: Unknown",
+        "Version: 2",
+        "Size: 1.5 MB",
+        "No description provided."
+      ],
+      [
+        "Tiny",
+        "Author: Unknown",
+        "Version: 1.0",
+        "Size: 0.8 MB",
+        "No description provided."
+      ],
+      [
+        "alpha",
+        "Author: bob",
+        "Version: 1.2",
+        "Size: 1.0 MB",
+        "Release notes"
+      ],
+      [
+        "Beta.ZIP",
+        "Author: bob",
+        "Version: 1.2",
+        "Size: Unknown",
+        "Release notes"
+      ],
+      [
+        "c.zip",
+        "Author: Unknown",
+        "Version: 1.0",
+        "Size: 0.0 MB",
+        "No description provided."
+      ],
+      [
+        "Alpha",
+        "Author: A",
+        "Version: 1.5",
+        "Size: 0.0 MB",
+        "First"
+      ],
+      [
+        "beta",
+        "Author: Unknown",
+        "Version: 1.0",
+        "Size: Unknown",
+        "No description provided."
+      ],
+      [
+        "Delta",
+        "Author: Unknown",
+        "Version: 1.0",
+        "Size: Unknown",
+        "No description provided."
+      ]
+    ],
+    "str": [
+      "Storm 2.1 by Ann",
+      "only-id 1.0 by Unknown",
+      "unknown 2 by Unknown",
+      "Tiny 1.0 by Unknown",
+      "alpha 1.2 by bob",
+      "Beta.ZIP 1.2 by bob",
+      "c.zip 1.0 by Unknown",
+      "Alpha 1.5 by A",
+      "beta 1.0 by Unknown",
+      "Delta 1.0 by Unknown"
+    ]
+  },
+  "progress_detail": [
+    [
+      0,
+      0,
+      "0.0 MB downloaded"
+    ],
+    [
+      52428,
+      0,
+      "0.0 MB downloaded"
+    ],
+    [
+      262144,
+      1048576,
+      "0.2 MB of 1.0 MB"
+    ],
+    [
+      1048576,
+      1048576,
+      "1.0 MB of 1.0 MB"
+    ],
+    [
+      1100000,
+      3000000,
+      "1.0 MB of 2.9 MB"
+    ]
+  ],
+  "downloads": {
+    "routes": {
+      "https://api.github.com/repos/orinks/accessiweather-soundpacks/contents/index.json": [
+        200,
+        "{\"content\": \"\"}"
+      ],
+      "https://api.github.com/repos/orinks/accessiweather-soundpacks/releases?per_page=50": [
+        403,
+        "{\"message\": \"rate limited\"}"
+      ],
+      "https://api.github.com/repos/orinks/accessiweather-soundpacks/contents/packs?ref=main": [
+        200,
+        "[{\"type\": \"dir\", \"name\": \"alpha\", \"path\": \"packs/alpha\", \"sha\": \"a1\"}, {\"type\": \"dir\", \"name\": \"beta\", \"path\": \"packs/beta\"}, {\"type\": \"file\", \"name\": \"README.md\", \"path\": \"packs/README.md\"}, {\"type\": \"dir\", \"name\": \"gamma\", \"path\": \"packs/gamma\", \"sha\": \"g1\"}, {\"type\": \"dir\", \"name\": \"delta\", \"sha\": \"d1\"}]"
+      ],
+      "https://raw.githubusercontent.com/orinks/accessiweather-soundpacks/main/packs/alpha/pack.json": [
+        200,
+        "{\"name\": \"Alpha\", \"sounds\": {\"a\": \"sounds/a.wav\"}}"
+      ],
+      "https://raw.githubusercontent.com/orinks/accessiweather-soundpacks/main/packs/beta/pack.json": [
+        200,
+        "{}"
+      ],
+      "https://raw.githubusercontent.com/orinks/accessiweather-soundpacks/main/packs/gamma/pack.json": [
+        404,
+        "Not Found"
+      ],
+      "https://raw.githubusercontent.com/orinks/accessiweather-soundpacks/main/packs/delta/pack.json": [
+        200,
+        "{\"name\": \"Delta\"}"
+      ],
+      "https://api.github.com/repos/orinks/accessiweather-soundpacks/git/trees/a1?recursive=1": [
+        200,
+        "{\"tree\": [{\"type\": \"blob\", \"path\": \"pack.json\", \"size\": 40}, {\"type\": \"tree\", \"path\": \"sounds\"}, {\"type\": \"blob\", \"path\": \"sounds/a.wav\", \"size\": 5}, {\"type\": \"blob\", \"path\": \"sounds/b.wav\"}]}"
+      ],
+      "https://api.github.com/repos/orinks/accessiweather-soundpacks/git/trees/d1?recursive=1": [
+        500,
+        "{\"message\": \"oops\"}"
+      ],
+      "https://raw.githubusercontent.com/orinks/accessiweather-soundpacks/main/packs/alpha/sounds/a.wav": [
+        200,
+        "AAAAA"
+      ],
+      "https://raw.githubusercontent.com/orinks/accessiweather-soundpacks/main/packs/alpha/sounds/b.wav": [
+        200,
+        "bb"
+      ],
+      "https://dl/alpha.zip": [
+        200,
+        "zip-bytes-here"
+      ],
+      "https://dl/fail": [
+        404,
+        "nope"
+      ],
+      "https://api.github.com/repos/orinks/accessiweather-soundpacks/git/trees/evil?recursive=1": [
+        200,
+        "{\"tree\": [{\"type\": \"blob\", \"path\": \"ok.wav\", \"size\": 1}, {\"type\": \"blob\", \"path\": \"../escape.wav\", \"size\": 4}]}"
+      ],
+      "https://raw.githubusercontent.com/orinks/accessiweather-soundpacks/main/packs/evil/ok.wav": [
+        200,
+        "o"
+      ]
+    },
+    "cases": [
+      {
+        "pack": {
+          "name": "Alpha Pack",
+          "author": "A",
+          "description": "",
+          "version": "1.5",
+          "download_url": "",
+          "file_size": null,
+          "repository_url": "",
+          "release_tag": "main",
+          "download_count": null,
+          "created_date": null,
+          "preview_image_url": null,
+          "repo_path": "packs/alpha",
+          "tree_sha": "a1",
+          "ref": "main"
+        },
+        "result": {
+          "file": "Alpha_Pack-1.5.zip",
+          "zip": {
+            "pack.json": "{\"name\": \"Alpha\", \"sounds\": {\"a\": \"sounds/a.wav\"}}",
+            "sounds/a.wav": "AAAAA",
+            "sounds/b.wav": "bb"
+          }
+        },
+        "progress": [
+          [
+            111.11111111111111,
+            50,
+            45
+          ],
+          [
+            122.22222222222223,
+            55,
+            45
+          ],
+          [
+            126.66666666666666,
+            57,
+            45
+          ]
+        ],
+        "requests": [
+          "https://api.github.com/repos/orinks/accessiweather-soundpacks/git/trees/a1?recursive=1",
+          "https://raw.githubusercontent.com/orinks/accessiweather-soundpacks/main/packs/alpha/pack.json",
+          "https://raw.githubusercontent.com/orinks/accessiweather-soundpacks/main/packs/alpha/sounds/a.wav",
+          "https://raw.githubusercontent.com/orinks/accessiweather-soundpacks/main/packs/alpha/sounds/b.wav"
+        ]
+      },
+      {
+        "pack": {
+          "name": "Alpha Pack",
+          "author": "A",
+          "description": "",
+          "version": "1.5",
+          "download_url": "",
+          "file_size": null,
+          "repository_url": "",
+          "release_tag": "main",
+          "download_count": null,
+          "created_date": null,
+          "preview_image_url": null,
+          "repo_path": "packs/alpha",
+          "tree_sha": "a1",
+          "ref": "main"
+        },
+        "result": {
+          "file": "Alpha_Pack-1.5_2.zip",
+          "zip": {
+            "pack.json": "{\"name\": \"Alpha\", \"sounds\": {\"a\": \"sounds/a.wav\"}}",
+            "sounds/a.wav": "AAAAA",
+            "sounds/b.wav": "bb"
+          }
+        },
+        "progress": [
+          [
+            111.11111111111111,
+            50,
+            45
+          ],
+          [
+            122.22222222222223,
+            55,
+            45
+          ],
+          [
+            126.66666666666666,
+            57,
+            45
+          ]
+        ],
+        "requests": [
+          "https://api.github.com/repos/orinks/accessiweather-soundpacks/git/trees/a1?recursive=1",
+          "https://raw.githubusercontent.com/orinks/accessiweather-soundpacks/main/packs/alpha/pack.json",
+          "https://raw.githubusercontent.com/orinks/accessiweather-soundpacks/main/packs/alpha/sounds/a.wav",
+          "https://raw.githubusercontent.com/orinks/accessiweather-soundpacks/main/packs/alpha/sounds/b.wav"
+        ]
+      },
+      {
+        "pack": {
+          "name": "alpha",
+          "author": "bob",
+          "description": "",
+          "version": "1.2",
+          "download_url": "https://dl/alpha.zip",
+          "file_size": 14,
+          "repository_url": "",
+          "release_tag": "vv1.2",
+          "download_count": null,
+          "created_date": null,
+          "preview_image_url": null,
+          "repo_path": null,
+          "tree_sha": null,
+          "ref": "main"
+        },
+        "result": {
+          "file": "alpha-1.2.zip",
+          "zip": "zip-bytes-here"
+        },
+        "progress": [
+          [
+            100.0,
+            14,
+            14
+          ]
+        ],
+        "requests": [
+          "https://dl/alpha.zip"
+        ]
+      },
+      {
+        "pack": {
+          "name": "fail",
+          "author": "x",
+          "description": "",
+          "version": "1",
+          "download_url": "https://dl/fail",
+          "file_size": null,
+          "repository_url": "",
+          "release_tag": "",
+          "download_count": null,
+          "created_date": null,
+          "preview_image_url": null,
+          "repo_path": null,
+          "tree_sha": null,
+          "ref": "main"
+        },
+        "result": {
+          "error": "Failed to download fail: Download failed with status 404"
+        },
+        "progress": [],
+        "requests": [
+          "https://dl/fail",
+          "https://dl/fail",
+          "https://dl/fail"
+        ]
+      },
+      {
+        "pack": {
+          "name": "Evil",
+          "author": "x",
+          "description": "",
+          "version": "1",
+          "download_url": "",
+          "file_size": null,
+          "repository_url": "",
+          "release_tag": "",
+          "download_count": null,
+          "created_date": null,
+          "preview_image_url": null,
+          "repo_path": "packs/evil",
+          "tree_sha": "evil",
+          "ref": "main"
+        },
+        "result": {
+          "error": "Unsafe path in repository tree: '../escape.wav'"
+        },
+        "progress": [
+          [
+            20.0,
+            1,
+            5
+          ],
+          [
+            20.0,
+            1,
+            5
+          ]
+        ],
+        "requests": [
+          "https://api.github.com/repos/orinks/accessiweather-soundpacks/git/trees/evil?recursive=1",
+          "https://raw.githubusercontent.com/orinks/accessiweather-soundpacks/main/packs/evil/ok.wav",
+          "https://api.github.com/repos/orinks/accessiweather-soundpacks/git/trees/evil?recursive=1",
+          "https://raw.githubusercontent.com/orinks/accessiweather-soundpacks/main/packs/evil/ok.wav"
+        ]
+      },
+      {
+        "pack": {
+          "name": "Nothing",
+          "author": "x",
+          "description": "",
+          "version": "1",
+          "download_url": "",
+          "file_size": null,
+          "repository_url": "",
+          "release_tag": "",
+          "download_count": null,
+          "created_date": null,
+          "preview_image_url": null,
+          "repo_path": null,
+          "tree_sha": null,
+          "ref": "main"
+        },
+        "result": {
+          "error": "Pack Nothing has no download source"
+        },
+        "progress": [],
+        "requests": []
+      }
+    ],
+    "leftovers": [
+      "Alpha_Pack-1.5.zip",
+      "Alpha_Pack-1.5_2.zip",
+      "alpha-1.2.zip"
+    ]
+  }
+}

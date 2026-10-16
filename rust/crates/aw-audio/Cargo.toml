@@ -1,0 +1,20 @@
+[package]
+name = "aw-audio"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Sound playback, sound packs and community pack sharing for AccessiWeather"
+
+[dependencies]
+aw-core.workspace = true
+aw-store.workspace = true
+base64 = "0.22"
+reqwest = { workspace = true, features = ["multipart"] }
+rodio = { version = "0.22", default-features = false, features = ["playback", "vorbis", "mp3", "flac", "wav"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+tempfile.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+url.workspace = true
+zip = { version = "8.6.0", default-features = false, features = ["deflate"] }

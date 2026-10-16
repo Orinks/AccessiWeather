@@ -1,0 +1,109 @@
+{
+ "now": "2026-01-20T18:30:00+00:00",
+ "call": "alerts",
+ "location": {
+  "name": "New York, NY",
+  "latitude": 40.7128,
+  "longitude": -74.006,
+  "timezone": null,
+  "country_code": null,
+  "marine_mode": false,
+  "forecast_zone_id": null,
+  "cwa_office": null,
+  "county_zone_id": "NYC061",
+  "fire_zone_id": null,
+  "radar_station": null
+ },
+ "radius": "county",
+ "responses": [
+  {
+   "url": "https://api.weather.gov/alerts/active?zone=NYC061&status=actual",
+   "status": 200,
+   "body": "{\"features\":[{\"id\":\"urn:oid:a\",\"properties\":{\"event\":\"Tornado Warning\",\"headline\":\"Tornado Warning issued\",\"severity\":\"Extreme\",\"urgency\":\"Immediate\",\"certainty\":\"Observed\",\"messageType\":\"Alert\",\"description\":\"A tornado was sighted.\",\"instruction\":\"Take cover now.\",\"areaDesc\":\"New York, NY; Kings, NY;\",\"affectedZones\":[\"https://api.weather.gov/zones/county/NYC061\",\"https://api.weather.gov/zones/forecast/NYZ072\"],\"geocode\":{\"SAME\":[\"036061\",36047]},\"eventCode\":{\"SAME\":[\"TOR\"]},\"sent\":\"2026-01-20T18:00:00Z\",\"effective\":\"2026-01-20T18:00:00-05:00\",\"onset\":\"2026-01-20T18:05:00-05:00\",\"expires\":\"2026-01-20T19:00:00-05:00\",\"references\":[{\"identifier\":\"urn:oid:prev\",\"@id\":\"https://x/prev\"}]}},{\"id\":\"urn:oid:b\",\"properties\":{\"event\":\"Winter Storm Warning\",\"headline\":null,\"severity\":\"Severe\",\"messageType\":\"Update\",\"areaDesc\":\"Queens, NY\",\"description\":null}}]}"
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://api.weather.gov/alerts/active",
+   "params": [
+    [
+     "zone",
+     "NYC061"
+    ],
+    [
+     "status",
+     "actual"
+    ]
+   ],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  }
+ ],
+ "result": {
+  "alerts": [
+   {
+    "title": "Tornado Warning issued",
+    "description": "A tornado was sighted.",
+    "severity": "Extreme",
+    "urgency": "Immediate",
+    "certainty": "Observed",
+    "event": "Tornado Warning",
+    "headline": "Tornado Warning issued",
+    "instruction": "Take cover now.",
+    "onset": "2026-01-20T18:05:00-05:00",
+    "expires": "2026-01-20T19:00:00-05:00",
+    "sent": "2026-01-20T18:00:00+00:00",
+    "effective": "2026-01-20T18:00:00-05:00",
+    "areas": [
+     "New York, NY",
+     "Kings, NY"
+    ],
+    "references": [
+     "urn:oid:prev"
+    ],
+    "id": "urn:oid:a",
+    "source": "NWS",
+    "message_type": "Alert",
+    "affected_zones": [
+     "NYC061",
+     "NYZ072"
+    ],
+    "same_codes": [
+     "036061",
+     "36047"
+    ],
+    "same_event_codes": [
+     "TOR"
+    ]
+   },
+   {
+    "title": "",
+    "description": "",
+    "severity": "Severe",
+    "urgency": "Unknown",
+    "certainty": "Unknown",
+    "event": "Winter Storm Warning",
+    "headline": null,
+    "instruction": null,
+    "onset": null,
+    "expires": null,
+    "sent": null,
+    "effective": null,
+    "areas": [
+     "Queens, NY"
+    ],
+    "references": [],
+    "id": "urn:oid:b",
+    "source": "NWS",
+    "message_type": "Update",
+    "affected_zones": [],
+    "same_codes": [],
+    "same_event_codes": []
+   }
+  ]
+ }
+}

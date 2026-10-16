@@ -1,0 +1,182 @@
+{
+ "now": "2026-01-20T18:30:00+00:00",
+ "call": "current_conditions",
+ "location": {
+  "name": "St. Louis",
+  "latitude": 38.6,
+  "longitude": -90.2,
+  "timezone": null,
+  "country_code": null,
+  "marine_mode": false,
+  "forecast_zone_id": null,
+  "cwa_office": null,
+  "county_zone_id": null,
+  "fire_zone_id": null,
+  "radar_station": null
+ },
+ "location_after": {
+  "name": "St. Louis",
+  "latitude": 38.6,
+  "longitude": -90.2,
+  "timezone": "America/Chicago",
+  "country_code": null,
+  "marine_mode": false,
+  "forecast_zone_id": null,
+  "cwa_office": null,
+  "county_zone_id": null,
+  "fire_zone_id": null,
+  "radar_station": null
+ },
+ "responses": [
+  {
+   "url": "https://api.weather.gov/points/38.6,-90.2",
+   "status": 200,
+   "body": "{\"properties\":{\"observationStations\":\"https://api.weather.gov/gridpoints/LSX/90,74/stations\",\"timeZone\":\"America/Chicago\"}}"
+  },
+  {
+   "url": "https://api.weather.gov/gridpoints/LSX/90,74/stations",
+   "status": 200,
+   "body": "{\"features\":[{\"properties\":{\"stationIdentifier\":\"PAMR\",\"distance\":{\"value\":100}}},{\"properties\":{\"stationIdentifier\":\"KFAR\",\"distance\":{\"value\":9000}}},{\"properties\":{\"stationIdentifier\":\"KNEAR\",\"distance\":{\"value\":50}}},{\"properties\":{\"stationIdentifier\":\"KSTL\",\"distance\":{\"value\":500}}},{\"properties\":{\"stationIdentifier\":\"KEMP\",\"distance\":{\"value\":400}}},{\"properties\":{}}]}"
+  },
+  {
+   "url": "https://api.weather.gov/stations/KEMP/observations/latest",
+   "status": 200,
+   "body": "{\"properties\":{\"timestamp\":\"2026-01-20T18:00:00+00:00\"}}"
+  },
+  {
+   "url": "https://api.weather.gov/stations/KSTL/observations/latest",
+   "status": 200,
+   "body": "{\"properties\":{\"timestamp\":\"2026-01-20T12:00:00+00:00\",\"temperature\":{\"value\":5.0,\"unitCode\":\"wmoUnit:degC\",\"qualityControl\":\"V\"},\"textDescription\":\"Cloudy\"}}"
+  },
+  {
+   "url": "https://api.weather.gov/stations/KFAR/observations/latest",
+   "status": 200,
+   "body": "{\"properties\":{\"timestamp\":\"2026-01-20T18:10:00+00:00\",\"temperature\":{\"value\":30.0,\"unitCode\":\"wmoUnit:degC\",\"qualityControl\":\"X\"},\"relativeHumidity\":{\"value\":55.2,\"qualityControl\":\"V\"},\"barometricPressure\":{\"value\":101000,\"unitCode\":\"wmoUnit:Pa\",\"qualityControl\":\"V\"}}}"
+  },
+  {
+   "url": "https://api.weather.gov/stations/PAMR/observations/latest",
+   "status": 500,
+   "body": "oops"
+  },
+  {
+   "url": "https://api.weather.gov/stations/KNEAR/observations/latest",
+   "status": 404,
+   "body": ""
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://api.weather.gov/points/38.6,-90.2",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/gridpoints/LSX/90,74/stations",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/stations/KEMP/observations/latest",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/stations/KSTL/observations/latest",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/stations/KFAR/observations/latest",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/stations/PAMR/observations/latest",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/stations/KNEAR/observations/latest",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  }
+ ],
+ "result": {
+  "temperature": null,
+  "temperature_f": null,
+  "temperature_c": null,
+  "condition": null,
+  "humidity": 55,
+  "wind_speed": null,
+  "dewpoint_f": null,
+  "dewpoint_c": null,
+  "wind_speed_mph": null,
+  "wind_speed_kph": null,
+  "wind_direction": null,
+  "pressure": 29.825300000000002,
+  "pressure_in": 29.825300000000002,
+  "pressure_mb": 1010.0,
+  "feels_like_f": null,
+  "feels_like_c": null,
+  "visibility_miles": null,
+  "visibility_km": null,
+  "uv_index": null,
+  "cloud_cover": null,
+  "wind_gust_mph": null,
+  "wind_gust_kph": null,
+  "precipitation_in": null,
+  "precipitation_mm": null,
+  "sunrise_time": null,
+  "sunset_time": null,
+  "moon_phase": null,
+  "moonrise_time": null,
+  "moonset_time": null,
+  "snow_depth_in": null,
+  "snow_depth_cm": null,
+  "snowfall_rate_in": null,
+  "wind_chill_f": null,
+  "wind_chill_c": null,
+  "freezing_level_ft": null,
+  "freezing_level_m": null,
+  "heat_index_f": null,
+  "heat_index_c": null,
+  "frost_risk": null,
+  "precipitation_type": null,
+  "severe_weather_risk": null
+ }
+}

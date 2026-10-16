@@ -1,0 +1,1928 @@
+[
+  [
+    {
+      "title": "Tornado Warning",
+      "description": "x",
+      "severity": "Extreme",
+      "event": "Tornado Warning"
+    },
+    false,
+    null,
+    [
+      "extreme",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Tornado Warning",
+      "description": "x",
+      "severity": "Extreme",
+      "event": "Tornado Warning"
+    },
+    false,
+    "new_alert",
+    [
+      "extreme",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Tornado Warning",
+      "description": "x",
+      "severity": "Extreme",
+      "event": "Tornado Warning"
+    },
+    false,
+    "content_changed",
+    [
+      "alert_updated",
+      "extreme",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Tornado Warning",
+      "description": "x",
+      "severity": "Extreme",
+      "event": "Tornado Warning"
+    },
+    false,
+    "alert_updated",
+    [
+      "alert_updated",
+      "extreme",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Tornado Warning",
+      "description": "x",
+      "severity": "Extreme",
+      "event": "Tornado Warning"
+    },
+    false,
+    "updated",
+    [
+      "alert_updated",
+      "extreme",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Tornado Warning",
+      "description": "x",
+      "severity": "Extreme",
+      "event": "Tornado Warning"
+    },
+    false,
+    "escalated",
+    [
+      "extreme",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Tornado Warning",
+      "description": "x",
+      "severity": "Extreme",
+      "event": "Tornado Warning"
+    },
+    true,
+    null,
+    [
+      "tornado_warning",
+      "tornado_extreme",
+      "tornado",
+      "warning",
+      "extreme",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Tornado Warning",
+      "description": "x",
+      "severity": "Extreme",
+      "event": "Tornado Warning"
+    },
+    true,
+    "new_alert",
+    [
+      "tornado_warning",
+      "tornado_extreme",
+      "tornado",
+      "warning",
+      "extreme",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Tornado Warning",
+      "description": "x",
+      "severity": "Extreme",
+      "event": "Tornado Warning"
+    },
+    true,
+    "content_changed",
+    [
+      "alert_updated",
+      "tornado_warning",
+      "tornado_extreme",
+      "tornado",
+      "warning",
+      "extreme",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Tornado Warning",
+      "description": "x",
+      "severity": "Extreme",
+      "event": "Tornado Warning"
+    },
+    true,
+    "alert_updated",
+    [
+      "alert_updated",
+      "tornado_warning",
+      "tornado_extreme",
+      "tornado",
+      "warning",
+      "extreme",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Tornado Warning",
+      "description": "x",
+      "severity": "Extreme",
+      "event": "Tornado Warning"
+    },
+    true,
+    "updated",
+    [
+      "alert_updated",
+      "tornado_warning",
+      "tornado_extreme",
+      "tornado",
+      "warning",
+      "extreme",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Tornado Warning",
+      "description": "x",
+      "severity": "Extreme",
+      "event": "Tornado Warning"
+    },
+    true,
+    "escalated",
+    [
+      "tornado_warning",
+      "tornado_extreme",
+      "tornado",
+      "warning",
+      "extreme",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "t",
+      "description": "Heavy snow expected",
+      "severity": "high",
+      "event": "Winter Storm Watch"
+    },
+    false,
+    null,
+    [
+      "severe",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "t",
+      "description": "Heavy snow expected",
+      "severity": "high",
+      "event": "Winter Storm Watch"
+    },
+    false,
+    "new_alert",
+    [
+      "severe",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "t",
+      "description": "Heavy snow expected",
+      "severity": "high",
+      "event": "Winter Storm Watch"
+    },
+    false,
+    "content_changed",
+    [
+      "alert_updated",
+      "severe",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "t",
+      "description": "Heavy snow expected",
+      "severity": "high",
+      "event": "Winter Storm Watch"
+    },
+    false,
+    "alert_updated",
+    [
+      "alert_updated",
+      "severe",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "t",
+      "description": "Heavy snow expected",
+      "severity": "high",
+      "event": "Winter Storm Watch"
+    },
+    false,
+    "updated",
+    [
+      "alert_updated",
+      "severe",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "t",
+      "description": "Heavy snow expected",
+      "severity": "high",
+      "event": "Winter Storm Watch"
+    },
+    false,
+    "escalated",
+    [
+      "severe",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "t",
+      "description": "Heavy snow expected",
+      "severity": "high",
+      "event": "Winter Storm Watch"
+    },
+    true,
+    null,
+    [
+      "winter_storm_watch",
+      "winter_watch",
+      "winter_severe",
+      "winter",
+      "watch",
+      "severe",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "t",
+      "description": "Heavy snow expected",
+      "severity": "high",
+      "event": "Winter Storm Watch"
+    },
+    true,
+    "new_alert",
+    [
+      "winter_storm_watch",
+      "winter_watch",
+      "winter_severe",
+      "winter",
+      "watch",
+      "severe",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "t",
+      "description": "Heavy snow expected",
+      "severity": "high",
+      "event": "Winter Storm Watch"
+    },
+    true,
+    "content_changed",
+    [
+      "alert_updated",
+      "winter_storm_watch",
+      "winter_watch",
+      "winter_severe",
+      "winter",
+      "watch",
+      "severe",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "t",
+      "description": "Heavy snow expected",
+      "severity": "high",
+      "event": "Winter Storm Watch"
+    },
+    true,
+    "alert_updated",
+    [
+      "alert_updated",
+      "winter_storm_watch",
+      "winter_watch",
+      "winter_severe",
+      "winter",
+      "watch",
+      "severe",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "t",
+      "description": "Heavy snow expected",
+      "severity": "high",
+      "event": "Winter Storm Watch"
+    },
+    true,
+    "updated",
+    [
+      "alert_updated",
+      "winter_storm_watch",
+      "winter_watch",
+      "winter_severe",
+      "winter",
+      "watch",
+      "severe",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "t",
+      "description": "Heavy snow expected",
+      "severity": "high",
+      "event": "Winter Storm Watch"
+    },
+    true,
+    "escalated",
+    [
+      "winter_storm_watch",
+      "winter_watch",
+      "winter_severe",
+      "winter",
+      "watch",
+      "severe",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Flood Advisory issued",
+      "description": "",
+      "severity": "Moderate",
+      "event": null
+    },
+    false,
+    null,
+    [
+      "moderate",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Flood Advisory issued",
+      "description": "",
+      "severity": "Moderate",
+      "event": null
+    },
+    false,
+    "new_alert",
+    [
+      "moderate",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Flood Advisory issued",
+      "description": "",
+      "severity": "Moderate",
+      "event": null
+    },
+    false,
+    "content_changed",
+    [
+      "alert_updated",
+      "moderate",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Flood Advisory issued",
+      "description": "",
+      "severity": "Moderate",
+      "event": null
+    },
+    false,
+    "alert_updated",
+    [
+      "alert_updated",
+      "moderate",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Flood Advisory issued",
+      "description": "",
+      "severity": "Moderate",
+      "event": null
+    },
+    false,
+    "updated",
+    [
+      "alert_updated",
+      "moderate",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Flood Advisory issued",
+      "description": "",
+      "severity": "Moderate",
+      "event": null
+    },
+    false,
+    "escalated",
+    [
+      "moderate",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Flood Advisory issued",
+      "description": "",
+      "severity": "Moderate",
+      "event": null
+    },
+    true,
+    null,
+    [
+      "flood_advisory",
+      "flood_moderate",
+      "flood",
+      "advisory",
+      "moderate",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Flood Advisory issued",
+      "description": "",
+      "severity": "Moderate",
+      "event": null
+    },
+    true,
+    "new_alert",
+    [
+      "flood_advisory",
+      "flood_moderate",
+      "flood",
+      "advisory",
+      "moderate",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Flood Advisory issued",
+      "description": "",
+      "severity": "Moderate",
+      "event": null
+    },
+    true,
+    "content_changed",
+    [
+      "alert_updated",
+      "flood_advisory",
+      "flood_moderate",
+      "flood",
+      "advisory",
+      "moderate",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Flood Advisory issued",
+      "description": "",
+      "severity": "Moderate",
+      "event": null
+    },
+    true,
+    "alert_updated",
+    [
+      "alert_updated",
+      "flood_advisory",
+      "flood_moderate",
+      "flood",
+      "advisory",
+      "moderate",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Flood Advisory issued",
+      "description": "",
+      "severity": "Moderate",
+      "event": null
+    },
+    true,
+    "updated",
+    [
+      "alert_updated",
+      "flood_advisory",
+      "flood_moderate",
+      "flood",
+      "advisory",
+      "moderate",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Flood Advisory issued",
+      "description": "",
+      "severity": "Moderate",
+      "event": null
+    },
+    true,
+    "escalated",
+    [
+      "flood_advisory",
+      "flood_moderate",
+      "flood",
+      "advisory",
+      "moderate",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Special Weather Statement",
+      "description": "Dense fog",
+      "severity": "minor",
+      "event": "Special Weather Statement",
+      "headline": "Areas of dense fog"
+    },
+    false,
+    null,
+    [
+      "minor",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Special Weather Statement",
+      "description": "Dense fog",
+      "severity": "minor",
+      "event": "Special Weather Statement",
+      "headline": "Areas of dense fog"
+    },
+    false,
+    "new_alert",
+    [
+      "minor",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Special Weather Statement",
+      "description": "Dense fog",
+      "severity": "minor",
+      "event": "Special Weather Statement",
+      "headline": "Areas of dense fog"
+    },
+    false,
+    "content_changed",
+    [
+      "alert_updated",
+      "minor",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Special Weather Statement",
+      "description": "Dense fog",
+      "severity": "minor",
+      "event": "Special Weather Statement",
+      "headline": "Areas of dense fog"
+    },
+    false,
+    "alert_updated",
+    [
+      "alert_updated",
+      "minor",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Special Weather Statement",
+      "description": "Dense fog",
+      "severity": "minor",
+      "event": "Special Weather Statement",
+      "headline": "Areas of dense fog"
+    },
+    false,
+    "updated",
+    [
+      "alert_updated",
+      "minor",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Special Weather Statement",
+      "description": "Dense fog",
+      "severity": "minor",
+      "event": "Special Weather Statement",
+      "headline": "Areas of dense fog"
+    },
+    false,
+    "escalated",
+    [
+      "minor",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Special Weather Statement",
+      "description": "Dense fog",
+      "severity": "minor",
+      "event": "Special Weather Statement",
+      "headline": "Areas of dense fog"
+    },
+    true,
+    null,
+    [
+      "special_weather_statement",
+      "fog_statement",
+      "fog_minor",
+      "fog",
+      "statement",
+      "minor",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Special Weather Statement",
+      "description": "Dense fog",
+      "severity": "minor",
+      "event": "Special Weather Statement",
+      "headline": "Areas of dense fog"
+    },
+    true,
+    "new_alert",
+    [
+      "special_weather_statement",
+      "fog_statement",
+      "fog_minor",
+      "fog",
+      "statement",
+      "minor",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Special Weather Statement",
+      "description": "Dense fog",
+      "severity": "minor",
+      "event": "Special Weather Statement",
+      "headline": "Areas of dense fog"
+    },
+    true,
+    "content_changed",
+    [
+      "alert_updated",
+      "special_weather_statement",
+      "fog_statement",
+      "fog_minor",
+      "fog",
+      "statement",
+      "minor",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Special Weather Statement",
+      "description": "Dense fog",
+      "severity": "minor",
+      "event": "Special Weather Statement",
+      "headline": "Areas of dense fog"
+    },
+    true,
+    "alert_updated",
+    [
+      "alert_updated",
+      "special_weather_statement",
+      "fog_statement",
+      "fog_minor",
+      "fog",
+      "statement",
+      "minor",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Special Weather Statement",
+      "description": "Dense fog",
+      "severity": "minor",
+      "event": "Special Weather Statement",
+      "headline": "Areas of dense fog"
+    },
+    true,
+    "updated",
+    [
+      "alert_updated",
+      "special_weather_statement",
+      "fog_statement",
+      "fog_minor",
+      "fog",
+      "statement",
+      "minor",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Special Weather Statement",
+      "description": "Dense fog",
+      "severity": "minor",
+      "event": "Special Weather Statement",
+      "headline": "Areas of dense fog"
+    },
+    true,
+    "escalated",
+    [
+      "special_weather_statement",
+      "fog_statement",
+      "fog_minor",
+      "fog",
+      "statement",
+      "minor",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Air Quality Alert",
+      "description": "smoke",
+      "severity": null,
+      "event": "Air Quality Alert"
+    },
+    false,
+    null,
+    [
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Air Quality Alert",
+      "description": "smoke",
+      "severity": null,
+      "event": "Air Quality Alert"
+    },
+    false,
+    "new_alert",
+    [
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Air Quality Alert",
+      "description": "smoke",
+      "severity": null,
+      "event": "Air Quality Alert"
+    },
+    false,
+    "content_changed",
+    [
+      "alert_updated",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Air Quality Alert",
+      "description": "smoke",
+      "severity": null,
+      "event": "Air Quality Alert"
+    },
+    false,
+    "alert_updated",
+    [
+      "alert_updated",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Air Quality Alert",
+      "description": "smoke",
+      "severity": null,
+      "event": "Air Quality Alert"
+    },
+    false,
+    "updated",
+    [
+      "alert_updated",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Air Quality Alert",
+      "description": "smoke",
+      "severity": null,
+      "event": "Air Quality Alert"
+    },
+    false,
+    "escalated",
+    [
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Air Quality Alert",
+      "description": "smoke",
+      "severity": null,
+      "event": "Air Quality Alert"
+    },
+    true,
+    null,
+    [
+      "air_quality_alert",
+      "air_quality_unknown",
+      "air_quality",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Air Quality Alert",
+      "description": "smoke",
+      "severity": null,
+      "event": "Air Quality Alert"
+    },
+    true,
+    "new_alert",
+    [
+      "air_quality_alert",
+      "air_quality_unknown",
+      "air_quality",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Air Quality Alert",
+      "description": "smoke",
+      "severity": null,
+      "event": "Air Quality Alert"
+    },
+    true,
+    "content_changed",
+    [
+      "alert_updated",
+      "air_quality_alert",
+      "air_quality_unknown",
+      "air_quality",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Air Quality Alert",
+      "description": "smoke",
+      "severity": null,
+      "event": "Air Quality Alert"
+    },
+    true,
+    "alert_updated",
+    [
+      "alert_updated",
+      "air_quality_alert",
+      "air_quality_unknown",
+      "air_quality",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Air Quality Alert",
+      "description": "smoke",
+      "severity": null,
+      "event": "Air Quality Alert"
+    },
+    true,
+    "updated",
+    [
+      "alert_updated",
+      "air_quality_alert",
+      "air_quality_unknown",
+      "air_quality",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Air Quality Alert",
+      "description": "smoke",
+      "severity": null,
+      "event": "Air Quality Alert"
+    },
+    true,
+    "escalated",
+    [
+      "air_quality_alert",
+      "air_quality_unknown",
+      "air_quality",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "x",
+      "description": "y",
+      "severity": "  CRITICAL ",
+      "event": "Excessive  Heat -- Watch!"
+    },
+    false,
+    null,
+    [
+      "extreme",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "x",
+      "description": "y",
+      "severity": "  CRITICAL ",
+      "event": "Excessive  Heat -- Watch!"
+    },
+    false,
+    "new_alert",
+    [
+      "extreme",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "x",
+      "description": "y",
+      "severity": "  CRITICAL ",
+      "event": "Excessive  Heat -- Watch!"
+    },
+    false,
+    "content_changed",
+    [
+      "alert_updated",
+      "extreme",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "x",
+      "description": "y",
+      "severity": "  CRITICAL ",
+      "event": "Excessive  Heat -- Watch!"
+    },
+    false,
+    "alert_updated",
+    [
+      "alert_updated",
+      "extreme",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "x",
+      "description": "y",
+      "severity": "  CRITICAL ",
+      "event": "Excessive  Heat -- Watch!"
+    },
+    false,
+    "updated",
+    [
+      "alert_updated",
+      "extreme",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "x",
+      "description": "y",
+      "severity": "  CRITICAL ",
+      "event": "Excessive  Heat -- Watch!"
+    },
+    false,
+    "escalated",
+    [
+      "extreme",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "x",
+      "description": "y",
+      "severity": "  CRITICAL ",
+      "event": "Excessive  Heat -- Watch!"
+    },
+    true,
+    null,
+    [
+      "excessive_heat_watch",
+      "heat_watch",
+      "heat_extreme",
+      "heat",
+      "watch",
+      "extreme",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "x",
+      "description": "y",
+      "severity": "  CRITICAL ",
+      "event": "Excessive  Heat -- Watch!"
+    },
+    true,
+    "new_alert",
+    [
+      "excessive_heat_watch",
+      "heat_watch",
+      "heat_extreme",
+      "heat",
+      "watch",
+      "extreme",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "x",
+      "description": "y",
+      "severity": "  CRITICAL ",
+      "event": "Excessive  Heat -- Watch!"
+    },
+    true,
+    "content_changed",
+    [
+      "alert_updated",
+      "excessive_heat_watch",
+      "heat_watch",
+      "heat_extreme",
+      "heat",
+      "watch",
+      "extreme",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "x",
+      "description": "y",
+      "severity": "  CRITICAL ",
+      "event": "Excessive  Heat -- Watch!"
+    },
+    true,
+    "alert_updated",
+    [
+      "alert_updated",
+      "excessive_heat_watch",
+      "heat_watch",
+      "heat_extreme",
+      "heat",
+      "watch",
+      "extreme",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "x",
+      "description": "y",
+      "severity": "  CRITICAL ",
+      "event": "Excessive  Heat -- Watch!"
+    },
+    true,
+    "updated",
+    [
+      "alert_updated",
+      "excessive_heat_watch",
+      "heat_watch",
+      "heat_extreme",
+      "heat",
+      "watch",
+      "extreme",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "x",
+      "description": "y",
+      "severity": "  CRITICAL ",
+      "event": "Excessive  Heat -- Watch!"
+    },
+    true,
+    "escalated",
+    [
+      "excessive_heat_watch",
+      "heat_watch",
+      "heat_extreme",
+      "heat",
+      "watch",
+      "extreme",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "prewarnings",
+      "description": "",
+      "severity": "bogus",
+      "event": "Red Flag Warning"
+    },
+    false,
+    null,
+    [
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "prewarnings",
+      "description": "",
+      "severity": "bogus",
+      "event": "Red Flag Warning"
+    },
+    false,
+    "new_alert",
+    [
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "prewarnings",
+      "description": "",
+      "severity": "bogus",
+      "event": "Red Flag Warning"
+    },
+    false,
+    "content_changed",
+    [
+      "alert_updated",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "prewarnings",
+      "description": "",
+      "severity": "bogus",
+      "event": "Red Flag Warning"
+    },
+    false,
+    "alert_updated",
+    [
+      "alert_updated",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "prewarnings",
+      "description": "",
+      "severity": "bogus",
+      "event": "Red Flag Warning"
+    },
+    false,
+    "updated",
+    [
+      "alert_updated",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "prewarnings",
+      "description": "",
+      "severity": "bogus",
+      "event": "Red Flag Warning"
+    },
+    false,
+    "escalated",
+    [
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "prewarnings",
+      "description": "",
+      "severity": "bogus",
+      "event": "Red Flag Warning"
+    },
+    true,
+    null,
+    [
+      "red_flag_warning",
+      "fire_warning",
+      "fire_unknown",
+      "fire",
+      "warning",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "prewarnings",
+      "description": "",
+      "severity": "bogus",
+      "event": "Red Flag Warning"
+    },
+    true,
+    "new_alert",
+    [
+      "red_flag_warning",
+      "fire_warning",
+      "fire_unknown",
+      "fire",
+      "warning",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "prewarnings",
+      "description": "",
+      "severity": "bogus",
+      "event": "Red Flag Warning"
+    },
+    true,
+    "content_changed",
+    [
+      "alert_updated",
+      "red_flag_warning",
+      "fire_warning",
+      "fire_unknown",
+      "fire",
+      "warning",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "prewarnings",
+      "description": "",
+      "severity": "bogus",
+      "event": "Red Flag Warning"
+    },
+    true,
+    "alert_updated",
+    [
+      "alert_updated",
+      "red_flag_warning",
+      "fire_warning",
+      "fire_unknown",
+      "fire",
+      "warning",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "prewarnings",
+      "description": "",
+      "severity": "bogus",
+      "event": "Red Flag Warning"
+    },
+    true,
+    "updated",
+    [
+      "alert_updated",
+      "red_flag_warning",
+      "fire_warning",
+      "fire_unknown",
+      "fire",
+      "warning",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "prewarnings",
+      "description": "",
+      "severity": "bogus",
+      "event": "Red Flag Warning"
+    },
+    true,
+    "escalated",
+    [
+      "red_flag_warning",
+      "fire_warning",
+      "fire_unknown",
+      "fire",
+      "warning",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Hurricane",
+      "description": "",
+      "severity": "",
+      "event": "__"
+    },
+    false,
+    null,
+    [
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Hurricane",
+      "description": "",
+      "severity": "",
+      "event": "__"
+    },
+    false,
+    "new_alert",
+    [
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Hurricane",
+      "description": "",
+      "severity": "",
+      "event": "__"
+    },
+    false,
+    "content_changed",
+    [
+      "alert_updated",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Hurricane",
+      "description": "",
+      "severity": "",
+      "event": "__"
+    },
+    false,
+    "alert_updated",
+    [
+      "alert_updated",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Hurricane",
+      "description": "",
+      "severity": "",
+      "event": "__"
+    },
+    false,
+    "updated",
+    [
+      "alert_updated",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Hurricane",
+      "description": "",
+      "severity": "",
+      "event": "__"
+    },
+    false,
+    "escalated",
+    [
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Hurricane",
+      "description": "",
+      "severity": "",
+      "event": "__"
+    },
+    true,
+    null,
+    [
+      "hurricane_unknown",
+      "hurricane",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Hurricane",
+      "description": "",
+      "severity": "",
+      "event": "__"
+    },
+    true,
+    "new_alert",
+    [
+      "hurricane_unknown",
+      "hurricane",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Hurricane",
+      "description": "",
+      "severity": "",
+      "event": "__"
+    },
+    true,
+    "content_changed",
+    [
+      "alert_updated",
+      "hurricane_unknown",
+      "hurricane",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Hurricane",
+      "description": "",
+      "severity": "",
+      "event": "__"
+    },
+    true,
+    "alert_updated",
+    [
+      "alert_updated",
+      "hurricane_unknown",
+      "hurricane",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Hurricane",
+      "description": "",
+      "severity": "",
+      "event": "__"
+    },
+    true,
+    "updated",
+    [
+      "alert_updated",
+      "hurricane_unknown",
+      "hurricane",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Hurricane",
+      "description": "",
+      "severity": "",
+      "event": "__"
+    },
+    true,
+    "escalated",
+    [
+      "hurricane_unknown",
+      "hurricane",
+      "unknown",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Blowing Dust Advisory",
+      "description": "",
+      "severity": "low",
+      "event": "Dust Advisory",
+      "headline": "Freezing rain and ice"
+    },
+    false,
+    null,
+    [
+      "minor",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Blowing Dust Advisory",
+      "description": "",
+      "severity": "low",
+      "event": "Dust Advisory",
+      "headline": "Freezing rain and ice"
+    },
+    false,
+    "new_alert",
+    [
+      "minor",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Blowing Dust Advisory",
+      "description": "",
+      "severity": "low",
+      "event": "Dust Advisory",
+      "headline": "Freezing rain and ice"
+    },
+    false,
+    "content_changed",
+    [
+      "alert_updated",
+      "minor",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Blowing Dust Advisory",
+      "description": "",
+      "severity": "low",
+      "event": "Dust Advisory",
+      "headline": "Freezing rain and ice"
+    },
+    false,
+    "alert_updated",
+    [
+      "alert_updated",
+      "minor",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Blowing Dust Advisory",
+      "description": "",
+      "severity": "low",
+      "event": "Dust Advisory",
+      "headline": "Freezing rain and ice"
+    },
+    false,
+    "updated",
+    [
+      "alert_updated",
+      "minor",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Blowing Dust Advisory",
+      "description": "",
+      "severity": "low",
+      "event": "Dust Advisory",
+      "headline": "Freezing rain and ice"
+    },
+    false,
+    "escalated",
+    [
+      "minor",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Blowing Dust Advisory",
+      "description": "",
+      "severity": "low",
+      "event": "Dust Advisory",
+      "headline": "Freezing rain and ice"
+    },
+    true,
+    null,
+    [
+      "dust_advisory",
+      "ice_advisory",
+      "ice_minor",
+      "ice",
+      "advisory",
+      "minor",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Blowing Dust Advisory",
+      "description": "",
+      "severity": "low",
+      "event": "Dust Advisory",
+      "headline": "Freezing rain and ice"
+    },
+    true,
+    "new_alert",
+    [
+      "dust_advisory",
+      "ice_advisory",
+      "ice_minor",
+      "ice",
+      "advisory",
+      "minor",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Blowing Dust Advisory",
+      "description": "",
+      "severity": "low",
+      "event": "Dust Advisory",
+      "headline": "Freezing rain and ice"
+    },
+    true,
+    "content_changed",
+    [
+      "alert_updated",
+      "dust_advisory",
+      "ice_advisory",
+      "ice_minor",
+      "ice",
+      "advisory",
+      "minor",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Blowing Dust Advisory",
+      "description": "",
+      "severity": "low",
+      "event": "Dust Advisory",
+      "headline": "Freezing rain and ice"
+    },
+    true,
+    "alert_updated",
+    [
+      "alert_updated",
+      "dust_advisory",
+      "ice_advisory",
+      "ice_minor",
+      "ice",
+      "advisory",
+      "minor",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Blowing Dust Advisory",
+      "description": "",
+      "severity": "low",
+      "event": "Dust Advisory",
+      "headline": "Freezing rain and ice"
+    },
+    true,
+    "updated",
+    [
+      "alert_updated",
+      "dust_advisory",
+      "ice_advisory",
+      "ice_minor",
+      "ice",
+      "advisory",
+      "minor",
+      "alert",
+      "notify"
+    ]
+  ],
+  [
+    {
+      "title": "Blowing Dust Advisory",
+      "description": "",
+      "severity": "low",
+      "event": "Dust Advisory",
+      "headline": "Freezing rain and ice"
+    },
+    true,
+    "escalated",
+    [
+      "dust_advisory",
+      "ice_advisory",
+      "ice_minor",
+      "ice",
+      "advisory",
+      "minor",
+      "alert",
+      "notify"
+    ]
+  ]
+]

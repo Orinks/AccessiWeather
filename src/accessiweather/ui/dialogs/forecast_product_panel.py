@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING, cast
 
 import wx
 
+from ...ai_provider import ai_request_error
 from ...screen_reader import ScreenReaderAnnouncer
 from .async_guard import guard_destroyed
 from .forecast_product_ai import (
@@ -488,6 +489,7 @@ class ForecastProductPanel(wx.Panel):
 
     async def _run_explain(self, text: str) -> None:
         """Invoke ``AIExplainer.explain_text_product`` for this tab's product."""
+        provider = "openrouter"
         try:
             explainer = self._build_explainer()
             if explainer is None:
@@ -496,6 +498,7 @@ class ForecastProductPanel(wx.Panel):
                     "Selected AI provider API key not configured. Set it in Settings > AI.",
                 )
                 return
+            provider = getattr(explainer, "provider", provider)
             result = await explainer.explain_text_product(
                 text,
                 cast(ProductType, self.product_type),
@@ -514,7 +517,7 @@ class ForecastProductPanel(wx.Panel):
                 getattr(result, "model_attempts", ()),
             )
         except Exception as exc:  # noqa: BLE001
-            wx.CallAfter(self._on_explain_error, str(exc))
+            wx.CallAfter(self._on_explain_error, str(ai_request_error(exc, provider)))
 
     def _build_model_info(
         self,
@@ -560,6 +563,7 @@ class ForecastProductPanel(wx.Panel):
         """Fill in the AI summary TextCtrl + Model Information on success."""
         self._is_explaining = False
         self._show_ai_summary_section()
+        explain_had_focus = getattr(self.explain_button, "HasFocus", lambda: False)()
         self._set_post_explain_buttons(has_attempted=True)
         self.ai_summary_display.SetValue(summary)
         self.model_info.SetValue(
@@ -574,6 +578,8 @@ class ForecastProductPanel(wx.Panel):
             )
         )
         self._show_model_info()
+        if explain_had_focus:
+            self.ai_summary_display.SetFocus()
         completion_message = "Plain Language Summary generated."
         if model_used:
             completion_message = f"Plain Language Summary generated using {model_used}."

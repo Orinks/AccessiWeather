@@ -1,0 +1,420 @@
+{
+  "weatherindex": [
+    {
+      "payload": {
+        "feeds": [
+          {
+            "stream_url": "https://a"
+          },
+          {
+            "stream_url": " https://b "
+          },
+          {
+            "stream_url": "https://a"
+          }
+        ]
+      },
+      "urls": [
+        "https://a",
+        "https://b"
+      ],
+      "metadata": {
+        "call_sign": "REQ1",
+        "wfo": null,
+        "latitude": null,
+        "longitude": null,
+        "served_counties": []
+      }
+    },
+    {
+      "payload": {
+        "station": {
+          "callsign": "wxk27",
+          "feeds": [
+            {
+              "stream_url": 5
+            },
+            "junk",
+            {
+              "stream_url": ""
+            }
+          ]
+        }
+      },
+      "urls": [],
+      "metadata": {
+        "call_sign": "WXK27",
+        "wfo": null,
+        "latitude": null,
+        "longitude": null,
+        "served_counties": []
+      }
+    },
+    {
+      "payload": {
+        "station": {},
+        "feeds": [
+          {
+            "stream_url": "https://outer"
+          }
+        ]
+      },
+      "urls": [],
+      "metadata": null
+    },
+    {
+      "payload": {
+        "call_sign": "WXK27"
+      },
+      "urls": [],
+      "metadata": {
+        "call_sign": "WXK27",
+        "wfo": null,
+        "latitude": null,
+        "longitude": null,
+        "served_counties": []
+      }
+    },
+    {
+      "payload": {},
+      "urls": [],
+      "metadata": null
+    },
+    {
+      "payload": [],
+      "urls": [],
+      "metadata": null
+    },
+    {
+      "payload": "text",
+      "urls": [],
+      "metadata": null
+    },
+    {
+      "payload": {
+        "feeds": "nope"
+      },
+      "urls": [],
+      "metadata": {
+        "call_sign": "REQ1",
+        "wfo": null,
+        "latitude": null,
+        "longitude": null,
+        "served_counties": []
+      }
+    },
+    {
+      "payload": {
+        "callsign": "",
+        "call_sign": "kec49",
+        "wfo": "  ",
+        "latitude": "30.5",
+        "longitude": true,
+        "served_counties": [
+          {
+            "county": " Travis ",
+            "same_code": "048453",
+            "state": " tx ",
+            "area": "All"
+          },
+          {
+            "county": "Int",
+            "same_code": 48209,
+            "state": "TX",
+            "area": " "
+          },
+          {
+            "county": "Neg",
+            "same_code": -5,
+            "state": "TX"
+          },
+          {
+            "county": "Float",
+            "same_code": 48.0,
+            "state": "TX"
+          },
+          {
+            "county": "Bool",
+            "same_code": true,
+            "state": "TX"
+          },
+          {
+            "county": "Dashes",
+            "same_code": "48-453",
+            "state": "TX",
+            "area": 5
+          },
+          {
+            "county": "NoDigits",
+            "same_code": "abc",
+            "state": "TX"
+          },
+          {
+            "county": 5,
+            "same_code": "1",
+            "state": "TX"
+          },
+          {
+            "county": "NoState",
+            "same_code": "1"
+          },
+          "junk"
+        ]
+      },
+      "urls": [],
+      "metadata": {
+        "call_sign": "KEC49",
+        "wfo": null,
+        "latitude": 30.5,
+        "longitude": 1.0,
+        "served_counties": [
+          {
+            "county": "Travis",
+            "same_code": "048453",
+            "state": "TX",
+            "area": "All"
+          },
+          {
+            "county": "Int",
+            "same_code": "048209",
+            "state": "TX",
+            "area": null
+          },
+          {
+            "county": "Neg",
+            "same_code": "-00005",
+            "state": "TX",
+            "area": null
+          },
+          {
+            "county": "Bool",
+            "same_code": "000001",
+            "state": "TX",
+            "area": null
+          },
+          {
+            "county": "Dashes",
+            "same_code": "048453",
+            "state": "TX",
+            "area": null
+          }
+        ]
+      }
+    },
+    {
+      "payload": {
+        "callsign": 12345,
+        "latitude": null,
+        "longitude": "x",
+        "served_counties": {
+          "a": 1
+        }
+      },
+      "urls": [],
+      "metadata": {
+        "call_sign": "12345",
+        "wfo": null,
+        "latitude": null,
+        "longitude": null,
+        "served_counties": []
+      }
+    }
+  ],
+  "wxradio": [
+    {
+      "payload": {
+        "icestats": {
+          "source": [
+            {
+              "listenurl": "http://wxradio.org:8000/FL-Tallahassee-KIH24"
+            },
+            {
+              "listenurl": "http://wxradio.org:8000/FL-Tallahassee-KIH24"
+            },
+            {
+              "listenurl": "http://wxradio.org:8000/FL-Tallahassee-KIH24-alt1"
+            },
+            {
+              "server_name": "GA-Atlanta-KEC80"
+            },
+            {
+              "listenurl": "",
+              "server_name": "OK-Tulsa-KIH27"
+            },
+            {
+              "listenurl": "noslash",
+              "server_name": "TX-Austin-WXK27"
+            },
+            {
+              "listenurl": "http://x/",
+              "server_name": "TX-Austin-WXK27"
+            },
+            {
+              "listenurl": 5,
+              "server_name": 7
+            },
+            {
+              "listenurl": "http://x/NE-Omaha-KIH61-A"
+            },
+            {
+              "listenurl": "http://x/MA-Bourne/Hyannis-KEC73"
+            },
+            "junk"
+          ]
+        }
+      },
+      "streams": {
+        "KIH24": [
+          "https://wxradio.org/FL-Tallahassee-KIH24",
+          "https://wxradio.org/FL-Tallahassee-KIH24-alt1"
+        ],
+        "KEC80": [
+          "https://wxradio.org/GA-Atlanta-KEC80"
+        ],
+        "KIH27": [
+          "https://wxradio.org/OK-Tulsa-KIH27"
+        ],
+        "WXK27": [
+          "https://wxradio.org/TX-Austin-WXK27"
+        ],
+        "KIH61": [
+          "https://wxradio.org/NE-Omaha-KIH61-A"
+        ]
+      }
+    },
+    {
+      "payload": {
+        "icestats": {
+          "source": {
+            "listenurl": "http://x/OK-Tulsa-KIH27"
+          }
+        }
+      },
+      "streams": {
+        "KIH27": [
+          "https://wxradio.org/OK-Tulsa-KIH27"
+        ]
+      }
+    },
+    {
+      "payload": {
+        "icestats": {}
+      },
+      "streams": {}
+    },
+    {
+      "payload": {
+        "icestats": []
+      },
+      "streams": {}
+    },
+    {
+      "payload": {
+        "icestats": {
+          "source": "x"
+        }
+      },
+      "streams": {}
+    },
+    {
+      "payload": {},
+      "streams": {}
+    },
+    {
+      "payload": [],
+      "streams": {}
+    }
+  ],
+  "mounts": {
+    "/FL-Tallahassee-KIH24": "KIH24",
+    "/NY-New-York-City-KWO35": "KWO35",
+    "/MI-MountPleasant-KZZ33-alt2": "KZZ33",
+    "/NE-Omaha-KIH61-A": "KIH61",
+    "/AB-Calgary-XLF339": "XLF339",
+    "/IL-Marion-WXM49-ALT1": "WXM49",
+    "FL-Tallahassee-KIH24": "KIH24",
+    "/FL-Tallahassee": null,
+    "": null,
+    "/": null,
+    "/FL-Tallahassee-nothing": null,
+    "/fl-tallahassee-kih24": "KIH24",
+    "/XX-City-ABCDE12": null,
+    "/XX-City-A12": null,
+    "/XX-City-ABCD1234": "ABCD1234",
+    "/XX-City-ABC12345": null,
+    "/XX-KIH24-City": null
+  },
+  "merge": [
+    {
+      "call_sign": "KIH24",
+      "weatherindex": [
+        "https://wi/1",
+        "https://wxradio.org/FL-Tallahassee-KIH24"
+      ],
+      "wxradio": {
+        "KIH24": [
+          "https://wxradio.org/FL-Tallahassee-KIH24-alt"
+        ]
+      },
+      "use_fallback": true,
+      "urls": [
+        "https://wi/1",
+        "https://wxradio.org/FL-Tallahassee-KIH24",
+        "https://wxradio.org/FL-Tallahassee-KIH24-alt",
+        "http://wxradio.dyndns.org:8000/FL-Tallahassee-KIH24"
+      ]
+    },
+    {
+      "call_sign": " kih24 ",
+      "weatherindex": [],
+      "wxradio": {},
+      "use_fallback": false,
+      "urls": [
+        "https://wxradio.org/FL-Tallahassee-KIH24",
+        "http://wxradio.dyndns.org:8000/FL-Tallahassee-KIH24"
+      ]
+    },
+    {
+      "call_sign": "ZZZ99",
+      "weatherindex": [],
+      "wxradio": {},
+      "use_fallback": true,
+      "urls": [
+        "https://broadcastify.cdnstream1.com/noaa/ZZZ99"
+      ]
+    },
+    {
+      "call_sign": "ZZZ99",
+      "weatherindex": [],
+      "wxradio": {},
+      "use_fallback": false,
+      "urls": []
+    },
+    {
+      "call_sign": "ZZZ99",
+      "weatherindex": [
+        "https://only"
+      ],
+      "wxradio": {
+        "ZZZ99": [
+          "https://only",
+          "https://w"
+        ]
+      },
+      "use_fallback": true,
+      "urls": [
+        "https://only",
+        "https://w"
+      ]
+    },
+    {
+      "call_sign": "",
+      "weatherindex": [
+        "https://x"
+      ],
+      "wxradio": {},
+      "use_fallback": true,
+      "urls": []
+    }
+  ]
+}

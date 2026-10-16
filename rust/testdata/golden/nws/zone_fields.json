@@ -1,0 +1,244 @@
+{
+ "now": "2026-01-20T18:21:00+00:00",
+ "call": "zone_fields",
+ "result": [
+  {
+   "properties": {
+    "@id": "https://api.weather.gov/points/40.7128,-74.006",
+    "@type": "wx:Point",
+    "cwa": "OKX",
+    "type": "land",
+    "forecastOffice": "https://api.weather.gov/offices/OKX",
+    "gridId": "OKX",
+    "gridX": 33,
+    "gridY": 35,
+    "forecast": "https://api.weather.gov/gridpoints/OKX/33,35/forecast",
+    "forecastHourly": "https://api.weather.gov/gridpoints/OKX/33,35/forecast/hourly",
+    "forecastGridData": "https://api.weather.gov/gridpoints/OKX/33,35",
+    "observationStations": "https://api.weather.gov/gridpoints/OKX/33,35/stations",
+    "relativeLocation": {
+     "type": "Feature",
+     "geometry": {
+      "type": "Point",
+      "coordinates": [
+       -74.027926,
+       40.745251
+      ]
+     },
+     "properties": {
+      "city": "Hoboken",
+      "state": "NJ",
+      "distance": {
+       "unitCode": "wmoUnit:m",
+       "value": 4053.889432394
+      },
+      "bearing": {
+       "unitCode": "wmoUnit:degree_(angle)",
+       "value": 152
+      }
+     }
+    },
+    "forecastZone": "https://api.weather.gov/zones/forecast/NYZ072",
+    "county": "https://api.weather.gov/zones/county/NYC061",
+    "fireWeatherZone": "https://api.weather.gov/zones/fire/NYZ212",
+    "timeZone": "America/New_York",
+    "radarStation": "KDIX"
+   },
+   "fields": {
+    "timezone": "America/New_York",
+    "cwa_office": "OKX",
+    "forecast_zone_id": "NYZ072",
+    "county_zone_id": "NYC061",
+    "fire_zone_id": "NYZ212",
+    "radar_station": "KDIX"
+   },
+   "diffs": [
+    [
+     {
+      "name": "Legacy",
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": null,
+      "country_code": null,
+      "marine_mode": false,
+      "forecast_zone_id": null,
+      "cwa_office": null,
+      "county_zone_id": null,
+      "fire_zone_id": null,
+      "radar_station": null
+     },
+     {
+      "timezone": "America/New_York",
+      "cwa_office": "OKX",
+      "forecast_zone_id": "NYZ072",
+      "county_zone_id": "NYC061",
+      "fire_zone_id": "NYZ212",
+      "radar_station": "KDIX"
+     }
+    ],
+    [
+     {
+      "name": "Current",
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "country_code": null,
+      "marine_mode": false,
+      "forecast_zone_id": "NYZ072",
+      "cwa_office": "OKX",
+      "county_zone_id": "NYC061",
+      "fire_zone_id": "NYZ212",
+      "radar_station": "KOKX"
+     },
+     {
+      "radar_station": "KDIX"
+     }
+    ],
+    [
+     {
+      "name": "Drifted",
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": null,
+      "country_code": null,
+      "marine_mode": false,
+      "forecast_zone_id": null,
+      "cwa_office": "PHI",
+      "county_zone_id": null,
+      "fire_zone_id": null,
+      "radar_station": "KDIX"
+     },
+     {
+      "timezone": "America/New_York",
+      "cwa_office": "OKX",
+      "forecast_zone_id": "NYZ072",
+      "county_zone_id": "NYC061",
+      "fire_zone_id": "NYZ212"
+     }
+    ]
+   ]
+  },
+  {
+   "properties": {
+    "@id": "https://api.weather.gov/points/61.2181,-149.9003",
+    "@type": "wx:Point",
+    "cwa": "AFC",
+    "type": "land",
+    "forecastOffice": "https://api.weather.gov/offices/AFC",
+    "gridId": "AER",
+    "gridX": 143,
+    "gridY": 236,
+    "forecast": "https://api.weather.gov/gridpoints/AER/143,236/forecast",
+    "forecastHourly": "https://api.weather.gov/gridpoints/AER/143,236/forecast/hourly",
+    "forecastGridData": "https://api.weather.gov/gridpoints/AER/143,236",
+    "observationStations": "https://api.weather.gov/gridpoints/AER/143,236/stations",
+    "relativeLocation": {
+     "type": "Feature",
+     "geometry": {
+      "type": "Point",
+      "coordinates": [
+       -150.16935,
+       61.355597
+      ]
+     },
+     "properties": {
+      "city": "Point MacKenzie",
+      "state": "AK",
+      "distance": {
+       "unitCode": "wmoUnit:m",
+       "value": 20984.08291461
+      },
+      "bearing": {
+       "unitCode": "wmoUnit:degree_(angle)",
+       "value": 136
+      }
+     }
+    },
+    "forecastZone": "https://api.weather.gov/zones/forecast/AKZ701",
+    "county": "https://api.weather.gov/zones/county/AKC020",
+    "fireWeatherZone": "https://api.weather.gov/zones/fire/AKZ701",
+    "timeZone": "America/Anchorage",
+    "radarStation": "PAHG"
+   },
+   "fields": {
+    "timezone": "America/Anchorage",
+    "cwa_office": "AFC",
+    "forecast_zone_id": "AKZ701",
+    "county_zone_id": "AKC020",
+    "fire_zone_id": "AKZ701",
+    "radar_station": "PAHG"
+   },
+   "diffs": [
+    [
+     {
+      "name": "Legacy",
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": null,
+      "country_code": null,
+      "marine_mode": false,
+      "forecast_zone_id": null,
+      "cwa_office": null,
+      "county_zone_id": null,
+      "fire_zone_id": null,
+      "radar_station": null
+     },
+     {
+      "timezone": "America/Anchorage",
+      "cwa_office": "AFC",
+      "forecast_zone_id": "AKZ701",
+      "county_zone_id": "AKC020",
+      "fire_zone_id": "AKZ701",
+      "radar_station": "PAHG"
+     }
+    ],
+    [
+     {
+      "name": "Current",
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "country_code": null,
+      "marine_mode": false,
+      "forecast_zone_id": "NYZ072",
+      "cwa_office": "OKX",
+      "county_zone_id": "NYC061",
+      "fire_zone_id": "NYZ212",
+      "radar_station": "KOKX"
+     },
+     {
+      "timezone": "America/Anchorage",
+      "cwa_office": "AFC",
+      "forecast_zone_id": "AKZ701",
+      "county_zone_id": "AKC020",
+      "fire_zone_id": "AKZ701",
+      "radar_station": "PAHG"
+     }
+    ],
+    [
+     {
+      "name": "Drifted",
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": null,
+      "country_code": null,
+      "marine_mode": false,
+      "forecast_zone_id": null,
+      "cwa_office": "PHI",
+      "county_zone_id": null,
+      "fire_zone_id": null,
+      "radar_station": "KDIX"
+     },
+     {
+      "timezone": "America/Anchorage",
+      "cwa_office": "AFC",
+      "forecast_zone_id": "AKZ701",
+      "county_zone_id": "AKC020",
+      "fire_zone_id": "AKZ701",
+      "radar_station": "PAHG"
+     }
+    ]
+   ]
+  }
+ ]
+}

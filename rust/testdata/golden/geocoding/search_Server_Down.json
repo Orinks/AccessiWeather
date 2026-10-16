@@ -1,0 +1,14 @@
+{
+ "query": "Server Down",
+ "limit": 5,
+ "exchanges": [
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?name=Server%20Down&count=5&language=en&format=json",
+   "headers": {},
+   "status": 503,
+   "body": {}
+  }
+ ],
+ "output": null,
+ "error": true
+}

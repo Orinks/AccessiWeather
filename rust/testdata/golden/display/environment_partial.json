@@ -1,0 +1,2114 @@
+{
+"name": "environment_partial",
+"now": "2026-09-01T16:00:00+00:00",
+"local_tz": "America/New_York",
+"weather_data": {
+"location": {
+"name": "Toronto",
+"latitude": 43.65,
+"longitude": -79.38,
+"timezone": "America/Toronto",
+"country_code": "CA",
+"marine_mode": false,
+"forecast_zone_id": null,
+"cwa_office": null,
+"county_zone_id": null,
+"fire_zone_id": null,
+"radar_station": null
+},
+"current": {
+"temperature": 55.0,
+"temperature_f": 55.0,
+"temperature_c": null,
+"condition": "Partly Cloudy",
+"humidity": 35,
+"wind_speed": 18.0,
+"dewpoint_f": null,
+"dewpoint_c": null,
+"wind_speed_mph": 18.0,
+"wind_speed_kph": null,
+"wind_direction": null,
+"pressure": null,
+"pressure_in": null,
+"pressure_mb": null,
+"feels_like_f": null,
+"feels_like_c": null,
+"visibility_miles": null,
+"visibility_km": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust_mph": null,
+"wind_gust_kph": null,
+"precipitation_in": null,
+"precipitation_mm": null,
+"sunrise_time": null,
+"sunset_time": null,
+"moon_phase": null,
+"moonrise_time": null,
+"moonset_time": null,
+"snow_depth_in": null,
+"snow_depth_cm": null,
+"snowfall_rate_in": null,
+"wind_chill_f": null,
+"wind_chill_c": null,
+"freezing_level_ft": null,
+"freezing_level_m": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"frost_risk": null,
+"precipitation_type": null,
+"severe_weather_risk": null
+},
+"forecast": null,
+"hourly_forecast": null,
+"daily_history": [],
+"discussion": null,
+"discussion_issuance_time": null,
+"minutely_precipitation": null,
+"alerts": null,
+"environmental": {
+"air_quality_index": null,
+"air_quality_category": null,
+"air_quality_pollutant": "nh3_x",
+"air_quality_updated_at": null,
+"air_quality_reporting_area": null,
+"air_quality_source": null,
+"hourly_air_quality": [],
+"uv_index": 2.0,
+"uv_category": null,
+"hourly_uv_index": [],
+"pollen_index": 6.4,
+"pollen_category": null,
+"pollen_tree_index": null,
+"pollen_grass_index": null,
+"pollen_weed_index": null,
+"pollen_primary_allergen": "Ragweed",
+"updated_at": null,
+"sources": [
+"Open-Meteo"
+]
+},
+"aviation": null,
+"marine": null,
+"trend_insights": [],
+"stale": false,
+"stale_since": null,
+"stale_reason": null,
+"source_attribution": null,
+"incomplete_sections": [],
+"alert_lifecycle_diff": null,
+"forecast_confidence": null,
+"anomaly_callout": null
+},
+"variants": [
+{
+"settings": {},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 55°F (13°C) - Partly Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Partly Cloudy",
+"metrics": [
+{
+"label": "Temperature",
+"value": "55°F (12.8°C)"
+},
+{
+"label": "Dewpoint",
+"value": "27.9°F (-2.3°C)"
+},
+{
+"label": "Wind",
+"value": "18.0 mph (29.0 kph)"
+},
+{
+"label": "Humidity",
+"value": "35%"
+},
+{
+"label": "Air Quality",
+"value": "Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms."
+},
+{
+"label": "Pollen",
+"value": "6 – Ragweed"
+}
+],
+"fallback_text": "Current conditions for Toronto: Partly Cloudy\nTemperature: 55°F (12.8°C)\nDewpoint: 27.9°F (-2.3°C)\nWind: 18.0 mph (29.0 kph)\nHumidity: 35%\nAir Quality: Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms.\nPollen: 6 – Ragweed",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": {
+"title": "Air quality for Toronto",
+"summary": "Pollen Index: 6 (Ragweed)",
+"guidance": "Monitor local guidance and limit exposure if you notice symptoms.",
+"details": [
+"Pollen Index: 6 (Ragweed)",
+"Dominant pollutant: Nh3 X"
+],
+"fallback_text": "Air quality for Toronto\n• Pollen Index: 6 (Ragweed)\n• Dominant pollutant: Nh3 X\n• Advice: Monitor local guidance and limit exposure if you notice symptoms.\nSources: Open-Meteo",
+"updated_at": null,
+"sources": [
+"Open-Meteo"
+]
+},
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "55F Partly Cloudy",
+"preview": "55F Partly Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 55F at 18.0 mph (29.0 km/h) 35%",
+"preview": "Toronto: 55F at 18.0 mph (29.0 km/h) 35%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "55F N/A N/A 18.0 mph (29.0 km/h) {unknown}",
+"preview": "55F N/A N/A 18.0 mph (29.0 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "55F",
+"preview": "55F",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mp...",
+"preview": "Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mp...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+},
+"present_current": {
+"title": "Current conditions for Toronto",
+"description": "Partly Cloudy",
+"metrics": [
+{
+"label": "Temperature",
+"value": "55°F (12.8°C)"
+},
+{
+"label": "Dewpoint",
+"value": "27.9°F (-2.3°C)"
+},
+{
+"label": "Wind",
+"value": "18.0 mph (29.0 kph)"
+},
+{
+"label": "Humidity",
+"value": "35%"
+},
+{
+"label": "Air Quality",
+"value": "Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms."
+},
+{
+"label": "Pollen",
+"value": "6 – Ragweed"
+}
+],
+"fallback_text": "Current conditions for Toronto: Partly Cloudy\nTemperature: 55°F (12.8°C)\nDewpoint: 27.9°F (-2.3°C)\nWind: 18.0 mph (29.0 kph)\nHumidity: 35%\nAir Quality: Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms.\nPollen: 6 – Ragweed",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"present_forecast": null,
+"present_alerts": null
+},
+{
+"settings": {
+"temperature_unit": "f"
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 55°F - Partly Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Partly Cloudy",
+"metrics": [
+{
+"label": "Temperature",
+"value": "55°F"
+},
+{
+"label": "Dewpoint",
+"value": "27.9°F"
+},
+{
+"label": "Wind",
+"value": "18.0 mph"
+},
+{
+"label": "Humidity",
+"value": "35%"
+},
+{
+"label": "Air Quality",
+"value": "Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms."
+},
+{
+"label": "Pollen",
+"value": "6 – Ragweed"
+}
+],
+"fallback_text": "Current conditions for Toronto: Partly Cloudy\nTemperature: 55°F\nDewpoint: 27.9°F\nWind: 18.0 mph\nHumidity: 35%\nAir Quality: Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms.\nPollen: 6 – Ragweed",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": {
+"title": "Air quality for Toronto",
+"summary": "Pollen Index: 6 (Ragweed)",
+"guidance": "Monitor local guidance and limit exposure if you notice symptoms.",
+"details": [
+"Pollen Index: 6 (Ragweed)",
+"Dominant pollutant: Nh3 X"
+],
+"fallback_text": "Air quality for Toronto\n• Pollen Index: 6 (Ragweed)\n• Dominant pollutant: Nh3 X\n• Advice: Monitor local guidance and limit exposure if you notice symptoms.\nSources: Open-Meteo",
+"updated_at": null,
+"sources": [
+"Open-Meteo"
+]
+},
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "55F Partly Cloudy",
+"preview": "55F Partly Cloudy",
+"sample_preview": "72F Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 55F at 18.0 mph 35%",
+"preview": "Toronto: 55F at 18.0 mph 35%",
+"sample_preview": "Sample Location: 72F (feels like 74F) NW at 8.0 mph 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/61F 0.00 in 20% UV 5 10.0 mi 30.10 inHg"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "55F N/A N/A 18.0 mph {unknown}",
+"preview": "55F N/A N/A 18.0 mph {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "55F",
+"preview": "55F",
+"sample_preview": "Feels like: 74F | 72F"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Partly Cloudy at 18.0 mph Toronto Partly Cloudy at 18.0 mph Toronto Partly Cloudy at 18.0 mph Toronto",
+"preview": "Toronto Partly Cloudy at 18.0 mph Toronto Partly Cloudy at 18.0 mph Toronto Partly Cloudy at 18.0 mph Toronto",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "c"
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 13°C - Partly Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Partly Cloudy",
+"metrics": [
+{
+"label": "Temperature",
+"value": "12.8°C"
+},
+{
+"label": "Dewpoint",
+"value": "-2.3°C"
+},
+{
+"label": "Wind",
+"value": "29.0 kph"
+},
+{
+"label": "Humidity",
+"value": "35%"
+},
+{
+"label": "Air Quality",
+"value": "Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms."
+},
+{
+"label": "Pollen",
+"value": "6 – Ragweed"
+}
+],
+"fallback_text": "Current conditions for Toronto: Partly Cloudy\nTemperature: 12.8°C\nDewpoint: -2.3°C\nWind: 29.0 kph\nHumidity: 35%\nAir Quality: Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms.\nPollen: 6 – Ragweed",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": {
+"title": "Air quality for Toronto",
+"summary": "Pollen Index: 6 (Ragweed)",
+"guidance": "Monitor local guidance and limit exposure if you notice symptoms.",
+"details": [
+"Pollen Index: 6 (Ragweed)",
+"Dominant pollutant: Nh3 X"
+],
+"fallback_text": "Air quality for Toronto\n• Pollen Index: 6 (Ragweed)\n• Dominant pollutant: Nh3 X\n• Advice: Monitor local guidance and limit exposure if you notice symptoms.\nSources: Open-Meteo",
+"updated_at": null,
+"sources": [
+"Open-Meteo"
+]
+},
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "N/A Partly Cloudy",
+"preview": "N/A Partly Cloudy",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: N/A at 29.0 km/h 35%",
+"preview": "Toronto: N/A at 29.0 km/h 35%",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 12.9 km/h 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "55F N/A N/A 29.0 km/h {unknown}",
+"preview": "55F N/A N/A 29.0 km/h {unknown}",
+"sample_preview": "72F 22C NW 12.9 km/h {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "N/A",
+"preview": "N/A",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Partly Cloudy at 29.0 km/h Toronto Partly Cloudy at 29.0 km/h Toronto Partly Cloudy at 29.0 km/h Toronto",
+"preview": "Toronto Partly Cloudy at 29.0 km/h Toronto Partly Cloudy at 29.0 km/h Toronto Partly Cloudy at 29.0 km/h Toronto",
+"sample_preview": "Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "auto"
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 13°C - Partly Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Partly Cloudy",
+"metrics": [
+{
+"label": "Temperature",
+"value": "12.8°C"
+},
+{
+"label": "Dewpoint",
+"value": "-2.3°C"
+},
+{
+"label": "Wind",
+"value": "29.0 km/h"
+},
+{
+"label": "Humidity",
+"value": "35%"
+},
+{
+"label": "Air Quality",
+"value": "Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms."
+},
+{
+"label": "Pollen",
+"value": "6 – Ragweed"
+}
+],
+"fallback_text": "Current conditions for Toronto: Partly Cloudy\nTemperature: 12.8°C\nDewpoint: -2.3°C\nWind: 29.0 km/h\nHumidity: 35%\nAir Quality: Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms.\nPollen: 6 – Ragweed",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": {
+"title": "Air quality for Toronto",
+"summary": "Pollen Index: 6 (Ragweed)",
+"guidance": "Monitor local guidance and limit exposure if you notice symptoms.",
+"details": [
+"Pollen Index: 6 (Ragweed)",
+"Dominant pollutant: Nh3 X"
+],
+"fallback_text": "Air quality for Toronto\n• Pollen Index: 6 (Ragweed)\n• Dominant pollutant: Nh3 X\n• Advice: Monitor local guidance and limit exposure if you notice symptoms.\nSources: Open-Meteo",
+"updated_at": null,
+"sources": [
+"Open-Meteo"
+]
+},
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "N/A Partly Cloudy",
+"preview": "N/A Partly Cloudy",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: N/A at 29.0 km/h 35%",
+"preview": "Toronto: N/A at 8.0 m/s 35%",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 3.6 m/s 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "55F N/A N/A 29.0 km/h {unknown}",
+"preview": "55F N/A N/A 8.0 m/s {unknown}",
+"sample_preview": "72F 22C NW 3.6 m/s {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "N/A",
+"preview": "N/A",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Partly Cloudy at 29.0 km/h Toronto Partly Cloudy at 29.0 km/h Toronto Partly Cloudy at 29.0 km/h Toronto",
+"preview": "Toronto Partly Cloudy at 8.0 m/s Toronto Partly Cloudy at 8.0 m/s Toronto Partly Cloudy at 8.0 m/s Toronto",
+"sample_preview": "Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "auto",
+"wind_speed_unit": "m/s"
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 13°C - Partly Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Partly Cloudy",
+"metrics": [
+{
+"label": "Temperature",
+"value": "12.8°C"
+},
+{
+"label": "Dewpoint",
+"value": "-2.3°C"
+},
+{
+"label": "Wind",
+"value": "8.0 m/s"
+},
+{
+"label": "Humidity",
+"value": "35%"
+},
+{
+"label": "Air Quality",
+"value": "Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms."
+},
+{
+"label": "Pollen",
+"value": "6 – Ragweed"
+}
+],
+"fallback_text": "Current conditions for Toronto: Partly Cloudy\nTemperature: 12.8°C\nDewpoint: -2.3°C\nWind: 8.0 m/s\nHumidity: 35%\nAir Quality: Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms.\nPollen: 6 – Ragweed",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": {
+"title": "Air quality for Toronto",
+"summary": "Pollen Index: 6 (Ragweed)",
+"guidance": "Monitor local guidance and limit exposure if you notice symptoms.",
+"details": [
+"Pollen Index: 6 (Ragweed)",
+"Dominant pollutant: Nh3 X"
+],
+"fallback_text": "Air quality for Toronto\n• Pollen Index: 6 (Ragweed)\n• Dominant pollutant: Nh3 X\n• Advice: Monitor local guidance and limit exposure if you notice symptoms.\nSources: Open-Meteo",
+"updated_at": null,
+"sources": [
+"Open-Meteo"
+]
+},
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "N/A Partly Cloudy",
+"preview": "N/A Partly Cloudy",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: N/A at 8.0 m/s 35%",
+"preview": "Toronto: N/A at 8.0 m/s 35%",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 3.6 m/s 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "55F N/A N/A 8.0 m/s {unknown}",
+"preview": "55F N/A N/A 8.0 m/s {unknown}",
+"sample_preview": "72F 22C NW 3.6 m/s {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "N/A",
+"preview": "N/A",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Partly Cloudy at 8.0 m/s Toronto Partly Cloudy at 8.0 m/s Toronto Partly Cloudy at 8.0 m/s Toronto",
+"preview": "Toronto Partly Cloudy at 8.0 m/s Toronto Partly Cloudy at 8.0 m/s Toronto Partly Cloudy at 8.0 m/s Toronto",
+"sample_preview": "Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "both",
+"wind_speed_unit": "kph"
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 55°F (13°C) - Partly Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Partly Cloudy",
+"metrics": [
+{
+"label": "Temperature",
+"value": "55°F (12.8°C)"
+},
+{
+"label": "Dewpoint",
+"value": "27.9°F (-2.3°C)"
+},
+{
+"label": "Wind",
+"value": "29.0 km/h"
+},
+{
+"label": "Humidity",
+"value": "35%"
+},
+{
+"label": "Air Quality",
+"value": "Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms."
+},
+{
+"label": "Pollen",
+"value": "6 – Ragweed"
+}
+],
+"fallback_text": "Current conditions for Toronto: Partly Cloudy\nTemperature: 55°F (12.8°C)\nDewpoint: 27.9°F (-2.3°C)\nWind: 29.0 km/h\nHumidity: 35%\nAir Quality: Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms.\nPollen: 6 – Ragweed",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": {
+"title": "Air quality for Toronto",
+"summary": "Pollen Index: 6 (Ragweed)",
+"guidance": "Monitor local guidance and limit exposure if you notice symptoms.",
+"details": [
+"Pollen Index: 6 (Ragweed)",
+"Dominant pollutant: Nh3 X"
+],
+"fallback_text": "Air quality for Toronto\n• Pollen Index: 6 (Ragweed)\n• Dominant pollutant: Nh3 X\n• Advice: Monitor local guidance and limit exposure if you notice symptoms.\nSources: Open-Meteo",
+"updated_at": null,
+"sources": [
+"Open-Meteo"
+]
+},
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "55F Partly Cloudy",
+"preview": "55F Partly Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 55F at 29.0 km/h 35%",
+"preview": "Toronto: 55F at 29.0 km/h 35%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 12.9 km/h 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "55F N/A N/A 29.0 km/h {unknown}",
+"preview": "55F N/A N/A 29.0 km/h {unknown}",
+"sample_preview": "72F 22C NW 12.9 km/h {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "55F",
+"preview": "55F",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Partly Cloudy at 29.0 km/h Toronto Partly Cloudy at 29.0 km/h Toronto Partly Cloudy at 29.0 km/h Toronto",
+"preview": "Toronto Partly Cloudy at 29.0 km/h Toronto Partly Cloudy at 29.0 km/h Toronto Partly Cloudy at 29.0 km/h Toronto",
+"sample_preview": "Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "fahrenheit",
+"wind_speed_unit": "mph",
+"verbosity_level": "detailed",
+"show_impact_summaries": true
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 55°F - Partly Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Partly Cloudy",
+"metrics": [
+{
+"label": "Temperature",
+"value": "55°F"
+},
+{
+"label": "Dewpoint",
+"value": "27.9°F"
+},
+{
+"label": "Wind",
+"value": "18.0 mph"
+},
+{
+"label": "Humidity",
+"value": "35%"
+},
+{
+"label": "Air Quality",
+"value": "Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms."
+},
+{
+"label": "Pollen",
+"value": "6 – Ragweed"
+},
+{
+"label": "Impact: Outdoor",
+"value": "Mild - light jacket may be needed"
+},
+{
+"label": "Impact: Driving",
+"value": "Normal driving conditions"
+},
+{
+"label": "Impact: Allergy",
+"value": "Moderate pollen index"
+}
+],
+"fallback_text": "Current conditions for Toronto: Partly Cloudy\nTemperature: 55°F\nDewpoint: 27.9°F\nWind: 18.0 mph\nHumidity: 35%\nAir Quality: Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms.\nPollen: 6 – Ragweed\nImpact: Outdoor: Mild - light jacket may be needed\nImpact: Driving: Normal driving conditions\nImpact: Allergy: Moderate pollen index",
+"trends": [],
+"impact_summary": {
+"outdoor": "Mild - light jacket may be needed",
+"driving": "Normal driving conditions",
+"allergy": "Moderate pollen index"
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": {
+"title": "Air quality for Toronto",
+"summary": "Pollen Index: 6 (Ragweed)",
+"guidance": "Monitor local guidance and limit exposure if you notice symptoms.",
+"details": [
+"Pollen Index: 6 (Ragweed)",
+"Dominant pollutant: Nh3 X"
+],
+"fallback_text": "Air quality for Toronto\n• Pollen Index: 6 (Ragweed)\n• Dominant pollutant: Nh3 X\n• Advice: Monitor local guidance and limit exposure if you notice symptoms.\nSources: Open-Meteo",
+"updated_at": null,
+"sources": [
+"Open-Meteo"
+]
+},
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "55F Partly Cloudy",
+"preview": "55F Partly Cloudy",
+"sample_preview": "72F Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 55F at 18.0 mph 35%",
+"preview": "Toronto: 55F at 18.0 mph 35%",
+"sample_preview": "Sample Location: 72F (feels like 74F) NW at 8.0 mph 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/61F 0.00 in 20% UV 5 10.0 mi 30.10 inHg"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "55F N/A N/A 18.0 mph {unknown}",
+"preview": "55F N/A N/A 18.0 mph {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "55F",
+"preview": "55F",
+"sample_preview": "Feels like: 74F | 72F"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Partly Cloudy at 18.0 mph Toronto Partly Cloudy at 18.0 mph Toronto Partly Cloudy at 18.0 mph Toronto",
+"preview": "Toronto Partly Cloudy at 18.0 mph Toronto Partly Cloudy at 18.0 mph Toronto Partly Cloudy at 18.0 mph Toronto",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"verbosity_level": "minimal",
+"round_values": true
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 55°F (13°C) - Partly Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Partly Cloudy",
+"metrics": [
+{
+"label": "Temperature",
+"value": "55°F (13°C)"
+},
+{
+"label": "Dewpoint",
+"value": "28°F (-2°C)"
+},
+{
+"label": "Wind",
+"value": "18 mph (29 kph)"
+},
+{
+"label": "Humidity",
+"value": "35%"
+},
+{
+"label": "Air Quality",
+"value": "Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms."
+},
+{
+"label": "Pollen",
+"value": "6 – Ragweed"
+}
+],
+"fallback_text": "Current conditions for Toronto: Partly Cloudy\nTemperature: 55°F (13°C)\nDewpoint: 28°F (-2°C)\nWind: 18 mph (29 kph)\nHumidity: 35%\nAir Quality: Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms.\nPollen: 6 – Ragweed",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": {
+"title": "Air quality for Toronto",
+"summary": "Pollen Index: 6 (Ragweed)",
+"guidance": "Monitor local guidance and limit exposure if you notice symptoms.",
+"details": [
+"Pollen Index: 6 (Ragweed)",
+"Dominant pollutant: Nh3 X"
+],
+"fallback_text": "Air quality for Toronto\n• Pollen Index: 6 (Ragweed)\n• Dominant pollutant: Nh3 X\n• Advice: Monitor local guidance and limit exposure if you notice symptoms.\nSources: Open-Meteo",
+"updated_at": null,
+"sources": [
+"Open-Meteo"
+]
+},
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "55F Partly Cloudy",
+"preview": "55F Partly Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 55F at 18 mph (29 km/h) 35%",
+"preview": "Toronto: 55F at 18 mph (29 km/h) 35%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8 mph (13 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/26C/61F/16C 0 in (0 mm) 20% UV 5 10 mi (16 km) 30 inHg (1019 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "55F N/A N/A 18 mph (29 km/h) {unknown}",
+"preview": "55F N/A N/A 18 mph (29 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8 mph (13 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "55F",
+"preview": "55F",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Partly Cloudy at 18 mph (29 km/h) Toronto Partly Cloudy at 18 mph (29 km/h) Toronto Partly Cloudy at 18 mph (29 km/h...",
+"preview": "Toronto Partly Cloudy at 18 mph (29 km/h) Toronto Partly Cloudy at 18 mph (29 km/h) Toronto Partly Cloudy at 18 mph (29 km/h...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Part..."
+}
+}
+},
+{
+"settings": {
+"verbosity_level": "detailed",
+"time_format_12hour": false,
+"show_timezone_suffix": true
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 55°F (13°C) - Partly Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Partly Cloudy",
+"metrics": [
+{
+"label": "Temperature",
+"value": "55°F (12.8°C)"
+},
+{
+"label": "Dewpoint",
+"value": "27.9°F (-2.3°C)"
+},
+{
+"label": "Wind",
+"value": "18.0 mph (29.0 kph)"
+},
+{
+"label": "Humidity",
+"value": "35%"
+},
+{
+"label": "Air Quality",
+"value": "Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms."
+},
+{
+"label": "Pollen",
+"value": "6 – Ragweed"
+}
+],
+"fallback_text": "Current conditions for Toronto: Partly Cloudy\nTemperature: 55°F (12.8°C)\nDewpoint: 27.9°F (-2.3°C)\nWind: 18.0 mph (29.0 kph)\nHumidity: 35%\nAir Quality: Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms.\nPollen: 6 – Ragweed",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": {
+"title": "Air quality for Toronto",
+"summary": "Pollen Index: 6 (Ragweed)",
+"guidance": "Monitor local guidance and limit exposure if you notice symptoms.",
+"details": [
+"Pollen Index: 6 (Ragweed)",
+"Dominant pollutant: Nh3 X"
+],
+"fallback_text": "Air quality for Toronto\n• Pollen Index: 6 (Ragweed)\n• Dominant pollutant: Nh3 X\n• Advice: Monitor local guidance and limit exposure if you notice symptoms.\nSources: Open-Meteo",
+"updated_at": null,
+"sources": [
+"Open-Meteo"
+]
+},
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "55F Partly Cloudy",
+"preview": "55F Partly Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 55F at 18.0 mph (29.0 km/h) 35%",
+"preview": "Toronto: 55F at 18.0 mph (29.0 km/h) 35%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "55F N/A N/A 18.0 mph (29.0 km/h) {unknown}",
+"preview": "55F N/A N/A 18.0 mph (29.0 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "55F",
+"preview": "55F",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mp...",
+"preview": "Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mp...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"time_display_mode": "utc",
+"show_timezone_suffix": true
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 55°F (13°C) - Partly Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Partly Cloudy",
+"metrics": [
+{
+"label": "Temperature",
+"value": "55°F (12.8°C)"
+},
+{
+"label": "Dewpoint",
+"value": "27.9°F (-2.3°C)"
+},
+{
+"label": "Wind",
+"value": "18.0 mph (29.0 kph)"
+},
+{
+"label": "Humidity",
+"value": "35%"
+},
+{
+"label": "Air Quality",
+"value": "Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms."
+},
+{
+"label": "Pollen",
+"value": "6 – Ragweed"
+}
+],
+"fallback_text": "Current conditions for Toronto: Partly Cloudy\nTemperature: 55°F (12.8°C)\nDewpoint: 27.9°F (-2.3°C)\nWind: 18.0 mph (29.0 kph)\nHumidity: 35%\nAir Quality: Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms.\nPollen: 6 – Ragweed",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": {
+"title": "Air quality for Toronto",
+"summary": "Pollen Index: 6 (Ragweed)",
+"guidance": "Monitor local guidance and limit exposure if you notice symptoms.",
+"details": [
+"Pollen Index: 6 (Ragweed)",
+"Dominant pollutant: Nh3 X"
+],
+"fallback_text": "Air quality for Toronto\n• Pollen Index: 6 (Ragweed)\n• Dominant pollutant: Nh3 X\n• Advice: Monitor local guidance and limit exposure if you notice symptoms.\nSources: Open-Meteo",
+"updated_at": null,
+"sources": [
+"Open-Meteo"
+]
+},
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "55F Partly Cloudy",
+"preview": "55F Partly Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 55F at 18.0 mph (29.0 km/h) 35%",
+"preview": "Toronto: 55F at 18.0 mph (29.0 km/h) 35%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "55F N/A N/A 18.0 mph (29.0 km/h) {unknown}",
+"preview": "55F N/A N/A 18.0 mph (29.0 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "55F",
+"preview": "55F",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mp...",
+"preview": "Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mp...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"time_display_mode": "both",
+"show_timezone_suffix": true,
+"time_format_12hour": false
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 55°F (13°C) - Partly Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Partly Cloudy",
+"metrics": [
+{
+"label": "Temperature",
+"value": "55°F (12.8°C)"
+},
+{
+"label": "Dewpoint",
+"value": "27.9°F (-2.3°C)"
+},
+{
+"label": "Wind",
+"value": "18.0 mph (29.0 kph)"
+},
+{
+"label": "Humidity",
+"value": "35%"
+},
+{
+"label": "Air Quality",
+"value": "Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms."
+},
+{
+"label": "Pollen",
+"value": "6 – Ragweed"
+}
+],
+"fallback_text": "Current conditions for Toronto: Partly Cloudy\nTemperature: 55°F (12.8°C)\nDewpoint: 27.9°F (-2.3°C)\nWind: 18.0 mph (29.0 kph)\nHumidity: 35%\nAir Quality: Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms.\nPollen: 6 – Ragweed",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": {
+"title": "Air quality for Toronto",
+"summary": "Pollen Index: 6 (Ragweed)",
+"guidance": "Monitor local guidance and limit exposure if you notice symptoms.",
+"details": [
+"Pollen Index: 6 (Ragweed)",
+"Dominant pollutant: Nh3 X"
+],
+"fallback_text": "Air quality for Toronto\n• Pollen Index: 6 (Ragweed)\n• Dominant pollutant: Nh3 X\n• Advice: Monitor local guidance and limit exposure if you notice symptoms.\nSources: Open-Meteo",
+"updated_at": null,
+"sources": [
+"Open-Meteo"
+]
+},
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "55F Partly Cloudy",
+"preview": "55F Partly Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 55F at 18.0 mph (29.0 km/h) 35%",
+"preview": "Toronto: 55F at 18.0 mph (29.0 km/h) 35%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "55F N/A N/A 18.0 mph (29.0 km/h) {unknown}",
+"preview": "55F N/A N/A 18.0 mph (29.0 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "55F",
+"preview": "55F",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mp...",
+"preview": "Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mp...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"forecast_time_reference": "user_local",
+"show_timezone_suffix": true
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 55°F (13°C) - Partly Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Partly Cloudy",
+"metrics": [
+{
+"label": "Temperature",
+"value": "55°F (12.8°C)"
+},
+{
+"label": "Dewpoint",
+"value": "27.9°F (-2.3°C)"
+},
+{
+"label": "Wind",
+"value": "18.0 mph (29.0 kph)"
+},
+{
+"label": "Humidity",
+"value": "35%"
+},
+{
+"label": "Air Quality",
+"value": "Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms."
+},
+{
+"label": "Pollen",
+"value": "6 – Ragweed"
+}
+],
+"fallback_text": "Current conditions for Toronto: Partly Cloudy\nTemperature: 55°F (12.8°C)\nDewpoint: 27.9°F (-2.3°C)\nWind: 18.0 mph (29.0 kph)\nHumidity: 35%\nAir Quality: Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms.\nPollen: 6 – Ragweed",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": {
+"title": "Air quality for Toronto",
+"summary": "Pollen Index: 6 (Ragweed)",
+"guidance": "Monitor local guidance and limit exposure if you notice symptoms.",
+"details": [
+"Pollen Index: 6 (Ragweed)",
+"Dominant pollutant: Nh3 X"
+],
+"fallback_text": "Air quality for Toronto\n• Pollen Index: 6 (Ragweed)\n• Dominant pollutant: Nh3 X\n• Advice: Monitor local guidance and limit exposure if you notice symptoms.\nSources: Open-Meteo",
+"updated_at": null,
+"sources": [
+"Open-Meteo"
+]
+},
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "55F Partly Cloudy",
+"preview": "55F Partly Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 55F at 18.0 mph (29.0 km/h) 35%",
+"preview": "Toronto: 55F at 18.0 mph (29.0 km/h) 35%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "55F N/A N/A 18.0 mph (29.0 km/h) {unknown}",
+"preview": "55F N/A N/A 18.0 mph (29.0 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "55F",
+"preview": "55F",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mp...",
+"preview": "Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mp...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"show_dewpoint": false,
+"show_visibility": false,
+"show_uv_index": false,
+"show_pressure_trend": false,
+"show_seasonal_data": false
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 55°F (13°C) - Partly Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Partly Cloudy",
+"metrics": [
+{
+"label": "Temperature",
+"value": "55°F (12.8°C)"
+},
+{
+"label": "Wind",
+"value": "18.0 mph (29.0 kph)"
+},
+{
+"label": "Humidity",
+"value": "35%"
+},
+{
+"label": "Air Quality",
+"value": "Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms."
+},
+{
+"label": "Pollen",
+"value": "6 – Ragweed"
+}
+],
+"fallback_text": "Current conditions for Toronto: Partly Cloudy\nTemperature: 55°F (12.8°C)\nWind: 18.0 mph (29.0 kph)\nHumidity: 35%\nAir Quality: Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms.\nPollen: 6 – Ragweed",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": {
+"title": "Air quality for Toronto",
+"summary": "Pollen Index: 6 (Ragweed)",
+"guidance": "Monitor local guidance and limit exposure if you notice symptoms.",
+"details": [
+"Pollen Index: 6 (Ragweed)",
+"Dominant pollutant: Nh3 X"
+],
+"fallback_text": "Air quality for Toronto\n• Pollen Index: 6 (Ragweed)\n• Dominant pollutant: Nh3 X\n• Advice: Monitor local guidance and limit exposure if you notice symptoms.\nSources: Open-Meteo",
+"updated_at": null,
+"sources": [
+"Open-Meteo"
+]
+},
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "55F Partly Cloudy",
+"preview": "55F Partly Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 55F at 18.0 mph (29.0 km/h) 35%",
+"preview": "Toronto: 55F at 18.0 mph (29.0 km/h) 35%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "55F N/A N/A 18.0 mph (29.0 km/h) {unknown}",
+"preview": "55F N/A N/A 18.0 mph (29.0 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "55F",
+"preview": "55F",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mp...",
+"preview": "Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mp...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"severe_weather_override": true,
+"category_order": [
+"uv_index",
+"visibility_clouds",
+"humidity_pressure",
+"wind",
+"precipitation",
+"temperature"
+]
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 55°F (13°C) - Partly Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Partly Cloudy",
+"metrics": [
+{
+"label": "Humidity",
+"value": "35%"
+},
+{
+"label": "Wind",
+"value": "18.0 mph (29.0 kph)"
+},
+{
+"label": "Temperature",
+"value": "55°F (12.8°C)"
+},
+{
+"label": "Dewpoint",
+"value": "27.9°F (-2.3°C)"
+},
+{
+"label": "Air Quality",
+"value": "Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms."
+},
+{
+"label": "Pollen",
+"value": "6 – Ragweed"
+}
+],
+"fallback_text": "Current conditions for Toronto: Partly Cloudy\nHumidity: 35%\nWind: 18.0 mph (29.0 kph)\nTemperature: 55°F (12.8°C)\nDewpoint: 27.9°F (-2.3°C)\nAir Quality: Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms.\nPollen: 6 – Ragweed",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": {
+"title": "Air quality for Toronto",
+"summary": "Pollen Index: 6 (Ragweed)",
+"guidance": "Monitor local guidance and limit exposure if you notice symptoms.",
+"details": [
+"Pollen Index: 6 (Ragweed)",
+"Dominant pollutant: Nh3 X"
+],
+"fallback_text": "Air quality for Toronto\n• Pollen Index: 6 (Ragweed)\n• Dominant pollutant: Nh3 X\n• Advice: Monitor local guidance and limit exposure if you notice symptoms.\nSources: Open-Meteo",
+"updated_at": null,
+"sources": [
+"Open-Meteo"
+]
+},
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "55F Partly Cloudy",
+"preview": "55F Partly Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 55F at 18.0 mph (29.0 km/h) 35%",
+"preview": "Toronto: 55F at 18.0 mph (29.0 km/h) 35%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "55F N/A N/A 18.0 mph (29.0 km/h) {unknown}",
+"preview": "55F N/A N/A 18.0 mph (29.0 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "55F",
+"preview": "55F",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mp...",
+"preview": "Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mp...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"severe_weather_override": true,
+"show_impact_summaries": true,
+"temperature_unit": "celsius"
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 13°C - Partly Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Partly Cloudy",
+"metrics": [
+{
+"label": "Temperature",
+"value": "12.8°C"
+},
+{
+"label": "Dewpoint",
+"value": "-2.3°C"
+},
+{
+"label": "Wind",
+"value": "29.0 kph"
+},
+{
+"label": "Humidity",
+"value": "35%"
+},
+{
+"label": "Air Quality",
+"value": "Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms."
+},
+{
+"label": "Pollen",
+"value": "6 – Ragweed"
+},
+{
+"label": "Impact: Outdoor",
+"value": "Mild - light jacket may be needed"
+},
+{
+"label": "Impact: Driving",
+"value": "Normal driving conditions"
+},
+{
+"label": "Impact: Allergy",
+"value": "Moderate pollen index"
+}
+],
+"fallback_text": "Current conditions for Toronto: Partly Cloudy\nTemperature: 12.8°C\nDewpoint: -2.3°C\nWind: 29.0 kph\nHumidity: 35%\nAir Quality: Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms.\nPollen: 6 – Ragweed\nImpact: Outdoor: Mild - light jacket may be needed\nImpact: Driving: Normal driving conditions\nImpact: Allergy: Moderate pollen index",
+"trends": [],
+"impact_summary": {
+"outdoor": "Mild - light jacket may be needed",
+"driving": "Normal driving conditions",
+"allergy": "Moderate pollen index"
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": {
+"title": "Air quality for Toronto",
+"summary": "Pollen Index: 6 (Ragweed)",
+"guidance": "Monitor local guidance and limit exposure if you notice symptoms.",
+"details": [
+"Pollen Index: 6 (Ragweed)",
+"Dominant pollutant: Nh3 X"
+],
+"fallback_text": "Air quality for Toronto\n• Pollen Index: 6 (Ragweed)\n• Dominant pollutant: Nh3 X\n• Advice: Monitor local guidance and limit exposure if you notice symptoms.\nSources: Open-Meteo",
+"updated_at": null,
+"sources": [
+"Open-Meteo"
+]
+},
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "N/A Partly Cloudy",
+"preview": "N/A Partly Cloudy",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: N/A at 29.0 km/h 35%",
+"preview": "Toronto: N/A at 29.0 km/h 35%",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 12.9 km/h 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "55F N/A N/A 29.0 km/h {unknown}",
+"preview": "55F N/A N/A 29.0 km/h {unknown}",
+"sample_preview": "72F 22C NW 12.9 km/h {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "N/A",
+"preview": "N/A",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Partly Cloudy at 29.0 km/h Toronto Partly Cloudy at 29.0 km/h Toronto Partly Cloudy at 29.0 km/h Toronto",
+"preview": "Toronto Partly Cloudy at 29.0 km/h Toronto Partly Cloudy at 29.0 km/h Toronto Partly Cloudy at 29.0 km/h Toronto",
+"sample_preview": "Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW..."
+}
+}
+},
+{
+"settings": {
+"forecast_duration_days": 3,
+"hourly_forecast_hours": 12,
+"round_values": true
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 55°F (13°C) - Partly Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Partly Cloudy",
+"metrics": [
+{
+"label": "Temperature",
+"value": "55°F (13°C)"
+},
+{
+"label": "Dewpoint",
+"value": "28°F (-2°C)"
+},
+{
+"label": "Wind",
+"value": "18 mph (29 kph)"
+},
+{
+"label": "Humidity",
+"value": "35%"
+},
+{
+"label": "Air Quality",
+"value": "Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms."
+},
+{
+"label": "Pollen",
+"value": "6 – Ragweed"
+}
+],
+"fallback_text": "Current conditions for Toronto: Partly Cloudy\nTemperature: 55°F (13°C)\nDewpoint: 28°F (-2°C)\nWind: 18 mph (29 kph)\nHumidity: 35%\nAir Quality: Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms.\nPollen: 6 – Ragweed",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": {
+"title": "Air quality for Toronto",
+"summary": "Pollen Index: 6 (Ragweed)",
+"guidance": "Monitor local guidance and limit exposure if you notice symptoms.",
+"details": [
+"Pollen Index: 6 (Ragweed)",
+"Dominant pollutant: Nh3 X"
+],
+"fallback_text": "Air quality for Toronto\n• Pollen Index: 6 (Ragweed)\n• Dominant pollutant: Nh3 X\n• Advice: Monitor local guidance and limit exposure if you notice symptoms.\nSources: Open-Meteo",
+"updated_at": null,
+"sources": [
+"Open-Meteo"
+]
+},
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "55F Partly Cloudy",
+"preview": "55F Partly Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 55F at 18 mph (29 km/h) 35%",
+"preview": "Toronto: 55F at 18 mph (29 km/h) 35%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8 mph (13 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/26C/61F/16C 0 in (0 mm) 20% UV 5 10 mi (16 km) 30 inHg (1019 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "55F N/A N/A 18 mph (29 km/h) {unknown}",
+"preview": "55F N/A N/A 18 mph (29 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8 mph (13 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "55F",
+"preview": "55F",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Partly Cloudy at 18 mph (29 km/h) Toronto Partly Cloudy at 18 mph (29 km/h) Toronto Partly Cloudy at 18 mph (29 km/h...",
+"preview": "Toronto Partly Cloudy at 18 mph (29 km/h) Toronto Partly Cloudy at 18 mph (29 km/h) Toronto Partly Cloudy at 18 mph (29 km/h...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Part..."
+}
+}
+},
+{
+"settings": {
+"forecast_duration_days": 16,
+"hourly_forecast_hours": 48,
+"date_format": "eu",
+"time_display_mode": "both"
+},
+"presentation": {
+"location_name": "Toronto",
+"summary_text": "Toronto - 55°F (13°C) - Partly Cloudy",
+"current_conditions": {
+"title": "Current conditions for Toronto",
+"description": "Partly Cloudy",
+"metrics": [
+{
+"label": "Temperature",
+"value": "55°F (12.8°C)"
+},
+{
+"label": "Dewpoint",
+"value": "27.9°F (-2.3°C)"
+},
+{
+"label": "Wind",
+"value": "18.0 mph (29.0 kph)"
+},
+{
+"label": "Humidity",
+"value": "35%"
+},
+{
+"label": "Air Quality",
+"value": "Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms."
+},
+{
+"label": "Pollen",
+"value": "6 – Ragweed"
+}
+],
+"fallback_text": "Current conditions for Toronto: Partly Cloudy\nTemperature: 55°F (12.8°C)\nDewpoint: 27.9°F (-2.3°C)\nWind: 18.0 mph (29.0 kph)\nHumidity: 35%\nAir Quality: Pollen Index: 6 (Ragweed) | Advice: Monitor local guidance and limit exposure if you notice symptoms.\nPollen: 6 – Ragweed",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": {
+"title": "Air quality for Toronto",
+"summary": "Pollen Index: 6 (Ragweed)",
+"guidance": "Monitor local guidance and limit exposure if you notice symptoms.",
+"details": [
+"Pollen Index: 6 (Ragweed)",
+"Dominant pollutant: Nh3 X"
+],
+"fallback_text": "Air quality for Toronto\n• Pollen Index: 6 (Ragweed)\n• Dominant pollutant: Nh3 X\n• Advice: Monitor local guidance and limit exposure if you notice symptoms.\nSources: Open-Meteo",
+"updated_at": null,
+"sources": [
+"Open-Meteo"
+]
+},
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "55F Partly Cloudy",
+"preview": "55F Partly Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Toronto: 55F at 18.0 mph (29.0 km/h) 35%",
+"preview": "Toronto: 55F at 18.0 mph (29.0 km/h) 35%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "55F N/A N/A 18.0 mph (29.0 km/h) {unknown}",
+"preview": "55F N/A N/A 18.0 mph (29.0 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "55F",
+"preview": "55F",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mp...",
+"preview": "Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mph (29.0 km/h) Toronto Partly Cloudy at 18.0 mp...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+}
+]
+}

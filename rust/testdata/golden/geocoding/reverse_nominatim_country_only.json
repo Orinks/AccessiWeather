@@ -1,0 +1,50 @@
+{
+ "latitude": 0.0,
+ "longitude": -160.0,
+ "exchanges": [
+  {
+   "url": "https://api.weather.gov/points/0.0,-160.0",
+   "headers": {
+    "user-agent": "AccessiWeather/1.0 (AccessiWeather)",
+    "accept": "application/geo+json"
+   },
+   "status": 200,
+   "body": {
+    "properties": {
+     "relativeLocation": {
+      "properties": {
+       "city": ""
+      }
+     }
+    }
+   }
+  },
+  {
+   "url": "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=0.0&lon=-160.0&zoom=10&addressdetails=1&accept-language=en",
+   "headers": {
+    "user-agent": "AccessiWeather/1.0 (AccessiWeather)",
+    "accept": "application/json"
+   },
+   "status": 200,
+   "body": {
+    "address": {
+     "country": "Kiribati",
+     "country_code": "ki"
+    }
+   }
+  }
+ ],
+ "output": {
+  "name": "Kiribati",
+  "latitude": 0.0,
+  "longitude": -160.0,
+  "timezone": null,
+  "country_code": "KI",
+  "marine_mode": false,
+  "forecast_zone_id": null,
+  "cwa_office": null,
+  "county_zone_id": null,
+  "fire_zone_id": null,
+  "radar_station": null
+ }
+}

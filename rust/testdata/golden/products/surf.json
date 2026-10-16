@@ -1,0 +1,429 @@
+[
+ {
+  "name": "marine_full_report",
+  "call": {
+   "fn": "marine_format",
+   "data": {
+    "current": {
+     "time": "2026-06-07T12:00",
+     "wave_height": 1.4,
+     "wave_direction": 270,
+     "wave_period": 8,
+     "swell_wave_height": 0.9,
+     "swell_wave_direction": 11.25,
+     "swell_wave_period": 11.04,
+     "sea_surface_temperature": 18.5
+    },
+    "current_units": {
+     "wave_height": "m",
+     "wave_period": "s",
+     "swell_wave_height": "m",
+     "swell_wave_period": "s",
+     "sea_surface_temperature": "°C"
+    }
+   },
+   "location": {
+    "name": "Porto",
+    "latitude": 41.15,
+    "longitude": -8.63,
+    "country_code": "PT"
+   },
+   "now": "2026-05-01T18:00:00+00:00"
+  },
+  "responses": [],
+  "requests": [],
+  "expect": {
+   "ok": {
+    "product_type": "SURF_CONDITIONS",
+    "product_id": "openmeteo-marine-surf-conditions",
+    "cwa_office": "Open-Meteo Marine",
+    "issuance_time": "naive:2026-06-07T12:00:00",
+    "product_text": "Surf conditions from Open-Meteo Marine for Porto.\nMarine/surf conditions from Open-Meteo Marine; not an official NWS Surf Zone Forecast.\nWave height: 1.4 m.\nWave direction: W (270 degrees).\nWave period: 8 s.\nSwell height: 0.9 m.\nSwell direction: N (11 degrees).\nSwell period: 11 s.\nSea surface temperature: 18.5 °C.",
+    "headline": "Surf conditions from Open-Meteo Marine"
+   }
+  }
+ },
+ {
+  "name": "marine_list_values_and_odd_units",
+  "call": {
+   "fn": "marine_format",
+   "data": {
+    "current": {
+     "time": "2026-06-07T12:00Z",
+     "wave_height": [
+      2.0,
+      3.0
+     ],
+     "wave_direction": "offshore",
+     "wave_period": [],
+     "swell_wave_direction": " 33.75 ",
+     "swell_wave_height": "  ",
+     "sea_surface_temperature": 0.04
+    },
+    "current_units": {
+     "wave_height": 5,
+     "sea_surface_temperature": ""
+    }
+   },
+   "location": {
+    "name": "Porto",
+    "latitude": 41.15,
+    "longitude": -8.63,
+    "country_code": "PT"
+   },
+   "now": "2026-05-01T18:00:00+00:00"
+  },
+  "responses": [],
+  "requests": [],
+  "expect": {
+   "ok": {
+    "product_type": "SURF_CONDITIONS",
+    "product_id": "openmeteo-marine-surf-conditions",
+    "cwa_office": "Open-Meteo Marine",
+    "issuance_time": "2026-06-07T12:00:00+00:00",
+    "product_text": "Surf conditions from Open-Meteo Marine for Porto.\nMarine/surf conditions from Open-Meteo Marine; not an official NWS Surf Zone Forecast.\nWave height: 2 5.\nWave direction: offshore.\nSwell direction: NE (34 degrees).\nSea surface temperature: 0.",
+    "headline": "Surf conditions from Open-Meteo Marine"
+   }
+  }
+ },
+ {
+  "name": "marine_invalid_time_uses_now",
+  "call": {
+   "fn": "marine_format",
+   "data": {
+    "current": {
+     "time": "not-a-time",
+     "wave_height": 1.2
+    }
+   },
+   "location": {
+    "name": "Porto",
+    "latitude": 41.15,
+    "longitude": -8.63,
+    "country_code": "PT"
+   },
+   "now": "2026-05-01T18:00:00+00:00"
+  },
+  "responses": [],
+  "requests": [],
+  "expect": {
+   "ok": {
+    "product_type": "SURF_CONDITIONS",
+    "product_id": "openmeteo-marine-surf-conditions",
+    "cwa_office": "Open-Meteo Marine",
+    "issuance_time": "2026-05-01T18:00:00+00:00",
+    "product_text": "Surf conditions from Open-Meteo Marine for Porto.\nMarine/surf conditions from Open-Meteo Marine; not an official NWS Surf Zone Forecast.\nWave height: 1.2.",
+    "headline": "Surf conditions from Open-Meteo Marine"
+   }
+  }
+ },
+ {
+  "name": "marine_offset_time",
+  "call": {
+   "fn": "marine_format",
+   "data": {
+    "current": {
+     "time": "2026-06-07T12:00+01:00",
+     "wave_height": true
+    }
+   },
+   "location": {
+    "name": "Porto",
+    "latitude": 41.15,
+    "longitude": -8.63,
+    "country_code": "PT"
+   },
+   "now": "2026-05-01T18:00:00+00:00"
+  },
+  "responses": [],
+  "requests": [],
+  "expect": {
+   "ok": {
+    "product_type": "SURF_CONDITIONS",
+    "product_id": "openmeteo-marine-surf-conditions",
+    "cwa_office": "Open-Meteo Marine",
+    "issuance_time": "2026-06-07T12:00:00+01:00",
+    "product_text": "Surf conditions from Open-Meteo Marine for Porto.\nMarine/surf conditions from Open-Meteo Marine; not an official NWS Surf Zone Forecast.\nWave height: 1.",
+    "headline": "Surf conditions from Open-Meteo Marine"
+   }
+  }
+ },
+ {
+  "name": "marine_empty_current",
+  "call": {
+   "fn": "marine_format",
+   "data": {
+    "current": {}
+   },
+   "location": {
+    "name": "Porto",
+    "latitude": 41.15,
+    "longitude": -8.63,
+    "country_code": "PT"
+   },
+   "now": "2026-05-01T18:00:00+00:00"
+  },
+  "responses": [],
+  "requests": [],
+  "expect": {
+   "ok": null
+  }
+ },
+ {
+  "name": "marine_only_time",
+  "call": {
+   "fn": "marine_format",
+   "data": {
+    "current": {
+     "time": "2026-06-07T12:00"
+    }
+   },
+   "location": {
+    "name": "Porto",
+    "latitude": 41.15,
+    "longitude": -8.63,
+    "country_code": "PT"
+   },
+   "now": "2026-05-01T18:00:00+00:00"
+  },
+  "responses": [],
+  "requests": [],
+  "expect": {
+   "ok": null
+  }
+ },
+ {
+  "name": "marine_units_not_dict",
+  "call": {
+   "fn": "marine_format",
+   "data": {
+    "current": {
+     "wave_height": 1
+    },
+    "current_units": []
+   },
+   "location": {
+    "name": "Porto",
+    "latitude": 41.15,
+    "longitude": -8.63,
+    "country_code": "PT"
+   },
+   "now": "2026-05-01T18:00:00+00:00"
+  },
+  "responses": [],
+  "requests": [],
+  "expect": {
+   "ok": {
+    "product_type": "SURF_CONDITIONS",
+    "product_id": "openmeteo-marine-surf-conditions",
+    "cwa_office": "Open-Meteo Marine",
+    "issuance_time": "2026-05-01T18:00:00+00:00",
+    "product_text": "Surf conditions from Open-Meteo Marine for Porto.\nMarine/surf conditions from Open-Meteo Marine; not an official NWS Surf Zone Forecast.\nWave height: 1.",
+    "headline": "Surf conditions from Open-Meteo Marine"
+   }
+  }
+ },
+ {
+  "name": "marine_fetch",
+  "call": {
+   "fn": "marine_fetch",
+   "location": {
+    "name": "Porto",
+    "latitude": 41.15,
+    "longitude": -8.63,
+    "country_code": "PT"
+   },
+   "now": "2026-05-01T18:00:00+00:00"
+  },
+  "responses": [
+   {
+    "url": "https://marine-api.open-meteo.com/v1/marine",
+    "json": {
+     "current": {
+      "time": "2026-06-07T12:00",
+      "wave_height": 2.0
+     },
+     "current_units": {
+      "wave_height": "m"
+     }
+    }
+   }
+  ],
+  "requests": [
+   "https://marine-api.open-meteo.com/v1/marine?latitude=41.15&longitude=-8.63&current=wave_height%2Cwave_direction%2Cwave_period%2Cswell_wave_height%2Cswell_wave_direction%2Cswell_wave_period%2Csea_surface_temperature&timezone=auto"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "SURF_CONDITIONS",
+    "product_id": "openmeteo-marine-surf-conditions",
+    "cwa_office": "Open-Meteo Marine",
+    "issuance_time": "naive:2026-06-07T12:00:00",
+    "product_text": "Surf conditions from Open-Meteo Marine for Porto.\nMarine/surf conditions from Open-Meteo Marine; not an official NWS Surf Zone Forecast.\nWave height: 2 m.",
+    "headline": "Surf conditions from Open-Meteo Marine"
+   }
+  }
+ },
+ {
+  "name": "marine_fetch_http_error",
+  "call": {
+   "fn": "marine_fetch",
+   "location": {
+    "name": "Porto",
+    "latitude": 41.15,
+    "longitude": -8.63,
+    "country_code": "PT"
+   },
+   "now": "2026-05-01T18:00:00+00:00"
+  },
+  "responses": [
+   {
+    "url": "https://marine-api.open-meteo.com/v1/marine",
+    "status": 500,
+    "json": {}
+   }
+  ],
+  "requests": [
+   "https://marine-api.open-meteo.com/v1/marine?latitude=41.15&longitude=-8.63&current=wave_height%2Cwave_direction%2Cwave_period%2Cswell_wave_height%2Cswell_wave_direction%2Cswell_wave_period%2Csea_surface_temperature&timezone=auto"
+  ],
+  "expect": {
+   "ok": null
+  }
+ },
+ {
+  "name": "pirate_full",
+  "call": {
+   "fn": "pirate",
+   "payload": {
+    "currently": {
+     "summary": "Breezy",
+     "temperature": 70,
+     "apparentTemperature": 68.25,
+     "windSpeed": 14,
+     "windGust": 24,
+     "windBearing": 180,
+     "uvIndex": 6,
+     "visibility": 9.99,
+     "precipProbability": 0.285
+    }
+   },
+   "location": {
+    "name": "Brighton",
+    "latitude": 50.82,
+    "longitude": -0.14,
+    "country_code": "GB"
+   },
+   "now": "2026-05-01T18:00:00+00:00"
+  },
+  "responses": [],
+  "requests": [],
+  "expect": {
+   "ok": {
+    "product_type": "SURF_CONDITIONS",
+    "product_id": "pirate-weather-beach-conditions",
+    "cwa_office": "Pirate Weather",
+    "issuance_time": "2026-05-01T18:00:00+00:00",
+    "product_text": "Surf conditions from Pirate Weather for Brighton.\nBeach-weather context from Pirate Weather; not an official NWS Surf Zone Forecast and wave data is not available from this source in AccessiWeather.\nConditions: Breezy.\nTemperature: 70 degrees.\nFeels like: 68.2 degrees.\nWind speed: 14 mph.\nWind gust: 24 mph.\nWind direction: S (180 degrees).\nUV index: 6.\nVisibility: 10 miles.\nPrecipitation chance: 28 percent.",
+    "headline": "Surf conditions from Pirate Weather"
+   }
+  }
+ },
+ {
+  "name": "pirate_partial",
+  "call": {
+   "fn": "pirate",
+   "payload": {
+    "currently": {
+     "summary": "Clear",
+     "windSpeed": 8,
+     "windBearing": "calm",
+     "precipProbability": true
+    }
+   },
+   "location": {
+    "name": "Porto",
+    "latitude": 41.15,
+    "longitude": -8.63,
+    "country_code": "PT"
+   },
+   "now": "2026-05-01T18:00:00+00:00"
+  },
+  "responses": [],
+  "requests": [],
+  "expect": {
+   "ok": {
+    "product_type": "SURF_CONDITIONS",
+    "product_id": "pirate-weather-beach-conditions",
+    "cwa_office": "Pirate Weather",
+    "issuance_time": "2026-05-01T18:00:00+00:00",
+    "product_text": "Surf conditions from Pirate Weather for Porto.\nBeach-weather context from Pirate Weather; not an official NWS Surf Zone Forecast and wave data is not available from this source in AccessiWeather.\nConditions: Clear.\nWind speed: 8 mph.\nWind direction: calm.\nPrecipitation chance: 100 percent.",
+    "headline": "Surf conditions from Pirate Weather"
+   }
+  }
+ },
+ {
+  "name": "pirate_currently_not_dict",
+  "call": {
+   "fn": "pirate",
+   "payload": {
+    "currently": []
+   },
+   "location": {
+    "name": "Porto",
+    "latitude": 41.15,
+    "longitude": -8.63,
+    "country_code": "PT"
+   },
+   "now": "2026-05-01T18:00:00+00:00"
+  },
+  "responses": [],
+  "requests": [],
+  "expect": {
+   "ok": null
+  }
+ },
+ {
+  "name": "pirate_currently_empty",
+  "call": {
+   "fn": "pirate",
+   "payload": {
+    "currently": {}
+   },
+   "location": {
+    "name": "Porto",
+    "latitude": 41.15,
+    "longitude": -8.63,
+    "country_code": "PT"
+   },
+   "now": "2026-05-01T18:00:00+00:00"
+  },
+  "responses": [],
+  "requests": [],
+  "expect": {
+   "ok": null
+  }
+ },
+ {
+  "name": "pirate_only_nulls",
+  "call": {
+   "fn": "pirate",
+   "payload": {
+    "currently": {
+     "summary": null,
+     "temperature": null
+    }
+   },
+   "location": {
+    "name": "Porto",
+    "latitude": 41.15,
+    "longitude": -8.63,
+    "country_code": "PT"
+   },
+   "now": "2026-05-01T18:00:00+00:00"
+  },
+  "responses": [],
+  "requests": [],
+  "expect": {
+   "ok": null
+  }
+ }
+]

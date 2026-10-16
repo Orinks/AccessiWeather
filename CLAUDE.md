@@ -253,7 +253,6 @@ def test_weather_fetch(mock_simple_weather_apis):
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `ci.yml` | Push to main/dev, PRs | Linting, tests on Ubuntu/Windows/macOS |
 | `briefcase-build.yml` | After CI passes on dev | Build MSI/DMG installers |
 | `briefcase-release.yml` | Tags (v*.*.*) | Create GitHub releases |
 | `integration-tests.yml` | Nightly | Record VCR cassettes |
@@ -409,7 +408,9 @@ toga.Table(
 
 ## Changelog Maintenance
 
-Keep `CHANGELOG.md` updated with user-facing changes:
+Keep `CHANGELOG.md` updated with user-facing changes. Add the bullet in the same commit as the
+change: a `commit-msg` hook (`pre-commit install`) rejects a user-facing commit without one, unless
+the message carries `Changelog: none` for internal work.
 
 ### When to Add
 

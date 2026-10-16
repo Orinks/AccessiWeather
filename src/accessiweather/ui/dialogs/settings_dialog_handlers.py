@@ -43,6 +43,10 @@ class SettingsDialogHandlersMixin:
             if not self or self.IsBeingDeleted():
                 return
             button.Enable()
+            if self._controls["venice_key"].GetValue().strip() != key:
+                valid = False
+                message = "The key changed during validation. Please validate again."
+                announcer.announce(message)
             wx.MessageBox(
                 message,
                 "Venice Key Valid" if valid else "Venice Validation Failed",
@@ -205,47 +209,59 @@ class SettingsDialogHandlersMixin:
             wx.EndBusyCursor()
 
     def _on_validate_openrouter_key(self, event):
-        """Validate OpenRouter API key."""
-        key = self._controls["openrouter_key"].GetValue()
+        """Validate the user's OpenRouter key without blocking the UI or buying inference."""
+        key = self._controls["openrouter_key"].GetValue().strip()
         if not key:
-            wx.MessageBox("Please enter an API key first.", "Validation", wx.OK | wx.ICON_WARNING)
+            wx.MessageBox(
+                "Please enter your OpenRouter API key first.", "Validation", wx.OK | wx.ICON_WARNING
+            )
+            self._controls["openrouter_key"].SetFocus()
             return
 
-        wx.BeginBusyCursor()
-        try:
+        import threading
+
+        from ...screen_reader import ScreenReaderAnnouncer
+
+        button = event.GetEventObject()
+        button.Disable()
+        self._controls["openrouter_key"].SetFocus()
+        announcer = getattr(self, "_openrouter_validation_announcer", None)
+        if announcer is None:
+            announcer = self._openrouter_validation_announcer = ScreenReaderAnnouncer()
+        announcer.announce("Validating OpenRouter key…")
+
+        def finish(valid, message):
+            if not self or self.IsBeingDeleted():
+                return
+            button.Enable()
+            if self._controls["openrouter_key"].GetValue().strip() != key:
+                valid = False
+                message = "The key changed during validation. Please validate again."
+                announcer.announce(message)
+            wx.MessageBox(
+                message,
+                "OpenRouter Key Valid" if valid else "OpenRouter Validation Failed",
+                wx.OK | (wx.ICON_INFORMATION if valid else wx.ICON_ERROR),
+                parent=self,
+            )
+            button.SetFocus()
+
+        def validate():
             import asyncio
 
-            from ...ai_explainer import AIExplainer
+            from ...ai_explainer_validation import validate_openrouter_api_key
 
-            explainer = AIExplainer()
-
-            loop = asyncio.new_event_loop()
             try:
-                valid = loop.run_until_complete(explainer.validate_api_key(key))
-            finally:
-                loop.close()
+                valid, message = asyncio.run(validate_openrouter_api_key(key))
+            except Exception:
+                # Never include exception text: it could contain a credential or request.
+                valid, message = (
+                    False,
+                    "Unable to validate OpenRouter access. Check your connection and try again.",
+                )
+            wx.CallAfter(finish, valid, message)
 
-            if valid:
-                wx.MessageBox(
-                    "API key is valid!",
-                    "Validation Successful",
-                    wx.OK | wx.ICON_INFORMATION,
-                )
-            else:
-                wx.MessageBox(
-                    "API key validation failed. Please check your key and try again.",
-                    "Validation Failed",
-                    wx.OK | wx.ICON_ERROR,
-                )
-        except Exception as e:
-            logger.error(f"Error validating OpenRouter API key: {e}")
-            wx.MessageBox(
-                f"Error during validation: {e}",
-                "Validation Error",
-                wx.OK | wx.ICON_ERROR,
-            )
-        finally:
-            wx.EndBusyCursor()
+        threading.Thread(target=validate, daemon=True).start()
 
     def _on_browse_models(self, event):
         """Browse available AI models."""
@@ -257,17 +273,15 @@ class SettingsDialogHandlersMixin:
         if selected_model_id:
             if selected_model_id == "openrouter/free":
                 self._controls["ai_model"].SetSelection(0)
-            elif selected_model_id == "meta-llama/llama-3.3-70b-instruct:free":
-                self._controls["ai_model"].SetSelection(1)
             elif selected_model_id == "openrouter/auto":
-                self._controls["ai_model"].SetSelection(2)
+                self._controls["ai_model"].SetSelection(1)
             else:
                 model_display = f"Selected: {selected_model_id.split('/')[-1]}"
-                if self._controls["ai_model"].GetCount() > 3:
-                    self._controls["ai_model"].SetString(3, model_display)
+                if self._controls["ai_model"].GetCount() > 2:
+                    self._controls["ai_model"].SetString(2, model_display)
                 else:
                     self._controls["ai_model"].Append(model_display)
-                self._controls["ai_model"].SetSelection(3)
+                self._controls["ai_model"].SetSelection(2)
                 self._selected_specific_model = selected_model_id
 
     def _on_reset_prompt(self, event):
@@ -707,10 +721,8 @@ class SettingsDialogHandlersMixin:
         if selection == 0:
             return "openrouter/free"
         if selection == 1:
-            return "meta-llama/llama-3.3-70b-instruct:free"
-        if selection == 2:
             return "auto"
-        if selection == 3 and self._selected_specific_model:
+        if selection == 2 and self._selected_specific_model:
             return self._selected_specific_model
         return "openrouter/free"
 

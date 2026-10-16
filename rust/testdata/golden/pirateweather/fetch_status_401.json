@@ -1,0 +1,17 @@
+{
+ "exchanges": [
+  {
+   "url": "https://api.pirateweather.net/forecast/secret/40.7128,-74.006?units=uk2&extend=hourly&version=2",
+   "headers": {
+    "user-agent": "AccessiWeather/2.0"
+   },
+   "status": 401,
+   "body": {}
+  }
+ ],
+ "output": null,
+ "error": {
+  "message": "Invalid API key",
+  "status_code": 401
+ }
+}

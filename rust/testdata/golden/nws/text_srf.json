@@ -1,0 +1,48 @@
+{
+ "now": "2026-01-20T18:21:00+00:00",
+ "call": "text_product",
+ "product_type": "SRF",
+ "office": "OKX",
+ "responses": [
+  {
+   "url": "https://api.weather.gov/products/types/SRF/locations/OKX",
+   "status": 200,
+   "body": "{\"@graph\":[{\"id\":\"srf-1\",\"issuanceTime\":\"2026-01-20T08:00:00+00:00\",\"headline\":\"Surf Zone Forecast\"}]}"
+  },
+  {
+   "url": "https://api.weather.gov/products/srf-1",
+   "status": 200,
+   "body": "{\"productText\":\"SURF ZONE FORECAST\"}"
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://api.weather.gov/products/types/SRF/locations/OKX",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/products/srf-1",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  }
+ ],
+ "result": {
+  "product_type": "SRF",
+  "product_id": "srf-1",
+  "cwa_office": "OKX",
+  "issuance_time": "2026-01-20T08:00:00+00:00",
+  "product_text": "SURF ZONE FORECAST",
+  "headline": "Surf Zone Forecast"
+ }
+}

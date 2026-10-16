@@ -366,6 +366,7 @@ class TestAPIClient:
     def test_client_is_cached(self):
         """Test that client is cached after first creation."""
         with patch("openai.OpenAI") as mock_openai:
+            mock_openai.return_value.is_closed.return_value = False
             explainer = AIExplainer(api_key="test-key")
             client1 = explainer._get_client()
             client2 = explainer._get_client()
@@ -408,6 +409,22 @@ class TestExplainWeather:
             assert result.model_used == "test-model"
             assert result.token_count == 150
             assert result.cached is False
+
+    @pytest.mark.asyncio
+    async def test_explain_weather_rejects_model_refusal(self, sample_weather_data):
+        explainer = AIExplainer(api_key="test-key")
+        refusal = {
+            "content": "I’m sorry, but I can’t help with that.",
+            "model": "free-model",
+            "total_tokens": 40,
+            "prompt_tokens": 30,
+            "completion_tokens": 10,
+        }
+        with (
+            patch.object(explainer, "_call_openrouter", return_value=refusal),
+            pytest.raises(AIExplainerError, match="declined this request"),
+        ):
+            await explainer.explain_weather(sample_weather_data, "Test City")
 
     @pytest.mark.asyncio
     async def test_explain_weather_with_cache_hit(self, sample_weather_data, mock_cache):
@@ -506,6 +523,22 @@ class TestExplainAFD:
             assert result.cached is False
 
     @pytest.mark.asyncio
+    async def test_explain_afd_rejects_model_refusal(self, sample_afd_text):
+        explainer = AIExplainer(api_key="test-key")
+        refusal = {
+            "content": "I'm sorry, but I can't help with that.",
+            "model": "free-model",
+            "total_tokens": 40,
+            "prompt_tokens": 30,
+            "completion_tokens": 10,
+        }
+        with (
+            patch.object(explainer, "_call_openrouter", return_value=refusal),
+            pytest.raises(AIExplainerError, match="declined this request"),
+        ):
+            await explainer.explain_afd(sample_afd_text, "Test City")
+
+    @pytest.mark.asyncio
     async def test_explain_afd_different_styles(self, sample_afd_text):
         """Test AFD explanation with different styles."""
         explainer = AIExplainer(api_key="test-key")
@@ -556,7 +589,7 @@ class TestErrorHandling:
             with pytest.raises(RateLimitError) as exc:
                 explainer._call_openrouter("system", "user")
 
-        assert exc.value.__cause__ is api_error
+        assert exc.value.__cause__ is None
 
     @pytest.mark.asyncio
     async def test_invalid_api_key_error(self, sample_weather_data):
@@ -963,15 +996,10 @@ class TestAPIKeyValidation:
         """Test validate_api_key with valid key."""
         explainer = AIExplainer(api_key="test-key")
 
-        with patch.object(explainer, "_call_openrouter") as mock_call:
-            mock_call.return_value = {
-                "content": "OK",
-                "model": "test-model",
-                "total_tokens": 5,
-                "prompt_tokens": 3,
-                "completion_tokens": 2,
-            }
-
+        with patch(
+            "accessiweather.ai_explainer_validation.validate_openrouter_api_key",
+            return_value=(True, "Verified"),
+        ):
             result = await explainer.validate_api_key("valid-key")
             assert result is True
 
@@ -979,10 +1007,10 @@ class TestAPIKeyValidation:
     async def test_validate_api_key_invalid(self):
         """Test validate_api_key with invalid key."""
         explainer = AIExplainer(api_key="test-key")
-
-        with patch.object(explainer, "_call_openrouter") as mock_call:
-            mock_call.side_effect = InvalidAPIKeyError("Invalid key")
-
+        with patch(
+            "accessiweather.ai_explainer_validation.validate_openrouter_api_key",
+            return_value=(False, "Rejected"),
+        ):
             result = await explainer.validate_api_key("invalid-key")
             assert result is False
 
@@ -1071,6 +1099,58 @@ class TestExplanationResult:
 
 
 # =============================================================================
+def test_explanation_cache_changes_with_prompt_style_alerts_and_output_format():
+    weather = {"temperature": 72, "conditions": "Sunny", "alerts": []}
+    plain = AIExplainer(api_key="test-key", custom_system_prompt="Speak like a sailor")
+    different_prompt = AIExplainer(api_key="test-key", custom_system_prompt="Speak formally")
+    different_instructions = AIExplainer(
+        api_key="test-key",
+        custom_system_prompt="Speak like a sailor",
+        custom_instructions="Be brief",
+    )
+    base = plain._generate_cache_key(weather, "Home")
+
+    assert base != different_prompt._generate_cache_key(weather, "Home")
+    assert base != different_instructions._generate_cache_key(weather, "Home")
+    assert base != plain._generate_cache_key(weather, "Home", ExplanationStyle.BRIEF)
+    assert base != plain._generate_cache_key(weather, "Home", preserve_markdown=True)
+    assert base != plain._generate_cache_key(
+        {**weather, "alerts": [{"event": "Flood Warning"}]}, "Home"
+    )
+    assert "Speak like a sailor" not in base
+
+
+def test_custom_explanation_prompt_does_not_append_generic_style_instruction():
+    explainer = AIExplainer(api_key="test-key", custom_system_prompt="Speak like a sailor")
+    user_prompt = explainer._build_prompt(
+        {"conditions": "Sunny"}, "Home", ExplanationStyle.STANDARD
+    )
+
+    assert "Weather information to explain" in user_prompt
+    assert "someone planning their activities" not in user_prompt
+
+
+@pytest.mark.asyncio
+async def test_changing_custom_prompt_fetches_new_explanation_instead_of_cached_text():
+    entries = {}
+    cache = MagicMock()
+    cache.get.side_effect = entries.get
+    cache.set.side_effect = lambda key, value, ttl: entries.__setitem__(key, value)
+    first = AIExplainer(api_key="test-key", cache=cache, custom_system_prompt="Speak like a sailor")
+    second = AIExplainer(api_key="test-key", cache=cache, custom_system_prompt="Speak formally")
+    responses = [
+        {"content": "A fine sunny day ahead, matey.", "model": "model", "total_tokens": 12},
+        {"content": "Sunny conditions are expected today.", "model": "model", "total_tokens": 12},
+    ]
+    with patch.object(AIExplainer, "_call_provider", side_effect=responses) as provider:
+        first_result = await first.explain_weather({"conditions": "Sunny"}, "Home")
+        second_result = await second.explain_weather({"conditions": "Sunny"}, "Home")
+
+    assert first_result.text != second_result.text
+    assert not second_result.cached
+    assert provider.call_count == 2
+
+
 # Integration-style Tests (with mocked API)
 # =============================================================================
 
@@ -1129,3 +1209,14 @@ class TestIntegrationScenarios:
 
             assert result.text is not None
             assert "mid-week" in result.text or "high pressure" in result.text
+
+
+def test_openrouter_requests_skip_model_reasoning():
+    """Free reasoning models can spend the whole token budget thinking and return no text."""
+    explainer = AIExplainer(api_key="test-key", model="openrouter/free")
+    client = MagicMock()
+    client.chat.completions.create.return_value = []
+    with patch.object(explainer, "_get_client", return_value=client):
+        explainer._call_openrouter("system", "user")
+    request = client.chat.completions.create.call_args.kwargs
+    assert request["extra_body"] == {"reasoning": {"effort": "none"}}

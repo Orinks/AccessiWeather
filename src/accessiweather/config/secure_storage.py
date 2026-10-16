@@ -69,8 +69,8 @@ class SecureStorage:
             keyring.set_password(SERVICE_NAME, username, password)
             logger.info(f"Securely stored credential for {username}")
             return True
-        except Exception as e:
-            logger.error(f"Failed to store credential for {username}: {e}")
+        except Exception:
+            logger.error("Failed to store credential for %s", username)
             return False
 
     @staticmethod
@@ -92,8 +92,8 @@ class SecureStorage:
 
         try:
             return keyring.get_password(SERVICE_NAME, username)
-        except Exception as e:
-            logger.error(f"Failed to retrieve credential for {username}: {e}")
+        except Exception:
+            logger.error("Failed to retrieve credential for %s", username)
             return None
 
     @staticmethod
@@ -118,8 +118,8 @@ class SecureStorage:
                 keyring.delete_password(SERVICE_NAME, username)
                 logger.info(f"Securely deleted credential for {username}")
             return True
-        except Exception as e:
-            logger.error(f"Failed to delete credential for {username}: {e}")
+        except Exception:
+            logger.error("Failed to delete credential for %s", username)
             return False
 
 

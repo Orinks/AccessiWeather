@@ -1,0 +1,4467 @@
+{
+  "candidates": [
+    {
+      "alert": {
+        "id": "snd0",
+        "title": "Tornado Warning issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Extreme",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Tornado Warning",
+        "headline": "Tornado Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": null,
+      "candidates": [
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd0",
+        "title": "Tornado Warning issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Extreme",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Tornado Warning",
+        "headline": "Tornado Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "new_alert",
+      "candidates": [
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd0",
+        "title": "Tornado Warning issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Extreme",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Tornado Warning",
+        "headline": "Tornado Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd0",
+        "title": "Tornado Warning issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Extreme",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Tornado Warning",
+        "headline": "Tornado Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd0",
+        "title": "Tornado Warning issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Extreme",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Tornado Warning",
+        "headline": "Tornado Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "escalation",
+      "candidates": [
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd0",
+        "title": "Tornado Warning issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Extreme",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Tornado Warning",
+        "headline": "Tornado Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": null,
+      "candidates": [
+        "tornado_warning",
+        "tornado_extreme",
+        "tornado",
+        "warning",
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd0",
+        "title": "Tornado Warning issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Extreme",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Tornado Warning",
+        "headline": "Tornado Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "new_alert",
+      "candidates": [
+        "tornado_warning",
+        "tornado_extreme",
+        "tornado",
+        "warning",
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd0",
+        "title": "Tornado Warning issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Extreme",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Tornado Warning",
+        "headline": "Tornado Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "tornado_warning",
+        "tornado_extreme",
+        "tornado",
+        "warning",
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd0",
+        "title": "Tornado Warning issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Extreme",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Tornado Warning",
+        "headline": "Tornado Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "tornado_warning",
+        "tornado_extreme",
+        "tornado",
+        "warning",
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd0",
+        "title": "Tornado Warning issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Extreme",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Tornado Warning",
+        "headline": "Tornado Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "escalation",
+      "candidates": [
+        "tornado_warning",
+        "tornado_extreme",
+        "tornado",
+        "warning",
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd1",
+        "title": "Tornado Watch issued",
+        "description": "Tornado Watch description.",
+        "severity": "Moderate",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Tornado Watch",
+        "headline": "Tornado Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": null,
+      "candidates": [
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd1",
+        "title": "Tornado Watch issued",
+        "description": "Tornado Watch description.",
+        "severity": "Moderate",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Tornado Watch",
+        "headline": "Tornado Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "new_alert",
+      "candidates": [
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd1",
+        "title": "Tornado Watch issued",
+        "description": "Tornado Watch description.",
+        "severity": "Moderate",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Tornado Watch",
+        "headline": "Tornado Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd1",
+        "title": "Tornado Watch issued",
+        "description": "Tornado Watch description.",
+        "severity": "Moderate",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Tornado Watch",
+        "headline": "Tornado Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd1",
+        "title": "Tornado Watch issued",
+        "description": "Tornado Watch description.",
+        "severity": "Moderate",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Tornado Watch",
+        "headline": "Tornado Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "escalation",
+      "candidates": [
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd1",
+        "title": "Tornado Watch issued",
+        "description": "Tornado Watch description.",
+        "severity": "Moderate",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Tornado Watch",
+        "headline": "Tornado Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": null,
+      "candidates": [
+        "tornado_watch",
+        "tornado_moderate",
+        "tornado",
+        "watch",
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd1",
+        "title": "Tornado Watch issued",
+        "description": "Tornado Watch description.",
+        "severity": "Moderate",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Tornado Watch",
+        "headline": "Tornado Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "new_alert",
+      "candidates": [
+        "tornado_watch",
+        "tornado_moderate",
+        "tornado",
+        "watch",
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd1",
+        "title": "Tornado Watch issued",
+        "description": "Tornado Watch description.",
+        "severity": "Moderate",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Tornado Watch",
+        "headline": "Tornado Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "tornado_watch",
+        "tornado_moderate",
+        "tornado",
+        "watch",
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd1",
+        "title": "Tornado Watch issued",
+        "description": "Tornado Watch description.",
+        "severity": "Moderate",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Tornado Watch",
+        "headline": "Tornado Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "tornado_watch",
+        "tornado_moderate",
+        "tornado",
+        "watch",
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd1",
+        "title": "Tornado Watch issued",
+        "description": "Tornado Watch description.",
+        "severity": "Moderate",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Tornado Watch",
+        "headline": "Tornado Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "escalation",
+      "candidates": [
+        "tornado_watch",
+        "tornado_moderate",
+        "tornado",
+        "watch",
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd2",
+        "title": "Severe Thunderstorm Warning issued",
+        "description": "Severe Thunderstorm Warning description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Warning",
+        "headline": "Severe Thunderstorm Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": null,
+      "candidates": [
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd2",
+        "title": "Severe Thunderstorm Warning issued",
+        "description": "Severe Thunderstorm Warning description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Warning",
+        "headline": "Severe Thunderstorm Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "new_alert",
+      "candidates": [
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd2",
+        "title": "Severe Thunderstorm Warning issued",
+        "description": "Severe Thunderstorm Warning description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Warning",
+        "headline": "Severe Thunderstorm Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd2",
+        "title": "Severe Thunderstorm Warning issued",
+        "description": "Severe Thunderstorm Warning description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Warning",
+        "headline": "Severe Thunderstorm Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd2",
+        "title": "Severe Thunderstorm Warning issued",
+        "description": "Severe Thunderstorm Warning description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Warning",
+        "headline": "Severe Thunderstorm Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "escalation",
+      "candidates": [
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd2",
+        "title": "Severe Thunderstorm Warning issued",
+        "description": "Severe Thunderstorm Warning description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Warning",
+        "headline": "Severe Thunderstorm Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": null,
+      "candidates": [
+        "severe_thunderstorm_warning",
+        "thunderstorm_warning",
+        "thunderstorm_severe",
+        "thunderstorm",
+        "warning",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd2",
+        "title": "Severe Thunderstorm Warning issued",
+        "description": "Severe Thunderstorm Warning description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Warning",
+        "headline": "Severe Thunderstorm Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "new_alert",
+      "candidates": [
+        "severe_thunderstorm_warning",
+        "thunderstorm_warning",
+        "thunderstorm_severe",
+        "thunderstorm",
+        "warning",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd2",
+        "title": "Severe Thunderstorm Warning issued",
+        "description": "Severe Thunderstorm Warning description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Warning",
+        "headline": "Severe Thunderstorm Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "severe_thunderstorm_warning",
+        "thunderstorm_warning",
+        "thunderstorm_severe",
+        "thunderstorm",
+        "warning",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd2",
+        "title": "Severe Thunderstorm Warning issued",
+        "description": "Severe Thunderstorm Warning description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Warning",
+        "headline": "Severe Thunderstorm Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "severe_thunderstorm_warning",
+        "thunderstorm_warning",
+        "thunderstorm_severe",
+        "thunderstorm",
+        "warning",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd2",
+        "title": "Severe Thunderstorm Warning issued",
+        "description": "Severe Thunderstorm Warning description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Warning",
+        "headline": "Severe Thunderstorm Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "escalation",
+      "candidates": [
+        "severe_thunderstorm_warning",
+        "thunderstorm_warning",
+        "thunderstorm_severe",
+        "thunderstorm",
+        "warning",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd3",
+        "title": "Severe Thunderstorm Watch issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Watch",
+        "headline": "Severe Thunderstorm Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": null,
+      "candidates": [
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd3",
+        "title": "Severe Thunderstorm Watch issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Watch",
+        "headline": "Severe Thunderstorm Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "new_alert",
+      "candidates": [
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd3",
+        "title": "Severe Thunderstorm Watch issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Watch",
+        "headline": "Severe Thunderstorm Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd3",
+        "title": "Severe Thunderstorm Watch issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Watch",
+        "headline": "Severe Thunderstorm Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd3",
+        "title": "Severe Thunderstorm Watch issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Watch",
+        "headline": "Severe Thunderstorm Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "escalation",
+      "candidates": [
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd3",
+        "title": "Severe Thunderstorm Watch issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Watch",
+        "headline": "Severe Thunderstorm Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": null,
+      "candidates": [
+        "severe_thunderstorm_watch",
+        "thunderstorm_watch",
+        "thunderstorm_severe",
+        "thunderstorm",
+        "watch",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd3",
+        "title": "Severe Thunderstorm Watch issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Watch",
+        "headline": "Severe Thunderstorm Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "new_alert",
+      "candidates": [
+        "severe_thunderstorm_watch",
+        "thunderstorm_watch",
+        "thunderstorm_severe",
+        "thunderstorm",
+        "watch",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd3",
+        "title": "Severe Thunderstorm Watch issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Watch",
+        "headline": "Severe Thunderstorm Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "severe_thunderstorm_watch",
+        "thunderstorm_watch",
+        "thunderstorm_severe",
+        "thunderstorm",
+        "watch",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd3",
+        "title": "Severe Thunderstorm Watch issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Watch",
+        "headline": "Severe Thunderstorm Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "severe_thunderstorm_watch",
+        "thunderstorm_watch",
+        "thunderstorm_severe",
+        "thunderstorm",
+        "watch",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd3",
+        "title": "Severe Thunderstorm Watch issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Watch",
+        "headline": "Severe Thunderstorm Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "escalation",
+      "candidates": [
+        "severe_thunderstorm_watch",
+        "thunderstorm_watch",
+        "thunderstorm_severe",
+        "thunderstorm",
+        "watch",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd4",
+        "title": "Excessive Heat Watch issued",
+        "description": "Excessive Heat Watch description.",
+        "severity": "Unknown",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Excessive Heat Watch",
+        "headline": "Excessive Heat Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": null,
+      "candidates": [
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd4",
+        "title": "Excessive Heat Watch issued",
+        "description": "Excessive Heat Watch description.",
+        "severity": "Unknown",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Excessive Heat Watch",
+        "headline": "Excessive Heat Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "new_alert",
+      "candidates": [
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd4",
+        "title": "Excessive Heat Watch issued",
+        "description": "Excessive Heat Watch description.",
+        "severity": "Unknown",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Excessive Heat Watch",
+        "headline": "Excessive Heat Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd4",
+        "title": "Excessive Heat Watch issued",
+        "description": "Excessive Heat Watch description.",
+        "severity": "Unknown",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Excessive Heat Watch",
+        "headline": "Excessive Heat Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd4",
+        "title": "Excessive Heat Watch issued",
+        "description": "Excessive Heat Watch description.",
+        "severity": "Unknown",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Excessive Heat Watch",
+        "headline": "Excessive Heat Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "escalation",
+      "candidates": [
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd4",
+        "title": "Excessive Heat Watch issued",
+        "description": "Excessive Heat Watch description.",
+        "severity": "Unknown",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Excessive Heat Watch",
+        "headline": "Excessive Heat Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": null,
+      "candidates": [
+        "excessive_heat_watch",
+        "heat_watch",
+        "heat_unknown",
+        "heat",
+        "watch",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd4",
+        "title": "Excessive Heat Watch issued",
+        "description": "Excessive Heat Watch description.",
+        "severity": "Unknown",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Excessive Heat Watch",
+        "headline": "Excessive Heat Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "new_alert",
+      "candidates": [
+        "excessive_heat_watch",
+        "heat_watch",
+        "heat_unknown",
+        "heat",
+        "watch",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd4",
+        "title": "Excessive Heat Watch issued",
+        "description": "Excessive Heat Watch description.",
+        "severity": "Unknown",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Excessive Heat Watch",
+        "headline": "Excessive Heat Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "excessive_heat_watch",
+        "heat_watch",
+        "heat_unknown",
+        "heat",
+        "watch",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd4",
+        "title": "Excessive Heat Watch issued",
+        "description": "Excessive Heat Watch description.",
+        "severity": "Unknown",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Excessive Heat Watch",
+        "headline": "Excessive Heat Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "excessive_heat_watch",
+        "heat_watch",
+        "heat_unknown",
+        "heat",
+        "watch",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd4",
+        "title": "Excessive Heat Watch issued",
+        "description": "Excessive Heat Watch description.",
+        "severity": "Unknown",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Excessive Heat Watch",
+        "headline": "Excessive Heat Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "escalation",
+      "candidates": [
+        "excessive_heat_watch",
+        "heat_watch",
+        "heat_unknown",
+        "heat",
+        "watch",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd5",
+        "title": "Air Quality Alert issued",
+        "description": "Air Quality Alert description.",
+        "severity": "Unknown",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Air Quality Alert",
+        "headline": "Air Quality Alert in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": null,
+      "candidates": [
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd5",
+        "title": "Air Quality Alert issued",
+        "description": "Air Quality Alert description.",
+        "severity": "Unknown",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Air Quality Alert",
+        "headline": "Air Quality Alert in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "new_alert",
+      "candidates": [
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd5",
+        "title": "Air Quality Alert issued",
+        "description": "Air Quality Alert description.",
+        "severity": "Unknown",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Air Quality Alert",
+        "headline": "Air Quality Alert in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd5",
+        "title": "Air Quality Alert issued",
+        "description": "Air Quality Alert description.",
+        "severity": "Unknown",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Air Quality Alert",
+        "headline": "Air Quality Alert in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd5",
+        "title": "Air Quality Alert issued",
+        "description": "Air Quality Alert description.",
+        "severity": "Unknown",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Air Quality Alert",
+        "headline": "Air Quality Alert in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "escalation",
+      "candidates": [
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd5",
+        "title": "Air Quality Alert issued",
+        "description": "Air Quality Alert description.",
+        "severity": "Unknown",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Air Quality Alert",
+        "headline": "Air Quality Alert in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": null,
+      "candidates": [
+        "air_quality_alert",
+        "air_quality_unknown",
+        "air_quality",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd5",
+        "title": "Air Quality Alert issued",
+        "description": "Air Quality Alert description.",
+        "severity": "Unknown",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Air Quality Alert",
+        "headline": "Air Quality Alert in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "new_alert",
+      "candidates": [
+        "air_quality_alert",
+        "air_quality_unknown",
+        "air_quality",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd5",
+        "title": "Air Quality Alert issued",
+        "description": "Air Quality Alert description.",
+        "severity": "Unknown",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Air Quality Alert",
+        "headline": "Air Quality Alert in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "air_quality_alert",
+        "air_quality_unknown",
+        "air_quality",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd5",
+        "title": "Air Quality Alert issued",
+        "description": "Air Quality Alert description.",
+        "severity": "Unknown",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Air Quality Alert",
+        "headline": "Air Quality Alert in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "air_quality_alert",
+        "air_quality_unknown",
+        "air_quality",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd5",
+        "title": "Air Quality Alert issued",
+        "description": "Air Quality Alert description.",
+        "severity": "Unknown",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Air Quality Alert",
+        "headline": "Air Quality Alert in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "escalation",
+      "candidates": [
+        "air_quality_alert",
+        "air_quality_unknown",
+        "air_quality",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd6",
+        "title": "Special Weather Statement issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Minor",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Special Weather Statement",
+        "headline": "Special Weather Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": null,
+      "candidates": [
+        "minor",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd6",
+        "title": "Special Weather Statement issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Minor",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Special Weather Statement",
+        "headline": "Special Weather Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "new_alert",
+      "candidates": [
+        "minor",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd6",
+        "title": "Special Weather Statement issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Minor",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Special Weather Statement",
+        "headline": "Special Weather Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "minor",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd6",
+        "title": "Special Weather Statement issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Minor",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Special Weather Statement",
+        "headline": "Special Weather Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "minor",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd6",
+        "title": "Special Weather Statement issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Minor",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Special Weather Statement",
+        "headline": "Special Weather Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "escalation",
+      "candidates": [
+        "minor",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd6",
+        "title": "Special Weather Statement issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Minor",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Special Weather Statement",
+        "headline": "Special Weather Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": null,
+      "candidates": [
+        "special_weather_statement",
+        "ice_statement",
+        "ice_minor",
+        "ice",
+        "statement",
+        "minor",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd6",
+        "title": "Special Weather Statement issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Minor",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Special Weather Statement",
+        "headline": "Special Weather Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "new_alert",
+      "candidates": [
+        "special_weather_statement",
+        "ice_statement",
+        "ice_minor",
+        "ice",
+        "statement",
+        "minor",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd6",
+        "title": "Special Weather Statement issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Minor",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Special Weather Statement",
+        "headline": "Special Weather Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "special_weather_statement",
+        "ice_statement",
+        "ice_minor",
+        "ice",
+        "statement",
+        "minor",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd6",
+        "title": "Special Weather Statement issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Minor",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Special Weather Statement",
+        "headline": "Special Weather Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "special_weather_statement",
+        "ice_statement",
+        "ice_minor",
+        "ice",
+        "statement",
+        "minor",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd6",
+        "title": "Special Weather Statement issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Minor",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Special Weather Statement",
+        "headline": "Special Weather Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "escalation",
+      "candidates": [
+        "special_weather_statement",
+        "ice_statement",
+        "ice_minor",
+        "ice",
+        "statement",
+        "minor",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd7",
+        "title": "Red Flag Warning issued",
+        "description": "Red Flag Warning description.",
+        "severity": "critical",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Red Flag Warning",
+        "headline": "Red Flag Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": null,
+      "candidates": [
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd7",
+        "title": "Red Flag Warning issued",
+        "description": "Red Flag Warning description.",
+        "severity": "critical",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Red Flag Warning",
+        "headline": "Red Flag Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "new_alert",
+      "candidates": [
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd7",
+        "title": "Red Flag Warning issued",
+        "description": "Red Flag Warning description.",
+        "severity": "critical",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Red Flag Warning",
+        "headline": "Red Flag Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd7",
+        "title": "Red Flag Warning issued",
+        "description": "Red Flag Warning description.",
+        "severity": "critical",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Red Flag Warning",
+        "headline": "Red Flag Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd7",
+        "title": "Red Flag Warning issued",
+        "description": "Red Flag Warning description.",
+        "severity": "critical",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Red Flag Warning",
+        "headline": "Red Flag Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "escalation",
+      "candidates": [
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd7",
+        "title": "Red Flag Warning issued",
+        "description": "Red Flag Warning description.",
+        "severity": "critical",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Red Flag Warning",
+        "headline": "Red Flag Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": null,
+      "candidates": [
+        "red_flag_warning",
+        "fire_warning",
+        "fire_extreme",
+        "fire",
+        "warning",
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd7",
+        "title": "Red Flag Warning issued",
+        "description": "Red Flag Warning description.",
+        "severity": "critical",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Red Flag Warning",
+        "headline": "Red Flag Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "new_alert",
+      "candidates": [
+        "red_flag_warning",
+        "fire_warning",
+        "fire_extreme",
+        "fire",
+        "warning",
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd7",
+        "title": "Red Flag Warning issued",
+        "description": "Red Flag Warning description.",
+        "severity": "critical",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Red Flag Warning",
+        "headline": "Red Flag Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "red_flag_warning",
+        "fire_warning",
+        "fire_extreme",
+        "fire",
+        "warning",
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd7",
+        "title": "Red Flag Warning issued",
+        "description": "Red Flag Warning description.",
+        "severity": "critical",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Red Flag Warning",
+        "headline": "Red Flag Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "red_flag_warning",
+        "fire_warning",
+        "fire_extreme",
+        "fire",
+        "warning",
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd7",
+        "title": "Red Flag Warning issued",
+        "description": "Red Flag Warning description.",
+        "severity": "critical",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Red Flag Warning",
+        "headline": "Red Flag Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "escalation",
+      "candidates": [
+        "red_flag_warning",
+        "fire_warning",
+        "fire_extreme",
+        "fire",
+        "warning",
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd8",
+        "title": "Winter Weather Advisory issued",
+        "description": "Winter Weather Advisory description.",
+        "severity": "medium",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Winter Weather Advisory",
+        "headline": "Winter Weather Advisory in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": null,
+      "candidates": [
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd8",
+        "title": "Winter Weather Advisory issued",
+        "description": "Winter Weather Advisory description.",
+        "severity": "medium",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Winter Weather Advisory",
+        "headline": "Winter Weather Advisory in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "new_alert",
+      "candidates": [
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd8",
+        "title": "Winter Weather Advisory issued",
+        "description": "Winter Weather Advisory description.",
+        "severity": "medium",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Winter Weather Advisory",
+        "headline": "Winter Weather Advisory in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd8",
+        "title": "Winter Weather Advisory issued",
+        "description": "Winter Weather Advisory description.",
+        "severity": "medium",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Winter Weather Advisory",
+        "headline": "Winter Weather Advisory in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd8",
+        "title": "Winter Weather Advisory issued",
+        "description": "Winter Weather Advisory description.",
+        "severity": "medium",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Winter Weather Advisory",
+        "headline": "Winter Weather Advisory in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "escalation",
+      "candidates": [
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd8",
+        "title": "Winter Weather Advisory issued",
+        "description": "Winter Weather Advisory description.",
+        "severity": "medium",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Winter Weather Advisory",
+        "headline": "Winter Weather Advisory in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": null,
+      "candidates": [
+        "winter_weather_advisory",
+        "winter_advisory",
+        "winter_moderate",
+        "winter",
+        "advisory",
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd8",
+        "title": "Winter Weather Advisory issued",
+        "description": "Winter Weather Advisory description.",
+        "severity": "medium",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Winter Weather Advisory",
+        "headline": "Winter Weather Advisory in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "new_alert",
+      "candidates": [
+        "winter_weather_advisory",
+        "winter_advisory",
+        "winter_moderate",
+        "winter",
+        "advisory",
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd8",
+        "title": "Winter Weather Advisory issued",
+        "description": "Winter Weather Advisory description.",
+        "severity": "medium",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Winter Weather Advisory",
+        "headline": "Winter Weather Advisory in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "winter_weather_advisory",
+        "winter_advisory",
+        "winter_moderate",
+        "winter",
+        "advisory",
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd8",
+        "title": "Winter Weather Advisory issued",
+        "description": "Winter Weather Advisory description.",
+        "severity": "medium",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Winter Weather Advisory",
+        "headline": "Winter Weather Advisory in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "winter_weather_advisory",
+        "winter_advisory",
+        "winter_moderate",
+        "winter",
+        "advisory",
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd8",
+        "title": "Winter Weather Advisory issued",
+        "description": "Winter Weather Advisory description.",
+        "severity": "medium",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Winter Weather Advisory",
+        "headline": "Winter Weather Advisory in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "escalation",
+      "candidates": [
+        "winter_weather_advisory",
+        "winter_advisory",
+        "winter_moderate",
+        "winter",
+        "advisory",
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd9",
+        "title": "Blizzard Warning issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "high",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Blizzard Warning",
+        "headline": "Blizzard Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": null,
+      "candidates": [
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd9",
+        "title": "Blizzard Warning issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "high",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Blizzard Warning",
+        "headline": "Blizzard Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "new_alert",
+      "candidates": [
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd9",
+        "title": "Blizzard Warning issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "high",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Blizzard Warning",
+        "headline": "Blizzard Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd9",
+        "title": "Blizzard Warning issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "high",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Blizzard Warning",
+        "headline": "Blizzard Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd9",
+        "title": "Blizzard Warning issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "high",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Blizzard Warning",
+        "headline": "Blizzard Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "escalation",
+      "candidates": [
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd9",
+        "title": "Blizzard Warning issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "high",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Blizzard Warning",
+        "headline": "Blizzard Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": null,
+      "candidates": [
+        "blizzard_warning",
+        "ice_warning",
+        "ice_severe",
+        "ice",
+        "warning",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd9",
+        "title": "Blizzard Warning issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "high",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Blizzard Warning",
+        "headline": "Blizzard Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "new_alert",
+      "candidates": [
+        "blizzard_warning",
+        "ice_warning",
+        "ice_severe",
+        "ice",
+        "warning",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd9",
+        "title": "Blizzard Warning issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "high",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Blizzard Warning",
+        "headline": "Blizzard Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "blizzard_warning",
+        "ice_warning",
+        "ice_severe",
+        "ice",
+        "warning",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd9",
+        "title": "Blizzard Warning issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "high",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Blizzard Warning",
+        "headline": "Blizzard Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "blizzard_warning",
+        "ice_warning",
+        "ice_severe",
+        "ice",
+        "warning",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd9",
+        "title": "Blizzard Warning issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "high",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Blizzard Warning",
+        "headline": "Blizzard Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "escalation",
+      "candidates": [
+        "blizzard_warning",
+        "ice_warning",
+        "ice_severe",
+        "ice",
+        "warning",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd10",
+        "title": "Hurricane Force Wind Warning issued",
+        "description": "Hurricane Force Wind Warning description.",
+        "severity": "Extreme",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Hurricane Force Wind Warning",
+        "headline": "Hurricane Force Wind Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": null,
+      "candidates": [
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd10",
+        "title": "Hurricane Force Wind Warning issued",
+        "description": "Hurricane Force Wind Warning description.",
+        "severity": "Extreme",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Hurricane Force Wind Warning",
+        "headline": "Hurricane Force Wind Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "new_alert",
+      "candidates": [
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd10",
+        "title": "Hurricane Force Wind Warning issued",
+        "description": "Hurricane Force Wind Warning description.",
+        "severity": "Extreme",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Hurricane Force Wind Warning",
+        "headline": "Hurricane Force Wind Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd10",
+        "title": "Hurricane Force Wind Warning issued",
+        "description": "Hurricane Force Wind Warning description.",
+        "severity": "Extreme",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Hurricane Force Wind Warning",
+        "headline": "Hurricane Force Wind Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd10",
+        "title": "Hurricane Force Wind Warning issued",
+        "description": "Hurricane Force Wind Warning description.",
+        "severity": "Extreme",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Hurricane Force Wind Warning",
+        "headline": "Hurricane Force Wind Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "escalation",
+      "candidates": [
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd10",
+        "title": "Hurricane Force Wind Warning issued",
+        "description": "Hurricane Force Wind Warning description.",
+        "severity": "Extreme",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Hurricane Force Wind Warning",
+        "headline": "Hurricane Force Wind Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": null,
+      "candidates": [
+        "hurricane_force_wind_warning",
+        "wind_warning",
+        "wind_extreme",
+        "wind",
+        "warning",
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd10",
+        "title": "Hurricane Force Wind Warning issued",
+        "description": "Hurricane Force Wind Warning description.",
+        "severity": "Extreme",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Hurricane Force Wind Warning",
+        "headline": "Hurricane Force Wind Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "new_alert",
+      "candidates": [
+        "hurricane_force_wind_warning",
+        "wind_warning",
+        "wind_extreme",
+        "wind",
+        "warning",
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd10",
+        "title": "Hurricane Force Wind Warning issued",
+        "description": "Hurricane Force Wind Warning description.",
+        "severity": "Extreme",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Hurricane Force Wind Warning",
+        "headline": "Hurricane Force Wind Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "hurricane_force_wind_warning",
+        "wind_warning",
+        "wind_extreme",
+        "wind",
+        "warning",
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd10",
+        "title": "Hurricane Force Wind Warning issued",
+        "description": "Hurricane Force Wind Warning description.",
+        "severity": "Extreme",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Hurricane Force Wind Warning",
+        "headline": "Hurricane Force Wind Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "hurricane_force_wind_warning",
+        "wind_warning",
+        "wind_extreme",
+        "wind",
+        "warning",
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd10",
+        "title": "Hurricane Force Wind Warning issued",
+        "description": "Hurricane Force Wind Warning description.",
+        "severity": "Extreme",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Hurricane Force Wind Warning",
+        "headline": "Hurricane Force Wind Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "escalation",
+      "candidates": [
+        "hurricane_force_wind_warning",
+        "wind_warning",
+        "wind_extreme",
+        "wind",
+        "warning",
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd11",
+        "title": "Dense Fog Advisory issued",
+        "description": "Dense Fog Advisory description.",
+        "severity": "low",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Dense Fog Advisory",
+        "headline": "Dense Fog Advisory in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": null,
+      "candidates": [
+        "minor",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd11",
+        "title": "Dense Fog Advisory issued",
+        "description": "Dense Fog Advisory description.",
+        "severity": "low",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Dense Fog Advisory",
+        "headline": "Dense Fog Advisory in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "new_alert",
+      "candidates": [
+        "minor",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd11",
+        "title": "Dense Fog Advisory issued",
+        "description": "Dense Fog Advisory description.",
+        "severity": "low",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Dense Fog Advisory",
+        "headline": "Dense Fog Advisory in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "minor",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd11",
+        "title": "Dense Fog Advisory issued",
+        "description": "Dense Fog Advisory description.",
+        "severity": "low",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Dense Fog Advisory",
+        "headline": "Dense Fog Advisory in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "minor",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd11",
+        "title": "Dense Fog Advisory issued",
+        "description": "Dense Fog Advisory description.",
+        "severity": "low",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Dense Fog Advisory",
+        "headline": "Dense Fog Advisory in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "escalation",
+      "candidates": [
+        "minor",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd11",
+        "title": "Dense Fog Advisory issued",
+        "description": "Dense Fog Advisory description.",
+        "severity": "low",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Dense Fog Advisory",
+        "headline": "Dense Fog Advisory in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": null,
+      "candidates": [
+        "dense_fog_advisory",
+        "fog_advisory",
+        "fog_minor",
+        "fog",
+        "advisory",
+        "minor",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd11",
+        "title": "Dense Fog Advisory issued",
+        "description": "Dense Fog Advisory description.",
+        "severity": "low",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Dense Fog Advisory",
+        "headline": "Dense Fog Advisory in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "new_alert",
+      "candidates": [
+        "dense_fog_advisory",
+        "fog_advisory",
+        "fog_minor",
+        "fog",
+        "advisory",
+        "minor",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd11",
+        "title": "Dense Fog Advisory issued",
+        "description": "Dense Fog Advisory description.",
+        "severity": "low",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Dense Fog Advisory",
+        "headline": "Dense Fog Advisory in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "dense_fog_advisory",
+        "fog_advisory",
+        "fog_minor",
+        "fog",
+        "advisory",
+        "minor",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd11",
+        "title": "Dense Fog Advisory issued",
+        "description": "Dense Fog Advisory description.",
+        "severity": "low",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Dense Fog Advisory",
+        "headline": "Dense Fog Advisory in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "dense_fog_advisory",
+        "fog_advisory",
+        "fog_minor",
+        "fog",
+        "advisory",
+        "minor",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd11",
+        "title": "Dense Fog Advisory issued",
+        "description": "Dense Fog Advisory description.",
+        "severity": "low",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Dense Fog Advisory",
+        "headline": "Dense Fog Advisory in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "escalation",
+      "candidates": [
+        "dense_fog_advisory",
+        "fog_advisory",
+        "fog_minor",
+        "fog",
+        "advisory",
+        "minor",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd12",
+        "title": "Coastal Flood Statement issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Coastal Flood Statement",
+        "headline": "Coastal Flood Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": null,
+      "candidates": [
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd12",
+        "title": "Coastal Flood Statement issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Coastal Flood Statement",
+        "headline": "Coastal Flood Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "new_alert",
+      "candidates": [
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd12",
+        "title": "Coastal Flood Statement issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Coastal Flood Statement",
+        "headline": "Coastal Flood Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd12",
+        "title": "Coastal Flood Statement issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Coastal Flood Statement",
+        "headline": "Coastal Flood Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd12",
+        "title": "Coastal Flood Statement issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Coastal Flood Statement",
+        "headline": "Coastal Flood Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "escalation",
+      "candidates": [
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd12",
+        "title": "Coastal Flood Statement issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Coastal Flood Statement",
+        "headline": "Coastal Flood Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": null,
+      "candidates": [
+        "coastal_flood_statement",
+        "flood_statement",
+        "flood_unknown",
+        "flood",
+        "statement",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd12",
+        "title": "Coastal Flood Statement issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Coastal Flood Statement",
+        "headline": "Coastal Flood Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "new_alert",
+      "candidates": [
+        "coastal_flood_statement",
+        "flood_statement",
+        "flood_unknown",
+        "flood",
+        "statement",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd12",
+        "title": "Coastal Flood Statement issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Coastal Flood Statement",
+        "headline": "Coastal Flood Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "coastal_flood_statement",
+        "flood_statement",
+        "flood_unknown",
+        "flood",
+        "statement",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd12",
+        "title": "Coastal Flood Statement issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Coastal Flood Statement",
+        "headline": "Coastal Flood Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "coastal_flood_statement",
+        "flood_statement",
+        "flood_unknown",
+        "flood",
+        "statement",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd12",
+        "title": "Coastal Flood Statement issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Coastal Flood Statement",
+        "headline": "Coastal Flood Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "escalation",
+      "candidates": [
+        "coastal_flood_statement",
+        "flood_statement",
+        "flood_unknown",
+        "flood",
+        "statement",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd13",
+        "title": "Freeze Watch issued",
+        "description": "Freeze Watch description.",
+        "severity": "  Moderate  ",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Freeze Watch",
+        "headline": "Freeze Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": null,
+      "candidates": [
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd13",
+        "title": "Freeze Watch issued",
+        "description": "Freeze Watch description.",
+        "severity": "  Moderate  ",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Freeze Watch",
+        "headline": "Freeze Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "new_alert",
+      "candidates": [
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd13",
+        "title": "Freeze Watch issued",
+        "description": "Freeze Watch description.",
+        "severity": "  Moderate  ",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Freeze Watch",
+        "headline": "Freeze Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd13",
+        "title": "Freeze Watch issued",
+        "description": "Freeze Watch description.",
+        "severity": "  Moderate  ",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Freeze Watch",
+        "headline": "Freeze Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd13",
+        "title": "Freeze Watch issued",
+        "description": "Freeze Watch description.",
+        "severity": "  Moderate  ",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Freeze Watch",
+        "headline": "Freeze Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "escalation",
+      "candidates": [
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd13",
+        "title": "Freeze Watch issued",
+        "description": "Freeze Watch description.",
+        "severity": "  Moderate  ",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Freeze Watch",
+        "headline": "Freeze Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": null,
+      "candidates": [
+        "freeze_watch",
+        "watch",
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd13",
+        "title": "Freeze Watch issued",
+        "description": "Freeze Watch description.",
+        "severity": "  Moderate  ",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Freeze Watch",
+        "headline": "Freeze Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "new_alert",
+      "candidates": [
+        "freeze_watch",
+        "watch",
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd13",
+        "title": "Freeze Watch issued",
+        "description": "Freeze Watch description.",
+        "severity": "  Moderate  ",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Freeze Watch",
+        "headline": "Freeze Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "freeze_watch",
+        "watch",
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd13",
+        "title": "Freeze Watch issued",
+        "description": "Freeze Watch description.",
+        "severity": "  Moderate  ",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Freeze Watch",
+        "headline": "Freeze Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "freeze_watch",
+        "watch",
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd13",
+        "title": "Freeze Watch issued",
+        "description": "Freeze Watch description.",
+        "severity": "  Moderate  ",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Freeze Watch",
+        "headline": "Freeze Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "escalation",
+      "candidates": [
+        "freeze_watch",
+        "watch",
+        "moderate",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd14",
+        "title": "Rip Current Statement issued",
+        "description": "Rip Current Statement description.",
+        "severity": "weird",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Rip Current Statement",
+        "headline": "Rip Current Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": null,
+      "candidates": [
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd14",
+        "title": "Rip Current Statement issued",
+        "description": "Rip Current Statement description.",
+        "severity": "weird",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Rip Current Statement",
+        "headline": "Rip Current Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "new_alert",
+      "candidates": [
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd14",
+        "title": "Rip Current Statement issued",
+        "description": "Rip Current Statement description.",
+        "severity": "weird",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Rip Current Statement",
+        "headline": "Rip Current Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd14",
+        "title": "Rip Current Statement issued",
+        "description": "Rip Current Statement description.",
+        "severity": "weird",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Rip Current Statement",
+        "headline": "Rip Current Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd14",
+        "title": "Rip Current Statement issued",
+        "description": "Rip Current Statement description.",
+        "severity": "weird",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Rip Current Statement",
+        "headline": "Rip Current Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "escalation",
+      "candidates": [
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd14",
+        "title": "Rip Current Statement issued",
+        "description": "Rip Current Statement description.",
+        "severity": "weird",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Rip Current Statement",
+        "headline": "Rip Current Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": null,
+      "candidates": [
+        "rip_current_statement",
+        "statement",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd14",
+        "title": "Rip Current Statement issued",
+        "description": "Rip Current Statement description.",
+        "severity": "weird",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Rip Current Statement",
+        "headline": "Rip Current Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "new_alert",
+      "candidates": [
+        "rip_current_statement",
+        "statement",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd14",
+        "title": "Rip Current Statement issued",
+        "description": "Rip Current Statement description.",
+        "severity": "weird",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Rip Current Statement",
+        "headline": "Rip Current Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "rip_current_statement",
+        "statement",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd14",
+        "title": "Rip Current Statement issued",
+        "description": "Rip Current Statement description.",
+        "severity": "weird",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Rip Current Statement",
+        "headline": "Rip Current Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "rip_current_statement",
+        "statement",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd14",
+        "title": "Rip Current Statement issued",
+        "description": "Rip Current Statement description.",
+        "severity": "weird",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Rip Current Statement",
+        "headline": "Rip Current Statement in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "escalation",
+      "candidates": [
+        "rip_current_statement",
+        "statement",
+        "unknown",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd15",
+        "title": "Untitled issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": null,
+        "headline": null,
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": null,
+      "candidates": [
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd15",
+        "title": "Untitled issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": null,
+        "headline": null,
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "new_alert",
+      "candidates": [
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd15",
+        "title": "Untitled issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": null,
+        "headline": null,
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd15",
+        "title": "Untitled issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": null,
+        "headline": null,
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd15",
+        "title": "Untitled issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": null,
+        "headline": null,
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "escalation",
+      "candidates": [
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd15",
+        "title": "Untitled issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": null,
+        "headline": null,
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": null,
+      "candidates": [
+        "ice_severe",
+        "ice",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd15",
+        "title": "Untitled issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": null,
+        "headline": null,
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "new_alert",
+      "candidates": [
+        "ice_severe",
+        "ice",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd15",
+        "title": "Untitled issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": null,
+        "headline": null,
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "ice_severe",
+        "ice",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd15",
+        "title": "Untitled issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": null,
+        "headline": null,
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "ice_severe",
+        "ice",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd15",
+        "title": "Untitled issued",
+        "description": "Blowing dust and smoke with freezing rain; notice from the office.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": null,
+        "headline": null,
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "escalation",
+      "candidates": [
+        "ice_severe",
+        "ice",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd16",
+        "title": "Ice Storm Warning (Test) #2 issued",
+        "description": "Ice Storm Warning (Test) #2 description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Ice Storm Warning (Test) #2",
+        "headline": "Ice Storm Warning (Test) #2 in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": null,
+      "candidates": [
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd16",
+        "title": "Ice Storm Warning (Test) #2 issued",
+        "description": "Ice Storm Warning (Test) #2 description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Ice Storm Warning (Test) #2",
+        "headline": "Ice Storm Warning (Test) #2 in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "new_alert",
+      "candidates": [
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd16",
+        "title": "Ice Storm Warning (Test) #2 issued",
+        "description": "Ice Storm Warning (Test) #2 description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Ice Storm Warning (Test) #2",
+        "headline": "Ice Storm Warning (Test) #2 in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd16",
+        "title": "Ice Storm Warning (Test) #2 issued",
+        "description": "Ice Storm Warning (Test) #2 description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Ice Storm Warning (Test) #2",
+        "headline": "Ice Storm Warning (Test) #2 in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd16",
+        "title": "Ice Storm Warning (Test) #2 issued",
+        "description": "Ice Storm Warning (Test) #2 description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Ice Storm Warning (Test) #2",
+        "headline": "Ice Storm Warning (Test) #2 in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": false,
+      "reason": "escalation",
+      "candidates": [
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd16",
+        "title": "Ice Storm Warning (Test) #2 issued",
+        "description": "Ice Storm Warning (Test) #2 description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Ice Storm Warning (Test) #2",
+        "headline": "Ice Storm Warning (Test) #2 in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": null,
+      "candidates": [
+        "ice_storm_warning_test_2",
+        "ice_warning",
+        "ice_severe",
+        "ice",
+        "warning",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd16",
+        "title": "Ice Storm Warning (Test) #2 issued",
+        "description": "Ice Storm Warning (Test) #2 description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Ice Storm Warning (Test) #2",
+        "headline": "Ice Storm Warning (Test) #2 in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "new_alert",
+      "candidates": [
+        "ice_storm_warning_test_2",
+        "ice_warning",
+        "ice_severe",
+        "ice",
+        "warning",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd16",
+        "title": "Ice Storm Warning (Test) #2 issued",
+        "description": "Ice Storm Warning (Test) #2 description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Ice Storm Warning (Test) #2",
+        "headline": "Ice Storm Warning (Test) #2 in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "content_changed",
+      "candidates": [
+        "alert_updated",
+        "ice_storm_warning_test_2",
+        "ice_warning",
+        "ice_severe",
+        "ice",
+        "warning",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd16",
+        "title": "Ice Storm Warning (Test) #2 issued",
+        "description": "Ice Storm Warning (Test) #2 description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Ice Storm Warning (Test) #2",
+        "headline": "Ice Storm Warning (Test) #2 in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "updated",
+      "candidates": [
+        "alert_updated",
+        "ice_storm_warning_test_2",
+        "ice_warning",
+        "ice_severe",
+        "ice",
+        "warning",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "alert": {
+        "id": "snd16",
+        "title": "Ice Storm Warning (Test) #2 issued",
+        "description": "Ice Storm Warning (Test) #2 description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Ice Storm Warning (Test) #2",
+        "headline": "Ice Storm Warning (Test) #2 in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+          "Test County"
+        ]
+      },
+      "include_specific": true,
+      "reason": "escalation",
+      "candidates": [
+        "ice_storm_warning_test_2",
+        "ice_warning",
+        "ice_severe",
+        "ice",
+        "warning",
+        "severe",
+        "alert",
+        "notify"
+      ]
+    }
+  ],
+  "mute": [
+    {
+      "sound_event": null,
+      "candidates": [
+        "extreme",
+        "alert",
+        "notify"
+      ],
+      "muted": [],
+      "keys": [
+        "extreme",
+        "alert",
+        "notify"
+      ]
+    },
+    {
+      "sound_event": null,
+      "candidates": [
+        "alert_updated",
+        "moderate",
+        "alert",
+        "notify"
+      ],
+      "muted": [
+        "alert_updated"
+      ],
+      "keys": null
+    },
+    {
+      "sound_event": null,
+      "candidates": [
+        "moderate",
+        "alert_updated",
+        "alert",
+        "notify"
+      ],
+      "muted": [
+        "alert_updated",
+        "alert"
+      ],
+      "keys": [
+        "moderate",
+        "notify"
+      ]
+    },
+    {
+      "sound_event": "notify",
+      "candidates": [
+        "moderate",
+        "alert"
+      ],
+      "muted": [
+        "moderate"
+      ],
+      "keys": [
+        "alert"
+      ]
+    },
+    {
+      "sound_event": "moderate",
+      "candidates": [
+        "moderate",
+        "alert"
+      ],
+      "muted": [
+        "moderate"
+      ],
+      "keys": null
+    },
+    {
+      "sound_event": null,
+      "candidates": [
+        "alert",
+        "notify"
+      ],
+      "muted": [
+        "alert",
+        "notify"
+      ],
+      "keys": null
+    },
+    {
+      "sound_event": "discussion_update",
+      "candidates": null,
+      "muted": [
+        "discussion_update"
+      ],
+      "keys": null
+    },
+    {
+      "sound_event": "discussion_update",
+      "candidates": null,
+      "muted": [
+        " data_updated ",
+        ""
+      ],
+      "keys": [
+        "discussion_update"
+      ]
+    },
+    {
+      "sound_event": null,
+      "candidates": null,
+      "muted": [],
+      "keys": [
+        "alert"
+      ]
+    },
+    {
+      "sound_event": null,
+      "candidates": [],
+      "muted": [
+        "alert"
+      ],
+      "keys": null
+    },
+    {
+      "sound_event": "severe_risk",
+      "candidates": [],
+      "muted": [],
+      "keys": [
+        "severe_risk"
+      ]
+    }
+  ]
+}

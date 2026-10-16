@@ -1,0 +1,175 @@
+{
+  "installed": {
+    "settings": {
+      "data_source": "nws",
+      "ai_model_preference": "auto",
+      "temperature_unit": "f",
+      "custom_system_prompt": null
+    },
+    "locations": [
+      {
+        "name": "Home",
+        "latitude": 1,
+        "longitude": 2
+      }
+    ]
+  },
+  "precheck": [
+    {
+      "installed": "missing_dir",
+      "files": null,
+      "ok": false,
+      "reason": "Installed config directory not found."
+    },
+    {
+      "installed": "empty_dir",
+      "files": {},
+      "ok": false,
+      "reason": "Installed config directory is empty."
+    },
+    {
+      "installed": "no_config",
+      "files": {
+        "other.txt": "x"
+      },
+      "ok": false,
+      "reason": "Required config file accessiweather.json is missing."
+    },
+    {
+      "installed": "empty_file",
+      "files": {
+        "accessiweather.json": ""
+      },
+      "ok": false,
+      "reason": "Config file accessiweather.json is empty."
+    },
+    {
+      "installed": "invalid_json",
+      "files": {
+        "accessiweather.json": "{nope"
+      },
+      "ok": false,
+      "reason": "Config file accessiweather.json is invalid or unreadable."
+    },
+    {
+      "installed": "not_object",
+      "files": {
+        "accessiweather.json": "[1]"
+      },
+      "ok": false,
+      "reason": "Config file accessiweather.json is invalid or unreadable."
+    },
+    {
+      "installed": "no_locations",
+      "files": {
+        "accessiweather.json": "{\"settings\": {}, \"locations\": []}"
+      },
+      "ok": false,
+      "reason": "Installed config has no saved locations to transfer."
+    },
+    {
+      "installed": "ok",
+      "files": {
+        "accessiweather.json": "{\"settings\": {\"data_source\": \"nws\", \"ai_model_preference\": \"auto\", \"temperature_unit\": \"f\", \"custom_system_prompt\": null}, \"locations\": [{\"name\": \"Home\", \"latitude\": 1, \"longitude\": 2}]}"
+      },
+      "ok": true,
+      "reason": null
+    }
+  ],
+  "validation": [
+    {
+      "portable": {
+        "settings": {
+          "data_source": "nws",
+          "ai_model_preference": "auto",
+          "temperature_unit": "f",
+          "custom_system_prompt": null
+        },
+        "locations": [
+          {
+            "name": "Home",
+            "latitude": 1,
+            "longitude": 2
+          }
+        ]
+      },
+      "valid": true,
+      "messages": [],
+      "summary": [
+        "• locations: 1",
+        "• data source: nws",
+        "• AI model preference: auto",
+        "• temperature unit: f",
+        "• custom prompt: yes"
+      ]
+    },
+    {
+      "portable": {
+        "settings": {
+          "data_source": "auto",
+          "temperature_unit": "f",
+          "prompt": "  "
+        },
+        "locations": []
+      },
+      "valid": false,
+      "messages": [
+        "Setting 'ai_model_preference' did not copy correctly (installed='auto', portable=None).",
+        "Setting 'data_source' did not copy correctly (installed='nws', portable='auto').",
+        "Location count mismatch after copy (installed=1, portable=0)."
+      ],
+      "summary": [
+        "• locations: 0",
+        "• data source: auto",
+        "• AI model preference: not set",
+        "• temperature unit: f",
+        "• custom prompt: no"
+      ]
+    },
+    {
+      "portable": {
+        "settings": {
+          "data_source": "it's",
+          "ai_model_preference": 3,
+          "temperature_unit": true,
+          "custom_instructions": ""
+        },
+        "locations": [
+          1,
+          2
+        ]
+      },
+      "valid": false,
+      "messages": [
+        "Setting 'ai_model_preference' did not copy correctly (installed='auto', portable=3).",
+        "Setting 'data_source' did not copy correctly (installed='nws', portable=\"it's\").",
+        "Setting 'temperature_unit' did not copy correctly (installed='f', portable=True).",
+        "Location count mismatch after copy (installed=1, portable=2)."
+      ],
+      "summary": [
+        "• locations: 2",
+        "• data source: it's",
+        "• AI model preference: 3",
+        "• temperature unit: True",
+        "• custom prompt: no"
+      ]
+    },
+    {
+      "portable": {},
+      "valid": false,
+      "messages": [
+        "Setting 'ai_model_preference' did not copy correctly (installed='auto', portable=None).",
+        "Setting 'data_source' did not copy correctly (installed='nws', portable=None).",
+        "Setting 'temperature_unit' did not copy correctly (installed='f', portable=None).",
+        "Location count mismatch after copy (installed=1, portable=0)."
+      ],
+      "summary": [
+        "• locations: 0",
+        "• data source: not set",
+        "• AI model preference: not set",
+        "• temperature unit: not set",
+        "• custom prompt: no"
+      ]
+    }
+  ]
+}

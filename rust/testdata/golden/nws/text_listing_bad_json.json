@@ -1,0 +1,29 @@
+{
+ "now": "2026-01-20T18:21:00+00:00",
+ "call": "text_product",
+ "product_type": "AFD",
+ "office": "BADJSON",
+ "responses": [
+  {
+   "url": "https://api.weather.gov/products/types/AFD/locations/BADJSON",
+   "status": 200,
+   "body": "not json"
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://api.weather.gov/products/types/AFD/locations/BADJSON",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  }
+ ],
+ "result": {
+  "error": "JSONDecodeError",
+  "message": "Expecting value: line 1 column 1 (char 0)"
+ }
+}

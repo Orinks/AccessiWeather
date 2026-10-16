@@ -12,6 +12,7 @@ import logging
 import threading
 from collections.abc import Callable
 
+from accessiweather.noaa_radio.clients import get_weatherindex_client, load_station_database
 from accessiweather.noaa_radio.preferences import RadioPreferences
 from accessiweather.noaa_radio.session import RadioSession, get_shared_radio_session
 from accessiweather.noaa_radio.station_db import StationDatabase
@@ -46,8 +47,11 @@ class RadioToggleController:
         """Initialize the controller with injectable dependencies for tests."""
         self._session = session or get_shared_radio_session()
         self._preferences = preferences or RadioPreferences()
-        self._station_database = station_database or StationDatabase()
-        self._url_provider = url_provider or StreamURLProvider()
+        self._station_database = station_database
+        self._url_provider = url_provider or StreamURLProvider(
+            use_fallback=False,
+            weatherindex_client=get_weatherindex_client(),
+        )
         self._notify = notify
         self._auto_tuner_provider = auto_tuner_provider
         self._thread_factory = thread_factory or self._make_thread
@@ -123,8 +127,14 @@ class RadioToggleController:
 
     def _find_station(self, call_sign: str) -> Station | None:
         """Look up a station record by call sign."""
-        matches = self._station_database.get_stations_by_call_signs([call_sign])
+        matches = self._get_station_database().get_stations_by_call_signs([call_sign])
         return matches[0] if matches else None
+
+    def _get_station_database(self) -> StationDatabase:
+        """Return the injected database, or load the WeatherIndex directory on the worker."""
+        if self._station_database is None:
+            self._station_database = load_station_database(get_weatherindex_client())
+        return self._station_database
 
     def _play(self, station: Station, urls: list[str]) -> None:
         """Try each stream URL in order until one starts."""

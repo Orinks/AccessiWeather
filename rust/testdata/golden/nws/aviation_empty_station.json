@@ -1,0 +1,14 @@
+{
+ "now": "2026-01-20T18:21:00+00:00",
+ "call": "aviation_weather",
+ "station": "  ",
+ "include_sigmets": false,
+ "include_cwas": false,
+ "avwx_api_key": "",
+ "responses": [],
+ "requests": [],
+ "result": {
+  "error": "ValueError",
+  "message": "station_id must be a non-empty ICAO identifier."
+ }
+}

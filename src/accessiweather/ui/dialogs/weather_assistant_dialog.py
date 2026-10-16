@@ -15,8 +15,8 @@ import wx
 
 from ...ai_provider import (
     DEFAULT_VENICE_MODEL,
+    ai_request_error,
     create_venice_client,
-    venice_error,
     venice_request_options,
 )
 from ...ai_settings import selected_provider
@@ -242,6 +242,20 @@ class WeatherAssistantDialog(wx.Dialog):
             weather_client = _CombinedWeatherClient()
             geocoding_service = GeocodingService(data_source="auto")
             location = config_manager.get_current_location() if config_manager else None
+            displayed_weather = getattr(self.app, "current_weather_data", None)
+            displayed_alerts = None
+            if (
+                location
+                and displayed_weather
+                and displayed_weather.location.latitude == location.latitude
+                and displayed_weather.location.longitude == location.longitude
+                and displayed_weather.alerts
+            ):
+                displayed_alerts = [
+                    alert
+                    for alert in displayed_weather.alerts.alerts
+                    if not getattr(alert, "is_expired", lambda: False)()
+                ]
             return WeatherToolExecutor(
                 weather_client,
                 geocoding_service,
@@ -249,6 +263,7 @@ class WeatherAssistantDialog(wx.Dialog):
                 default_lat=location.latitude if location else None,
                 default_lon=location.longitude if location else None,
                 default_name=location.name if location else None,
+                displayed_alerts=displayed_alerts,
             )
         except Exception:
             logger.debug("Could not create WeatherToolExecutor", exc_info=True)
@@ -262,7 +277,10 @@ class WeatherAssistantDialog(wx.Dialog):
         try:
             provider = selected_provider(settings)
         except Exception as error:
-            wx.CallAfter(self._on_response_error, str(error))
+            logger.warning("Weather Assistant provider selection failed: %s", type(error).__name__)
+            wx.CallAfter(
+                self._on_response_error, "Unknown AI provider. Select one in Settings > AI."
+            )
             return
         is_venice = provider == "venice"
         api_key = (
@@ -281,7 +299,7 @@ class WeatherAssistantDialog(wx.Dialog):
         if not api_key:
             wx.CallAfter(
                 self._on_response_error,
-                f"No {'Venice' if is_venice else 'OpenRouter'} API key configured. Set one in Settings > AI Explanations.",
+                f"No {'Venice' if is_venice else 'OpenRouter'} API key configured. Set one in Settings > AI.",
             )
             return
 
@@ -322,6 +340,7 @@ class WeatherAssistantDialog(wx.Dialog):
                         base_url="https://openrouter.ai/api/v1",
                         api_key=api_key,
                         timeout=30.0,
+                        max_retries=0,
                     )
                 )
 
@@ -341,7 +360,14 @@ class WeatherAssistantDialog(wx.Dialog):
                     )
 
                 answer = run_assistant_request(
-                    client, effective_model, messages, tool_executor, extra_kwargs
+                    client,
+                    effective_model,
+                    messages,
+                    tool_executor,
+                    extra_kwargs,
+                    selected_location=(
+                        tool_executor.location_resolver.default_name if tool_executor else None
+                    ),
                 )
                 wx.CallAfter(
                     self._on_response_received, answer.text, answer.model, answer.messages[1:]
@@ -351,24 +377,8 @@ class WeatherAssistantDialog(wx.Dialog):
                 wx.CallAfter(self._on_response_error, str(error))
 
             except Exception as e:
-                if is_venice:
-                    wx.CallAfter(self._on_response_error, str(venice_error(e)))
-                    return
-                error_msg = str(e)
-                logger.error(f"Weather Assistant generation error: {e}", exc_info=True)
-
-                if "api key" in error_msg.lower() or "401" in error_msg:
-                    friendly = "API key is invalid. Check Settings > AI Explanations."
-                elif "429" in error_msg or "rate limit" in error_msg.lower():
-                    friendly = (
-                        "Rate limited. Wait a moment and try again, or switch to a different model."
-                    )
-                elif "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
-                    friendly = "Request timed out. The AI service may be busy, try again."
-                else:
-                    friendly = f"Error: {error_msg}"
-
-                wx.CallAfter(self._on_response_error, friendly)
+                logger.warning("Weather Assistant request failed: %s", type(e).__name__)
+                wx.CallAfter(self._on_response_error, str(ai_request_error(e, provider)))
 
         thread = threading.Thread(target=do_generate, daemon=True)
         thread.start()
@@ -392,10 +402,18 @@ class WeatherAssistantDialog(wx.Dialog):
         """Handle AI response error."""
         error_message = f"Sorry, I couldn't respond: {error}"
         self._append_to_display("Weather Assistant", error_message)
-        self._announcer.announce(f"Weather Assistant: {error_message}")
-        # Remove the last user message from conversation since we failed
+        # Restore the failed question when the input is still empty, so it can be edited.
+        question = ""
         if self._conversation and self._conversation[-1]["role"] == "user":
-            self._conversation.pop()
+            question = self._conversation.pop()["content"]
+        restored = bool(question and not self.input_ctrl.GetValue().strip())
+        if restored:
+            self.input_ctrl.SetValue(question)
+            self.input_ctrl.SetInsertionPointEnd()
+        announcement = f"Weather Assistant: {error_message}"
+        if restored:
+            announcement += " Your question is restored in the input for editing."
+        self._announcer.announce(announcement)
         self._set_generating(False)
 
     def _on_clear(self, event: wx.Event) -> None:

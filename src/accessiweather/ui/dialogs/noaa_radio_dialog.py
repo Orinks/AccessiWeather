@@ -16,6 +16,7 @@ from accessiweather.noaa_radio import (
     StationDatabase,
     StreamURLProvider,
 )
+from accessiweather.noaa_radio.clients import directory_stations
 from accessiweather.noaa_radio.preferences import DEFAULT_STATION_LIMIT, RadioPreferences
 from accessiweather.noaa_radio.session import RadioSession, get_shared_radio_session
 
@@ -168,6 +169,7 @@ class NOAARadioDialog(wx.Dialog):
         self._player = self._session.player
         # Use cached clients to leverage HTTP response caching across dialog opens
         wxradio, weatherindex = _get_clients()
+        self._weatherindex = weatherindex
         self._url_provider = StreamURLProvider(
             use_fallback=False,
             wxradio_client=wxradio,
@@ -266,7 +268,7 @@ class NOAARadioDialog(wx.Dialog):
     ) -> None:
         """Worker method that loads stations in background thread."""
         try:
-            db = StationDatabase()
+            db = self._build_station_database()
             active_mode = finder_mode or (
                 FINDER_MODE_SEARCH_ALL if search_query else self._get_finder_mode()
             )
@@ -333,6 +335,15 @@ class NOAARadioDialog(wx.Dialog):
         except Exception as e:
             logger.error(f"Failed to load stations: {e}")
             wx.CallAfter(self._set_status, f"Error loading stations: {e}")
+
+    def _build_station_database(self) -> StationDatabase:
+        """Build the station list from the WeatherIndex directory, else the built-in list."""
+        weatherindex = getattr(self, "_weatherindex", None)
+        stations = directory_stations(weatherindex) if weatherindex is not None else []
+        if stations:
+            return StationDatabase(stations)
+        logger.warning("Using built-in NOAA radio station list; WeatherIndex directory unavailable")
+        return StationDatabase()
 
     def _prewarm_stream_cache(self, stations: list[Station]) -> None:
         """Pre-warm stream URL cache in background for faster play response."""

@@ -1,0 +1,1117 @@
+{
+ "forecaster_tabs": [
+  {
+   "product_type": "AFD",
+   "label": "Area Forecast Discussion",
+   "loader_kind": "current",
+   "requires_cwa": true
+  },
+  {
+   "product_type": "HWO",
+   "label": "Hazardous Weather Outlook",
+   "loader_kind": "current",
+   "requires_cwa": true
+  },
+  {
+   "product_type": "SPS",
+   "label": "Special Weather Statement",
+   "loader_kind": "current",
+   "requires_cwa": true
+  },
+  {
+   "product_type": "SURF",
+   "label": "Surf/Beach Conditions",
+   "loader_kind": "surf_conditions",
+   "requires_cwa": false
+  },
+  {
+   "product_type": "CLI",
+   "label": "Daily Climate Report",
+   "loader_kind": "daily_climate",
+   "requires_cwa": false
+  },
+  {
+   "product_type": "SPC_OUTLOOK",
+   "label": "SPC Outlook (Storm Prediction Center)",
+   "loader_kind": "spc_outlook",
+   "requires_cwa": false
+  },
+  {
+   "product_type": "SPC_MCD",
+   "label": "SPC MCD (Mesoscale Discussion)",
+   "loader_kind": "spc_mcd",
+   "requires_cwa": false
+  },
+  {
+   "product_type": "SPC_WATCHES",
+   "label": "SPC Watches (Storm Prediction Center)",
+   "loader_kind": "spc_watches_current",
+   "requires_cwa": false
+  },
+  {
+   "product_type": "WPC_ERO",
+   "label": "WPC ERO (Excessive Rainfall Outlook)",
+   "loader_kind": "wpc_ero",
+   "requires_cwa": false
+  },
+  {
+   "product_type": "WPC_MPD",
+   "label": "WPC MPD (Mesoscale Precipitation Discussion)",
+   "loader_kind": "wpc_mpd",
+   "requires_cwa": false
+  }
+ ],
+ "national_tabs": [
+  [
+   "PMDSPD",
+   "WPC Short Range"
+  ],
+  [
+   "PMDEPD",
+   "WPC Medium Range"
+  ],
+  [
+   "PMDET4",
+   "WPC Extended"
+  ],
+  [
+   "QPFPFD",
+   "WPC QPF Discussion"
+  ],
+  [
+   "PMDMRD",
+   "CPC Outlook"
+  ],
+  [
+   "TWOAT",
+   "NHC Atlantic Outlook"
+  ],
+  [
+   "TWOEP",
+   "NHC East Pacific Outlook"
+  ],
+  [
+   "SWODY1",
+   "SPC Day 1 Outlook"
+  ],
+  [
+   "SWODY2",
+   "SPC Day 2 Outlook"
+  ],
+  [
+   "SWODY3",
+   "SPC Day 3 Outlook"
+  ]
+ ],
+ "plans": [
+  {
+   "location": {
+    "name": "Raleigh, NC",
+    "latitude": 35.78,
+    "longitude": -78.64,
+    "country_code": "US",
+    "cwa_office": "RAH",
+    "radar_station": "KRAX"
+   },
+   "tabs": [
+    {
+     "product_type": "AFD",
+     "label": "Area Forecast Discussion",
+     "autoload": true,
+     "panel_cwa": "RAH"
+    },
+    {
+     "product_type": "HWO",
+     "label": "Hazardous Weather Outlook",
+     "autoload": false,
+     "panel_cwa": "RAH"
+    },
+    {
+     "product_type": "SPS",
+     "label": "Special Weather Statement",
+     "autoload": false,
+     "panel_cwa": "RAH"
+    },
+    {
+     "product_type": "SURF",
+     "label": "Surf/Beach Conditions",
+     "autoload": false,
+     "panel_cwa": "RAH"
+    },
+    {
+     "product_type": "CLI",
+     "label": "Daily Climate Report",
+     "autoload": true,
+     "panel_cwa": "RAH"
+    }
+   ],
+   "pending": [
+    "SPC_OUTLOOK",
+    "SPC_MCD",
+    "SPC_WATCHES",
+    "WPC_ERO",
+    "WPC_MPD"
+   ]
+  },
+  {
+   "location": {
+    "name": "Porto",
+    "latitude": 41.15,
+    "longitude": -8.63,
+    "country_code": "PT"
+   },
+   "tabs": [
+    {
+     "product_type": "SURF",
+     "label": "Surf/Beach Conditions",
+     "autoload": true,
+     "panel_cwa": null
+    },
+    {
+     "product_type": "CLI",
+     "label": "Daily Climate Report",
+     "autoload": true,
+     "panel_cwa": null
+    }
+   ],
+   "pending": [
+    "SPC_OUTLOOK",
+    "SPC_MCD",
+    "SPC_WATCHES",
+    "WPC_ERO",
+    "WPC_MPD"
+   ]
+  },
+  {
+   "location": {
+    "name": "Blank office",
+    "latitude": 40.0,
+    "longitude": -100.0,
+    "cwa_office": ""
+   },
+   "tabs": [
+    {
+     "product_type": "SURF",
+     "label": "Surf/Beach Conditions",
+     "autoload": true,
+     "panel_cwa": ""
+    },
+    {
+     "product_type": "CLI",
+     "label": "Daily Climate Report",
+     "autoload": true,
+     "panel_cwa": ""
+    }
+   ],
+   "pending": [
+    "SPC_OUTLOOK",
+    "SPC_MCD",
+    "SPC_WATCHES",
+    "WPC_ERO",
+    "WPC_MPD"
+   ]
+  }
+ ],
+ "loaders": [
+  {
+   "name": "loader_afd",
+   "call": {
+    "fn": "load_tab",
+    "product_type": "AFD",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH",
+     "radar_station": "KRAX"
+    }
+   },
+   "responses": [
+    {
+     "url": "https://api.weather.gov/products/types/AFD/locations/RAH",
+     "json": {
+      "@graph": [
+       {
+        "id": "afd-rah"
+       }
+      ]
+     }
+    },
+    {
+     "url": "https://api.weather.gov/products/afd-rah",
+     "json": {
+      "productText": "AFD RAH",
+      "issuanceTime": "2026-05-01T15:00:00+00:00"
+     }
+    }
+   ],
+   "requests": [
+    "https://api.weather.gov/products/types/AFD/locations/RAH",
+    "https://api.weather.gov/products/afd-rah"
+   ],
+   "expect": {
+    "ok": {
+     "one": {
+      "product_type": "AFD",
+      "product_id": "afd-rah",
+      "cwa_office": "RAH",
+      "issuance_time": "2026-05-01T15:00:00+00:00",
+      "product_text": "AFD RAH",
+      "headline": null
+     }
+    }
+   }
+  },
+  {
+   "name": "loader_hwo",
+   "call": {
+    "fn": "load_tab",
+    "product_type": "HWO",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH",
+     "radar_station": "KRAX"
+    }
+   },
+   "responses": [
+    {
+     "url": "https://api.weather.gov/products/types/HWO/locations/RAH",
+     "json": {
+      "@graph": []
+     }
+    }
+   ],
+   "requests": [
+    "https://api.weather.gov/products/types/HWO/locations/RAH"
+   ],
+   "expect": {
+    "ok": {
+     "one": null
+    }
+   }
+  },
+  {
+   "name": "loader_sps",
+   "call": {
+    "fn": "load_tab",
+    "product_type": "SPS",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH",
+     "radar_station": "KRAX"
+    }
+   },
+   "responses": [
+    {
+     "url": "https://api.weather.gov/products/types/SPS/locations/RAH",
+     "json": {
+      "@graph": [
+       {
+        "id": "s1"
+       },
+       {
+        "id": "s2"
+       }
+      ]
+     }
+    },
+    {
+     "url": "https://api.weather.gov/products/s1",
+     "json": {
+      "productText": "SPS one",
+      "issuanceTime": "2026-05-01T12:00:00+00:00"
+     }
+    },
+    {
+     "url": "https://api.weather.gov/products/s2",
+     "json": {
+      "productText": "SPS two",
+      "issuanceTime": "2026-05-01T13:00:00+00:00"
+     }
+    }
+   ],
+   "requests": [
+    "https://api.weather.gov/products/types/SPS/locations/RAH",
+    "https://api.weather.gov/products/s1",
+    "https://api.weather.gov/products/s2"
+   ],
+   "expect": {
+    "ok": {
+     "many": [
+      {
+       "product_type": "SPS",
+       "product_id": "s2",
+       "cwa_office": "RAH",
+       "issuance_time": "2026-05-01T13:00:00+00:00",
+       "product_text": "SPS two",
+       "headline": null
+      },
+      {
+       "product_type": "SPS",
+       "product_id": "s1",
+       "cwa_office": "RAH",
+       "issuance_time": "2026-05-01T12:00:00+00:00",
+       "product_text": "SPS one",
+       "headline": null
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "loader_surf",
+   "call": {
+    "fn": "load_tab",
+    "product_type": "SURF",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH",
+     "radar_station": "KRAX"
+    }
+   },
+   "responses": [
+    {
+     "url": "https://api.weather.gov/products/types/SRF/locations/RAH",
+     "json": {
+      "@graph": []
+     }
+    },
+    {
+     "url": "https://marine-api.open-meteo.com/v1/marine",
+     "json": {
+      "current": {
+       "time": "2026-05-01T14:00:00Z",
+       "wave_height": 0.5
+      }
+     }
+    }
+   ],
+   "requests": [
+    "https://api.weather.gov/products/types/SRF/locations/RAH",
+    "https://marine-api.open-meteo.com/v1/marine?latitude=35.78&longitude=-78.64&current=wave_height%2Cwave_direction%2Cwave_period%2Cswell_wave_height%2Cswell_wave_direction%2Cswell_wave_period%2Csea_surface_temperature&timezone=auto"
+   ],
+   "expect": {
+    "ok": {
+     "one": {
+      "product_type": "SURF_CONDITIONS",
+      "product_id": "openmeteo-marine-surf-conditions",
+      "cwa_office": "Open-Meteo Marine",
+      "issuance_time": "2026-05-01T14:00:00+00:00",
+      "product_text": "Surf conditions from Open-Meteo Marine for Raleigh, NC.\nMarine/surf conditions from Open-Meteo Marine; not an official NWS Surf Zone Forecast.\nWave height: 0.5.",
+      "headline": "Surf conditions from Open-Meteo Marine"
+     }
+    }
+   }
+  },
+  {
+   "name": "loader_cli",
+   "call": {
+    "fn": "load_tab",
+    "product_type": "CLI",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH",
+     "radar_station": "KRAX"
+    }
+   },
+   "responses": [
+    {
+     "url": "https://api.weather.gov/points/",
+     "json": {
+      "properties": {
+       "observationStations": "https://api.weather.gov/gridpoints/RAH/1,1/stations"
+      }
+     }
+    },
+    {
+     "url": "https://api.weather.gov/gridpoints/RAH/1,1/stations",
+     "json": {
+      "observationStations": [
+       "https://api.weather.gov/stations/KRDU",
+       "https://api.weather.gov/stations/KIGX"
+      ]
+     }
+    },
+    {
+     "url": "https://api.weather.gov/products/types/CLI/locations",
+     "json": {
+      "locations": {
+       "RDU": "Raleigh",
+       "GSO": ""
+      }
+     }
+    },
+    {
+     "url": "https://api.weather.gov/products?",
+     "json": {
+      "@graph": [
+       {
+        "id": "cli-rdu"
+       }
+      ]
+     }
+    },
+    {
+     "url": "https://api.weather.gov/products/cli-rdu",
+     "json": {
+      "productText": "CLIMATE REPORT RDU",
+      "issuanceTime": "2026-05-01T06:00:00+00:00"
+     }
+    }
+   ],
+   "requests": [
+    "https://api.weather.gov/points/35.7800,-78.6400",
+    "https://api.weather.gov/gridpoints/RAH/1,1/stations",
+    "https://api.weather.gov/products/types/CLI/locations",
+    "https://api.weather.gov/products?location=RDU&type=CLI&limit=1",
+    "https://api.weather.gov/products/cli-rdu"
+   ],
+   "expect": {
+    "ok": {
+     "one": {
+      "product_type": "CLI",
+      "product_id": "cli-rdu",
+      "cwa_office": "RDU",
+      "issuance_time": "2026-05-01T06:00:00+00:00",
+      "product_text": "CLIMATE REPORT RDU",
+      "headline": null
+     }
+    }
+   }
+  },
+  {
+   "name": "loader_spc_outlook",
+   "call": {
+    "fn": "load_tab",
+    "product_type": "SPC_OUTLOOK",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH",
+     "radar_station": "KRAX"
+    }
+   },
+   "responses": [
+    {
+     "url": "https://mesonet.agron.iastate.edu/json/spcoutlook.py",
+     "json": {
+      "generated_at": "2026-05-01T12:00:00Z",
+      "outlooks": [
+       {
+        "category": "SLGT",
+        "threshold": "CATEGORICAL"
+       },
+       {
+        "category": "SLGT",
+        "threshold": "CATEGORICAL"
+       },
+       {
+        "category": "SLGT",
+        "threshold": "CATEGORICAL"
+       },
+       {
+        "category": "SLGT",
+        "threshold": "CATEGORICAL"
+       }
+      ]
+     }
+    }
+   ],
+   "requests": [
+    "https://mesonet.agron.iastate.edu/json/spcoutlook.py?lat=35.78&lon=-78.64&day=1&fmt=json&current=1"
+   ],
+   "expect": {
+    "ok": {
+     "one": {
+      "product_type": "SPC_OUTLOOK",
+      "product_id": "SPC_OUTLOOK_DAY1",
+      "cwa_office": "SPC",
+      "issuance_time": "2026-05-01T12:00:00+00:00",
+      "product_text": "SPC Day 1 Convective Outlook\n\nGenerated: 2026-05-01T12:00:00Z\n\nProduct 1:\nCategory: SLGT\nThreshold: CATEGORICAL\n\nProduct 2:\nCategory: SLGT\nThreshold: CATEGORICAL\n\nProduct 3:\nCategory: SLGT\nThreshold: CATEGORICAL\n\n1 older matches omitted. Use Advanced Lookup for broader history.",
+      "headline": "SPC Day 1 Convective Outlook"
+     }
+    }
+   }
+  },
+  {
+   "name": "loader_spc_mcd",
+   "call": {
+    "fn": "load_tab",
+    "product_type": "SPC_MCD",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH",
+     "radar_station": "KRAX"
+    }
+   },
+   "responses": [
+    {
+     "url": "https://mesonet.agron.iastate.edu/json/spcmcd.py",
+     "json": {
+      "mcds": [
+       {
+        "mdnum": 5,
+        "utc_expire": "2026-05-01T12:00:00Z"
+       }
+      ]
+     }
+    }
+   ],
+   "requests": [
+    "https://mesonet.agron.iastate.edu/json/spcmcd.py?lat=35.78&lon=-78.64&fmt=json"
+   ],
+   "expect": {
+    "ok": {
+     "one": null
+    }
+   }
+  },
+  {
+   "name": "loader_spc_watches",
+   "call": {
+    "fn": "load_tab",
+    "product_type": "SPC_WATCHES",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH",
+     "radar_station": "KRAX"
+    }
+   },
+   "responses": [
+    {
+     "url": "https://mesonet.agron.iastate.edu/json/spcwatch.py",
+     "error": "timed out"
+    }
+   ],
+   "requests": [
+    "https://mesonet.agron.iastate.edu/json/spcwatch.py?lat=35.78&lon=-78.64&ts=202605011800"
+   ],
+   "expect": {
+    "ok": {
+     "one": null
+    }
+   }
+  },
+  {
+   "name": "loader_wpc_ero",
+   "call": {
+    "fn": "load_tab",
+    "product_type": "WPC_ERO",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH",
+     "radar_station": "KRAX"
+    }
+   },
+   "responses": [
+    {
+     "url": "https://mesonet.agron.iastate.edu/json/wpcoutlook.py",
+     "json": {
+      "outlook": {
+       "threshold": "MRGL",
+       "utc_issue": "2026-05-01T12:00:00Z"
+      }
+     }
+    }
+   ],
+   "requests": [
+    "https://mesonet.agron.iastate.edu/json/wpcoutlook.py?lat=35.78&lon=-78.64&day=1&fmt=json&last=1&time=current"
+   ],
+   "expect": {
+    "ok": {
+     "one": {
+      "product_type": "WPC_ERO",
+      "product_id": "WPC_ERO_DAY1",
+      "cwa_office": "WPC",
+      "issuance_time": null,
+      "product_text": "WPC Day 1 Excessive Rainfall Outlook\n\nOutlook 1:\nThreshold: MRGL\nValid begins: 2026-05-01T12:00:00Z\n",
+      "headline": "WPC Day 1 Excessive Rainfall Outlook"
+     }
+    }
+   }
+  },
+  {
+   "name": "loader_wpc_mpd",
+   "call": {
+    "fn": "load_tab",
+    "product_type": "WPC_MPD",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH",
+     "radar_station": "KRAX"
+    }
+   },
+   "responses": [
+    {
+     "url": "https://mesonet.agron.iastate.edu/json/wpcmpd.py",
+     "json": {
+      "mpds": []
+     }
+    }
+   ],
+   "requests": [
+    "https://mesonet.agron.iastate.edu/json/wpcmpd.py?lat=35.78&lon=-78.64&fmt=json"
+   ],
+   "expect": {
+    "ok": {
+     "one": null
+    }
+   }
+  }
+ ],
+ "active": [
+  {
+   "text": "WPC Day 1 Excessive Rainfall Outlook\n\nGenerated: 2026-05-01T12:00:00Z\n\nNo active outlooks were returned.",
+   "active": false
+  },
+  {
+   "text": "SPC Watches\n\nWatch 1:\nSEL: SEL8\nType: SVR\n",
+   "active": true
+  },
+  {
+   "text": "SPC Mesoscale Discussions\n\nNo matching point-based products were returned for this location.",
+   "active": false
+  },
+  {
+   "text": "Title\n\n  No structured data returned.  ",
+   "active": false
+  },
+  {
+   "text": "Title\nGenerated: No active products",
+   "active": true
+  },
+  {
+   "text": "Title\n\nProduct 1:\nConcerning: No active severe weather expected\n",
+   "active": true
+  },
+  {
+   "text": "",
+   "active": true
+  }
+ ],
+ "availability": [
+  {
+   "types": [
+    "AFD",
+    "HWO",
+    "SPS"
+   ],
+   "index": 1,
+   "has_product": false,
+   "kept": false
+  },
+  {
+   "types": [
+    "AFD",
+    "HWO",
+    "SPS"
+   ],
+   "index": 0,
+   "has_product": false,
+   "kept": true
+  },
+  {
+   "types": [
+    "AFD",
+    "HWO",
+    "SPS"
+   ],
+   "index": 2,
+   "has_product": true,
+   "kept": true
+  },
+  {
+   "types": [
+    "SURF"
+   ],
+   "index": 0,
+   "has_product": false,
+   "kept": true
+  },
+  {
+   "types": [
+    "SURF",
+    "CLI"
+   ],
+   "index": 1,
+   "has_product": false,
+   "kept": false
+  },
+  {
+   "types": [
+    "SPC_OUTLOOK",
+    "WPC_ERO"
+   ],
+   "index": 0,
+   "has_product": false,
+   "kept": false
+  }
+ ],
+ "advanced_lookup_product": {
+  "AFD": "AFD",
+  "HWO": "HWO",
+  "SPS": "SPS",
+  "SURF": "SRF",
+  "CLI": "CLI",
+  "SPC_OUTLOOK": "SPC_OUTLOOK",
+  "SPC_MCD": "SPC_MCD",
+  "SPC_WATCHES": "SPC_WATCHES",
+  "WPC_ERO": "WPC_ERO",
+  "WPC_MPD": "WPC_MPD"
+ },
+ "formatting": {
+  "full_names": {
+   "AFD": "Area Forecast Discussion",
+   "HWO": "Hazardous Weather Outlook",
+   "SPS": "Special Weather Statement",
+   "SRF": "Official NWS Surf Zone Forecast",
+   "SURF": "Surf/Beach Conditions",
+   "SURF_CONDITIONS": "Surf/Beach Conditions",
+   "LSR": "Local Storm Report",
+   "PNS": "Public Information Statement",
+   "CLI": "Daily Climate Report",
+   "SPC_OUTLOOK": "SPC Day 1 Convective Outlook (Storm Prediction Center)",
+   "SPC_MCD": "SPC Mesoscale Discussions (Storm Prediction Center)",
+   "SPC_WATCHES": "SPC Watches (Storm Prediction Center)",
+   "WPC_ERO": "WPC Day 1 Excessive Rainfall Outlook (Weather Prediction Center)",
+   "WPC_MPD": "WPC Mesoscale Precipitation Discussions (Weather Prediction Center)",
+   "PMDSPD": "WPC Short Range Discussion (Weather Prediction Center)",
+   "PMDEPD": "WPC Medium Range Discussion (Weather Prediction Center)",
+   "PMDET4": "WPC Extended Discussion (Weather Prediction Center)",
+   "QPFPFD": "WPC Quantitative Precipitation Discussion (Weather Prediction Center)",
+   "PMDMRD": "CPC 6-10 and 8-14 Day Outlook (Climate Prediction Center)",
+   "TWOAT": "NHC Atlantic Tropical Weather Outlook (National Hurricane Center)",
+   "TWOEP": "NHC East Pacific Tropical Weather Outlook (National Hurricane Center)",
+   "SWODY1": "SPC Day 1 Convective Outlook (Storm Prediction Center)",
+   "SWODY2": "SPC Day 2 Convective Outlook (Storm Prediction Center)",
+   "SWODY3": "SPC Day 3 Convective Outlook (Storm Prediction Center)"
+  },
+  "empty_copy": [
+   {
+    "product_type": "AFD",
+    "cwa": "RAH",
+    "text": "Area Forecast Discussion not currently available for RAH."
+   },
+   {
+    "product_type": "AFD",
+    "cwa": null,
+    "text": "Area Forecast Discussion not currently available for None."
+   },
+   {
+    "product_type": "HWO",
+    "cwa": "RAH",
+    "text": "Hazardous Weather Outlook not currently available for RAH."
+   },
+   {
+    "product_type": "HWO",
+    "cwa": null,
+    "text": "Hazardous Weather Outlook not currently available for None."
+   },
+   {
+    "product_type": "SPS",
+    "cwa": "RAH",
+    "text": "No recent Special Weather Statements for RAH."
+   },
+   {
+    "product_type": "SPS",
+    "cwa": null,
+    "text": "No recent Special Weather Statements for None."
+   },
+   {
+    "product_type": "SRF",
+    "cwa": "RAH",
+    "text": "Surf Zone Forecast issued by NWS RAH for regional beaches is not currently available."
+   },
+   {
+    "product_type": "SRF",
+    "cwa": null,
+    "text": "Surf Zone Forecast issued by NWS None for regional beaches is not currently available."
+   },
+   {
+    "product_type": "SURF",
+    "cwa": "RAH",
+    "text": "No official NWS Surf Zone Forecast or derived surf/beach conditions are currently available for this location."
+   },
+   {
+    "product_type": "SURF",
+    "cwa": null,
+    "text": "No official NWS Surf Zone Forecast or derived surf/beach conditions are currently available for this location."
+   },
+   {
+    "product_type": "SURF_CONDITIONS",
+    "cwa": "RAH",
+    "text": "No derived surf/beach conditions are currently available for this location."
+   },
+   {
+    "product_type": "SURF_CONDITIONS",
+    "cwa": null,
+    "text": "No derived surf/beach conditions are currently available for this location."
+   },
+   {
+    "product_type": "LSR",
+    "cwa": "RAH",
+    "text": "No recent Local Storm Reports for RAH."
+   },
+   {
+    "product_type": "LSR",
+    "cwa": null,
+    "text": "No recent Local Storm Reports for None."
+   },
+   {
+    "product_type": "PNS",
+    "cwa": "RAH",
+    "text": "No recent Public Information Statements for RAH."
+   },
+   {
+    "product_type": "PNS",
+    "cwa": null,
+    "text": "No recent Public Information Statements for None."
+   },
+   {
+    "product_type": "CLI",
+    "cwa": "RAH",
+    "text": "Daily Climate Report not currently available for RAH."
+   },
+   {
+    "product_type": "CLI",
+    "cwa": null,
+    "text": "Daily Climate Report not currently available for None."
+   },
+   {
+    "product_type": "SPC_OUTLOOK",
+    "cwa": "RAH",
+    "text": "No matching SPC (Storm Prediction Center) Day 1 Convective Outlook for this location."
+   },
+   {
+    "product_type": "SPC_OUTLOOK",
+    "cwa": null,
+    "text": "No matching SPC (Storm Prediction Center) Day 1 Convective Outlook for this location."
+   },
+   {
+    "product_type": "SPC_MCD",
+    "cwa": "RAH",
+    "text": "No matching SPC (Storm Prediction Center) Mesoscale Discussions for this location."
+   },
+   {
+    "product_type": "SPC_MCD",
+    "cwa": null,
+    "text": "No matching SPC (Storm Prediction Center) Mesoscale Discussions for this location."
+   },
+   {
+    "product_type": "SPC_WATCHES",
+    "cwa": "RAH",
+    "text": "No matching SPC (Storm Prediction Center) Watches for this location."
+   },
+   {
+    "product_type": "SPC_WATCHES",
+    "cwa": null,
+    "text": "No matching SPC (Storm Prediction Center) Watches for this location."
+   },
+   {
+    "product_type": "WPC_ERO",
+    "cwa": "RAH",
+    "text": "No matching WPC (Weather Prediction Center) Excessive Rainfall Outlook for this location."
+   },
+   {
+    "product_type": "WPC_ERO",
+    "cwa": null,
+    "text": "No matching WPC (Weather Prediction Center) Excessive Rainfall Outlook for this location."
+   },
+   {
+    "product_type": "WPC_MPD",
+    "cwa": "RAH",
+    "text": "No matching WPC (Weather Prediction Center) Mesoscale Precipitation Discussions for this location."
+   },
+   {
+    "product_type": "WPC_MPD",
+    "cwa": null,
+    "text": "No matching WPC (Weather Prediction Center) Mesoscale Precipitation Discussions for this location."
+   },
+   {
+    "product_type": "PMDSPD",
+    "cwa": "RAH",
+    "text": "WPC Short Range Discussion is not currently available."
+   },
+   {
+    "product_type": "PMDSPD",
+    "cwa": null,
+    "text": "WPC Short Range Discussion is not currently available."
+   },
+   {
+    "product_type": "PMDEPD",
+    "cwa": "RAH",
+    "text": "WPC Medium Range Discussion is not currently available."
+   },
+   {
+    "product_type": "PMDEPD",
+    "cwa": null,
+    "text": "WPC Medium Range Discussion is not currently available."
+   },
+   {
+    "product_type": "PMDET4",
+    "cwa": "RAH",
+    "text": "WPC Extended Discussion is not currently available."
+   },
+   {
+    "product_type": "PMDET4",
+    "cwa": null,
+    "text": "WPC Extended Discussion is not currently available."
+   },
+   {
+    "product_type": "QPFPFD",
+    "cwa": "RAH",
+    "text": "WPC Quantitative Precipitation Discussion is not currently available."
+   },
+   {
+    "product_type": "QPFPFD",
+    "cwa": null,
+    "text": "WPC Quantitative Precipitation Discussion is not currently available."
+   },
+   {
+    "product_type": "PMDMRD",
+    "cwa": "RAH",
+    "text": "CPC 6-10 and 8-14 Day Outlook is not currently available."
+   },
+   {
+    "product_type": "PMDMRD",
+    "cwa": null,
+    "text": "CPC 6-10 and 8-14 Day Outlook is not currently available."
+   },
+   {
+    "product_type": "TWOAT",
+    "cwa": "RAH",
+    "text": "NHC Atlantic Tropical Weather Outlook is not currently available."
+   },
+   {
+    "product_type": "TWOAT",
+    "cwa": null,
+    "text": "NHC Atlantic Tropical Weather Outlook is not currently available."
+   },
+   {
+    "product_type": "TWOEP",
+    "cwa": "RAH",
+    "text": "NHC East Pacific Tropical Weather Outlook is not currently available."
+   },
+   {
+    "product_type": "TWOEP",
+    "cwa": null,
+    "text": "NHC East Pacific Tropical Weather Outlook is not currently available."
+   },
+   {
+    "product_type": "SWODY1",
+    "cwa": "RAH",
+    "text": "SPC Day 1 Convective Outlook is not currently available."
+   },
+   {
+    "product_type": "SWODY1",
+    "cwa": null,
+    "text": "SPC Day 1 Convective Outlook is not currently available."
+   },
+   {
+    "product_type": "SWODY2",
+    "cwa": "RAH",
+    "text": "SPC Day 2 Convective Outlook is not currently available."
+   },
+   {
+    "product_type": "SWODY2",
+    "cwa": null,
+    "text": "SPC Day 2 Convective Outlook is not currently available."
+   },
+   {
+    "product_type": "SWODY3",
+    "cwa": "RAH",
+    "text": "SPC Day 3 Convective Outlook is not currently available."
+   },
+   {
+    "product_type": "SWODY3",
+    "cwa": null,
+    "text": "SPC Day 3 Convective Outlook is not currently available."
+   },
+   {
+    "product_type": "UNKNOWN",
+    "cwa": "RAH",
+    "text": "UNKNOWN not currently available for RAH."
+   },
+   {
+    "product_type": "UNKNOWN",
+    "cwa": null,
+    "text": "UNKNOWN not currently available for None."
+   }
+  ],
+  "intro": [
+   {
+    "product_type": "SRF",
+    "cwa": " phi ",
+    "text": "Surf Zone Forecast issued by NWS PHI for regional beaches."
+   },
+   {
+    "product_type": "SRF",
+    "cwa": null,
+    "text": "Surf Zone Forecast issued by NWS the selected office for regional beaches."
+   },
+   {
+    "product_type": "SRF",
+    "cwa": "",
+    "text": "Surf Zone Forecast issued by NWS the selected office for regional beaches."
+   },
+   {
+    "product_type": "SURF_CONDITIONS",
+    "cwa": " phi ",
+    "text": "Marine/surf conditions from a supported source; not an official NWS Surf Zone Forecast."
+   },
+   {
+    "product_type": "SURF_CONDITIONS",
+    "cwa": null,
+    "text": "Marine/surf conditions from a supported source; not an official NWS Surf Zone Forecast."
+   },
+   {
+    "product_type": "SURF_CONDITIONS",
+    "cwa": "",
+    "text": "Marine/surf conditions from a supported source; not an official NWS Surf Zone Forecast."
+   },
+   {
+    "product_type": "AFD",
+    "cwa": " phi ",
+    "text": ""
+   },
+   {
+    "product_type": "AFD",
+    "cwa": null,
+    "text": ""
+   },
+   {
+    "product_type": "AFD",
+    "cwa": "",
+    "text": ""
+   }
+  ],
+  "no_cwa": "NWS text products will populate after the next weather refresh."
+ }
+}

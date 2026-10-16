@@ -1,0 +1,9 @@
+{
+ "input": [
+  "bad",
+  {
+   "AQI": null
+  }
+ ],
+ "output": null
+}

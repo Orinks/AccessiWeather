@@ -1,0 +1,78 @@
+{
+ "now": "2026-01-20T18:21:00+00:00",
+ "call": "aviation_weather",
+ "station": "KNIL",
+ "include_sigmets": false,
+ "include_cwas": false,
+ "avwx_api_key": "",
+ "responses": [
+  {
+   "url": "https://api.weather.gov/stations/KNIL",
+   "status": 200,
+   "body": "{\"properties\":{}}"
+  },
+  {
+   "url": "https://api.weather.gov/stations/KNIL/tafs",
+   "status": 404,
+   "body": ""
+  },
+  {
+   "url": "https://aviationweather.gov/api/data/taf?ids=KNIL&format=json",
+   "status": 200,
+   "body": "[{\"rawTAF\":\"TAF KNIL 201730Z NIL=\"}]"
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://api.weather.gov/stations/KNIL",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/stations/KNIL/tafs",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://aviationweather.gov/api/data/taf",
+   "params": [
+    [
+     "ids",
+     "KNIL"
+    ],
+    [
+     "format",
+     "json"
+    ]
+   ],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ],
+    [
+     "Accept",
+     "application/json"
+    ]
+   ]
+  }
+ ],
+ "result": {
+  "raw_taf": null,
+  "decoded_taf": null,
+  "station_id": "KNIL",
+  "airport_name": "KNIL",
+  "active_sigmets": [],
+  "active_cwas": []
+ }
+}

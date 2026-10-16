@@ -1,0 +1,163 @@
+{
+ "mode": "geocode",
+ "data_source": "auto",
+ "query": "Tromso",
+ "exchanges": [
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=Tromso",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=Tr%C3%B3mso",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=Tr%C3%B2mso",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=Tr%C3%B4mso",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=Tr%C3%B5mso",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=Tr%C3%B6mso",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=Tr%C3%B8mso",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=Trom%C3%9Fo",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=Troms%C3%B3",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=Troms%C3%B2",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=Troms%C3%B4",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=Troms%C3%B5",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=Troms%C3%B6",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=Troms%C3%B8",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "results": [
+     {
+      "name": "Tromsø",
+      "latitude": 69.6489,
+      "longitude": 18.9551,
+      "country": "Norway",
+      "country_code": "NO",
+      "timezone": "UTC",
+      "population": 72681,
+      "admin1": "Troms"
+     }
+    ]
+   }
+  }
+ ],
+ "output": [
+  69.6489,
+  18.9551,
+  "Tromsø, Troms, Norway"
+ ]
+}

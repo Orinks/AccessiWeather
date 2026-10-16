@@ -12,9 +12,7 @@ def selected_provider(settings: Any) -> str:
     """Validate provider selection rather than silently switching services."""
     provider = getattr(settings, "ai_provider", "openrouter")
     if provider not in ("openrouter", "venice"):
-        raise AIExplainerError(
-            "Unknown AI provider. Choose a provider in Settings > AI Explanations."
-        )
+        raise AIExplainerError("Unknown AI provider. Choose a provider in Settings > AI.")
     return provider
 
 

@@ -1,0 +1,171 @@
+{
+  "cases": [
+    [
+      "nested",
+      [
+        [
+          "MyPack/pack.json",
+          "{\"name\": \"My Pack\", \"sounds\": {\"alert\": \"a.wav\"}}"
+        ],
+        [
+          "MyPack/a.wav",
+          "a"
+        ],
+        [
+          "MyPack/sub/extra.txt",
+          "e"
+        ]
+      ],
+      true,
+      "Successfully installed sound pack 'My Pack'"
+    ],
+    [
+      "root",
+      [
+        [
+          "pack.json",
+          "{\"name\": \"Root Pack\", \"author\": \"R\", \"sounds\": {\"alert\": \"s/a.wav\"}}"
+        ],
+        [
+          "s/a.wav",
+          "a"
+        ]
+      ],
+      true,
+      "Successfully installed sound pack 'Root Pack'"
+    ],
+    [
+      "nested",
+      [
+        [
+          "pack.json",
+          "{\"name\": \"Again\", \"sounds\": {}}"
+        ]
+      ],
+      false,
+      "Sound pack 'nested' already exists"
+    ],
+    [
+      "noname_display",
+      [
+        [
+          "pack.json",
+          "{\"sounds\": {}}"
+        ]
+      ],
+      false,
+      "Invalid sound pack: Missing 'name' field in pack.json"
+    ],
+    [
+      "nopack",
+      [
+        [
+          "a.wav",
+          "a"
+        ]
+      ],
+      false,
+      "No pack.json file found in ZIP archive"
+    ],
+    [
+      "missingfile",
+      [
+        [
+          "pack.json",
+          "{\"name\": \"M\", \"sounds\": {\"alert\": \"gone.wav\", \"b\": \"b.wav\"}}"
+        ],
+        [
+          "b.wav",
+          "b"
+        ]
+      ],
+      false,
+      "Invalid sound pack: Missing sound files: gone.wav"
+    ],
+    [
+      "noname",
+      [
+        [
+          "pack.json",
+          "{\"sounds\": {}}"
+        ],
+        [
+          "x/pack.json",
+          "{\"name\": \"deeper\"}"
+        ]
+      ],
+      false,
+      "Invalid sound pack: Missing 'name' field in pack.json"
+    ],
+    [
+      "nosounds",
+      [
+        [
+          "pack.json",
+          "{\"name\": \"N\"}"
+        ]
+      ],
+      false,
+      "Invalid sound pack: Missing 'sounds' field in pack.json"
+    ],
+    [
+      "dictentry",
+      [
+        [
+          "pack.json",
+          "{\"name\": \"D\", \"sounds\": {\"alert\": {\"file\": \"a.wav\"}}}"
+        ],
+        [
+          "a.wav",
+          "a"
+        ]
+      ],
+      false,
+      "Invalid sound pack: Error validating sound pack: unsupported operand type(s) for /: 'WindowsPath' and 'dict'"
+    ],
+    [
+      "slip",
+      [
+        [
+          "pack.json",
+          "{\"name\": \"S\", \"sounds\": {}}"
+        ],
+        [
+          "../evil.txt",
+          "pwned"
+        ]
+      ],
+      false,
+      "Installation failed: Zip Slip detected: member '../evil.txt' would extract outside target directory"
+    ],
+    [
+      "badzip",
+      null,
+      false,
+      "Invalid ZIP file"
+    ],
+    [
+      "deep",
+      [
+        [
+          "a/b/pack.json",
+          "{\"name\": \"Deep\", \"sounds\": {}}"
+        ],
+        [
+          "c/pack.txt",
+          "x"
+        ]
+      ],
+      true,
+      "Successfully installed sound pack 'Deep'"
+    ]
+  ],
+  "tree": {
+    "deep/pack.json": "{\"name\": \"Deep\", \"sounds\": {}}",
+    "nested/a.wav": "a",
+    "nested/pack.json": "{\"name\": \"My Pack\", \"sounds\": {\"alert\": \"a.wav\"}}",
+    "nested/sub/extra.txt": "e",
+    "root/pack.json": "{\"name\": \"Root Pack\", \"author\": \"R\", \"sounds\": {\"alert\": \"s/a.wav\"}}",
+    "root/s/a.wav": "a"
+  }
+}

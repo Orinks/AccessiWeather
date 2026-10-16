@@ -1,0 +1,1813 @@
+{
+ "real_changelog": "# AccessiWeather Changelog\r\n\r\nAll notable changes to this project will be documented in this file.\r\n\r\n## [Unreleased]\r\n\r\n### Changed\r\n- AccessiWeather is now a native app for Windows, macOS and Linux, and updating from the previous version keeps your saved locations and settings.\r\n- The OpenRouter model picker drops the retired Llama 3.3 70B option; choose the free router, the paid auto router, or browse models.\r\n\r\n### Fixed\r\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\r\n- AI explanations and the Weather Assistant work again in installed builds, which were failing every request before it reached OpenRouter or Venice.\r\n- AI error messages now distinguish invalid keys, depleted credits, denied access, unavailable models, rate limits, connection or timeout failures, and model refusals across the Weather Assistant and explanation views, without displaying raw provider errors.\r\n- After an AI summary finishes, keyboard focus moves to the result when Explain was focused; failed Weather Assistant questions return to the input for editing, and key errors point to the correct AI settings tab.\r\n- AI explanations now use your updated custom prompt and instructions immediately, and the Weather Assistant checks alerts for the selected place even when a model supplies an ambiguous location. It also reports when an alert shown in the app is missing from the live point lookup.\r\n- OpenRouter key validation now checks the key without generating a response, so unavailable models and account limits no longer make a valid key appear invalid. It reports exhausted key spending allowance, connection and service problems separately, without freezing Settings.\r\n- Venice key validation distinguishes rejected keys from permission problems and reports when all listed balances are depleted.\r\n- Settings reports a secure-storage failure instead of claiming an API key was saved, and keeps the prior key in memory if the new write fails.\r\n- If a key changes during validation, Settings asks to validate the new value instead of reporting the earlier key's result.\r\n- Closing Settings with Escape or Cancel now asks whether to save your changes, so a provider switch isn't silently thrown away.\r\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\r\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\r\n- OpenRouter explanations stop on authentication, permission and credit errors, avoid logging response text, and limit free-model fallback attempts so a failing model does not leave the app waiting through a long chain of retries.\r\n\r\n## [0.10.1] - 2026-09-20\r\n\r\n### Changed\r\n- The show, hide and read-tray hotkeys now default to Ctrl+Alt+Shift+W, M and I, so they no longer steal Ctrl+Shift shortcuts from your browser or screen reader.\r\n- Edit Location is now F2, and NOAA Weather Radio opens with Ctrl+N.\r\n- AccessiWeather tells you when another program already owns a window or tray hotkey, instead of failing silently. Windows only.\r\n- A shortcut Settings won't accept now gets focus along with the message, so you can fix it right away.\r\n\r\n## [0.10.0] - 2026-09-14\r\n\r\n### Added\r\n- Browse and pick Venice text models in AI settings, with token prices, cost and function-calling filters, and your credit balance when your key allows.\r\n- A Get Venice API key button in AI settings opens Venice's signup and API settings page.\r\n- Choose Venice AI for weather explanations and the Weather Assistant with your own key and prepaid credits; OpenRouter stays the default.\r\n- Choose wind speed units (mph, km/h or m/s) separately from temperature units in Settings; Explain Weather follows the choice.\r\n- Reorder saved locations from the Location menu; the order survives restarts.\r\n- Set shortcuts in Advanced Settings to restore the window, hide it to the tray, and read tray information, which work while hidden on Windows.\r\n- Ctrl+Shift+L now opens Edit Location.\r\n- Start and stop NOAA Weather Radio from anywhere with Ctrl+Alt+Shift+R, even with AccessiWeather in the tray (Windows only).\r\n- Rebind the radio hotkey on the General tab in Settings, or clear the field to turn it off.\r\n- AccessiWeather now keeps a log file in a logs folder next to your settings, so there's something to send when reporting a problem.\r\n- A portable copy keeps its logs inside the portable folder.\r\n- Automatic updates now work on Linux from the AppImage, the same way they do on Windows.\r\n- Running from the tarball, AccessiWeather downloads and verifies the update and tells you where the file is and how to finish installing it.\r\n- Linux releases now include an AppImage that runs on Fedora, Ubuntu, Arch, openSUSE and other distros; mark it executable and run it.\r\n- US locations can use official EPA AirNow observations for current air quality when you add your AirNow API key in Settings.\r\n- A Validate AirNow key button on the Data Sources tab tests your key and tells you whether it works.\r\n\r\n### Changed\r\n- The Venice model browser's Provider filter lists the model vendors, such as Anthropic, OpenAI and Google, instead of a single Venice entry.\r\n- The AI settings tab shows only the key and model fields for the provider you've selected.\r\n\r\n### Fixed\r\n- Weather Assistant requests live weather more reliably with Venice and OpenRouter, keeps lookup results for follow-up questions, and gets complete measurements with observation times.\r\n- NWS lookups now follow coordinate-precision redirects instead of falling back to another weather source.\r\n- Weather Assistant can find international locations instead of only U.S. places with similar names.\r\n- Creating a fresh settings file keeps API keys already saved on your computer available in Settings.\r\n- NWS feels-like temperatures use calculated wind chill or heat index when observations leave them out.\r\n- Explain Weather follows your selected units, including automatic location-based units.\r\n- NOAA Weather Radio auto-tune no longer starts for alerts a real weather radio would sleep through; it goes by the alert's SAME code now.\r\n- AirNow observations now reach the display, so the AQI, pollutant and observation time match AirNow.gov.\r\n- AirNow air quality now works for US locations saved before country detection existed.\r\n- Weather Assistant queries that need live weather let OpenRouter's free endpoint pick an available model instead of failing when a hardcoded one is retired.\r\n\r\n## [0.9.0] - 2026-07-21\r\n\r\n### Changed\r\n- New default sounds: The alert and notification audio has been completely replaced with a warm, gentle set of wooden-mallet tones. The old pack was full of piercing high-frequency tones - some dumping most of their energy into the harsh 3-6 kHz range - and one alert ran a jarring 12 seconds. The new sounds stay in a soft, low register (around 200-500 Hz), are short, and are grouped by severity so an advisory, a watch, a warning, and an extreme alert each sound distinct without ever being shrill. Prefer the old set? It's still available as \"Classic Default\", a downloadable optional pack in the sound manager, with the worst ear-piercing tones softened.\r\n- Forecaster Notes can now show official NWS Surf Zone Forecasts for regional beaches where available, with surf/beach condition alternatives from supported global sources when an official SRF product is not available.\r\n- AccessiWeather can now automatically tune NOAA Weather Radio for qualifying alerts that use Specific Area Message Encoding (SAME) when you turn on the opt-in setting on the Alerts tab, then stop after the duration you choose when a reliable station match is available.\r\n- NOAA Weather Radio now opens independently of saved weather locations and keeps playing after you close the player until you press Stop or exit the app.\r\n- The NOAA Weather Radio Station Finder now has clearer modes for searching all stations, browsing by full state or territory name, and finding nearby stations by coordinates.\r\n- NOAA Weather Radio stations can now be saved as favorites, with a Favorites finder mode and optional nearby-station lookup from your saved AccessiWeather locations.\r\n\r\n### Fixed\r\n- Air quality, pollen, and UV readings now show the current hour instead of a forecast hour. AccessiWeather was reading the far end of Open-Meteo's multi-day hourly forecast, so the AQI, dominant pollutant, \"current\" pollutant breakdown, and hourly trend could all reflect a time days away rather than right now.\r\n- The Air Quality dialog's hourly forecast now shows real clock times (like \"2:00 PM\") instead of generic \"Hour 1\" through \"Hour 12\" labels.\r\n- Screen reader announcements work again in installed builds — the Weather Assistant now auto-reads replies, and other spoken announcements are back. The installer was shipping without the speech library's native component, so announcements were silently skipped.\r\n- The `{precip}` and `{precip_chance}` tray placeholders now show real values instead of N/A. Precipitation chance comes from the current hour's forecast (observations never include it), and Open-Meteo's current precipitation amount now reaches the tray.\r\n- Canadian locations now show barometric pressure in kilopascals, such as 101.3 kPa, when using automatic units.\r\n- Current conditions and tray text now omit feels-like or heat-index details when they are unavailable instead of announcing them as `N/A`.\r\n- \"Launch automatically at startup\" now survives app updates. Windows startup registration moved from a Startup-folder shortcut to the standard registry Run entry, and AccessiWeather repairs it on every launch — so an update can't silently uncheck the setting or stop the app from starting with Windows.\r\n- The startup checkbox no longer unchecks itself when Windows is slow: checking startup status is now instant instead of relying on a PowerShell probe that could time out right after a reboot or update.\r\n- Disabling AccessiWeather in Task Manager's Startup apps is now respected — the Settings checkbox shows it as off, and re-checking it in Settings turns it back on properly instead of appearing enabled while never launching.\r\n- Upgrading from an older version now migrates the old Startup-folder shortcut automatically, so you won't get double launches or a stale shortcut pointing at a removed install.\r\n- Saving Settings after turning on automatic startup now returns to the main window faster while still updating the OS startup registration.\r\n- NOAA Weather Radio SAME auto-tune now starts again when an existing qualifying alert materially escalates, while still ignoring routine updates and cancellations.\r\n- NOAA Weather Radio auto-tune now starts only for the first issuance of a qualifying SAME alert, reliably stops after your configured playback duration, and no longer restarts for later updates or cancellations of the same alert.\r\n- Feels-like and heat-index readings now ignore implausibly warm provider values when the current temperature and humidity do not support them, while keeping valid humid heat-index and cold wind-chill readings.\r\n- Unknown or uncategorized weather alerts now have a mappable default sound, and missing custom-pack event sounds fall back to the matching default sound before generic notification audio.\r\n- NOAA Weather Radio Station Finder now repopulates stations when leaving an empty Favorites view, so you no longer need to reopen the radio dialog.\r\n- Feels-like temperatures now keep showing in tray text when only one temperature unit is available, instead of falling back to `N/A`.\r\n- Editing a location now tells you when the new name is empty or already in use, instead of silently discarding your changes.\r\n- The tray text format dialog now warns you about unknown placeholders or unbalanced braces before saving, so a typo like `{tmp}` can't quietly end up in your tray tooltip.\r\n- Closing the Add or Edit Location dialog while a search or current-location detection is still running no longer risks a crash.\r\n- Weather history's \"Today vs Yesterday\" section now reads naturally when both days have the same temperature, instead of \"is 0.0°F about the same than yesterday\".\r\n\r\n## [0.8.1] - 2026-06-26\r\n\r\n### Fixed\r\n- Canadian locations now show barometric pressure in kilopascals, such as 101.3 kPa, when using automatic units.\r\n\r\n## [0.8.0] - 2026-06-19\r\n\r\n### Changed\r\n- Forecaster Notes can now show official NWS Surf Zone Forecasts for regional beaches where available, with surf/beach condition alternatives from supported global sources when an official SRF product is not available.\r\n- AccessiWeather can now automatically tune NOAA Weather Radio for qualifying alerts that use Specific Area Message Encoding (SAME) when you turn on the opt-in setting on the Alerts tab, then stop after the duration you choose when a reliable station match is available.\r\n- NOAA Weather Radio now opens independently of saved weather locations and keeps playing after you close the player until you press Stop or exit the app.\r\n- The NOAA Weather Radio Station Finder now has clearer modes for searching all stations, browsing by full state or territory name, and finding nearby stations by coordinates.\r\n- NOAA Weather Radio stations can now be saved as favorites, with a Favorites finder mode and optional nearby-station lookup from your saved AccessiWeather locations.\r\n\r\n### Fixed\r\n- Current conditions and tray text now omit feels-like or heat-index details when they are unavailable instead of announcing them as `N/A`.\r\n- The Settings startup checkbox now reflects and repairs the actual OS startup registration instead of trusting a stale saved preference.\r\n- Saving Settings after turning on automatic startup now returns to the main window faster while still updating the OS startup registration.\r\n- NOAA Weather Radio SAME auto-tune now starts again when an existing qualifying alert materially escalates, while still ignoring routine updates and cancellations.\r\n- NOAA Weather Radio auto-tune now starts only for the first issuance of a qualifying SAME alert, reliably stops after your configured playback duration, and no longer restarts for later updates or cancellations of the same alert.\r\n- Feels-like and heat-index readings now ignore implausibly warm provider values when the current temperature and humidity do not support them, while keeping valid humid heat-index and cold wind-chill readings.\r\n- Unknown or uncategorized weather alerts now have a mappable default sound, and missing custom-pack event sounds fall back to the matching default sound before generic notification audio.\r\n- NOAA Weather Radio Station Finder now repopulates stations when leaving an empty Favorites view, so you no longer need to reopen the radio dialog.\r\n- Feels-like temperatures now keep showing in tray text when only one temperature unit is available, instead of falling back to `N/A`.\r\n- Editing a location now tells you when the new name is empty or already in use, instead of silently discarding your changes.\r\n- The tray text format dialog now warns you about unknown placeholders or unbalanced braces before saving, so a typo like `{tmp}` can't quietly end up in your tray tooltip.\r\n- Closing the Add or Edit Location dialog while a search or current-location detection is still running no longer risks a crash.\r\n- Weather history's \"Today vs Yesterday\" section now reads naturally when both days have the same temperature, instead of \"is 0.0°F about the same than yesterday\".\r\n\r\n## [0.7.2] - 2026-05-30\r\n\r\n### Added\r\n- You can now choose \"Use my current location\" when adding or updating a saved location. AccessiWeather asks the OS once, only after you press the button, and keeps manual search available if location access is denied or unavailable.\r\n- Alert updates can now use their own mappable sound in sound packs.\r\n- Settings > Audio can now enable specific-alert sounds per sound pack, so packs with sounds like `tornado_watch` and `tornado_warning` keep working while severity-only packs stay simple.\r\n- First-run setup can now import existing settings and encrypted API keys from the wizard, or exit with Escape at any wizard step when you want to configure everything yourself.\r\n- You can now search for a US street address when adding or editing a location, so AccessiWeather can save coordinates for that specific address instead of the nearest city or ZIP result.\r\n- Saved locations now stay sorted alphabetically in the location list (#667).\r\n- You can now choose to sort saved locations alphabetically or nearest to the current location.\r\n- **Daily Climate Reports in Forecaster Notes** — You can now read the latest NWS Daily Climate Report for supported US climate stations, with station-aware lookup, cached refreshes, history through Advanced Lookup, and optional update notifications.\r\n- **National Products in Forecaster Notes** — Forecaster Notes now opens a dedicated National Products dialog for SPC, WPC, NHC, CPC, and other national NWS text products. The new view replaces the old Nationwide Discussions scraper with IEM AFOS plain-text products while keeping the existing Advanced Lookup path available for direct product searches (#641).\r\n- **Guided Advanced Lookup in Forecaster Notes** — Advanced Lookup now organizes NWS and IEM text products into product groups with clearer product choices, office selection, date presets, result limits, sort order, source selection, aviation AFD, center, WMO, and text-match filters.\r\n\r\n### Changed\r\n- Linux downloads now ship as `.tar.gz` tarballs instead of ZIP files.\r\n- Alert sounds and sound-pack creation now focus on alert severity instead of a long list of specific alert names, while existing packs can keep their older mappings.\r\n\r\n### Fixed\r\n- Edit Location and Settings > AI prompt fields now expose their visible labels correctly to screen readers.\r\n- Reliability fixes now prevent several update, notification, tray tooltip, dialog, NOAA radio, and alert-refresh edge cases from interrupting normal use.\r\n- Detected current locations outside the US now get an editable place name when reverse geocoding can identify the coordinates.\r\n- Editing a location after using \"Use my current location\" now refreshes the editable name and saved US metadata for the detected point, so locations don't quietly fall back to metric defaults.\r\n- Notification sounds now recover after Windows sleep or hibernation, so update\r\n  notifications don't fall back to only the generic Windows toast sound.\r\n- Plain Language Summary now shows and speaks which OpenRouter model it is trying, when it falls back from a busy free model, and why the final model was used.\r\n- Forecaster Notes AI summaries now use the same default prompt for every text product unless you've set custom AI prompt options.\r\n- Default AI summaries now stay grounded in the provided weather text or data, so they are less likely to invent forecast details when summarizing reports.\r\n- Relaunching AccessiWeather on Windows now reliably restores the already-running window from desktop shortcuts, direct EXE launches, and portable copies without relying on the window title.\r\n- Restoring the running AccessiWeather window on relaunch, and bringing it to the front from a notification, now work reliably on 64-bit Windows instead of leaving the window in the background.\r\n- Relaunching AccessiWeather no longer briefly activates the already-running window twice in rare fallback cases.\r\n- Alt+F4 now stays routed through the normal close-to-tray behavior after switching between All Locations and saved locations.\r\n- Automatic Windows startup now stays in the background when AccessiWeather is already running, and startup shortcuts are recreated with a stable AccessiWeather target for portable copies.\r\n- The Windows installer now closes running AccessiWeather copies automatically before installing, then can launch the updated app normally when setup exits.\r\n- Alt+F4 now respects \"Minimize to the notification area when closing\" again, so keyboard users can send AccessiWeather to the background without exiting.\r\n- Launching AccessiWeather no longer focuses a browser tab whose title starts with \"AccessiWeather\" instead of opening the app.\r\n- Open-Meteo location searches now handle common city/state or city/country entries like \"New York, NY\" and \"London, UK\" when adding locations.\r\n- The Windows installer now waits for any running AccessiWeather copy before replacing files, including portable copies launched from a folder.\r\n- Plain Language Summary now works for Daily Climate Reports and other Forecaster Notes text products, not just AFD, HWO, and SPS.\r\n- Weather Assistant now avoids a removed OpenRouter free model, so automatic free mode no longer fails with a 404 before answering.\r\n- Opening AccessiWeather no longer sends catch-up notifications for older Forecaster Notes updates; text-product notifications now start from the current session, and HWO/SPS checks run after their latest products are loaded.\r\n- Default soundpack now includes specific sounds for mapped weather alert types.\r\n- Pirate Weather minute-by-minute precipitation notifications now wait until start/stop changes are near-term and no longer count down repeatedly for the same rain event.\r\n- Saving Settings no longer waits on the Windows startup shortcut check unless you actually change the launch-at-startup checkbox.\r\n- Settings now opens without waiting on the Windows startup shortcut check.\r\n- The weather-refresh completion sound is now off by default, and switching to a cached location no longer plays it before the real refresh finishes.\r\n- Open-Meteo forecasts now keep unit-aware wind, visibility, snow depth, pressure, and freezing-level details instead of misreading feet, meters, or kilometers in some payloads.\r\n- Open-Meteo daily forecasts now include low temperatures and wind details when the API provides them.\r\n- Weather history comparisons now skip incomplete Open-Meteo archive responses instead of comparing against placeholder zero values.\r\n- Pressure outlooks no longer show unrealistic swings when current conditions and hourly forecasts use mixed pressure reference levels.\r\n- NWS and Pirate Weather data handling is more accurate: NWS alert lookups now avoid rejected radius parameters and stale cross-location alert caches, while Pirate Weather no longer treats precipitation rate as accumulated amount or reuses US units for international minutely precipitation checks.\r\n- NWS forecasts now pair daytime highs with following nighttime lows when NWS provides day/night forecast periods.\r\n- Smart Auto mode now keeps the NWS forecaster discussion from its main NWS fetch, avoids a duplicate follow-up request when it already has that discussion, and chooses Open-Meteo for extended US forecasts even if Pirate Weather is listed first.\r\n- Smart Auto mode now fills in current condition text from Open-Meteo or Pirate Weather when NWS reports an empty or unknown condition.\r\n- Canadian locations near the border no longer try NWS in Automatic mode when an older/manual location is missing a saved country code.\r\n- IEM text-product lookup errors no longer appear as if they were valid forecaster text.\r\n- Alerts now honor your selected alert area during regular refreshes, including state and zone alert modes.\r\n- Zone alert mode now checks both county and forecast zones so county-based watches and warnings are less likely to be missed.\r\n- The \"Launch automatically at startup\" setting now updates the system startup entry instead of only saving the checkbox.\r\n- Repeated checks of unchanged alerts no longer use up notification rate-limit capacity before newer alerts are handled.\r\n- The update dialog now shows release notes as screen-reader-friendly plain text instead of raw Markdown.\r\n- Linux packages now include the files needed for notification sounds.\r\n- Linux packages now avoid a startup compatibility issue on some systems.\r\n- Forecaster Notes now starts with NWS discussion tabs only and adds IEM-backed tabs only when active SPC/WPC products apply to your selected location.\r\n- Pirate Weather now requests API v2 data and carries v2 precipitation types like freezing rain and wintry mix into current, daily, and hourly forecasts.\r\n- Forecaster Notes now hides Hazardous Weather Outlook and Special Weather Statement tabs when NWS confirms there is no matching product for the selected office.\r\n\r\n## [0.6.0] - 2026-04-24\r\n\r\n### Added\r\n- You can now grab the whole alert — headline, details, instructions, timestamps — in one click with the new **Copy to clipboard** button in the alert dialog. Works the same whether you use separate fields or the combined view.\r\n- **Edit Location** — a new \"Edit Location\" button and menu item in the Location menu let you toggle Marine Mode on existing locations without having to remove and re-add them\r\n- **NOAA radio station count chooser** — the NOAA Weather Radio dialog now lets you pick how many nearby stations to load (10, 25, 50, 100, or All) without digging through the main Settings window\r\n- **Precipitation timeline dialog** — View > Precipitation Timeline now opens a dedicated Pirate Weather minutely precipitation timeline with a quick summary and minute-by-minute plain-text breakdown\r\n- **Faster Pirate Weather rain checks are opt-in** — a new notification setting lets you check minutely precipitation more often when rain is likely, while the default cadence stays closer to Pirate Weather's recommended update window\r\n- **Single combined alert view** — pick \"Single combined view\" in Settings > Display > Alert display to read the whole alert (headline, description, instruction, Issued, and Expires) in one scrollable edit box with a Close button. The original separate-fields layout is still the default\r\n- **Configurable date format** — choose how dates are shown: ISO (2026-04-18), US short (04/18/2026), US long (April 18, 2026), or EU (18/04/2026). Applies to timestamps in the new combined alert view for now\r\n- **Pressure outlook for fishing and planning** — pressure trends now say when a barometric pressure drop or rise is predicted, and Settings > Display lets you choose the pressure outlook range from 1 hour to 7 days\r\n\r\n### Fixed\r\n- **Pirate Weather minutely precipitation units** — rain-start notifications now evaluate Pirate Weather minutely intensity in consistent mm/hr units, and the timeline shows the unit plus uncertainty when Pirate Weather provides it\r\n- **NOAA radio station count now sticks** — your nearby-station limit is saved with NOAA radio preferences and reused the next time you open the dialog, while preferred stream choices keep working as before\r\n- **Automatic update checks now fire on long-running sessions** — the 24-hour update check used a single long wxTimer that could silently skip its tick after the computer slept or hibernated, so users who left the app open had to check manually. The scheduler now polls every 15 minutes and uses wall-clock elapsed time, so checks run on schedule even across sleep/wake cycles\r\n- **Adaptive Pirate Weather minutely polling** — minutely precipitation checks now stay near Pirate Weather's recommended cadence by default, with an opt-in faster check cadence when the hourly forecast suggests rain is likely soon (#565)\r\n\r\n## [0.4.5] - 2026-03-26\r\n\r\n### Added\r\n- **Optional in-app alert detail popups** — while AccessiWeather is already running, you can now choose to open newly eligible alert details immediately instead of only getting toast notifications (#578)\r\n- **Pirate Weather full integration** — Pirate Weather is now a first-class data source with alerts, hourly and minutely forecasts, and automatic fusion alongside NWS and Open-Meteo (#479)\r\n- **AVWX aviation source** — TAF and METAR data from AVWX for international locations (#480)\r\n- **All Locations summary view** — see a compact weather overview for all your saved locations at once (#518)\r\n- **ScreenReaderAnnouncer** — new dynamic announcement system for status changes, ensuring NVDA and other screen readers get timely updates without polluting the status bar (#525)\r\n- **Configurable auto mode source list** — choose which sources are eligible when using Smart Auto mode (#531)\r\n- **All Locations tray placeholder** — `{alert}` tray text placeholder shows the most severe active alert across all locations (#519)\r\n- **Whole-numbers display setting** — global option to round all displayed values to whole numbers (#476)\r\n- **Auto unit preference** — units default to metric or imperial based on the detected country of the selected location (#490)\r\n- **Improved geocoding** — international locations with special characters (accents, non-ASCII) now resolve correctly (#491)\r\n- **Humidity and dewpoint in hourly forecasts** (#499)\r\n- **Pirate Weather hourly/minutely summaries** surfaced in auto mode (#498)\r\n- **AFD section extraction** — Area Forecast Discussion change notifications now summarize the relevant changed sections (#453)\r\n- **Version shown in About dialog** (#451)\r\n- **Alert timing controls moved to Advanced dialog** — declutters the main Settings window (#524)\r\n- **Separate daily and hourly forecast sections** — navigable independently with screen readers (#501)\r\n\r\n### Changed\r\n- **Open-Meteo now handles extended forecasts** — replaces the previous NWS+OM stitching approach for cleaner multi-day data (#484)\r\n- **Default soundpack converted from WAV to OGG** — smaller file size, same quality (#542)\r\n- **Status bar replaces custom status label** — NVDA End-key navigation now works correctly in the main window (#539)\r\n- **Redundant US/international priority combo boxes removed** from Settings (#535)\r\n- **Minimum Python version bumped to 3.11**\r\n- **Parallel fetch timeout is now configurable**\r\n- Runtime alert and notification state migrated to normalized storage roots (#468)\r\n\r\n### Fixed\r\n- **Action Center notification clicks now reopen AccessiWeather** — clicking a weather alert or discussion update restores the running app and opens the matching dialog instead of doing nothing (#573)\r\n- **Forecast timezone labels now honor the location timezone consistently** — daily generated times and hourly forecast labels use named zones like BST when available instead of falling back to UTC/GMT offsets (#572)\r\n- **Permanent refresh freeze** — weather updates no longer stop indefinitely when a location is added or removed while a background fetch is in progress (#545)\r\n- **stop_all_sounds() now works** — was silently doing nothing; now properly stops all active audio streams (#545)\r\n- **Announcer cleanup on exit** — ScreenReaderAnnouncer is now shut down properly when the window closes (#545)\r\n- **Auto-source checkboxes update immediately** when a VC/PW API key is entered or cleared in Settings (#545)\r\n- **Routine status bar calls removed** — NVDA no longer announces every background weather refresh as a status change (#543)\r\n- **NWS detailed forecast text restored** — was accidentally hidden by a removed setting (#537)\r\n- **Data source is now strictly respected** — selecting a specific source no longer silently falls back to NWS (#530)\r\n- **Fields hidden when not provided by source** — no more blank or stale values from a previous source showing through (#528)\r\n- **Visibility capped at 10 statute miles** in Open-Meteo output (#532)\r\n- **UV index uses real-time value** in Open-Meteo current conditions, not the daily maximum (#533)\r\n- **API key portable bundle** now applies to the weather client on startup and refreshes when settings change (#523)\r\n- **severe_weather_override defaults to False** — was accidentally opt-in on fresh installs\r\n- **Pirate Weather source preference preserved** across restarts (#512)\r\n- **Pirate Weather alert cancellation stabilized** — no more false cancellation announcements when an alert briefly disappears upstream (#503)\r\n- **Pirate Weather WMO alerts treated as regional** — correctly labeled, not matched to county/zone (#504)\r\n- **Duplicate NWS discussion notifications prevented** (#notifications)\r\n- **Pirate Weather keyring resolution retried on startup** — fixes missing PW data after first launch (#515)\r\n- **Tray wind direction** now displays as cardinal (N/NE/etc.) instead of raw degrees (#511)\r\n- **Tray text format configuration improved** (#460)\r\n- **AFD update notifications** now use cleaner, more informative text (#462)\r\n- **Visual Crossing timeline API path corrected** (#465)\r\n- **Canadian border city detection fixed** — cities near the US/Canada border now resolve to the correct country\r\n- **Open-Meteo overnight lows** now display correctly (#497)\r\n- **Auto-select newly added location** (#516)\r\n- **UTC fallback crash, weather code messages, and expired alert display** fixed in combined bug hunt pass (#522)\r\n- **Accessibility audit fixes** — button order, accessible labels, and keyboard focus corrected throughout (#520)\r\n\r\n---\r\n\r\n## [0.4.2] - 2025-12-16\r\n\r\n### Added\r\n- AI weather explanations and model browser - get AI-generated insights about your weather, and pick specific OpenRouter models instead of just \"Auto (Free)\" or \"Auto (Paid)\". Hit \"Browse Models...\" in the AI tab to search through all available models, filter by free/paid, and see context lengths and pricing\r\n- HTML-based weather display with optional semantic HTML rendering for better accessibility\r\n- Smart Auto Source with seasonal weather display - automatically picks the best weather source (NWS for US, Open-Meteo internationally) and shows you which source each piece of data came from\r\n- Air Quality Dialog - dedicated view for detailed air quality and pollutant information accessible from the View menu\r\n- Hourly air quality forecasts - see pollutant levels and AQI predictions for the coming hours\r\n- Dynamic taskbar icon text - shows current weather conditions (temperature and conditions) in the taskbar on Windows 11+\r\n- Weather history trends and pollen display - compare weather against yesterday and last week, with detailed pollen count forecasts\r\n- Precipitation probability, snowfall, and UV index in forecasts - see detailed precipitation chance, expected snowfall amounts, and UV intensity in your forecast\r\n\r\n### Changed\r\n- Forecast display now uses WebView with optional semantic HTML rendering for faster performance\r\n\r\n### Fixed\r\n- API keys now persist in secure storage regardless of selected data source, fixing auto mode's ability to use Visual Crossing when configured\r\n- System tray tooltip now shows actual weather data (like \"45F Clear\") instead of just \"AccessiWeather\" on Windows 11\r\n- Hourly forecast times now display correctly in your location's timezone for all data sources (NWS and Visual Crossing were showing UTC times, causing incorrect displays like \"0:00 AM\" for midnight UTC)\r\n- Forecast periods no longer appear twice - the app now picks the best single source (NWS for US, Open-Meteo internationally) instead of merging forecasts from multiple sources with different naming conventions\r\n- Snow depth and snowfall values now display correctly - Open-Meteo was returning data in metric units (cm/meters) but the code treated them as imperial (inches/feet), causing values to be 2-3x too high\r\n\r\n---\r\n\r\n## [0.4.1] - 2025-11-20\r\n\r\n### Highlights\r\n- **Secure API Key Storage**: Integrated system keyring for safer storage of API credentials on Windows, macOS, and Linux—no more plain-text keys in config files.\r\n- **Moon Phase Data**: Visual Crossing moon phase information now displays in the current conditions, showing lunar phase with readable descriptions.\r\n- **Flexible Time Display**: Standardized time format controls across the app—choose between local time, UTC, or both, with 12/24-hour and timezone label toggles to suit your preferences.\r\n- **Performance Improvements**: Implemented cache-first design with background enrichment updates, reducing unnecessary API calls by 80%+ and improving app responsiveness on slower connections.\r\n\r\n### Added\r\n- Secure API Key Storage via system keyring (Windows, macOS, Linux)\r\n- Moon Phase Data integration from Visual Crossing (API integration complete; UI display pending)\r\n- Flexible time display preferences (local/UTC toggle, 12/24-hour format, timezone labels)\r\n- Fine-grained alert notification settings for alert type filtering\r\n- Automatic weather refresh when app window returns to foreground\r\n\r\n### Changed\r\n- Time format preferences now consistently apply to all displayed timestamps (sunrise/sunset, forecasts, alerts, weather history)\r\n- Cache-first architecture pre-warms forecasts in the background while serving cached data instantly to the user\r\n- Alert notification settings UI for better accessibility and control\r\n- Modernized sound pack manager and community browser interface\r\n- Improved NWS observation station selection to prioritize quality data\r\n- Enhanced international Open-Meteo support with better location search scoring\r\n\r\n### Fixed\r\n- Timezone display bug for sunrise/sunset times—now properly respects location timezone instead of shifting by local offset\r\n- NWS temperature unit normalization inconsistencies\r\n- Improved weather data coverage and aviation handling to reduce missing data gaps\r\n- Sound pack manager async race conditions during import/delete\r\n- NWS 'Last updated' timestamps now convert to location's timezone based on user display preferences\r\n- Keyring now gracefully handles missing system integration without crashing\r\n- Location search now returns correct results when adding locations\r\n\r\n### Known Issues\r\n- **Moon Phase Data (UI Not Displaying)**: Visual Crossing moon phase API calls are working correctly, but the UI is not yet displaying the retrieved moon phase information. The data is being fetched and cached successfully; this is a presentation-layer issue that will be resolved in a future patch.\r\n\r\n### Upgrade Notes\r\n- **API Keys**: Add your API keys through Settings > Data Sources. Keys are now stored securely in your system's keyring (Windows Credential Manager, macOS Keychain, Linux Secret Service) instead of plain text.\r\n- Portable Windows builds should remove any legacy `config` folders next to the executable before extracting the new ZIP to ensure clean asset refresh.\r\n- Need a fresh start? Use Settings > Advanced > Reset Application to clear your config and start fresh. Your config is stored in `%APPDATA%\\.accessiweather` on Windows and `~/.accessiweather` on macOS/Linux.\r\n\r\n---\r\n\r\n## [0.4.0] - 2025-10-12 [YANKED]\r\n\r\n⚠️ **Security Warning**: This release stored API keys in plain text in `accessiweather.json`. Upgrade to v0.4.1+ immediately.\r\n\r\n### Added\r\n- Desktop app rebuilt on BeeWare's Toga toolkit for native UI across Windows, macOS, Linux\r\n- Weather History comparisons against yesterday and last week using Open-Meteo archive\r\n- Auto mode with enriched forecasts (sunrise/sunset, NWS discussions, Visual Crossing alerts)\r\n- Sound pack manager with modular interface, mapping previews, creation wizard, community integration\r\n- Update center with stable/beta/dev channels and checksum-verified downloads\r\n- Expanded current conditions view (sunrise/sunset, UV, air-quality, pollen metrics)\r\n- Universal Remove shortcut (Ctrl/Cmd+D) for locations and sound packs\r\n- Startup management for automatic launch on Windows, macOS, Linux\r\n- Accessible Weather History dialog with forecast discussion reader layout\r\n\r\n### Changed\r\n- Refined settings dialog with accessible dropdowns for temperature units and data sources\r\n- Refactored codebase into modular packages (app shell, presenters, weather client, updater)\r\n- Streamlined CI/CD with make.py-driven builds, nightly smoketests, checksum validation\r\n\r\n### Fixed\r\n- Normalized Open-Meteo timestamps for international forecasts\r\n- Restored legacy `current` weather accessor compatibility\r\n- Prevented duplicate application launches\r\n- Removed unstable text-to-speech override controls\r\n\r\n### Removed\r\n- wxPython-based UI and related dependencies\r\n- Unstable text-to-speech override functionality\r\n\r\n---\r\n\r\n## [0.3.1] and earlier\r\n\r\nSee git history for detailed changes prior to v0.4.0.\r\n",
+ "scenarios": [
+  {
+   "name": "real stable v0.10.1",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "@real-changelog"
+     },
+     "commit": "real changelog"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "stable",
+    "--version",
+    "v0.10.1",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Changed\n- The show, hide and read-tray hotkeys now default to Ctrl+Alt+Shift+W, M and I, so they no longer steal Ctrl+Shift shortcuts from your browser or screen reader.\n- Edit Location is now F2, and NOAA Weather Radio opens with Ctrl+N.\n- AccessiWeather tells you when another program already owns a window or tray hotkey, instead of failing silently. Windows only.\n- A shortcut Settings won't accept now gets focus along with the message, so you can fix it right away.\n"
+   }
+  },
+  {
+   "name": "real stable v0.10.0",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "@real-changelog"
+     },
+     "commit": "real changelog"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "stable",
+    "--version",
+    "v0.10.0",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Added\n- Browse and pick Venice text models in AI settings, with token prices, cost and function-calling filters, and your credit balance when your key allows.\n- A Get Venice API key button in AI settings opens Venice's signup and API settings page.\n- Choose Venice AI for weather explanations and the Weather Assistant with your own key and prepaid credits; OpenRouter stays the default.\n- Choose wind speed units (mph, km/h or m/s) separately from temperature units in Settings; Explain Weather follows the choice.\n- Reorder saved locations from the Location menu; the order survives restarts.\n- Set shortcuts in Advanced Settings to restore the window, hide it to the tray, and read tray information, which work while hidden on Windows.\n- Ctrl+Shift+L now opens Edit Location.\n- Start and stop NOAA Weather Radio from anywhere with Ctrl+Alt+Shift+R, even with AccessiWeather in the tray (Windows only).\n- Rebind the radio hotkey on the General tab in Settings, or clear the field to turn it off.\n- AccessiWeather now keeps a log file in a logs folder next to your settings, so there's something to send when reporting a problem.\n- A portable copy keeps its logs inside the portable folder.\n- Automatic updates now work on Linux from the AppImage, the same way they do on Windows.\n- Running from the tarball, AccessiWeather downloads and verifies the update and tells you where the file is and how to finish installing it.\n- Linux releases now include an AppImage that runs on Fedora, Ubuntu, Arch, openSUSE and other distros; mark it executable and run it.\n- US locations can use official EPA AirNow observations for current air quality when you add your AirNow API key in Settings.\n- A Validate AirNow key button on the Data Sources tab tests your key and tells you whether it works.\n\n## Changed\n- The Venice model browser's Provider filter lists the model vendors, such as Anthropic, OpenAI and Google, instead of a single Venice entry.\n- The AI settings tab shows only the key and model fields for the provider you've selected.\n\n## Fixed\n- Weather Assistant requests live weather more reliably with Venice and OpenRouter, keeps lookup results for follow-up questions, and gets complete measurements with observation times.\n- NWS lookups now follow coordinate-precision redirects instead of falling back to another weather source.\n- Weather Assistant can find international locations instead of only U.S. places with similar names.\n- Creating a fresh settings file keeps API keys already saved on your computer available in Settings.\n- NWS feels-like temperatures use calculated wind chill or heat index when observations leave them out.\n- Explain Weather follows your selected units, including automatic location-based units.\n- NOAA Weather Radio auto-tune no longer starts for alerts a real weather radio would sleep through; it goes by the alert's SAME code now.\n- AirNow observations now reach the display, so the AQI, pollutant and observation time match AirNow.gov.\n- AirNow air quality now works for US locations saved before country detection existed.\n- Weather Assistant queries that need live weather let OpenRouter's free endpoint pick an available model instead of failing when a hardcoded one is retired.\n"
+   }
+  },
+  {
+   "name": "real stable v0.9.0",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "@real-changelog"
+     },
+     "commit": "real changelog"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "stable",
+    "--version",
+    "v0.9.0",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Changed\n- New default sounds: The alert and notification audio has been completely replaced with a warm, gentle set of wooden-mallet tones. The old pack was full of piercing high-frequency tones - some dumping most of their energy into the harsh 3-6 kHz range - and one alert ran a jarring 12 seconds. The new sounds stay in a soft, low register (around 200-500 Hz), are short, and are grouped by severity so an advisory, a watch, a warning, and an extreme alert each sound distinct without ever being shrill. Prefer the old set? It's still available as \"Classic Default\", a downloadable optional pack in the sound manager, with the worst ear-piercing tones softened.\n- Forecaster Notes can now show official NWS Surf Zone Forecasts for regional beaches where available, with surf/beach condition alternatives from supported global sources when an official SRF product is not available.\n- AccessiWeather can now automatically tune NOAA Weather Radio for qualifying alerts that use Specific Area Message Encoding (SAME) when you turn on the opt-in setting on the Alerts tab, then stop after the duration you choose when a reliable station match is available.\n- NOAA Weather Radio now opens independently of saved weather locations and keeps playing after you close the player until you press Stop or exit the app.\n- The NOAA Weather Radio Station Finder now has clearer modes for searching all stations, browsing by full state or territory name, and finding nearby stations by coordinates.\n- NOAA Weather Radio stations can now be saved as favorites, with a Favorites finder mode and optional nearby-station lookup from your saved AccessiWeather locations.\n\n## Fixed\n- Air quality, pollen, and UV readings now show the current hour instead of a forecast hour. AccessiWeather was reading the far end of Open-Meteo's multi-day hourly forecast, so the AQI, dominant pollutant, \"current\" pollutant breakdown, and hourly trend could all reflect a time days away rather than right now.\n- The Air Quality dialog's hourly forecast now shows real clock times (like \"2:00 PM\") instead of generic \"Hour 1\" through \"Hour 12\" labels.\n- Screen reader announcements work again in installed builds — the Weather Assistant now auto-reads replies, and other spoken announcements are back. The installer was shipping without the speech library's native component, so announcements were silently skipped.\n- The `{precip}` and `{precip_chance}` tray placeholders now show real values instead of N/A. Precipitation chance comes from the current hour's forecast (observations never include it), and Open-Meteo's current precipitation amount now reaches the tray.\n- Canadian locations now show barometric pressure in kilopascals, such as 101.3 kPa, when using automatic units.\n- Current conditions and tray text now omit feels-like or heat-index details when they are unavailable instead of announcing them as `N/A`.\n- \"Launch automatically at startup\" now survives app updates. Windows startup registration moved from a Startup-folder shortcut to the standard registry Run entry, and AccessiWeather repairs it on every launch — so an update can't silently uncheck the setting or stop the app from starting with Windows.\n- The startup checkbox no longer unchecks itself when Windows is slow: checking startup status is now instant instead of relying on a PowerShell probe that could time out right after a reboot or update.\n- Disabling AccessiWeather in Task Manager's Startup apps is now respected — the Settings checkbox shows it as off, and re-checking it in Settings turns it back on properly instead of appearing enabled while never launching.\n- Upgrading from an older version now migrates the old Startup-folder shortcut automatically, so you won't get double launches or a stale shortcut pointing at a removed install.\n- Saving Settings after turning on automatic startup now returns to the main window faster while still updating the OS startup registration.\n- NOAA Weather Radio SAME auto-tune now starts again when an existing qualifying alert materially escalates, while still ignoring routine updates and cancellations.\n- NOAA Weather Radio auto-tune now starts only for the first issuance of a qualifying SAME alert, reliably stops after your configured playback duration, and no longer restarts for later updates or cancellations of the same alert.\n- Feels-like and heat-index readings now ignore implausibly warm provider values when the current temperature and humidity do not support them, while keeping valid humid heat-index and cold wind-chill readings.\n- Unknown or uncategorized weather alerts now have a mappable default sound, and missing custom-pack event sounds fall back to the matching default sound before generic notification audio.\n- NOAA Weather Radio Station Finder now repopulates stations when leaving an empty Favorites view, so you no longer need to reopen the radio dialog.\n- Feels-like temperatures now keep showing in tray text when only one temperature unit is available, instead of falling back to `N/A`.\n- Editing a location now tells you when the new name is empty or already in use, instead of silently discarding your changes.\n- The tray text format dialog now warns you about unknown placeholders or unbalanced braces before saving, so a typo like `{tmp}` can't quietly end up in your tray tooltip.\n- Closing the Add or Edit Location dialog while a search or current-location detection is still running no longer risks a crash.\n- Weather history's \"Today vs Yesterday\" section now reads naturally when both days have the same temperature, instead of \"is 0.0°F about the same than yesterday\".\n"
+   }
+  },
+  {
+   "name": "real stable v0.8.1",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "@real-changelog"
+     },
+     "commit": "real changelog"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "stable",
+    "--version",
+    "v0.8.1",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Fixed\n- Canadian locations now show barometric pressure in kilopascals, such as 101.3 kPa, when using automatic units.\n"
+   }
+  },
+  {
+   "name": "real stable v0.8.0",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "@real-changelog"
+     },
+     "commit": "real changelog"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "stable",
+    "--version",
+    "v0.8.0",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Changed\n- Forecaster Notes can now show official NWS Surf Zone Forecasts for regional beaches where available, with surf/beach condition alternatives from supported global sources when an official SRF product is not available.\n- AccessiWeather can now automatically tune NOAA Weather Radio for qualifying alerts that use Specific Area Message Encoding (SAME) when you turn on the opt-in setting on the Alerts tab, then stop after the duration you choose when a reliable station match is available.\n- NOAA Weather Radio now opens independently of saved weather locations and keeps playing after you close the player until you press Stop or exit the app.\n- The NOAA Weather Radio Station Finder now has clearer modes for searching all stations, browsing by full state or territory name, and finding nearby stations by coordinates.\n- NOAA Weather Radio stations can now be saved as favorites, with a Favorites finder mode and optional nearby-station lookup from your saved AccessiWeather locations.\n\n## Fixed\n- Current conditions and tray text now omit feels-like or heat-index details when they are unavailable instead of announcing them as `N/A`.\n- The Settings startup checkbox now reflects and repairs the actual OS startup registration instead of trusting a stale saved preference.\n- Saving Settings after turning on automatic startup now returns to the main window faster while still updating the OS startup registration.\n- NOAA Weather Radio SAME auto-tune now starts again when an existing qualifying alert materially escalates, while still ignoring routine updates and cancellations.\n- NOAA Weather Radio auto-tune now starts only for the first issuance of a qualifying SAME alert, reliably stops after your configured playback duration, and no longer restarts for later updates or cancellations of the same alert.\n- Feels-like and heat-index readings now ignore implausibly warm provider values when the current temperature and humidity do not support them, while keeping valid humid heat-index and cold wind-chill readings.\n- Unknown or uncategorized weather alerts now have a mappable default sound, and missing custom-pack event sounds fall back to the matching default sound before generic notification audio.\n- NOAA Weather Radio Station Finder now repopulates stations when leaving an empty Favorites view, so you no longer need to reopen the radio dialog.\n- Feels-like temperatures now keep showing in tray text when only one temperature unit is available, instead of falling back to `N/A`.\n- Editing a location now tells you when the new name is empty or already in use, instead of silently discarding your changes.\n- The tray text format dialog now warns you about unknown placeholders or unbalanced braces before saving, so a typo like `{tmp}` can't quietly end up in your tray tooltip.\n- Closing the Add or Edit Location dialog while a search or current-location detection is still running no longer risks a crash.\n- Weather history's \"Today vs Yesterday\" section now reads naturally when both days have the same temperature, instead of \"is 0.0°F about the same than yesterday\".\n"
+   }
+  },
+  {
+   "name": "real stable v0.7.2",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "@real-changelog"
+     },
+     "commit": "real changelog"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "stable",
+    "--version",
+    "v0.7.2",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Added\n- You can now choose \"Use my current location\" when adding or updating a saved location. AccessiWeather asks the OS once, only after you press the button, and keeps manual search available if location access is denied or unavailable.\n- Alert updates can now use their own mappable sound in sound packs.\n- Settings > Audio can now enable specific-alert sounds per sound pack, so packs with sounds like `tornado_watch` and `tornado_warning` keep working while severity-only packs stay simple.\n- First-run setup can now import existing settings and encrypted API keys from the wizard, or exit with Escape at any wizard step when you want to configure everything yourself.\n- You can now search for a US street address when adding or editing a location, so AccessiWeather can save coordinates for that specific address instead of the nearest city or ZIP result.\n- Saved locations now stay sorted alphabetically in the location list (#667).\n- You can now choose to sort saved locations alphabetically or nearest to the current location.\n- **Daily Climate Reports in Forecaster Notes** — You can now read the latest NWS Daily Climate Report for supported US climate stations, with station-aware lookup, cached refreshes, history through Advanced Lookup, and optional update notifications.\n- **National Products in Forecaster Notes** — Forecaster Notes now opens a dedicated National Products dialog for SPC, WPC, NHC, CPC, and other national NWS text products. The new view replaces the old Nationwide Discussions scraper with IEM AFOS plain-text products while keeping the existing Advanced Lookup path available for direct product searches (#641).\n- **Guided Advanced Lookup in Forecaster Notes** — Advanced Lookup now organizes NWS and IEM text products into product groups with clearer product choices, office selection, date presets, result limits, sort order, source selection, aviation AFD, center, WMO, and text-match filters.\n\n## Changed\n- Linux downloads now ship as `.tar.gz` tarballs instead of ZIP files.\n- Alert sounds and sound-pack creation now focus on alert severity instead of a long list of specific alert names, while existing packs can keep their older mappings.\n\n## Fixed\n- Edit Location and Settings > AI prompt fields now expose their visible labels correctly to screen readers.\n- Reliability fixes now prevent several update, notification, tray tooltip, dialog, NOAA radio, and alert-refresh edge cases from interrupting normal use.\n- Detected current locations outside the US now get an editable place name when reverse geocoding can identify the coordinates.\n- Editing a location after using \"Use my current location\" now refreshes the editable name and saved US metadata for the detected point, so locations don't quietly fall back to metric defaults.\n- Notification sounds now recover after Windows sleep or hibernation, so update\n  notifications don't fall back to only the generic Windows toast sound.\n- Plain Language Summary now shows and speaks which OpenRouter model it is trying, when it falls back from a busy free model, and why the final model was used.\n- Forecaster Notes AI summaries now use the same default prompt for every text product unless you've set custom AI prompt options.\n- Default AI summaries now stay grounded in the provided weather text or data, so they are less likely to invent forecast details when summarizing reports.\n- Relaunching AccessiWeather on Windows now reliably restores the already-running window from desktop shortcuts, direct EXE launches, and portable copies without relying on the window title.\n- Restoring the running AccessiWeather window on relaunch, and bringing it to the front from a notification, now work reliably on 64-bit Windows instead of leaving the window in the background.\n- Relaunching AccessiWeather no longer briefly activates the already-running window twice in rare fallback cases.\n- Alt+F4 now stays routed through the normal close-to-tray behavior after switching between All Locations and saved locations.\n- Automatic Windows startup now stays in the background when AccessiWeather is already running, and startup shortcuts are recreated with a stable AccessiWeather target for portable copies.\n- The Windows installer now closes running AccessiWeather copies automatically before installing, then can launch the updated app normally when setup exits.\n- Alt+F4 now respects \"Minimize to the notification area when closing\" again, so keyboard users can send AccessiWeather to the background without exiting.\n- Launching AccessiWeather no longer focuses a browser tab whose title starts with \"AccessiWeather\" instead of opening the app.\n- Open-Meteo location searches now handle common city/state or city/country entries like \"New York, NY\" and \"London, UK\" when adding locations.\n- The Windows installer now waits for any running AccessiWeather copy before replacing files, including portable copies launched from a folder.\n- Plain Language Summary now works for Daily Climate Reports and other Forecaster Notes text products, not just AFD, HWO, and SPS.\n- Weather Assistant now avoids a removed OpenRouter free model, so automatic free mode no longer fails with a 404 before answering.\n- Opening AccessiWeather no longer sends catch-up notifications for older Forecaster Notes updates; text-product notifications now start from the current session, and HWO/SPS checks run after their latest products are loaded.\n- Default soundpack now includes specific sounds for mapped weather alert types.\n- Pirate Weather minute-by-minute precipitation notifications now wait until start/stop changes are near-term and no longer count down repeatedly for the same rain event.\n- Saving Settings no longer waits on the Windows startup shortcut check unless you actually change the launch-at-startup checkbox.\n- Settings now opens without waiting on the Windows startup shortcut check.\n- The weather-refresh completion sound is now off by default, and switching to a cached location no longer plays it before the real refresh finishes.\n- Open-Meteo forecasts now keep unit-aware wind, visibility, snow depth, pressure, and freezing-level details instead of misreading feet, meters, or kilometers in some payloads.\n- Open-Meteo daily forecasts now include low temperatures and wind details when the API provides them.\n- Weather history comparisons now skip incomplete Open-Meteo archive responses instead of comparing against placeholder zero values.\n- Pressure outlooks no longer show unrealistic swings when current conditions and hourly forecasts use mixed pressure reference levels.\n- NWS and Pirate Weather data handling is more accurate: NWS alert lookups now avoid rejected radius parameters and stale cross-location alert caches, while Pirate Weather no longer treats precipitation rate as accumulated amount or reuses US units for international minutely precipitation checks.\n- NWS forecasts now pair daytime highs with following nighttime lows when NWS provides day/night forecast periods.\n- Smart Auto mode now keeps the NWS forecaster discussion from its main NWS fetch, avoids a duplicate follow-up request when it already has that discussion, and chooses Open-Meteo for extended US forecasts even if Pirate Weather is listed first.\n- Smart Auto mode now fills in current condition text from Open-Meteo or Pirate Weather when NWS reports an empty or unknown condition.\n- Canadian locations near the border no longer try NWS in Automatic mode when an older/manual location is missing a saved country code.\n- IEM text-product lookup errors no longer appear as if they were valid forecaster text.\n- Alerts now honor your selected alert area during regular refreshes, including state and zone alert modes.\n- Zone alert mode now checks both county and forecast zones so county-based watches and warnings are less likely to be missed.\n- The \"Launch automatically at startup\" setting now updates the system startup entry instead of only saving the checkbox.\n- Repeated checks of unchanged alerts no longer use up notification rate-limit capacity before newer alerts are handled.\n- The update dialog now shows release notes as screen-reader-friendly plain text instead of raw Markdown.\n- Linux packages now include the files needed for notification sounds.\n- Linux packages now avoid a startup compatibility issue on some systems.\n- Forecaster Notes now starts with NWS discussion tabs only and adds IEM-backed tabs only when active SPC/WPC products apply to your selected location.\n- Pirate Weather now requests API v2 data and carries v2 precipitation types like freezing rain and wintry mix into current, daily, and hourly forecasts.\n- Forecaster Notes now hides Hazardous Weather Outlook and Special Weather Statement tabs when NWS confirms there is no matching product for the selected office.\n"
+   }
+  },
+  {
+   "name": "real stable v0.6.0",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "@real-changelog"
+     },
+     "commit": "real changelog"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "stable",
+    "--version",
+    "v0.6.0",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Added\n- You can now grab the whole alert — headline, details, instructions, timestamps — in one click with the new **Copy to clipboard** button in the alert dialog. Works the same whether you use separate fields or the combined view.\n- **Edit Location** — a new \"Edit Location\" button and menu item in the Location menu let you toggle Marine Mode on existing locations without having to remove and re-add them\n- **NOAA radio station count chooser** — the NOAA Weather Radio dialog now lets you pick how many nearby stations to load (10, 25, 50, 100, or All) without digging through the main Settings window\n- **Precipitation timeline dialog** — View > Precipitation Timeline now opens a dedicated Pirate Weather minutely precipitation timeline with a quick summary and minute-by-minute plain-text breakdown\n- **Faster Pirate Weather rain checks are opt-in** — a new notification setting lets you check minutely precipitation more often when rain is likely, while the default cadence stays closer to Pirate Weather's recommended update window\n- **Single combined alert view** — pick \"Single combined view\" in Settings > Display > Alert display to read the whole alert (headline, description, instruction, Issued, and Expires) in one scrollable edit box with a Close button. The original separate-fields layout is still the default\n- **Configurable date format** — choose how dates are shown: ISO (2026-04-18), US short (04/18/2026), US long (April 18, 2026), or EU (18/04/2026). Applies to timestamps in the new combined alert view for now\n- **Pressure outlook for fishing and planning** — pressure trends now say when a barometric pressure drop or rise is predicted, and Settings > Display lets you choose the pressure outlook range from 1 hour to 7 days\n\n## Fixed\n- **Pirate Weather minutely precipitation units** — rain-start notifications now evaluate Pirate Weather minutely intensity in consistent mm/hr units, and the timeline shows the unit plus uncertainty when Pirate Weather provides it\n- **NOAA radio station count now sticks** — your nearby-station limit is saved with NOAA radio preferences and reused the next time you open the dialog, while preferred stream choices keep working as before\n- **Automatic update checks now fire on long-running sessions** — the 24-hour update check used a single long wxTimer that could silently skip its tick after the computer slept or hibernated, so users who left the app open had to check manually. The scheduler now polls every 15 minutes and uses wall-clock elapsed time, so checks run on schedule even across sleep/wake cycles\n- **Adaptive Pirate Weather minutely polling** — minutely precipitation checks now stay near Pirate Weather's recommended cadence by default, with an opt-in faster check cadence when the hourly forecast suggests rain is likely soon (#565)\n"
+   }
+  },
+  {
+   "name": "real stable v0.4.5",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "@real-changelog"
+     },
+     "commit": "real changelog"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "stable",
+    "--version",
+    "v0.4.5",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Added\n- **Optional in-app alert detail popups** — while AccessiWeather is already running, you can now choose to open newly eligible alert details immediately instead of only getting toast notifications (#578)\n- **Pirate Weather full integration** — Pirate Weather is now a first-class data source with alerts, hourly and minutely forecasts, and automatic fusion alongside NWS and Open-Meteo (#479)\n- **AVWX aviation source** — TAF and METAR data from AVWX for international locations (#480)\n- **All Locations summary view** — see a compact weather overview for all your saved locations at once (#518)\n- **ScreenReaderAnnouncer** — new dynamic announcement system for status changes, ensuring NVDA and other screen readers get timely updates without polluting the status bar (#525)\n- **Configurable auto mode source list** — choose which sources are eligible when using Smart Auto mode (#531)\n- **All Locations tray placeholder** — `{alert}` tray text placeholder shows the most severe active alert across all locations (#519)\n- **Whole-numbers display setting** — global option to round all displayed values to whole numbers (#476)\n- **Auto unit preference** — units default to metric or imperial based on the detected country of the selected location (#490)\n- **Improved geocoding** — international locations with special characters (accents, non-ASCII) now resolve correctly (#491)\n- **Humidity and dewpoint in hourly forecasts** (#499)\n- **Pirate Weather hourly/minutely summaries** surfaced in auto mode (#498)\n- **AFD section extraction** — Area Forecast Discussion change notifications now summarize the relevant changed sections (#453)\n- **Version shown in About dialog** (#451)\n- **Alert timing controls moved to Advanced dialog** — declutters the main Settings window (#524)\n- **Separate daily and hourly forecast sections** — navigable independently with screen readers (#501)\n\n## Changed\n- **Open-Meteo now handles extended forecasts** — replaces the previous NWS+OM stitching approach for cleaner multi-day data (#484)\n- **Default soundpack converted from WAV to OGG** — smaller file size, same quality (#542)\n- **Status bar replaces custom status label** — NVDA End-key navigation now works correctly in the main window (#539)\n- **Redundant US/international priority combo boxes removed** from Settings (#535)\n- **Minimum Python version bumped to 3.11**\n- **Parallel fetch timeout is now configurable**\n- Runtime alert and notification state migrated to normalized storage roots (#468)\n\n## Fixed\n- **Action Center notification clicks now reopen AccessiWeather** — clicking a weather alert or discussion update restores the running app and opens the matching dialog instead of doing nothing (#573)\n- **Forecast timezone labels now honor the location timezone consistently** — daily generated times and hourly forecast labels use named zones like BST when available instead of falling back to UTC/GMT offsets (#572)\n- **Permanent refresh freeze** — weather updates no longer stop indefinitely when a location is added or removed while a background fetch is in progress (#545)\n- **stop_all_sounds() now works** — was silently doing nothing; now properly stops all active audio streams (#545)\n- **Announcer cleanup on exit** — ScreenReaderAnnouncer is now shut down properly when the window closes (#545)\n- **Auto-source checkboxes update immediately** when a VC/PW API key is entered or cleared in Settings (#545)\n- **Routine status bar calls removed** — NVDA no longer announces every background weather refresh as a status change (#543)\n- **NWS detailed forecast text restored** — was accidentally hidden by a removed setting (#537)\n- **Data source is now strictly respected** — selecting a specific source no longer silently falls back to NWS (#530)\n- **Fields hidden when not provided by source** — no more blank or stale values from a previous source showing through (#528)\n- **Visibility capped at 10 statute miles** in Open-Meteo output (#532)\n- **UV index uses real-time value** in Open-Meteo current conditions, not the daily maximum (#533)\n- **API key portable bundle** now applies to the weather client on startup and refreshes when settings change (#523)\n- **severe_weather_override defaults to False** — was accidentally opt-in on fresh installs\n- **Pirate Weather source preference preserved** across restarts (#512)\n- **Pirate Weather alert cancellation stabilized** — no more false cancellation announcements when an alert briefly disappears upstream (#503)\n- **Pirate Weather WMO alerts treated as regional** — correctly labeled, not matched to county/zone (#504)\n- **Duplicate NWS discussion notifications prevented** (#notifications)\n- **Pirate Weather keyring resolution retried on startup** — fixes missing PW data after first launch (#515)\n- **Tray wind direction** now displays as cardinal (N/NE/etc.) instead of raw degrees (#511)\n- **Tray text format configuration improved** (#460)\n- **AFD update notifications** now use cleaner, more informative text (#462)\n- **Visual Crossing timeline API path corrected** (#465)\n- **Canadian border city detection fixed** — cities near the US/Canada border now resolve to the correct country\n- **Open-Meteo overnight lows** now display correctly (#497)\n- **Auto-select newly added location** (#516)\n- **UTC fallback crash, weather code messages, and expired alert display** fixed in combined bug hunt pass (#522)\n- **Accessibility audit fixes** — button order, accessible labels, and keyboard focus corrected throughout (#520)\n"
+   }
+  },
+  {
+   "name": "real stable v0.4.2",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "@real-changelog"
+     },
+     "commit": "real changelog"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "stable",
+    "--version",
+    "v0.4.2",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Added\n- AI weather explanations and model browser - get AI-generated insights about your weather, and pick specific OpenRouter models instead of just \"Auto (Free)\" or \"Auto (Paid)\". Hit \"Browse Models...\" in the AI tab to search through all available models, filter by free/paid, and see context lengths and pricing\n- HTML-based weather display with optional semantic HTML rendering for better accessibility\n- Smart Auto Source with seasonal weather display - automatically picks the best weather source (NWS for US, Open-Meteo internationally) and shows you which source each piece of data came from\n- Air Quality Dialog - dedicated view for detailed air quality and pollutant information accessible from the View menu\n- Hourly air quality forecasts - see pollutant levels and AQI predictions for the coming hours\n- Dynamic taskbar icon text - shows current weather conditions (temperature and conditions) in the taskbar on Windows 11+\n- Weather history trends and pollen display - compare weather against yesterday and last week, with detailed pollen count forecasts\n- Precipitation probability, snowfall, and UV index in forecasts - see detailed precipitation chance, expected snowfall amounts, and UV intensity in your forecast\n\n## Changed\n- Forecast display now uses WebView with optional semantic HTML rendering for faster performance\n\n## Fixed\n- API keys now persist in secure storage regardless of selected data source, fixing auto mode's ability to use Visual Crossing when configured\n- System tray tooltip now shows actual weather data (like \"45F Clear\") instead of just \"AccessiWeather\" on Windows 11\n- Hourly forecast times now display correctly in your location's timezone for all data sources (NWS and Visual Crossing were showing UTC times, causing incorrect displays like \"0:00 AM\" for midnight UTC)\n- Forecast periods no longer appear twice - the app now picks the best single source (NWS for US, Open-Meteo internationally) instead of merging forecasts from multiple sources with different naming conventions\n- Snow depth and snowfall values now display correctly - Open-Meteo was returning data in metric units (cm/meters) but the code treated them as imperial (inches/feet), causing values to be 2-3x too high\n"
+   }
+  },
+  {
+   "name": "real stable v0.4.1",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "@real-changelog"
+     },
+     "commit": "real changelog"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "stable",
+    "--version",
+    "v0.4.1",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Added\n- Secure API Key Storage via system keyring (Windows, macOS, Linux)\n- Moon Phase Data integration from Visual Crossing (API integration complete; UI display pending)\n- Flexible time display preferences (local/UTC toggle, 12/24-hour format, timezone labels)\n- Fine-grained alert notification settings for alert type filtering\n- Automatic weather refresh when app window returns to foreground\n\n## Changed\n- Time format preferences now consistently apply to all displayed timestamps (sunrise/sunset, forecasts, alerts, weather history)\n- Cache-first architecture pre-warms forecasts in the background while serving cached data instantly to the user\n- Alert notification settings UI for better accessibility and control\n- Modernized sound pack manager and community browser interface\n- Improved NWS observation station selection to prioritize quality data\n- Enhanced international Open-Meteo support with better location search scoring\n\n## Fixed\n- Timezone display bug for sunrise/sunset times—now properly respects location timezone instead of shifting by local offset\n- NWS temperature unit normalization inconsistencies\n- Improved weather data coverage and aviation handling to reduce missing data gaps\n- Sound pack manager async race conditions during import/delete\n- NWS 'Last updated' timestamps now convert to location's timezone based on user display preferences\n- Keyring now gracefully handles missing system integration without crashing\n- Location search now returns correct results when adding locations\n\n## Highlights\n- **Secure API Key Storage**: Integrated system keyring for safer storage of API credentials on Windows, macOS, and Linux—no more plain-text keys in config files.\n- **Moon Phase Data**: Visual Crossing moon phase information now displays in the current conditions, showing lunar phase with readable descriptions.\n- **Flexible Time Display**: Standardized time format controls across the app—choose between local time, UTC, or both, with 12/24-hour and timezone label toggles to suit your preferences.\n- **Performance Improvements**: Implemented cache-first design with background enrichment updates, reducing unnecessary API calls by 80%+ and improving app responsiveness on slower connections.\n\n## Known Issues\n- **Moon Phase Data (UI Not Displaying)**: Visual Crossing moon phase API calls are working correctly, but the UI is not yet displaying the retrieved moon phase information. The data is being fetched and cached successfully; this is a presentation-layer issue that will be resolved in a future patch.\n\n## Upgrade Notes\n- **API Keys**: Add your API keys through Settings > Data Sources. Keys are now stored securely in your system's keyring (Windows Credential Manager, macOS Keychain, Linux Secret Service) instead of plain text.\n- Portable Windows builds should remove any legacy `config` folders next to the executable before extracting the new ZIP to ensure clean asset refresh.\n- Need a fresh start? Use Settings > Advanced > Reset Application to clear your config and start fresh. Your config is stored in `%APPDATA%\\.accessiweather` on Windows and `~/.accessiweather` on macOS/Linux.\n"
+   }
+  },
+  {
+   "name": "real stable v0.4.0",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "@real-changelog"
+     },
+     "commit": "real changelog"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "stable",
+    "--version",
+    "v0.4.0",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Changed\n- AccessiWeather is now a native app for Windows, macOS and Linux, and updating from the previous version keeps your saved locations and settings.\n- The OpenRouter model picker drops the retired Llama 3.3 70B option; choose the free router, the paid auto router, or browse models.\n\n## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations and the Weather Assistant work again in installed builds, which were failing every request before it reached OpenRouter or Venice.\n- AI error messages now distinguish invalid keys, depleted credits, denied access, unavailable models, rate limits, connection or timeout failures, and model refusals across the Weather Assistant and explanation views, without displaying raw provider errors.\n- After an AI summary finishes, keyboard focus moves to the result when Explain was focused; failed Weather Assistant questions return to the input for editing, and key errors point to the correct AI settings tab.\n- AI explanations now use your updated custom prompt and instructions immediately, and the Weather Assistant checks alerts for the selected place even when a model supplies an ambiguous location. It also reports when an alert shown in the app is missing from the live point lookup.\n- OpenRouter key validation now checks the key without generating a response, so unavailable models and account limits no longer make a valid key appear invalid. It reports exhausted key spending allowance, connection and service problems separately, without freezing Settings.\n- Venice key validation distinguishes rejected keys from permission problems and reports when all listed balances are depleted.\n- Settings reports a secure-storage failure instead of claiming an API key was saved, and keeps the prior key in memory if the new write fails.\n- If a key changes during validation, Settings asks to validate the new value instead of reporting the earlier key's result.\n- Closing Settings with Escape or Cancel now asks whether to save your changes, so a provider switch isn't silently thrown away.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n- OpenRouter explanations stop on authentication, permission and credit errors, avoid logging response text, and limit free-model fallback attempts so a failing model does not leave the app waiting through a long chain of retries.\n"
+   }
+  },
+  {
+   "name": "real stable v0.3.1",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "@real-changelog"
+     },
+     "commit": "real changelog"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "stable",
+    "--version",
+    "v0.3.1",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Changed\n- AccessiWeather is now a native app for Windows, macOS and Linux, and updating from the previous version keeps your saved locations and settings.\n- The OpenRouter model picker drops the retired Llama 3.3 70B option; choose the free router, the paid auto router, or browse models.\n\n## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations and the Weather Assistant work again in installed builds, which were failing every request before it reached OpenRouter or Venice.\n- AI error messages now distinguish invalid keys, depleted credits, denied access, unavailable models, rate limits, connection or timeout failures, and model refusals across the Weather Assistant and explanation views, without displaying raw provider errors.\n- After an AI summary finishes, keyboard focus moves to the result when Explain was focused; failed Weather Assistant questions return to the input for editing, and key errors point to the correct AI settings tab.\n- AI explanations now use your updated custom prompt and instructions immediately, and the Weather Assistant checks alerts for the selected place even when a model supplies an ambiguous location. It also reports when an alert shown in the app is missing from the live point lookup.\n- OpenRouter key validation now checks the key without generating a response, so unavailable models and account limits no longer make a valid key appear invalid. It reports exhausted key spending allowance, connection and service problems separately, without freezing Settings.\n- Venice key validation distinguishes rejected keys from permission problems and reports when all listed balances are depleted.\n- Settings reports a secure-storage failure instead of claiming an API key was saved, and keeps the prior key in memory if the new write fails.\n- If a key changes during validation, Settings asks to validate the new value instead of reporting the earlier key's result.\n- Closing Settings with Escape or Cancel now asks whether to save your changes, so a provider switch isn't silently thrown away.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n- OpenRouter explanations stop on authentication, permission and credit errors, avoid logging response text, and limit free-model fallback attempts so a failing model does not leave the app waiting through a long chain of retries.\n"
+   }
+  },
+  {
+   "name": "real stable v9.9.9",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "@real-changelog"
+     },
+     "commit": "real changelog"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "stable",
+    "--version",
+    "v9.9.9",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Changed\n- AccessiWeather is now a native app for Windows, macOS and Linux, and updating from the previous version keeps your saved locations and settings.\n- The OpenRouter model picker drops the retired Llama 3.3 70B option; choose the free router, the paid auto router, or browse models.\n\n## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations and the Weather Assistant work again in installed builds, which were failing every request before it reached OpenRouter or Venice.\n- AI error messages now distinguish invalid keys, depleted credits, denied access, unavailable models, rate limits, connection or timeout failures, and model refusals across the Weather Assistant and explanation views, without displaying raw provider errors.\n- After an AI summary finishes, keyboard focus moves to the result when Explain was focused; failed Weather Assistant questions return to the input for editing, and key errors point to the correct AI settings tab.\n- AI explanations now use your updated custom prompt and instructions immediately, and the Weather Assistant checks alerts for the selected place even when a model supplies an ambiguous location. It also reports when an alert shown in the app is missing from the live point lookup.\n- OpenRouter key validation now checks the key without generating a response, so unavailable models and account limits no longer make a valid key appear invalid. It reports exhausted key spending allowance, connection and service problems separately, without freezing Settings.\n- Venice key validation distinguishes rejected keys from permission problems and reports when all listed balances are depleted.\n- Settings reports a secure-storage failure instead of claiming an API key was saved, and keeps the prior key in memory if the new write fails.\n- If a key changes during validation, Settings asks to validate the new value instead of reporting the earlier key's result.\n- Closing Settings with Escape or Cancel now asks whether to save your changes, so a provider switch isn't silently thrown away.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n- OpenRouter explanations stop on authentication, permission and credit errors, avoid logging response text, and limit free-model fallback attempts so a failing model does not leave the app waiting through a long chain of retries.\n"
+   }
+  },
+  {
+   "name": "real nightly",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "@real-changelog"
+     },
+     "commit": "real changelog"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "nightly",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Changed\n- AccessiWeather is now a native app for Windows, macOS and Linux, and updating from the previous version keeps your saved locations and settings.\n- The OpenRouter model picker drops the retired Llama 3.3 70B option; choose the free router, the paid auto router, or browse models.\n\n## Fixed\n- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.\n- AI explanations and the Weather Assistant work again in installed builds, which were failing every request before it reached OpenRouter or Venice.\n- AI error messages now distinguish invalid keys, depleted credits, denied access, unavailable models, rate limits, connection or timeout failures, and model refusals across the Weather Assistant and explanation views, without displaying raw provider errors.\n- After an AI summary finishes, keyboard focus moves to the result when Explain was focused; failed Weather Assistant questions return to the input for editing, and key errors point to the correct AI settings tab.\n- AI explanations now use your updated custom prompt and instructions immediately, and the Weather Assistant checks alerts for the selected place even when a model supplies an ambiguous location. It also reports when an alert shown in the app is missing from the live point lookup.\n- OpenRouter key validation now checks the key without generating a response, so unavailable models and account limits no longer make a valid key appear invalid. It reports exhausted key spending allowance, connection and service problems separately, without freezing Settings.\n- Venice key validation distinguishes rejected keys from permission problems and reports when all listed balances are depleted.\n- Settings reports a secure-storage failure instead of claiming an API key was saved, and keeps the prior key in memory if the new write fails.\n- If a key changes during validation, Settings asks to validate the new value instead of reporting the earlier key's result.\n- Closing Settings with Escape or Cancel now asks whether to save your changes, so a provider switch isn't silently thrown away.\n- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.\n- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.\n- OpenRouter explanations stop on authentication, permission and credit errors, avoid logging response text, and limit free-model fallback attempts so a failing model does not leave the app waiting through a long chain of retries.\n"
+   }
+  },
+  {
+   "name": "edge stable '2.0.0'",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n### Fixed\n- Fixed first, listed before Added\n- Duplicate entry\n- Duplicate entry\n\n### Accessibility\n- Screen reader label added\n\n### Added\n- Added entry one\n* Starred line is not a bullet\n#### Deep heading is not a section\n- Added entry two\n\n  - Indented continuation after a blank line\ntrailing text that is ignored\n\n### Added\n- Second Added section wins\n\n### Notes\n### Empty section above\n\n## [2.0.0] - 2026-05-05\n\n### Changed\n- Two point oh change\n\n## [1.9.0]   \n\n### Fixed\n- Undated release with trailing spaces\n\n## [1.8.0] - 2026-04-04 [YANKED]\n\n### Removed\n- Yanked release\n"
+     },
+     "commit": "edge"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "stable",
+    "--version",
+    "2.0.0",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Changed\n- Two point oh change\n"
+   }
+  },
+  {
+   "name": "edge stable 'v1.9.0'",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n### Fixed\n- Fixed first, listed before Added\n- Duplicate entry\n- Duplicate entry\n\n### Accessibility\n- Screen reader label added\n\n### Added\n- Added entry one\n* Starred line is not a bullet\n#### Deep heading is not a section\n- Added entry two\n\n  - Indented continuation after a blank line\ntrailing text that is ignored\n\n### Added\n- Second Added section wins\n\n### Notes\n### Empty section above\n\n## [2.0.0] - 2026-05-05\n\n### Changed\n- Two point oh change\n\n## [1.9.0]   \n\n### Fixed\n- Undated release with trailing spaces\n\n## [1.8.0] - 2026-04-04 [YANKED]\n\n### Removed\n- Yanked release\n"
+     },
+     "commit": "edge"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "stable",
+    "--version",
+    "v1.9.0",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Fixed\n- Undated release with trailing spaces\n"
+   }
+  },
+  {
+   "name": "edge stable '1.8.0'",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n### Fixed\n- Fixed first, listed before Added\n- Duplicate entry\n- Duplicate entry\n\n### Accessibility\n- Screen reader label added\n\n### Added\n- Added entry one\n* Starred line is not a bullet\n#### Deep heading is not a section\n- Added entry two\n\n  - Indented continuation after a blank line\ntrailing text that is ignored\n\n### Added\n- Second Added section wins\n\n### Notes\n### Empty section above\n\n## [2.0.0] - 2026-05-05\n\n### Changed\n- Two point oh change\n\n## [1.9.0]   \n\n### Fixed\n- Undated release with trailing spaces\n\n## [1.8.0] - 2026-04-04 [YANKED]\n\n### Removed\n- Yanked release\n"
+     },
+     "commit": "edge"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "stable",
+    "--version",
+    "1.8.0",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Added\n- Second Added section wins\n\n## Fixed\n- Fixed first, listed before Added\n- Duplicate entry\n\n## Accessibility\n- Screen reader label added\n"
+   }
+  },
+  {
+   "name": "edge stable 'vv2.0.0'",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n### Fixed\n- Fixed first, listed before Added\n- Duplicate entry\n- Duplicate entry\n\n### Accessibility\n- Screen reader label added\n\n### Added\n- Added entry one\n* Starred line is not a bullet\n#### Deep heading is not a section\n- Added entry two\n\n  - Indented continuation after a blank line\ntrailing text that is ignored\n\n### Added\n- Second Added section wins\n\n### Notes\n### Empty section above\n\n## [2.0.0] - 2026-05-05\n\n### Changed\n- Two point oh change\n\n## [1.9.0]   \n\n### Fixed\n- Undated release with trailing spaces\n\n## [1.8.0] - 2026-04-04 [YANKED]\n\n### Removed\n- Yanked release\n"
+     },
+     "commit": "edge"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "stable",
+    "--version",
+    "vv2.0.0",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Added\n- Second Added section wins\n\n## Fixed\n- Fixed first, listed before Added\n- Duplicate entry\n\n## Accessibility\n- Screen reader label added\n"
+   }
+  },
+  {
+   "name": "edge stable ''",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n### Fixed\n- Fixed first, listed before Added\n- Duplicate entry\n- Duplicate entry\n\n### Accessibility\n- Screen reader label added\n\n### Added\n- Added entry one\n* Starred line is not a bullet\n#### Deep heading is not a section\n- Added entry two\n\n  - Indented continuation after a blank line\ntrailing text that is ignored\n\n### Added\n- Second Added section wins\n\n### Notes\n### Empty section above\n\n## [2.0.0] - 2026-05-05\n\n### Changed\n- Two point oh change\n\n## [1.9.0]   \n\n### Fixed\n- Undated release with trailing spaces\n\n## [1.8.0] - 2026-04-04 [YANKED]\n\n### Removed\n- Yanked release\n"
+     },
+     "commit": "edge"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "stable",
+    "--version",
+    "",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Added\n- Second Added section wins\n\n## Fixed\n- Fixed first, listed before Added\n- Duplicate entry\n\n## Accessibility\n- Screen reader label added\n"
+   }
+  },
+  {
+   "name": "edge nightly",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n### Fixed\n- Fixed first, listed before Added\n- Duplicate entry\n- Duplicate entry\n\n### Accessibility\n- Screen reader label added\n\n### Added\n- Added entry one\n* Starred line is not a bullet\n#### Deep heading is not a section\n- Added entry two\n\n  - Indented continuation after a blank line\ntrailing text that is ignored\n\n### Added\n- Second Added section wins\n\n### Notes\n### Empty section above\n\n## [2.0.0] - 2026-05-05\n\n### Changed\n- Two point oh change\n\n## [1.9.0]   \n\n### Fixed\n- Undated release with trailing spaces\n\n## [1.8.0] - 2026-04-04 [YANKED]\n\n### Removed\n- Yanked release\n"
+     },
+     "commit": "edge"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "nightly",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Added\n- Second Added section wins\n\n## Fixed\n- Fixed first, listed before Added\n- Duplicate entry\n\n## Accessibility\n- Screen reader label added\n"
+   }
+  },
+  {
+   "name": "crlf nightly",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\r\n\r\n## Unreleased\r\n\r\n### Fixed\r\n- Fixed first, listed before Added\r\n- Duplicate entry\r\n- Duplicate entry\r\n\r\n### Accessibility\r\n- Screen reader label added\r\n\r\n### Added\r\n- Added entry one\r\n* Starred line is not a bullet\r\n#### Deep heading is not a section\r\n- Added entry two\r\n\r\n  - Indented continuation after a blank line\r\ntrailing text that is ignored\r\n\r\n### Added\r\n- Second Added section wins\r\n\r\n### Notes\r\n### Empty section above\r\n\r\n## [2.0.0] - 2026-05-05\r\n\r\n### Changed\r\n- Two point oh change\r\n\r\n## [1.9.0]   \r\n\r\n### Fixed\r\n- Undated release with trailing spaces\r\n\r\n## [1.8.0] - 2026-04-04 [YANKED]\r\n\r\n### Removed\r\n- Yanked release\r\n"
+     },
+     "commit": "crlf"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "nightly",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Added\n- Second Added section wins\n\n## Fixed\n- Fixed first, listed before Added\n- Duplicate entry\n\n## Accessibility\n- Screen reader label added\n"
+   }
+  },
+  {
+   "name": "crlf stable",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\r\n\r\n## Unreleased\r\n\r\n### Fixed\r\n- Fixed first, listed before Added\r\n- Duplicate entry\r\n- Duplicate entry\r\n\r\n### Accessibility\r\n- Screen reader label added\r\n\r\n### Added\r\n- Added entry one\r\n* Starred line is not a bullet\r\n#### Deep heading is not a section\r\n- Added entry two\r\n\r\n  - Indented continuation after a blank line\r\ntrailing text that is ignored\r\n\r\n### Added\r\n- Second Added section wins\r\n\r\n### Notes\r\n### Empty section above\r\n\r\n## [2.0.0] - 2026-05-05\r\n\r\n### Changed\r\n- Two point oh change\r\n\r\n## [1.9.0]   \r\n\r\n### Fixed\r\n- Undated release with trailing spaces\r\n\r\n## [1.8.0] - 2026-04-04 [YANKED]\r\n\r\n### Removed\r\n- Yanked release\r\n"
+     },
+     "commit": "crlf"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "stable",
+    "--version",
+    "2.0.0",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Changed\n- Two point oh change\n"
+   }
+  },
+  {
+   "name": "empty unreleased nightly",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "empty"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "nightly",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "- No user-facing changes\n"
+   }
+  },
+  {
+   "name": "empty unreleased stable fallback",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "empty"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "stable",
+    "--version",
+    "0.2.0",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "- No user-facing changes\n"
+   }
+  },
+  {
+   "name": "nightly since tag",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "base",
+     "tag": "nightly-20260101"
+    },
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- first   FEATURE\n- Brand new thing – with an en dash\n- See [the docs](https://example.com/docs) for __details__\n\n### Fixed\n- A bug fix\n  that continues on the next line\n- Another fix with *emphasis* and _underscores_\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
+      "src/app.py": "x = 1\n"
+     },
+     "commit": "next"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "nightly",
+    "--previous-tag",
+    "nightly-20260101",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Added\n- Brand new thing – with an en dash\n- See [the docs](https://example.com/docs) for __details__\n\n## Fixed\n- Another fix with *emphasis* and _underscores_\n"
+   }
+  },
+  {
+   "name": "nightly since tag excluding previous notes",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "base",
+     "tag": "nightly-20260101"
+    },
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- first   FEATURE\n- Brand new thing – with an en dash\n- See [the docs](https://example.com/docs) for __details__\n\n### Fixed\n- A bug fix\n  that continues on the next line\n- Another fix with *emphasis* and _underscores_\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
+      "src/app.py": "x = 1\n"
+     },
+     "commit": "next"
+    }
+   ],
+   "worktree": {},
+   "aux": {
+    "prev.md": "## Fixed\n- ANOTHER fix with emphasis and underscores\n"
+   },
+   "args": [
+    "notes",
+    "--kind",
+    "nightly",
+    "--previous-tag",
+    "nightly-20260101",
+    "--exclude-notes",
+    "{aux}/prev.md",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Added\n- Brand new thing – with an en dash\n- See [the docs](https://example.com/docs) for __details__\n"
+   }
+  },
+  {
+   "name": "nightly since tag with missing exclude file",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "base",
+     "tag": "nightly-20260101"
+    },
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- first   FEATURE\n- Brand new thing – with an en dash\n- See [the docs](https://example.com/docs) for __details__\n\n### Fixed\n- A bug fix\n  that continues on the next line\n- Another fix with *emphasis* and _underscores_\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
+      "src/app.py": "x = 1\n"
+     },
+     "commit": "next"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "nightly",
+    "--previous-tag",
+    "nightly-20260101",
+    "--exclude-notes",
+    "{aux}/missing.md",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Added\n- Brand new thing – with an en dash\n- See [the docs](https://example.com/docs) for __details__\n\n## Fixed\n- Another fix with *emphasis* and _underscores_\n"
+   }
+  },
+  {
+   "name": "nightly since tag without a changelog",
+   "steps": [
+    {
+     "write": {
+      "README.md": "hi\n"
+     },
+     "commit": "readme",
+     "tag": "nightly-20260101"
+    },
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- first   FEATURE\n- Brand new thing – with an en dash\n- See [the docs](https://example.com/docs) for __details__\n\n### Fixed\n- A bug fix\n  that continues on the next line\n- Another fix with *emphasis* and _underscores_\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "changelog"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "notes",
+    "--kind",
+    "nightly",
+    "--previous-tag",
+    "nightly-20260101",
+    "--output",
+    "{aux}/notes.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Wrote release notes to {aux}/notes.md.\n",
+    "stderr": "",
+    "output": "## Added\n- first   FEATURE\n- Brand new thing – with an en dash\n- See [the docs](https://example.com/docs) for __details__\n\n## Fixed\n- A bug fix\n  that continues on the next line\n- Another fix with *emphasis* and _underscores_\n"
+   }
+  },
+  {
+   "name": "no previous nightly",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "base",
+     "tag": "nightly-20260101"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "should-build-nightly"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "should_build=true\n",
+    "stderr": "No previous nightly tag found; building once.\n",
+    "output": null
+   }
+  },
+  {
+   "name": "nothing new",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "base",
+     "tag": "nightly-20260101"
+    },
+    {
+     "write": {
+      "src/app.py": "x = 1\n"
+     },
+     "commit": "internal change"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "should-build-nightly",
+    "--previous-tag",
+    "nightly-20260101"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "should_build=false\n",
+    "stderr": "No new curated changelog entries or nightly build marker found.\n",
+    "output": null
+   }
+  },
+  {
+   "name": "new curated entry",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "base",
+     "tag": "nightly-20260101"
+    },
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- first   FEATURE\n- Brand new thing – with an en dash\n- See [the docs](https://example.com/docs) for __details__\n\n### Fixed\n- A bug fix\n  that continues on the next line\n- Another fix with *emphasis* and _underscores_\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "feat: things"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "should-build-nightly",
+    "--previous-tag",
+    "nightly-20260101"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "should_build=true\n",
+    "stderr": "New curated changelog entries found for nightly build.\n",
+    "output": null
+   }
+  },
+  {
+   "name": "nightly marker",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "base",
+     "tag": "nightly-20260101"
+    },
+    {
+     "write": {
+      "src/app.py": "x = 2\n"
+     },
+     "commit": "fix: packaged thing\n\nNightly: build"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "should-build-nightly",
+    "--previous-tag",
+    "nightly-20260101"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "should_build=true\n",
+    "stderr": "Nightly build requested by commit marker.\n",
+    "output": null
+   }
+  },
+  {
+   "name": "bracket marker any case",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "base",
+     "tag": "nightly-20260101"
+    },
+    {
+     "write": {
+      "src/app.py": "x = 3\n"
+     },
+     "commit": "fix: thing [Nightly Build]"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "should-build-nightly",
+    "--previous-tag",
+    "nightly-20260101"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "should_build=true\n",
+    "stderr": "Nightly build requested by commit marker.\n",
+    "output": null
+   }
+  },
+  {
+   "name": "stable release contains head",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "base",
+     "tag": "nightly-20260101"
+    },
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- first   FEATURE\n- Brand new thing – with an en dash\n- See [the docs](https://example.com/docs) for __details__\n\n### Fixed\n- A bug fix\n  that continues on the next line\n- Another fix with *emphasis* and _underscores_\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "feat",
+     "tag": "v0.2.0"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "should-build-nightly",
+    "--previous-tag",
+    "nightly-20260101",
+    "--latest-stable-tag",
+    "v0.2.0"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "should_build=false\n",
+    "stderr": "Latest stable release already contains this commit.\n",
+    "output": null
+   }
+  },
+  {
+   "name": "baseline moves to stable",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "base",
+     "tag": "nightly-20260101"
+    },
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- first   FEATURE\n- Brand new thing – with an en dash\n- See [the docs](https://example.com/docs) for __details__\n\n### Fixed\n- A bug fix\n  that continues on the next line\n- Another fix with *emphasis* and _underscores_\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "feat",
+     "tag": "v0.2.0"
+    },
+    {
+     "write": {
+      "src/app.py": "x = 4\n"
+     },
+     "commit": "internal"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "should-build-nightly",
+    "--previous-tag",
+    "nightly-20260101",
+    "--latest-stable-tag",
+    "v0.2.0"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "should_build=false\n",
+    "stderr": "No new curated changelog entries or nightly build marker found.\n",
+    "output": null
+   }
+  },
+  {
+   "name": "new entry after stable",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "base",
+     "tag": "nightly-20260101"
+    },
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "noop",
+     "tag": "v0.2.0"
+    },
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- first   FEATURE\n- Brand new thing – with an en dash\n- See [the docs](https://example.com/docs) for __details__\n\n### Fixed\n- A bug fix\n  that continues on the next line\n- Another fix with *emphasis* and _underscores_\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "feat"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "should-build-nightly",
+    "--previous-tag",
+    "nightly-20260101",
+    "--latest-stable-tag",
+    "v0.2.0"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "should_build=true\n",
+    "stderr": "New curated changelog entries found for nightly build.\n",
+    "output": null
+   }
+  },
+  {
+   "name": "stable not descended from nightly",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "root",
+     "tag": "v0.1.0"
+    },
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
+      "a.txt": "a\n"
+     },
+     "commit": "nightly",
+     "tag": "nightly-20260101"
+    },
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- first   FEATURE\n- Brand new thing – with an en dash\n- See [the docs](https://example.com/docs) for __details__\n\n### Fixed\n- A bug fix\n  that continues on the next line\n- Another fix with *emphasis* and _underscores_\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "feat"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "should-build-nightly",
+    "--previous-tag",
+    "nightly-20260101",
+    "--latest-stable-tag",
+    "v0.1.0"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "should_build=true\n",
+    "stderr": "New curated changelog entries found for nightly build.\n",
+    "output": null
+   }
+  },
+  {
+   "name": "entries already in previous nightly notes",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "base",
+     "tag": "nightly-20260101"
+    },
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- first   FEATURE\n- Brand new thing – with an en dash\n- See [the docs](https://example.com/docs) for __details__\n\n### Fixed\n- A bug fix\n  that continues on the next line\n- Another fix with *emphasis* and _underscores_\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "feat"
+    }
+   ],
+   "worktree": {},
+   "aux": {
+    "prev.md": "## Added\n- Brand new thing - with an en dash\n- See the docs for details\n\n## Fixed\n- Another fix with emphasis and underscores\n"
+   },
+   "args": [
+    "should-build-nightly",
+    "--previous-tag",
+    "nightly-20260101",
+    "--exclude-notes",
+    "{aux}/prev.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "should_build=false\n",
+    "stderr": "No new curated changelog entries or nightly build marker found.\n",
+    "output": null
+   }
+  },
+  {
+   "name": "entries already in stable notes",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "base",
+     "tag": "nightly-20260101"
+    },
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- first   FEATURE\n- Brand new thing – with an en dash\n- See [the docs](https://example.com/docs) for __details__\n\n### Fixed\n- A bug fix\n  that continues on the next line\n- Another fix with *emphasis* and _underscores_\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "feat"
+    }
+   ],
+   "worktree": {},
+   "aux": {
+    "stable.md": "## Added\n- Brand new thing – with an en dash\n- See [the docs](x) for details\n\n## Fixed\n- Another fix with *emphasis* and _underscores_\n"
+   },
+   "args": [
+    "should-build-nightly",
+    "--previous-tag",
+    "nightly-20260101",
+    "--exclude-stable-notes",
+    "{aux}/stable.md"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "should_build=false\n",
+    "stderr": "No new curated changelog entries or nightly build marker found.\n",
+    "output": null
+   }
+  },
+  {
+   "name": "docs only",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
+      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
+      "src/app.py": "x = 0\n"
+     },
+     "commit": "base",
+     "tag": "base"
+    },
+    {
+     "write": {
+      "docs/a.md": "a\n"
+     },
+     "commit": "docs"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "check",
+    "--base",
+    "base"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "No user-facing paths changed.\n",
+    "stderr": "",
+    "output": null
+   }
+  },
+  {
+   "name": "source without changelog",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
+      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
+      "src/app.py": "x = 0\n"
+     },
+     "commit": "base",
+     "tag": "base"
+    },
+    {
+     "write": {
+      "src/app.py": "x = 1\n",
+      "src/b.py": "b\n"
+     },
+     "commit": "feat"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "check",
+    "--base",
+    "base"
+   ],
+   "expected": {
+    "code": 1,
+    "stdout": "",
+    "stderr": "User-facing paths changed without updating CHANGELOG.md:\n- src/app.py\n- src/b.py\n",
+    "output": null
+   }
+  },
+  {
+   "name": "source with new bullet",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
+      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
+      "src/app.py": "x = 0\n"
+     },
+     "commit": "base",
+     "tag": "base"
+    },
+    {
+     "write": {
+      "src/app.py": "x = 1\n",
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- first   FEATURE\n- Brand new thing – with an en dash\n- See [the docs](https://example.com/docs) for __details__\n\n### Fixed\n- A bug fix\n  that continues on the next line\n- Another fix with *emphasis* and _underscores_\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "feat"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "check",
+    "--base",
+    "base"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Found CHANGELOG.md Unreleased entries for user-facing changes.\n",
+    "stderr": "",
+    "output": null
+   }
+  },
+  {
+   "name": "changelog reworded only",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
+      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
+      "src/app.py": "x = 0\n"
+     },
+     "commit": "base",
+     "tag": "base"
+    },
+    {
+     "write": {
+      "src/app.py": "x = 1\n",
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- **First** feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "feat"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "check",
+    "--base",
+    "base"
+   ],
+   "expected": {
+    "code": 1,
+    "stdout": "",
+    "stderr": "CHANGELOG.md changed, but no new bullet was added under ## [Unreleased].\n",
+    "output": null
+   }
+  },
+  {
+   "name": "all commits opt out",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
+      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
+      "src/app.py": "x = 0\n"
+     },
+     "commit": "base",
+     "tag": "base"
+    },
+    {
+     "write": {
+      "src/app.py": "x = 1\n"
+     },
+     "commit": "refactor: a\n\nChangelog: none"
+    },
+    {
+     "write": {
+      "src/app.py": "x = 2\n"
+     },
+     "commit": "refactor: b [skip changelog]"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "check",
+    "--base",
+    "base"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "All commits opt out of the changelog gate via a skip marker.\n",
+    "stderr": "",
+    "output": null
+   }
+  },
+  {
+   "name": "one commit opts out",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
+      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
+      "src/app.py": "x = 0\n"
+     },
+     "commit": "base",
+     "tag": "base"
+    },
+    {
+     "write": {
+      "src/app.py": "x = 1\n"
+     },
+     "commit": "refactor: a\n\nChangelog: none"
+    },
+    {
+     "write": {
+      "src/app.py": "x = 2\n"
+     },
+     "commit": "feat: b"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "check",
+    "--base",
+    "base"
+   ],
+   "expected": {
+    "code": 1,
+    "stdout": "",
+    "stderr": "User-facing paths changed without updating CHANGELOG.md:\n- src/app.py\n",
+    "output": null
+   }
+  },
+  {
+   "name": "pyproject version bump",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
+      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
+      "src/app.py": "x = 0\n"
+     },
+     "commit": "base",
+     "tag": "base"
+    },
+    {
+     "write": {
+      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.2.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n"
+     },
+     "commit": "bump"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "check",
+    "--base",
+    "base"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "No user-facing paths changed.\n",
+    "stderr": "",
+    "output": null
+   }
+  },
+  {
+   "name": "pyproject ruff bump",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
+      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
+      "src/app.py": "x = 0\n"
+     },
+     "commit": "base",
+     "tag": "base"
+    },
+    {
+     "write": {
+      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.1\",\n]\n"
+     },
+     "commit": "ruff"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "check",
+    "--base",
+    "base"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "No user-facing paths changed.\n",
+    "stderr": "",
+    "output": null
+   }
+  },
+  {
+   "name": "pyproject new dependency",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
+      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
+      "src/app.py": "x = 0\n"
+     },
+     "commit": "base",
+     "tag": "base"
+    },
+    {
+     "write": {
+      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n    \"rich>=13\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n"
+     },
+     "commit": "deps"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "check",
+    "--base",
+    "base"
+   ],
+   "expected": {
+    "code": 1,
+    "stdout": "",
+    "stderr": "User-facing paths changed without updating CHANGELOG.md:\n- pyproject.toml\n",
+    "output": null
+   }
+  },
+  {
+   "name": "release cut",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
+      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
+      "src/app.py": "x = 0\n"
+     },
+     "commit": "base",
+     "tag": "base"
+    },
+    {
+     "write": {
+      "src/app.py": "x = 1\n",
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n## [0.2.0] - 2026-02-01\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "release 0.2.0"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "check",
+    "--base",
+    "base"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Found CHANGELOG.md Unreleased entries for user-facing changes.\n",
+    "stderr": "",
+    "output": null
+   }
+  },
+  {
+   "name": "generated client only",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
+      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
+      "src/app.py": "x = 0\n"
+     },
+     "commit": "base",
+     "tag": "base"
+    },
+    {
+     "write": {
+      "src/accessiweather/weather_gov_api_client/models.py": "m\n"
+     },
+     "commit": "regen"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "check",
+    "--base",
+    "base"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "No user-facing paths changed.\n",
+    "stderr": "",
+    "output": null
+   }
+  },
+  {
+   "name": "installer and spec files",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
+      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
+      "src/app.py": "x = 0\n"
+     },
+     "commit": "base",
+     "tag": "base"
+    },
+    {
+     "write": {
+      "installer/x.iss": "i\n",
+      "tools/app.spec": "s\n"
+     },
+     "commit": "build"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "check",
+    "--base",
+    "base"
+   ],
+   "expected": {
+    "code": 1,
+    "stdout": "",
+    "stderr": "User-facing paths changed without updating CHANGELOG.md:\n- installer/x.iss\n- tools/app.spec\n",
+    "output": null
+   }
+  },
+  {
+   "name": "dirty worktree without changelog",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
+      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
+      "src/app.py": "x = 0\n"
+     },
+     "commit": "base",
+     "tag": "base"
+    }
+   ],
+   "worktree": {
+    "src/app.py": "x = 9\n",
+    "src/new.py": "n\n"
+   },
+   "aux": {},
+   "args": [
+    "check",
+    "--base",
+    "base"
+   ],
+   "expected": {
+    "code": 1,
+    "stdout": "",
+    "stderr": "User-facing paths changed without updating CHANGELOG.md:\n- src/app.py\n- src/new.py\n",
+    "output": null
+   }
+  },
+  {
+   "name": "dirty worktree with changelog",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
+      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
+      "src/app.py": "x = 0\n"
+     },
+     "commit": "base",
+     "tag": "base"
+    }
+   ],
+   "worktree": {
+    "src/app.py": "x = 9\n",
+    "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- first   FEATURE\n- Brand new thing – with an en dash\n- See [the docs](https://example.com/docs) for __details__\n\n### Fixed\n- A bug fix\n  that continues on the next line\n- Another fix with *emphasis* and _underscores_\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+   },
+   "aux": {},
+   "args": [
+    "check",
+    "--base",
+    "base"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Found CHANGELOG.md Unreleased entries for user-facing changes.\n",
+    "stderr": "",
+    "output": null
+   }
+  },
+  {
+   "name": "committed only ignores worktree",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
+      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
+      "src/app.py": "x = 0\n"
+     },
+     "commit": "base",
+     "tag": "base"
+    },
+    {
+     "write": {
+      "docs/a.md": "a\n"
+     },
+     "commit": "docs"
+    }
+   ],
+   "worktree": {
+    "src/app.py": "x = 9\n"
+   },
+   "aux": {},
+   "args": [
+    "check",
+    "--base",
+    "base",
+    "--committed-only"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "No user-facing paths changed.\n",
+    "stderr": "",
+    "output": null
+   }
+  },
+  {
+   "name": "worktree change defeats opt-out",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
+      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
+      "src/app.py": "x = 0\n"
+     },
+     "commit": "base",
+     "tag": "base"
+    },
+    {
+     "write": {
+      "src/app.py": "x = 1\n"
+     },
+     "commit": "refactor\n\nChangelog: none"
+    }
+   ],
+   "worktree": {
+    "src/other.py": "o\n"
+   },
+   "aux": {},
+   "args": [
+    "check",
+    "--base",
+    "base"
+   ],
+   "expected": {
+    "code": 1,
+    "stdout": "",
+    "stderr": "User-facing paths changed without updating CHANGELOG.md:\n- src/app.py\n- src/other.py\n",
+    "output": null
+   }
+  },
+  {
+   "name": "explicit head skips worktree",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
+      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
+      "src/app.py": "x = 0\n"
+     },
+     "commit": "base",
+     "tag": "base"
+    },
+    {
+     "write": {
+      "src/app.py": "x = 1\n",
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- first   FEATURE\n- Brand new thing – with an en dash\n- See [the docs](https://example.com/docs) for __details__\n\n### Fixed\n- A bug fix\n  that continues on the next line\n- Another fix with *emphasis* and _underscores_\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
+     },
+     "commit": "feat",
+     "tag": "tip"
+    }
+   ],
+   "worktree": {
+    "src/app.py": "x = 9\n"
+   },
+   "aux": {},
+   "args": [
+    "check",
+    "--base",
+    "base",
+    "--head",
+    "tip"
+   ],
+   "expected": {
+    "code": 0,
+    "stdout": "Found CHANGELOG.md Unreleased entries for user-facing changes.\n",
+    "stderr": "",
+    "output": null
+   }
+  },
+  {
+   "name": "auto base on a feature branch",
+   "steps": [
+    {
+     "write": {
+      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
+      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
+      "src/app.py": "x = 0\n"
+     },
+     "commit": "base",
+     "tag": "base"
+    },
+    {
+     "write": {},
+     "branch": "feature",
+     "refs": {
+      "refs/remotes/origin/dev": "base"
+     }
+    },
+    {
+     "write": {
+      "src/app.py": "x = 1\n"
+     },
+     "commit": "feat"
+    }
+   ],
+   "worktree": {},
+   "aux": {},
+   "args": [
+    "check",
+    "--base",
+    "auto"
+   ],
+   "expected": {
+    "code": 1,
+    "stdout": "",
+    "stderr": "User-facing paths changed without updating CHANGELOG.md:\n- src/app.py\n",
+    "output": null
+   }
+  }
+ ]
+}

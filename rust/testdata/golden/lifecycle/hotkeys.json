@@ -1,0 +1,426 @@
+[
+  {
+    "combo": "Ctrl+Alt+Shift+R",
+    "parse": {
+      "ok": [
+        7,
+        82
+      ]
+    },
+    "normalize": {
+      "ok": "Ctrl+Alt+Shift+R"
+    },
+    "setting": "Ctrl+Alt+Shift+R"
+  },
+  {
+    "combo": "ctrl+alt+shift+r",
+    "parse": {
+      "ok": [
+        7,
+        82
+      ]
+    },
+    "normalize": {
+      "ok": "Ctrl+Alt+Shift+R"
+    },
+    "setting": "Ctrl+Alt+Shift+R"
+  },
+  {
+    "combo": " Control + Alt + R ",
+    "parse": {
+      "ok": [
+        3,
+        82
+      ]
+    },
+    "normalize": {
+      "ok": "Ctrl+Alt+R"
+    },
+    "setting": "Ctrl+Alt+R"
+  },
+  {
+    "combo": "shift+ctrl+w",
+    "parse": {
+      "ok": [
+        6,
+        87
+      ]
+    },
+    "normalize": {
+      "ok": "Ctrl+Shift+W"
+    },
+    "setting": "Ctrl+Shift+W"
+  },
+  {
+    "combo": "Win+Alt+R",
+    "parse": {
+      "ok": [
+        9,
+        82
+      ]
+    },
+    "normalize": {
+      "ok": "Alt+Win+R"
+    },
+    "setting": "Alt+Win+R"
+  },
+  {
+    "combo": "super+F5",
+    "parse": {
+      "ok": [
+        8,
+        344
+      ]
+    },
+    "normalize": {
+      "ok": "Win+F5"
+    },
+    "setting": "Win+F5"
+  },
+  {
+    "combo": "cmd+command+x",
+    "parse": {
+      "ok": [
+        8,
+        88
+      ]
+    },
+    "normalize": {
+      "ok": "Win+X"
+    },
+    "setting": "Win+X"
+  },
+  {
+    "combo": "Ctrl+Ctrl+R",
+    "parse": {
+      "ok": [
+        2,
+        82
+      ]
+    },
+    "normalize": {
+      "ok": "Ctrl+R"
+    },
+    "setting": "Ctrl+R"
+  },
+  {
+    "combo": "Ctrl+F1",
+    "parse": {
+      "ok": [
+        2,
+        340
+      ]
+    },
+    "normalize": {
+      "ok": "Ctrl+F1"
+    },
+    "setting": "Ctrl+F1"
+  },
+  {
+    "combo": "Ctrl+F24",
+    "parse": {
+      "ok": [
+        2,
+        363
+      ]
+    },
+    "normalize": {
+      "ok": "Ctrl+F24"
+    },
+    "setting": "Ctrl+F24"
+  },
+  {
+    "combo": "Ctrl+F25",
+    "parse": {
+      "error": "Unsupported key 'F25' in hotkey 'Ctrl+F25'"
+    },
+    "normalize": {
+      "error": "Unsupported key 'F25' in hotkey 'Ctrl+F25'"
+    },
+    "setting": "Ctrl+Alt+Shift+R"
+  },
+  {
+    "combo": "Ctrl+F0",
+    "parse": {
+      "error": "Unsupported key 'F0' in hotkey 'Ctrl+F0'"
+    },
+    "normalize": {
+      "error": "Unsupported key 'F0' in hotkey 'Ctrl+F0'"
+    },
+    "setting": "Ctrl+Alt+Shift+R"
+  },
+  {
+    "combo": "Ctrl+F01",
+    "parse": {
+      "ok": [
+        2,
+        340
+      ]
+    },
+    "normalize": {
+      "ok": "Ctrl+F1"
+    },
+    "setting": "Ctrl+F1"
+  },
+  {
+    "combo": "Ctrl+f12",
+    "parse": {
+      "ok": [
+        2,
+        351
+      ]
+    },
+    "normalize": {
+      "ok": "Ctrl+F12"
+    },
+    "setting": "Ctrl+F12"
+  },
+  {
+    "combo": "Alt+F",
+    "parse": {
+      "ok": [
+        1,
+        70
+      ]
+    },
+    "normalize": {
+      "ok": "Alt+F"
+    },
+    "setting": "Alt+F"
+  },
+  {
+    "combo": "Alt+Fx",
+    "parse": {
+      "error": "Unsupported key 'Fx' in hotkey 'Alt+Fx'"
+    },
+    "normalize": {
+      "error": "Unsupported key 'Fx' in hotkey 'Alt+Fx'"
+    },
+    "setting": "Ctrl+Alt+Shift+R"
+  },
+  {
+    "combo": "Ctrl+1",
+    "parse": {
+      "ok": [
+        2,
+        49
+      ]
+    },
+    "normalize": {
+      "ok": "Ctrl+1"
+    },
+    "setting": "Ctrl+1"
+  },
+  {
+    "combo": "Ctrl+é",
+    "parse": {
+      "ok": [
+        2,
+        201
+      ]
+    },
+    "normalize": {
+      "ok": "Ctrl+É"
+    },
+    "setting": "Ctrl+É"
+  },
+  {
+    "combo": "Ctrl+Space",
+    "parse": {
+      "error": "Unsupported key 'Space' in hotkey 'Ctrl+Space'"
+    },
+    "normalize": {
+      "error": "Unsupported key 'Space' in hotkey 'Ctrl+Space'"
+    },
+    "setting": "Ctrl+Alt+Shift+R"
+  },
+  {
+    "combo": "Ctrl+Escape",
+    "parse": {
+      "error": "Unsupported key 'Escape' in hotkey 'Ctrl+Escape'"
+    },
+    "normalize": {
+      "error": "Unsupported key 'Escape' in hotkey 'Ctrl+Escape'"
+    },
+    "setting": "Ctrl+Alt+Shift+R"
+  },
+  {
+    "combo": "Ctrl+Tab",
+    "parse": {
+      "error": "Unsupported key 'Tab' in hotkey 'Ctrl+Tab'"
+    },
+    "normalize": {
+      "error": "Unsupported key 'Tab' in hotkey 'Ctrl+Tab'"
+    },
+    "setting": "Ctrl+Alt+Shift+R"
+  },
+  {
+    "combo": "R",
+    "parse": {
+      "error": "Hotkey must be modifiers plus a key, got 'R'"
+    },
+    "normalize": {
+      "error": "Hotkey must be modifiers plus a key, got 'R'"
+    },
+    "setting": "Ctrl+Alt+Shift+R"
+  },
+  {
+    "combo": "",
+    "parse": {
+      "error": "Hotkey must be modifiers plus a key, got ''"
+    },
+    "normalize": {
+      "error": "Hotkey must be modifiers plus a key, got ''"
+    },
+    "setting": ""
+  },
+  {
+    "combo": "   ",
+    "parse": {
+      "error": "Hotkey must be modifiers plus a key, got '   '"
+    },
+    "normalize": {
+      "error": "Hotkey must be modifiers plus a key, got '   '"
+    },
+    "setting": ""
+  },
+  {
+    "combo": "+",
+    "parse": {
+      "error": "Hotkey must be modifiers plus a key, got '+'"
+    },
+    "normalize": {
+      "error": "Hotkey must be modifiers plus a key, got '+'"
+    },
+    "setting": "Ctrl+Alt+Shift+R"
+  },
+  {
+    "combo": "Ctrl+",
+    "parse": {
+      "error": "Hotkey must be modifiers plus a key, got 'Ctrl+'"
+    },
+    "normalize": {
+      "error": "Hotkey must be modifiers plus a key, got 'Ctrl+'"
+    },
+    "setting": "Ctrl+Alt+Shift+R"
+  },
+  {
+    "combo": "+R",
+    "parse": {
+      "error": "Hotkey must be modifiers plus a key, got '+R'"
+    },
+    "normalize": {
+      "error": "Hotkey must be modifiers plus a key, got '+R'"
+    },
+    "setting": "Ctrl+Alt+Shift+R"
+  },
+  {
+    "combo": "Ctrl++",
+    "parse": {
+      "error": "Hotkey must be modifiers plus a key, got 'Ctrl++'"
+    },
+    "normalize": {
+      "error": "Hotkey must be modifiers plus a key, got 'Ctrl++'"
+    },
+    "setting": "Ctrl+Alt+Shift+R"
+  },
+  {
+    "combo": "Meta+R",
+    "parse": {
+      "error": "Unknown modifier 'Meta' in hotkey 'Meta+R'"
+    },
+    "normalize": {
+      "error": "Unknown modifier 'Meta' in hotkey 'Meta+R'"
+    },
+    "setting": "Ctrl+Alt+Shift+R"
+  },
+  {
+    "combo": "Option+R",
+    "parse": {
+      "error": "Unknown modifier 'Option' in hotkey 'Option+R'"
+    },
+    "normalize": {
+      "error": "Unknown modifier 'Option' in hotkey 'Option+R'"
+    },
+    "setting": "Ctrl+Alt+Shift+R"
+  },
+  {
+    "combo": "Ctrl+Alt+Shift+W",
+    "parse": {
+      "ok": [
+        7,
+        87
+      ]
+    },
+    "normalize": {
+      "ok": "Ctrl+Alt+Shift+W"
+    },
+    "setting": "Ctrl+Alt+Shift+W"
+  },
+  {
+    "combo": "Ctrl + Shift + I",
+    "parse": {
+      "ok": [
+        6,
+        73
+      ]
+    },
+    "normalize": {
+      "ok": "Ctrl+Shift+I"
+    },
+    "setting": "Ctrl+Shift+I"
+  },
+  {
+    "combo": "Ctrl+RR",
+    "parse": {
+      "error": "Unsupported key 'RR' in hotkey 'Ctrl+RR'"
+    },
+    "normalize": {
+      "error": "Unsupported key 'RR' in hotkey 'Ctrl+RR'"
+    },
+    "setting": "Ctrl+Alt+Shift+R"
+  },
+  {
+    "combo": "Ctrl+?",
+    "parse": {
+      "error": "Unsupported key '?' in hotkey 'Ctrl+?'"
+    },
+    "normalize": {
+      "error": "Unsupported key '?' in hotkey 'Ctrl+?'"
+    },
+    "setting": "Ctrl+Alt+Shift+R"
+  },
+  {
+    "combo": "Alt+F4",
+    "parse": {
+      "ok": [
+        1,
+        343
+      ]
+    },
+    "normalize": {
+      "ok": "Alt+F4"
+    },
+    "setting": "Alt+F4"
+  },
+  {
+    "combo": "Ctrl+ß",
+    "parse": {
+      "error": "Unsupported key 'ß' in hotkey 'Ctrl+ß'"
+    },
+    "normalize": {
+      "error": "Unsupported key 'ß' in hotkey 'Ctrl+ß'"
+    },
+    "setting": "Ctrl+Alt+Shift+R"
+  },
+  {
+    "combo": "Shift+F99999999999",
+    "parse": {
+      "error": "Unsupported key 'F99999999999' in hotkey 'Shift+F99999999999'"
+    },
+    "normalize": {
+      "error": "Unsupported key 'F99999999999' in hotkey 'Shift+F99999999999'"
+    },
+    "setting": "Ctrl+Alt+Shift+R"
+  }
+]

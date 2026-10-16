@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from .ai_explainer_models import (
+    MODEL_REFUSAL_MESSAGE,
     AIExplainerError,
     EmptyResponseError,
     ExplanationResult,
@@ -21,12 +22,14 @@ from .ai_explainer_models import (
     InvalidAPIKeyError,
     InvalidModelError,
     NetworkError,
+    ProviderPermissionError,
     RateLimitError,
     RequestTimeoutError,
     TextProductType,
     WeatherContext,
+    is_model_refusal,
 )
-from .ai_explainer_openrouter import DEFAULT_FREE_MODEL, get_available_free_models
+from .ai_explainer_openrouter import DEFAULT_FREE_MODEL
 from .ai_explainer_openrouter_client import AIExplainerOpenRouterMixin
 from .ai_explainer_prompting import AIExplainerPromptMixin
 from .ai_explainer_text_products import AIExplainerTextProductMixin
@@ -34,6 +37,7 @@ from .ai_explainer_validation import AIExplainerValidationMixin
 from .ai_provider import (
     DEFAULT_VENICE_MODEL,
     create_venice_client,
+    stream_chat_completion,
     venice_error,
     venice_request_options,
 )
@@ -57,7 +61,6 @@ __all__ = [
     "RequestTimeoutError",
     "TextProductType",
     "WeatherContext",
-    "get_available_free_models",
     "has_valid_api_key",
 ]
 
@@ -128,9 +131,10 @@ class AIExplainer(
         if self.provider == "openrouter":
             return self._call_openrouter(system_prompt, user_prompt, model_override)
         try:
-            if self._client is None:
+            if self._client is None or self._client.is_closed():
                 self._client = create_venice_client(self.api_key)
-            response = self._client.chat.completions.create(
+            result = stream_chat_completion(
+                self._client,
                 model=model_override or self.get_effective_model(),
                 messages=[
                     {"role": "system", "content": system_prompt},
@@ -139,14 +143,9 @@ class AIExplainer(
                 max_tokens=4000,
                 **venice_request_options(),
             )
-            usage = response.usage
-            return {
-                "content": (response.choices[0].message.content or "") if response.choices else "",
-                "model": response.model or self.get_effective_model(),
-                "total_tokens": usage.total_tokens if usage else 0,
-                "prompt_tokens": usage.prompt_tokens if usage else 0,
-                "completion_tokens": usage.completion_tokens if usage else 0,
-            }
+            del result["finish_reason"]
+            result["model"] = result["model"] or self.get_effective_model()
+            return result
         except Exception as error:
             raise venice_error(error) from None
 
@@ -181,7 +180,7 @@ class AIExplainer(
         import asyncio
 
         # Check cache first
-        cache_key = self._generate_cache_key(weather_data, location_name)
+        cache_key = self._generate_cache_key(weather_data, location_name, style, preserve_markdown)
         if self.cache:
             cached_result = self.cache.get(cache_key)
             if cached_result:
@@ -225,6 +224,10 @@ class AIExplainer(
 
                 # Check if we got actual content (minimum 20 chars for meaningful response)
                 content = response["content"]
+                if is_model_refusal(content):
+                    last_error = AIExplainerError(MODEL_REFUSAL_MESSAGE)
+                    response = None
+                    continue
                 if content and len(content.strip()) >= 20:
                     logger.info(f"Got valid response from model: {model}")
                     break
@@ -248,7 +251,11 @@ class AIExplainer(
 
             except Exception as e:
                 last_error = e
-                logger.warning(f"Model {model} failed: {e}, trying fallback...")
+                if isinstance(
+                    e, InvalidAPIKeyError | ProviderPermissionError | InsufficientCreditsError
+                ):
+                    raise
+                logger.warning("Model attempt failed (%s)", type(e).__name__)
                 if attempt_index + 1 < len(models_to_try):
                     reason = self._describe_generation_error(e)
                     self._notify_generation_status(
@@ -263,7 +270,9 @@ class AIExplainer(
             if last_error:
                 if self.provider == "venice":
                     raise last_error
-                logger.error(f"All models failed. Last error: {last_error}", exc_info=True)
+                logger.error("All attempted models failed")
+                if isinstance(last_error, AIExplainerError):
+                    raise last_error
                 # Convert common errors to specific exceptions
                 error_message = str(last_error).lower()
 
@@ -271,7 +280,7 @@ class AIExplainer(
                 if "api key" in error_message or "api_key" in error_message:
                     raise InvalidAPIKeyError(
                         "OpenRouter API key is required.\n\n"
-                        "Please add your API key in Settings → AI Explanations.\n"
+                        "Please add your API key in Settings > AI.\n"
                         "Get a free key at: openrouter.ai/keys"
                     ) from last_error
 
@@ -285,7 +294,7 @@ class AIExplainer(
                     raise InvalidModelError(
                         f"The AI model '{primary_model}' was not found.\n\n"
                         "It may have been removed or renamed by OpenRouter.\n"
-                        "Please go to Settings → AI Explanations and select a different model."
+                        "Please go to Settings > AI and select a different model."
                     ) from last_error
 
                 # Rate limiting

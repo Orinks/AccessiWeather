@@ -1,0 +1,346 @@
+{
+ "query": "xyznonexistentlocation12345",
+ "limit": 5,
+ "exchanges": [
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?name=xyznonexistentlocation12345&count=5&language=en&format=json",
+   "headers": {},
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyznonexistentlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=x%C3%BDznonexistentlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=x%C3%BFznonexistentlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyz%C3%B1onexistentlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyzn%C3%B3nexistentlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyzn%C3%B2nexistentlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyzn%C3%B4nexistentlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyzn%C3%B5nexistentlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyzn%C3%B6nexistentlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyzn%C3%B8nexistentlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyzno%C3%B1existentlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyznon%C3%A9xistentlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyznon%C3%A8xistentlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyznon%C3%AAxistentlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyznon%C3%ABxistentlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyznonex%C3%ADstentlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyznonex%C3%ACstentlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyznonex%C3%AEstentlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyznonex%C3%AFstentlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyznonexi%C3%9Ftentlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyznonexist%C3%A9ntlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyznonexist%C3%A8ntlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyznonexist%C3%AAntlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyznonexist%C3%ABntlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyznonexiste%C3%B1tlocation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyznonexistentl%C3%B3cation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyznonexistentl%C3%B2cation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyznonexistentl%C3%B4cation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyznonexistentl%C3%B5cation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyznonexistentl%C3%B6cation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyznonexistentl%C3%B8cation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyznonexistentlo%C3%A7ation12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=xyznonexistentloc%C3%A1tion12345",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  }
+ ],
+ "output": [],
+ "error": false
+}

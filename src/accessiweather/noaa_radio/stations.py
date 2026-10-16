@@ -15,6 +15,8 @@ class Station:
         lat: Latitude in decimal degrees.
         lon: Longitude in decimal degrees.
         state: US state abbreviation.
+        status: Operational status reported by the station directory
+            (e.g. 'NORMAL' or 'OUT OF SERVICE'); empty when unknown.
 
     """
 
@@ -24,3 +26,9 @@ class Station:
     lat: float
     lon: float
     state: str
+    status: str = ""
+
+    @property
+    def is_out_of_service(self) -> bool:
+        """Return True when the directory reports the transmitter as out of service."""
+        return self.status.strip().upper() == "OUT OF SERVICE"

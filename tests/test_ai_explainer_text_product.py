@@ -119,10 +119,6 @@ class TestExplainTextProductPrompts:
         explainer = AIExplainer(api_key="test-key")
         with (
             patch.object(explainer, "_call_openrouter") as mock_call,
-            patch(
-                "accessiweather.ai_explainer_openrouter_client.get_available_free_models",
-                return_value=[],
-            ),
         ):
             mock_call.return_value = mock_response
 
@@ -193,10 +189,6 @@ class TestExplainTextProductModelProgress:
 
         with (
             patch.object(explainer, "_call_openrouter", side_effect=fake_call),
-            patch(
-                "accessiweather.ai_explainer_openrouter_client.get_available_free_models",
-                return_value=[backup_model],
-            ),
         ):
             result = await explainer.explain_text_product(
                 sample_cli_text,
@@ -228,10 +220,6 @@ class TestExplainTextProductModelProgress:
 
         with (
             patch.object(explainer, "_call_openrouter", side_effect=fake_call),
-            patch(
-                "accessiweather.ai_explainer_openrouter_client.get_available_free_models",
-                return_value=[backup_model],
-            ),
         ):
             result = await explainer.explain_text_product(
                 sample_cli_text,
@@ -261,10 +249,6 @@ class TestExplainTextProductModelProgress:
 
         with (
             patch.object(explainer, "_call_openrouter") as mock_call,
-            patch(
-                "accessiweather.ai_explainer_openrouter_client.get_available_free_models",
-                return_value=[],
-            ),
         ):
             mock_call.return_value = {**mock_response, "model": router_selected_model}
 

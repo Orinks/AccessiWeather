@@ -1,0 +1,601 @@
+{
+"taf": [
+{
+"raw": "",
+"decoded": "No TAF available."
+},
+{
+"raw": "TAF KJFK",
+"decoded": "TAF issued for station KJFK."
+},
+{
+"raw": "TAF KJFK NIL=",
+"decoded": "No TAF available for station KJFK."
+},
+{
+"raw": "TAF KORD 251130Z 2512/2618 27015G25KT P6SM FEW050 SCT250 FM251800 29012KT P6SM SKC FM260200 VRB03KT 5SM BR OVC008 TEMPO 2606/2610 1SM -DZ BR OVC004",
+"decoded": "Forecast for station KORD.\nIssued at 11:30 UTC on the 25th.\nValid from 12:00 UTC on the 25th until 18:00 UTC on the 26th.\nBase forecast: Winds from 270 degrees at 15 knots with gusts to 25 knots (27015G25KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: A few clouds at 5,000 feet (FEW050); Scattered clouds at 25,000 feet (SCT250).\nFrom 18:00 UTC on the 25th: Winds from 290 degrees at 12 knots (29012KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Sky clear (SKC).\nFrom 02:00 UTC on the 26th: Winds variable at 3 knots (VRB03KT). Visibility 5 statute miles (5 SM) (5SM). Weather: mist (BR). Clouds: Overcast at 800 feet (OVC008).\nTemporary between from 06:00 UTC on the 26th until 10:00 UTC on the 26th: Visibility 1 statute miles (1 SM) (1SM). Weather: light drizzle (-DZ); mist (BR). Clouds: Overcast at 400 feet (OVC004)."
+},
+{
+"raw": "TAF EGLL 251100Z 2512/2618 24012KT 9999 SCT030 BECMG 2515/2518 27008KT PROB30 TEMPO 2600/2606 3000 SHRA BKN014 PROB40 2612/2615 0800 FG",
+"decoded": "Forecast for station EGLL.\nIssued at 11:00 UTC on the 25th.\nValid from 12:00 UTC on the 25th until 18:00 UTC on the 26th.\nBase forecast: Winds from 240 degrees at 12 knots (24012KT). Visibility 10 kilometres or more (9999 meters). Clouds: Scattered clouds at 3,000 feet (SCT030).\nBecoming from 15:00 UTC on the 25th until 18:00 UTC on the 25th: Winds from 270 degrees at 8 knots (27008KT).\nProbability 30% of temporary conditions from 00:00 UTC on the 26th until 06:00 UTC on the 26th: Visibility 3.0 kilometres (3000 meters). Weather: showers of rain (SHRA). Clouds: Broken clouds at 1,400 feet (BKN014).\nProbability 40% from 12:00 UTC on the 26th until 15:00 UTC on the 26th: Visibility 0.8 kilometres (0800 meters). Weather: fog (FG)."
+},
+{
+"raw": "TAF LFPG 251100Z 2512/2618 36005MPS CAVOK TEMPO 2514/2518 VCTS FZUP BLSN +UP DRSA",
+"decoded": "Forecast for station LFPG.\nIssued at 11:00 UTC on the 25th.\nValid from 12:00 UTC on the 25th until 18:00 UTC on the 26th.\nBase forecast: Winds from 360 degrees at 5 meters per second (36005MPS). Clouds: Ceiling and visibility OK (CAVOK).\nTemporary between from 14:00 UTC on the 25th until 18:00 UTC on the 25th: Weather: In the vicinity, thunderstorms with (VCTS); freezing freezing precipitation (FZUP); blowing snow (BLSN); heavy unidentified precipitation (+UP); low drifting sand (DRSA)."
+},
+{
+"raw": "KSEA 021720Z 0218/0324 00000KT M1/4SM VV001 = RMK",
+"decoded": "Forecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Calm winds (00000KT). Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Clouds: Vertical visibility 100 feet (VV001)."
+},
+{
+"raw": "TAF CYYZ 251140Z 2512/2612 1 1/2SM 2 1/4SM OVC/// BKN020/// 3/0SM 1/2/3SM P",
+"decoded": "Forecast for station CYYZ.\nIssued at 11:40 UTC on the 25th.\nValid from 12:00 UTC on the 25th until 12:00 UTC on the 26th.\nBase forecast: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: Visibility 2 1/4 statute miles (2.25 SM) (2 1/4SM). Clouds: Overcast (OVC///); Broken clouds at 2,000 feet (BKN020///). Additional codes: 3/0SM 1/2/3SM P."
+},
+{
+"raw": "TAF KXYZ 251140Z FM2 BECMG TEMPOX PROB3 2512/2612 18005KMH 1800 ==",
+"decoded": "Forecast for station KXYZ.\nIssued at 11:40 UTC on the 25th.\nBase forecast: Additional codes: FM2.\nBecoming conditions: Winds from 180 degrees at 5 kilometres per hour (18005KMH). Visibility 1.8 kilometres (1800 meters). Weather: partial (PROB3). Additional codes: TEMPOX 2512/2612 ."
+},
+{
+"raw": "TAF KJFK 071730Z 0718/0824 21015KT P6SM SCT250",
+"decoded": "Forecast for station KJFK.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 210 degrees at 15 knots (21015KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 25,000 feet (SCT250)."
+},
+{
+"raw": "TAF AMD KJFK 071730Z 0718/0824 21015KT P6SM SCT250",
+"decoded": "Forecast for station KJFK.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 210 degrees at 15 knots (21015KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 25,000 feet (SCT250)."
+},
+{
+"raw": "TAF COR KJFK 071730Z 0718/0824 21015KT P6SM SCT250",
+"decoded": "Forecast for station KJFK.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 210 degrees at 15 knots (21015KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 25,000 feet (SCT250)."
+},
+{
+"raw": "TAF KJFK 071730Z 0718/0824 21015KT P6SM SCT250 FM072200 31010KT P6SM FEW250",
+"decoded": "Forecast for station KJFK.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 210 degrees at 15 knots (21015KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 25,000 feet (SCT250).\nFrom 22:00 UTC on the 7th: Winds from 310 degrees at 10 knots (31010KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: A few clouds at 25,000 feet (FEW250)."
+},
+{
+"raw": "TAF KJFK 071730Z 0718/0824 21015KT P6SM SCT250 TEMPO 0720/0724 3SM -RA",
+"decoded": "Forecast for station KJFK.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 210 degrees at 15 knots (21015KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 25,000 feet (SCT250).\nTemporary between from 20:00 UTC on the 7th until 24:00 UTC on the 7th: Visibility 3 statute miles (3 SM) (3SM). Weather: light rain (-RA)."
+},
+{
+"raw": "TAF KJFK 071730Z 0718/0824 21015KT P6SM SCT250 BECMG 0720/0722 BKN040",
+"decoded": "Forecast for station KJFK.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 210 degrees at 15 knots (21015KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 25,000 feet (SCT250).\nBecoming from 20:00 UTC on the 7th until 22:00 UTC on the 7th: Clouds: Broken clouds at 4,000 feet (BKN040)."
+},
+{
+"raw": "TAF KJFK 071730Z 0718/0824 21015KT P6SM SCT250 PROB30 0720/0724 1SM +TSRA",
+"decoded": "Forecast for station KJFK.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 210 degrees at 15 knots (21015KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 25,000 feet (SCT250).\nProbability 30% from 20:00 UTC on the 7th until 24:00 UTC on the 7th: Visibility 1 statute miles (1 SM) (1SM). Weather: heavy thunderstorms with rain (+TSRA)."
+},
+{
+"raw": "TAF KJFK 071730Z 0718/0824 21015KT P6SM SCT250 PROB40 TEMPO 0720/0724 1SM +TSRA",
+"decoded": "Forecast for station KJFK.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 210 degrees at 15 knots (21015KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 25,000 feet (SCT250).\nProbability 40% of temporary conditions from 20:00 UTC on the 7th until 24:00 UTC on the 7th: Visibility 1 statute miles (1 SM) (1SM). Weather: heavy thunderstorms with rain (+TSRA)."
+},
+{
+"raw": "TAF KJFK 071730Z 0718/0824 21015KT P6SM SCT250 RMK NXT FCST BY 08Z",
+"decoded": "Forecast for station KJFK.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 210 degrees at 15 knots (21015KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 25,000 feet (SCT250).\nRemarks: NXT FCST BY 08Z."
+},
+{
+"raw": "TAF EGLL 071730Z 0718/0824 27010KT CAVOK",
+"decoded": "Forecast for station EGLL.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 270 degrees at 10 knots (27010KT). Clouds: Ceiling and visibility OK (CAVOK)."
+},
+{
+"raw": "TAF KJFK 071730Z 0718/0824 21015KT P6SM NSW SCT250",
+"decoded": "Forecast for station KJFK.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 210 degrees at 15 knots (21015KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Weather: No significant weather (NSW). Clouds: Scattered clouds at 25,000 feet (SCT250)."
+},
+{
+"raw": "TAF KJFK 071730Z 0718/0824 21015KT P6SM SCT250=",
+"decoded": "Forecast for station KJFK.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 210 degrees at 15 knots (21015KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 25,000 feet (SCT250)."
+},
+{
+"raw": "TAF KJFK 071730Z 0718/0824\n        21015KT P6SM SCT250",
+"decoded": "Forecast for station KJFK.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 210 degrees at 15 knots (21015KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 25,000 feet (SCT250)."
+},
+{
+"raw": "TAF AMD KJFK 071730Z 0718/0824 21015G25KT P6SM SCT250 FM072200 31010KT P6SM FEW250 TEMPO 0720/0724 3SM -RA BKN020 BECMG 0802/0804 18005KT PROB30 0806/0810 1SM +TSRA OVC010CB RMK NXT FCST BY 08Z",
+"decoded": "Forecast for station KJFK.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 210 degrees at 15 knots with gusts to 25 knots (21015G25KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 25,000 feet (SCT250).\nFrom 22:00 UTC on the 7th: Winds from 310 degrees at 10 knots (31010KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: A few clouds at 25,000 feet (FEW250).\nTemporary between from 20:00 UTC on the 7th until 24:00 UTC on the 7th: Visibility 3 statute miles (3 SM) (3SM). Weather: light rain (-RA). Clouds: Broken clouds at 2,000 feet (BKN020).\nBecoming from 02:00 UTC on the 8th until 04:00 UTC on the 8th: Winds from 180 degrees at 5 knots (18005KT).\nProbability 30% from 06:00 UTC on the 8th until 10:00 UTC on the 8th: Visibility 1 statute miles (1 SM) (1SM). Weather: heavy thunderstorms with rain (+TSRA). Clouds: Overcast at 1,000 feet with cumulonimbus (OVC010CB).\nRemarks: NXT FCST BY 08Z."
+},
+{
+"raw": "EGLL 071730Z 0718/0824 27010KT 9999 SCT040",
+"decoded": "Forecast for station EGLL.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 270 degrees at 10 knots (27010KT). Visibility 10 kilometres or more (9999 meters). Clouds: Scattered clouds at 4,000 feet (SCT040)."
+},
+{
+"raw": "TAF KJFK NIL",
+"decoded": "No TAF available for station KJFK."
+},
+{
+"raw": "KJFK 071730Z 0718/0824 21015KT P6SM",
+"decoded": "Forecast for station KJFK.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 210 degrees at 15 knots (21015KT). Visibility greater than 6 statute miles (6 SM) (P6SM)."
+},
+{
+"raw": "TAF",
+"decoded": "TAF issued, but no additional information was provided."
+},
+{
+"raw": "   \n  ",
+"decoded": "No TAF available."
+},
+{
+"raw": "= = =",
+"decoded": "No TAF available."
+}
+],
+"taf_elements": {
+"_decode_wind": [
+{
+"token": "21015KT",
+"decoded": "Winds from 210 degrees at 15 knots (21015KT)"
+},
+{
+"token": "21015G25KT",
+"decoded": "Winds from 210 degrees at 15 knots with gusts to 25 knots (21015G25KT)"
+},
+{
+"token": "VRB05KT",
+"decoded": "Winds variable at 5 knots (VRB05KT)"
+},
+{
+"token": "00000KT",
+"decoded": "Calm winds (00000KT)"
+},
+{
+"token": "18010MPS",
+"decoded": "Winds from 180 degrees at 10 meters per second (18010MPS)"
+},
+{
+"token": "27020KMH",
+"decoded": "Winds from 270 degrees at 20 kilometres per hour (27020KMH)"
+},
+{
+"token": "270100KT",
+"decoded": "Winds from 270 degrees at 100 knots (270100KT)"
+},
+{
+"token": "NOSUCHWIND",
+"decoded": null
+}
+],
+"_decode_visibility": [
+{
+"token": "6SM",
+"decoded": "Visibility 6 statute miles (6 SM) (6SM)"
+},
+{
+"token": "P6SM",
+"decoded": "Visibility greater than 6 statute miles (6 SM) (P6SM)"
+},
+{
+"token": "M1/4SM",
+"decoded": "Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM)"
+},
+{
+"token": "1/2SM",
+"decoded": "Visibility 1/2 statute miles (0.5 SM) (1/2SM)"
+},
+{
+"token": "1 1/2SM",
+"decoded": "Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM)"
+},
+{
+"token": "5000",
+"decoded": "Visibility 5.0 kilometres (5000 meters)"
+},
+{
+"token": "9999",
+"decoded": "Visibility 10 kilometres or more (9999 meters)"
+},
+{
+"token": "",
+"decoded": null
+},
+{
+"token": "NOSUCH",
+"decoded": null
+}
+],
+"_decode_weather": [
+{
+"token": "RA",
+"decoded": "rain (RA)"
+},
+{
+"token": "+RA",
+"decoded": "heavy rain (+RA)"
+},
+{
+"token": "-SN",
+"decoded": "light snow (-SN)"
+},
+{
+"token": "TSRA",
+"decoded": "thunderstorms with rain (TSRA)"
+},
+{
+"token": "FZRA",
+"decoded": "freezing rain (FZRA)"
+},
+{
+"token": "VCSH",
+"decoded": "In the vicinity, showers of (VCSH)"
+},
+{
+"token": "FG",
+"decoded": "fog (FG)"
+},
+{
+"token": "BR",
+"decoded": "mist (BR)"
+},
+{
+"token": "HZ",
+"decoded": "haze (HZ)"
+},
+{
+"token": "BLSN",
+"decoded": "blowing snow (BLSN)"
+},
+{
+"token": "MIFG",
+"decoded": "shallow fog (MIFG)"
+},
+{
+"token": "UP",
+"decoded": "unidentified precipitation (UP)"
+},
+{
+"token": "RAUP",
+"decoded": "mixed precipitation (RAUP)"
+},
+{
+"token": "FZUP",
+"decoded": "freezing freezing precipitation (FZUP)"
+},
+{
+"token": "TSUP",
+"decoded": "thunderstorms with thunderstorm precipitation (TSUP)"
+},
+{
+"token": "SHUP",
+"decoded": "showers of showery precipitation (SHUP)"
+},
+{
+"token": "",
+"decoded": null
+},
+{
+"token": "XX",
+"decoded": null
+}
+],
+"_decode_cloud": [
+{
+"token": "FEW020",
+"decoded": "A few clouds at 2,000 feet (FEW020)"
+},
+{
+"token": "SCT250",
+"decoded": "Scattered clouds at 25,000 feet (SCT250)"
+},
+{
+"token": "BKN040",
+"decoded": "Broken clouds at 4,000 feet (BKN040)"
+},
+{
+"token": "OVC010",
+"decoded": "Overcast at 1,000 feet (OVC010)"
+},
+{
+"token": "NSC",
+"decoded": "No significant clouds (NSC)"
+},
+{
+"token": "BKN040CB",
+"decoded": "Broken clouds at 4,000 feet with cumulonimbus (BKN040CB)"
+},
+{
+"token": "SCT030TCU",
+"decoded": "Scattered clouds at 3,000 feet with towering cumulus (SCT030TCU)"
+},
+{
+"token": "VV005",
+"decoded": "Vertical visibility 500 feet (VV005)"
+},
+{
+"token": "BKN///",
+"decoded": "Broken clouds (BKN///)"
+},
+{
+"token": "SKC",
+"decoded": "Sky clear (SKC)"
+},
+{
+"token": "CLR",
+"decoded": "Sky clear (CLR)"
+},
+{
+"token": "NOSUCHCLOUD",
+"decoded": null
+},
+{
+"token": "",
+"decoded": null
+}
+]
+},
+"dates": [
+{
+"value": "2026-01-05T00:05:00-05:00",
+"style": "iso",
+"time_12hour": true,
+"date": "2026-01-05",
+"datetime": "2026-01-05 12:05 AM"
+},
+{
+"value": "2026-01-05T00:05:00-05:00",
+"style": "iso",
+"time_12hour": false,
+"date": "2026-01-05",
+"datetime": "2026-01-05 00:05"
+},
+{
+"value": "2026-01-05T00:05:00-05:00",
+"style": "us_short",
+"time_12hour": true,
+"date": "01/05/2026",
+"datetime": "01/05/2026 12:05 AM"
+},
+{
+"value": "2026-01-05T00:05:00-05:00",
+"style": "us_short",
+"time_12hour": false,
+"date": "01/05/2026",
+"datetime": "01/05/2026 00:05"
+},
+{
+"value": "2026-01-05T00:05:00-05:00",
+"style": "us_long",
+"time_12hour": true,
+"date": "January 05, 2026",
+"datetime": "January 05, 2026 12:05 AM"
+},
+{
+"value": "2026-01-05T00:05:00-05:00",
+"style": "us_long",
+"time_12hour": false,
+"date": "January 05, 2026",
+"datetime": "January 05, 2026 00:05"
+},
+{
+"value": "2026-01-05T00:05:00-05:00",
+"style": "eu",
+"time_12hour": true,
+"date": "05/01/2026",
+"datetime": "05/01/2026 12:05 AM"
+},
+{
+"value": "2026-01-05T00:05:00-05:00",
+"style": "eu",
+"time_12hour": false,
+"date": "05/01/2026",
+"datetime": "05/01/2026 00:05"
+},
+{
+"value": "2026-01-05T00:05:00-05:00",
+"style": "bogus",
+"time_12hour": true,
+"date": "2026-01-05",
+"datetime": "2026-01-05 12:05 AM"
+},
+{
+"value": "2026-01-05T00:05:00-05:00",
+"style": "bogus",
+"time_12hour": false,
+"date": "2026-01-05",
+"datetime": "2026-01-05 00:05"
+},
+{
+"value": "2026-07-14T13:45:00+02:00",
+"style": "iso",
+"time_12hour": true,
+"date": "2026-07-14",
+"datetime": "2026-07-14 1:45 PM"
+},
+{
+"value": "2026-07-14T13:45:00+02:00",
+"style": "iso",
+"time_12hour": false,
+"date": "2026-07-14",
+"datetime": "2026-07-14 13:45"
+},
+{
+"value": "2026-07-14T13:45:00+02:00",
+"style": "us_short",
+"time_12hour": true,
+"date": "07/14/2026",
+"datetime": "07/14/2026 1:45 PM"
+},
+{
+"value": "2026-07-14T13:45:00+02:00",
+"style": "us_short",
+"time_12hour": false,
+"date": "07/14/2026",
+"datetime": "07/14/2026 13:45"
+},
+{
+"value": "2026-07-14T13:45:00+02:00",
+"style": "us_long",
+"time_12hour": true,
+"date": "July 14, 2026",
+"datetime": "July 14, 2026 1:45 PM"
+},
+{
+"value": "2026-07-14T13:45:00+02:00",
+"style": "us_long",
+"time_12hour": false,
+"date": "July 14, 2026",
+"datetime": "July 14, 2026 13:45"
+},
+{
+"value": "2026-07-14T13:45:00+02:00",
+"style": "eu",
+"time_12hour": true,
+"date": "14/07/2026",
+"datetime": "14/07/2026 1:45 PM"
+},
+{
+"value": "2026-07-14T13:45:00+02:00",
+"style": "eu",
+"time_12hour": false,
+"date": "14/07/2026",
+"datetime": "14/07/2026 13:45"
+},
+{
+"value": "2026-07-14T13:45:00+02:00",
+"style": "bogus",
+"time_12hour": true,
+"date": "2026-07-14",
+"datetime": "2026-07-14 1:45 PM"
+},
+{
+"value": "2026-07-14T13:45:00+02:00",
+"style": "bogus",
+"time_12hour": false,
+"date": "2026-07-14",
+"datetime": "2026-07-14 13:45"
+},
+{
+"value": "2026-12-31T09:07:00",
+"style": "iso",
+"time_12hour": true,
+"date": "2026-12-31",
+"datetime": "2026-12-31 9:07 AM"
+},
+{
+"value": "2026-12-31T09:07:00",
+"style": "iso",
+"time_12hour": false,
+"date": "2026-12-31",
+"datetime": "2026-12-31 09:07"
+},
+{
+"value": "2026-12-31T09:07:00",
+"style": "us_short",
+"time_12hour": true,
+"date": "12/31/2026",
+"datetime": "12/31/2026 9:07 AM"
+},
+{
+"value": "2026-12-31T09:07:00",
+"style": "us_short",
+"time_12hour": false,
+"date": "12/31/2026",
+"datetime": "12/31/2026 09:07"
+},
+{
+"value": "2026-12-31T09:07:00",
+"style": "us_long",
+"time_12hour": true,
+"date": "December 31, 2026",
+"datetime": "December 31, 2026 9:07 AM"
+},
+{
+"value": "2026-12-31T09:07:00",
+"style": "us_long",
+"time_12hour": false,
+"date": "December 31, 2026",
+"datetime": "December 31, 2026 09:07"
+},
+{
+"value": "2026-12-31T09:07:00",
+"style": "eu",
+"time_12hour": true,
+"date": "31/12/2026",
+"datetime": "31/12/2026 9:07 AM"
+},
+{
+"value": "2026-12-31T09:07:00",
+"style": "eu",
+"time_12hour": false,
+"date": "31/12/2026",
+"datetime": "31/12/2026 09:07"
+},
+{
+"value": "2026-12-31T09:07:00",
+"style": "bogus",
+"time_12hour": true,
+"date": "2026-12-31",
+"datetime": "2026-12-31 9:07 AM"
+},
+{
+"value": "2026-12-31T09:07:00",
+"style": "bogus",
+"time_12hour": false,
+"date": "2026-12-31",
+"datetime": "2026-12-31 09:07"
+}
+],
+"placeholders": [
+{
+"format": "",
+"placeholders": [],
+"valid": [
+true,
+null
+],
+"formatted": ""
+},
+{
+"format": "{temp} {condition}",
+"placeholders": [
+"temp",
+"condition"
+],
+"valid": [
+true,
+null
+],
+"formatted": "72F {temp}"
+},
+{
+"format": "{temp",
+"placeholders": [],
+"valid": [
+false,
+"Unbalanced braces in format string"
+],
+"formatted": "Error: Unbalanced braces in format string"
+},
+{
+"format": "{bogus} and {temp_f}",
+"placeholders": [
+"bogus",
+"temp_f"
+],
+"valid": [
+false,
+"Unsupported placeholder(s): bogus. Supported placeholders are: alert, condition, feels_like, high, humidity, location, low, precip, precip_chance, pressure, temp, temp_c, temp_f, uv, visibility, wind, wind_dir, wind_speed"
+],
+"formatted": "{bogus} and {temp_f}"
+},
+{
+"format": "{{temp}}",
+"placeholders": [
+"temp"
+],
+"valid": [
+true,
+null
+],
+"formatted": "{72F}"
+},
+{
+"format": "{a b} {Temp}",
+"placeholders": [
+"Temp"
+],
+"valid": [
+false,
+"Unsupported placeholder(s): Temp. Supported placeholders are: alert, condition, feels_like, high, humidity, location, low, precip, precip_chance, pressure, temp, temp_c, temp_f, uv, visibility, wind, wind_dir, wind_speed"
+],
+"formatted": "{a b} {Temp}"
+}
+],
+"placeholder_help": "Supported Placeholders:\n\n{alert}: Most severe active weather alert event name (e.g. 'Tornado Watch'), or empty if none\n{condition}: Current weather condition (e.g., 'Partly Cloudy')\n{feels_like}: Feels-like temperature (follows your temperature unit setting)\n{high}: Forecast high temperature when available (follows your temperature unit setting)\n{humidity}: Current humidity percentage\n{location}: Current location name\n{low}: Forecast low temperature when available (follows your temperature unit setting)\n{precip}: Precipitation amount (follows your temperature unit setting)\n{precip_chance}: Chance of precipitation percentage\n{pressure}: Barometric pressure (follows your temperature unit setting)\n{temp}: Current temperature (follows your temperature unit setting)\n{temp_c}: Current temperature in Celsius\n{temp_f}: Current temperature in Fahrenheit\n{uv}: UV index\n{visibility}: Visibility (follows your temperature unit setting)\n{wind}: Wind direction with speed text (e.g., 'NW at 5 mph')\n{wind_dir}: Wind direction (e.g., 'NW')\n{wind_speed}: Wind speed (follows your temperature unit setting)\n"
+}

@@ -1,0 +1,96 @@
+{
+ "now": "2026-01-20T18:21:00+00:00",
+ "call": "aviation_weather",
+ "station": "KJFK",
+ "include_sigmets": true,
+ "include_cwas": true,
+ "avwx_api_key": "",
+ "responses": [
+  {
+   "url": "https://api.weather.gov/stations/KJFK",
+   "status": 200,
+   "body": "{\"properties\":{\"name\":\"John F Kennedy International Airport\",\"cwa\":\"ZNY\",\"wfo\":\"OKX\",\"state\":\"NY\",\"country\":\"US\"}}"
+  },
+  {
+   "url": "https://api.weather.gov/stations/KJFK/tafs",
+   "status": 200,
+   "body": "{\"features\":[{\"properties\":{\"rawMessage\":\"\"}},{\"properties\":{\"rawTAF\":\"  TAF KJFK 201730Z 2018/2124 31015G25KT P6SM FEW050 TEMPO 2018/2022 BKN035 FM210200 32010KT P6SM SKC PROB30 2106/2110 -SN BKN020  \"}}]}"
+  },
+  {
+   "url": "https://api.weather.gov/aviation/sigmets?atsu=KKCI",
+   "status": 200,
+   "body": "{\"features\":[{\"properties\":{\"name\":\"SIGMET NOVEMBER 3\",\"fir\":\"KZNY\",\"hazard\":\"TURB\"}},{\"properties\":{\"name\":\"SIGMET OSCAR 1\",\"fir\":\"KZMA\"}},{\"id\":\"no-props\",\"text\":\"JFK area\"}]}"
+  },
+  {
+   "url": "https://api.weather.gov/aviation/cwsus/ZNY/cwas",
+   "status": 200,
+   "body": "{\"features\":[{\"properties\":{\"text\":\"CWA 101 ... NEAR JFK\",\"cwsu\":\"ZNY\"}},{\"properties\":{\"text\":\"elsewhere\",\"cwsu\":\"ZDC\"}}]}"
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://api.weather.gov/stations/KJFK",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/stations/KJFK/tafs",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/aviation/sigmets",
+   "params": [
+    [
+     "atsu",
+     "KKCI"
+    ]
+   ],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/aviation/cwsus/ZNY/cwas",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  }
+ ],
+ "result": {
+  "raw_taf": "TAF KJFK 201730Z 2018/2124 31015G25KT P6SM FEW050 TEMPO 2018/2022 BKN035 FM210200 32010KT P6SM SKC PROB30 2106/2110 -SN BKN020",
+  "decoded_taf": "Forecast for station KJFK.\nIssued at 17:30 UTC on the 20th.\nValid from 18:00 UTC on the 20th until 24:00 UTC on the 21st.\nBase forecast: Winds from 310 degrees at 15 knots with gusts to 25 knots (31015G25KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: A few clouds at 5,000 feet (FEW050).\nTemporary between from 18:00 UTC on the 20th until 22:00 UTC on the 20th: Clouds: Broken clouds at 3,500 feet (BKN035).\nFrom 02:00 UTC on the 21st: Winds from 320 degrees at 10 knots (32010KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Sky clear (SKC).\nProbability 30% from 06:00 UTC on the 21st until 10:00 UTC on the 21st: Weather: light snow (-SN). Clouds: Broken clouds at 2,000 feet (BKN020).",
+  "station_id": "KJFK",
+  "airport_name": "John F Kennedy International Airport",
+  "active_sigmets": [
+   {
+    "name": "SIGMET NOVEMBER 3",
+    "fir": "KZNY",
+    "hazard": "TURB"
+   }
+  ],
+  "active_cwas": [
+   {
+    "text": "CWA 101 ... NEAR JFK",
+    "cwsu": "ZNY"
+   }
+  ]
+ }
+}

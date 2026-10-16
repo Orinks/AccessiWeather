@@ -1,0 +1,4806 @@
+{
+ "history": [
+  {
+   "name": "no data",
+   "location": "Philadelphia, PA",
+   "weather": null,
+   "sections": [
+    [
+     "No Data",
+     "Weather history data is not available."
+    ]
+   ],
+   "title": "Weather History - Philadelphia, PA",
+   "controls": [
+    {
+     "kind": "label",
+     "label": "Weather History for Philadelphia, PA",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.2,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "label",
+     "label": "Comparisons against previous days to provide context for current conditions.",
+     "name": "staticText",
+     "bold": false,
+     "scale": 1.0,
+     "gray": true,
+     "wrap": null
+    },
+    {
+     "kind": "text",
+     "name": "Weather history text",
+     "value": "=== No Data ===\nWeather history data is not available.",
+     "mono": true,
+     "password": false
+    },
+    {
+     "kind": "button",
+     "id": 5001,
+     "label": "Close",
+     "name": "button"
+    }
+   ],
+   "focus": 2
+  },
+  {
+   "name": "no history",
+   "location": "Philadelphia, PA",
+   "weather": {
+    "current": {
+     "temperature": 72.0,
+     "temperature_f": 72.0,
+     "temperature_c": null,
+     "condition": null,
+     "humidity": null,
+     "wind_speed": null,
+     "dewpoint_f": null,
+     "dewpoint_c": null,
+     "wind_speed_mph": null,
+     "wind_speed_kph": null,
+     "wind_direction": null,
+     "pressure": null,
+     "pressure_in": null,
+     "pressure_mb": null,
+     "feels_like_f": null,
+     "feels_like_c": null,
+     "visibility_miles": null,
+     "visibility_km": null,
+     "uv_index": null,
+     "cloud_cover": null,
+     "wind_gust_mph": null,
+     "wind_gust_kph": null,
+     "precipitation_in": null,
+     "precipitation_mm": null,
+     "sunrise_time": null,
+     "sunset_time": null,
+     "moon_phase": null,
+     "moonrise_time": null,
+     "moonset_time": null,
+     "snow_depth_in": null,
+     "snow_depth_cm": null,
+     "snowfall_rate_in": null,
+     "wind_chill_f": null,
+     "wind_chill_c": null,
+     "freezing_level_ft": null,
+     "freezing_level_m": null,
+     "heat_index_f": null,
+     "heat_index_c": null,
+     "frost_risk": null,
+     "precipitation_type": null,
+     "severe_weather_risk": null
+    },
+    "daily_history": [],
+    "trend_insights": [
+     {
+      "metric": "temperature",
+      "direction": "rising",
+      "change": 4.5,
+      "unit": "°F",
+      "timeframe_hours": 24,
+      "summary": "Temperature rising +4.5°F over 24h",
+      "sparkline": null
+     }
+    ]
+   },
+   "sections": [
+    [
+     "Recent Weather History",
+     "Historical data not available."
+    ]
+   ],
+   "title": "Weather History - Philadelphia, PA",
+   "controls": [
+    {
+     "kind": "label",
+     "label": "Weather History for Philadelphia, PA",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.2,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "label",
+     "label": "Comparisons against previous days to provide context for current conditions.",
+     "name": "staticText",
+     "bold": false,
+     "scale": 1.0,
+     "gray": true,
+     "wrap": null
+    },
+    {
+     "kind": "text",
+     "name": "Weather history text",
+     "value": "=== Recent Weather History ===\nHistorical data not available.",
+     "mono": true,
+     "password": false
+    },
+    {
+     "kind": "button",
+     "id": 5001,
+     "label": "Close",
+     "name": "button"
+    }
+   ],
+   "focus": 2
+  },
+  {
+   "name": "warmer",
+   "location": "Philadelphia, PA",
+   "weather": {
+    "current": {
+     "temperature": 72.5,
+     "temperature_f": 72.5,
+     "temperature_c": null,
+     "condition": null,
+     "humidity": null,
+     "wind_speed": null,
+     "dewpoint_f": null,
+     "dewpoint_c": null,
+     "wind_speed_mph": null,
+     "wind_speed_kph": null,
+     "wind_direction": null,
+     "pressure": null,
+     "pressure_in": null,
+     "pressure_mb": null,
+     "feels_like_f": null,
+     "feels_like_c": null,
+     "visibility_miles": null,
+     "visibility_km": null,
+     "uv_index": null,
+     "cloud_cover": null,
+     "wind_gust_mph": null,
+     "wind_gust_kph": null,
+     "precipitation_in": null,
+     "precipitation_mm": null,
+     "sunrise_time": null,
+     "sunset_time": null,
+     "moon_phase": null,
+     "moonrise_time": null,
+     "moonset_time": null,
+     "snow_depth_in": null,
+     "snow_depth_cm": null,
+     "snowfall_rate_in": null,
+     "wind_chill_f": null,
+     "wind_chill_c": null,
+     "freezing_level_ft": null,
+     "freezing_level_m": null,
+     "heat_index_f": null,
+     "heat_index_c": null,
+     "frost_risk": null,
+     "precipitation_type": null,
+     "severe_weather_risk": null
+    },
+    "daily_history": [
+     {
+      "name": "Yesterday",
+      "temperature": 70.0,
+      "temperature_low": null,
+      "temperature_unit": "F",
+      "short_forecast": "Partly Sunny",
+      "detailed_forecast": null,
+      "wind_speed": null,
+      "wind_speed_mph": null,
+      "wind_direction": null,
+      "icon": null,
+      "start_time": "2026-09-24T06:00:00-04:00",
+      "end_time": null,
+      "precipitation_probability": null,
+      "snowfall": null,
+      "uv_index": null,
+      "cloud_cover": null,
+      "wind_gust": null,
+      "precipitation_amount": null,
+      "snow_depth": null,
+      "wind_chill_min_f": null,
+      "wind_chill_max_f": null,
+      "freezing_level_ft": null,
+      "ice_risk": null,
+      "heat_index_max_f": null,
+      "heat_index_min_f": null,
+      "uv_index_max": null,
+      "air_quality_forecast": null,
+      "frost_risk": null,
+      "pollen_forecast": null,
+      "precipitation_type": null,
+      "severe_weather_risk": null,
+      "feels_like_high": null,
+      "feels_like_low": null
+     },
+     {
+      "name": "Tuesday",
+      "temperature": 68.5,
+      "temperature_low": null,
+      "temperature_unit": "F",
+      "short_forecast": "Showers",
+      "detailed_forecast": null,
+      "wind_speed": null,
+      "wind_speed_mph": null,
+      "wind_direction": null,
+      "icon": null,
+      "start_time": "2026-09-23T06:00:00-04:00",
+      "end_time": null,
+      "precipitation_probability": null,
+      "snowfall": null,
+      "uv_index": null,
+      "cloud_cover": null,
+      "wind_gust": null,
+      "precipitation_amount": null,
+      "snow_depth": null,
+      "wind_chill_min_f": null,
+      "wind_chill_max_f": null,
+      "freezing_level_ft": null,
+      "ice_risk": null,
+      "heat_index_max_f": null,
+      "heat_index_min_f": null,
+      "uv_index_max": null,
+      "air_quality_forecast": null,
+      "frost_risk": null,
+      "pollen_forecast": null,
+      "precipitation_type": null,
+      "severe_weather_risk": null,
+      "feels_like_high": null,
+      "feels_like_low": null
+     },
+     {
+      "name": "Monday",
+      "temperature": 66.0,
+      "temperature_low": null,
+      "temperature_unit": "F",
+      "short_forecast": "Cloudy",
+      "detailed_forecast": null,
+      "wind_speed": null,
+      "wind_speed_mph": null,
+      "wind_direction": null,
+      "icon": null,
+      "start_time": null,
+      "end_time": null,
+      "precipitation_probability": null,
+      "snowfall": null,
+      "uv_index": null,
+      "cloud_cover": null,
+      "wind_gust": null,
+      "precipitation_amount": null,
+      "snow_depth": null,
+      "wind_chill_min_f": null,
+      "wind_chill_max_f": null,
+      "freezing_level_ft": null,
+      "ice_risk": null,
+      "heat_index_max_f": null,
+      "heat_index_min_f": null,
+      "uv_index_max": null,
+      "air_quality_forecast": null,
+      "frost_risk": null,
+      "pollen_forecast": null,
+      "precipitation_type": null,
+      "severe_weather_risk": null,
+      "feels_like_high": null,
+      "feels_like_low": null
+     },
+     {
+      "name": "",
+      "temperature": null,
+      "temperature_low": null,
+      "temperature_unit": "F",
+      "short_forecast": null,
+      "detailed_forecast": null,
+      "wind_speed": null,
+      "wind_speed_mph": null,
+      "wind_direction": null,
+      "icon": null,
+      "start_time": null,
+      "end_time": null,
+      "precipitation_probability": null,
+      "snowfall": null,
+      "uv_index": null,
+      "cloud_cover": null,
+      "wind_gust": null,
+      "precipitation_amount": null,
+      "snow_depth": null,
+      "wind_chill_min_f": null,
+      "wind_chill_max_f": null,
+      "freezing_level_ft": null,
+      "ice_risk": null,
+      "heat_index_max_f": null,
+      "heat_index_min_f": null,
+      "uv_index_max": null,
+      "air_quality_forecast": null,
+      "frost_risk": null,
+      "pollen_forecast": null,
+      "precipitation_type": null,
+      "severe_weather_risk": null,
+      "feels_like_high": null,
+      "feels_like_low": null
+     },
+     {
+      "name": "Saturday",
+      "temperature": null,
+      "temperature_low": null,
+      "temperature_unit": "F",
+      "short_forecast": "Clear",
+      "detailed_forecast": null,
+      "wind_speed": null,
+      "wind_speed_mph": null,
+      "wind_direction": null,
+      "icon": null,
+      "start_time": "2026-09-20T00:00:00+00:00",
+      "end_time": null,
+      "precipitation_probability": null,
+      "snowfall": null,
+      "uv_index": null,
+      "cloud_cover": null,
+      "wind_gust": null,
+      "precipitation_amount": null,
+      "snow_depth": null,
+      "wind_chill_min_f": null,
+      "wind_chill_max_f": null,
+      "freezing_level_ft": null,
+      "ice_risk": null,
+      "heat_index_max_f": null,
+      "heat_index_min_f": null,
+      "uv_index_max": null,
+      "air_quality_forecast": null,
+      "frost_risk": null,
+      "pollen_forecast": null,
+      "precipitation_type": null,
+      "severe_weather_risk": null,
+      "feels_like_high": null,
+      "feels_like_low": null
+     },
+     {
+      "name": "Friday",
+      "temperature": 81.25,
+      "temperature_low": null,
+      "temperature_unit": "F",
+      "short_forecast": "",
+      "detailed_forecast": null,
+      "wind_speed": null,
+      "wind_speed_mph": null,
+      "wind_direction": null,
+      "icon": null,
+      "start_time": "2026-09-19T12:00:00-04:00",
+      "end_time": null,
+      "precipitation_probability": null,
+      "snowfall": null,
+      "uv_index": null,
+      "cloud_cover": null,
+      "wind_gust": null,
+      "precipitation_amount": null,
+      "snow_depth": null,
+      "wind_chill_min_f": null,
+      "wind_chill_max_f": null,
+      "freezing_level_ft": null,
+      "ice_risk": null,
+      "heat_index_max_f": null,
+      "heat_index_min_f": null,
+      "uv_index_max": null,
+      "air_quality_forecast": null,
+      "frost_risk": null,
+      "pollen_forecast": null,
+      "precipitation_type": null,
+      "severe_weather_risk": null,
+      "feels_like_high": null,
+      "feels_like_low": null
+     },
+     {
+      "name": "Thursday",
+      "temperature": -3.0,
+      "temperature_low": null,
+      "temperature_unit": "F",
+      "short_forecast": "Snow",
+      "detailed_forecast": null,
+      "wind_speed": null,
+      "wind_speed_mph": null,
+      "wind_direction": null,
+      "icon": null,
+      "start_time": "2026-09-18T12:00:00-04:00",
+      "end_time": null,
+      "precipitation_probability": null,
+      "snowfall": null,
+      "uv_index": null,
+      "cloud_cover": null,
+      "wind_gust": null,
+      "precipitation_amount": null,
+      "snow_depth": null,
+      "wind_chill_min_f": null,
+      "wind_chill_max_f": null,
+      "freezing_level_ft": null,
+      "ice_risk": null,
+      "heat_index_max_f": null,
+      "heat_index_min_f": null,
+      "uv_index_max": null,
+      "air_quality_forecast": null,
+      "frost_risk": null,
+      "pollen_forecast": null,
+      "precipitation_type": null,
+      "severe_weather_risk": null,
+      "feels_like_high": null,
+      "feels_like_low": null
+     },
+     {
+      "name": "Wednesday",
+      "temperature": 99.0,
+      "temperature_low": null,
+      "temperature_unit": "F",
+      "short_forecast": "Hot",
+      "detailed_forecast": null,
+      "wind_speed": null,
+      "wind_speed_mph": null,
+      "wind_direction": null,
+      "icon": null,
+      "start_time": "2026-09-17T12:00:00-04:00",
+      "end_time": null,
+      "precipitation_probability": null,
+      "snowfall": null,
+      "uv_index": null,
+      "cloud_cover": null,
+      "wind_gust": null,
+      "precipitation_amount": null,
+      "snow_depth": null,
+      "wind_chill_min_f": null,
+      "wind_chill_max_f": null,
+      "freezing_level_ft": null,
+      "ice_risk": null,
+      "heat_index_max_f": null,
+      "heat_index_min_f": null,
+      "uv_index_max": null,
+      "air_quality_forecast": null,
+      "frost_risk": null,
+      "pollen_forecast": null,
+      "precipitation_type": null,
+      "severe_weather_risk": null,
+      "feels_like_high": null,
+      "feels_like_low": null
+     }
+    ],
+    "trend_insights": [
+     {
+      "metric": "temperature",
+      "direction": "rising",
+      "change": 4.5,
+      "unit": "°F",
+      "timeframe_hours": 24,
+      "summary": "Temperature rising +4.5°F over 24h",
+      "sparkline": null
+     }
+    ]
+   },
+   "sections": [
+    [
+     "Recent Weather History",
+     "Thursday, Sep 24: 70.0°F - Partly Sunny\nWednesday, Sep 23: 68.5°F - Showers\nMonday: 66.0°F - Cloudy\nUnknown: Unknown\nSunday, Sep 20: Clear\nSaturday, Sep 19: 81.25°F - Unknown\nFriday, Sep 18: -3.0°F - Snow"
+    ],
+    [
+     "Today vs Yesterday",
+     "Current temperature (72.5°F) is 2.5°F warmer than yesterday (70.0°F)."
+    ]
+   ],
+   "title": "Weather History - Philadelphia, PA",
+   "controls": [
+    {
+     "kind": "label",
+     "label": "Weather History for Philadelphia, PA",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.2,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "label",
+     "label": "Comparisons against previous days to provide context for current conditions.",
+     "name": "staticText",
+     "bold": false,
+     "scale": 1.0,
+     "gray": true,
+     "wrap": null
+    },
+    {
+     "kind": "text",
+     "name": "Weather history text",
+     "value": "=== Recent Weather History ===\nThursday, Sep 24: 70.0°F - Partly Sunny\nWednesday, Sep 23: 68.5°F - Showers\nMonday: 66.0°F - Cloudy\nUnknown: Unknown\nSunday, Sep 20: Clear\nSaturday, Sep 19: 81.25°F - Unknown\nFriday, Sep 18: -3.0°F - Snow\n\n=== Today vs Yesterday ===\nCurrent temperature (72.5°F) is 2.5°F warmer than yesterday (70.0°F).",
+     "mono": true,
+     "password": false
+    },
+    {
+     "kind": "button",
+     "id": 5001,
+     "label": "Close",
+     "name": "button"
+    }
+   ],
+   "focus": 2
+  },
+  {
+   "name": "about the same",
+   "location": "Zürich",
+   "weather": {
+    "current": {
+     "temperature": 70.2,
+     "temperature_f": 70.2,
+     "temperature_c": null,
+     "condition": null,
+     "humidity": null,
+     "wind_speed": null,
+     "dewpoint_f": null,
+     "dewpoint_c": null,
+     "wind_speed_mph": null,
+     "wind_speed_kph": null,
+     "wind_direction": null,
+     "pressure": null,
+     "pressure_in": null,
+     "pressure_mb": null,
+     "feels_like_f": null,
+     "feels_like_c": null,
+     "visibility_miles": null,
+     "visibility_km": null,
+     "uv_index": null,
+     "cloud_cover": null,
+     "wind_gust_mph": null,
+     "wind_gust_kph": null,
+     "precipitation_in": null,
+     "precipitation_mm": null,
+     "sunrise_time": null,
+     "sunset_time": null,
+     "moon_phase": null,
+     "moonrise_time": null,
+     "moonset_time": null,
+     "snow_depth_in": null,
+     "snow_depth_cm": null,
+     "snowfall_rate_in": null,
+     "wind_chill_f": null,
+     "wind_chill_c": null,
+     "freezing_level_ft": null,
+     "freezing_level_m": null,
+     "heat_index_f": null,
+     "heat_index_c": null,
+     "frost_risk": null,
+     "precipitation_type": null,
+     "severe_weather_risk": null
+    },
+    "daily_history": [
+     {
+      "name": "Yesterday",
+      "temperature": 70.0,
+      "temperature_low": null,
+      "temperature_unit": "F",
+      "short_forecast": "Partly Sunny",
+      "detailed_forecast": null,
+      "wind_speed": null,
+      "wind_speed_mph": null,
+      "wind_direction": null,
+      "icon": null,
+      "start_time": "2026-09-24T06:00:00-04:00",
+      "end_time": null,
+      "precipitation_probability": null,
+      "snowfall": null,
+      "uv_index": null,
+      "cloud_cover": null,
+      "wind_gust": null,
+      "precipitation_amount": null,
+      "snow_depth": null,
+      "wind_chill_min_f": null,
+      "wind_chill_max_f": null,
+      "freezing_level_ft": null,
+      "ice_risk": null,
+      "heat_index_max_f": null,
+      "heat_index_min_f": null,
+      "uv_index_max": null,
+      "air_quality_forecast": null,
+      "frost_risk": null,
+      "pollen_forecast": null,
+      "precipitation_type": null,
+      "severe_weather_risk": null,
+      "feels_like_high": null,
+      "feels_like_low": null
+     },
+     {
+      "name": "Tuesday",
+      "temperature": 68.5,
+      "temperature_low": null,
+      "temperature_unit": "F",
+      "short_forecast": "Showers",
+      "detailed_forecast": null,
+      "wind_speed": null,
+      "wind_speed_mph": null,
+      "wind_direction": null,
+      "icon": null,
+      "start_time": "2026-09-23T06:00:00-04:00",
+      "end_time": null,
+      "precipitation_probability": null,
+      "snowfall": null,
+      "uv_index": null,
+      "cloud_cover": null,
+      "wind_gust": null,
+      "precipitation_amount": null,
+      "snow_depth": null,
+      "wind_chill_min_f": null,
+      "wind_chill_max_f": null,
+      "freezing_level_ft": null,
+      "ice_risk": null,
+      "heat_index_max_f": null,
+      "heat_index_min_f": null,
+      "uv_index_max": null,
+      "air_quality_forecast": null,
+      "frost_risk": null,
+      "pollen_forecast": null,
+      "precipitation_type": null,
+      "severe_weather_risk": null,
+      "feels_like_high": null,
+      "feels_like_low": null
+     }
+    ],
+    "trend_insights": []
+   },
+   "sections": [
+    [
+     "Recent Weather History",
+     "Thursday, Sep 24: 70.0°F - Partly Sunny\nWednesday, Sep 23: 68.5°F - Showers"
+    ],
+    [
+     "Today vs Yesterday",
+     "Current temperature (70.2°F) is about the same as yesterday (70.0°F)."
+    ]
+   ],
+   "title": "Weather History - Zürich",
+   "controls": [
+    {
+     "kind": "label",
+     "label": "Weather History for Zürich",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.2,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "label",
+     "label": "Comparisons against previous days to provide context for current conditions.",
+     "name": "staticText",
+     "bold": false,
+     "scale": 1.0,
+     "gray": true,
+     "wrap": null
+    },
+    {
+     "kind": "text",
+     "name": "Weather history text",
+     "value": "=== Recent Weather History ===\nThursday, Sep 24: 70.0°F - Partly Sunny\nWednesday, Sep 23: 68.5°F - Showers\n\n=== Today vs Yesterday ===\nCurrent temperature (70.2°F) is about the same as yesterday (70.0°F).",
+     "mono": true,
+     "password": false
+    },
+    {
+     "kind": "button",
+     "id": 5001,
+     "label": "Close",
+     "name": "button"
+    }
+   ],
+   "focus": 2
+  },
+  {
+   "name": "cooler",
+   "location": "Anchorage, AK",
+   "weather": {
+    "current": {
+     "temperature": 65.0,
+     "temperature_f": 65.0,
+     "temperature_c": null,
+     "condition": null,
+     "humidity": null,
+     "wind_speed": null,
+     "dewpoint_f": null,
+     "dewpoint_c": null,
+     "wind_speed_mph": null,
+     "wind_speed_kph": null,
+     "wind_direction": null,
+     "pressure": null,
+     "pressure_in": null,
+     "pressure_mb": null,
+     "feels_like_f": null,
+     "feels_like_c": null,
+     "visibility_miles": null,
+     "visibility_km": null,
+     "uv_index": null,
+     "cloud_cover": null,
+     "wind_gust_mph": null,
+     "wind_gust_kph": null,
+     "precipitation_in": null,
+     "precipitation_mm": null,
+     "sunrise_time": null,
+     "sunset_time": null,
+     "moon_phase": null,
+     "moonrise_time": null,
+     "moonset_time": null,
+     "snow_depth_in": null,
+     "snow_depth_cm": null,
+     "snowfall_rate_in": null,
+     "wind_chill_f": null,
+     "wind_chill_c": null,
+     "freezing_level_ft": null,
+     "freezing_level_m": null,
+     "heat_index_f": null,
+     "heat_index_c": null,
+     "frost_risk": null,
+     "precipitation_type": null,
+     "severe_weather_risk": null
+    },
+    "daily_history": [
+     {
+      "name": "Yesterday",
+      "temperature": 71.3,
+      "temperature_low": null,
+      "temperature_unit": "F",
+      "short_forecast": "Rain",
+      "detailed_forecast": null,
+      "wind_speed": null,
+      "wind_speed_mph": null,
+      "wind_direction": null,
+      "icon": null,
+      "start_time": null,
+      "end_time": null,
+      "precipitation_probability": null,
+      "snowfall": null,
+      "uv_index": null,
+      "cloud_cover": null,
+      "wind_gust": null,
+      "precipitation_amount": null,
+      "snow_depth": null,
+      "wind_chill_min_f": null,
+      "wind_chill_max_f": null,
+      "freezing_level_ft": null,
+      "ice_risk": null,
+      "heat_index_max_f": null,
+      "heat_index_min_f": null,
+      "uv_index_max": null,
+      "air_quality_forecast": null,
+      "frost_risk": null,
+      "pollen_forecast": null,
+      "precipitation_type": null,
+      "severe_weather_risk": null,
+      "feels_like_high": null,
+      "feels_like_low": null
+     }
+    ],
+    "trend_insights": []
+   },
+   "sections": [
+    [
+     "Recent Weather History",
+     "Yesterday: 71.3°F - Rain"
+    ],
+    [
+     "Today vs Yesterday",
+     "Current temperature (65.0°F) is 6.3°F cooler than yesterday (71.3°F)."
+    ]
+   ],
+   "title": "Weather History - Anchorage, AK",
+   "controls": [
+    {
+     "kind": "label",
+     "label": "Weather History for Anchorage, AK",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.2,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "label",
+     "label": "Comparisons against previous days to provide context for current conditions.",
+     "name": "staticText",
+     "bold": false,
+     "scale": 1.0,
+     "gray": true,
+     "wrap": null
+    },
+    {
+     "kind": "text",
+     "name": "Weather history text",
+     "value": "=== Recent Weather History ===\nYesterday: 71.3°F - Rain\n\n=== Today vs Yesterday ===\nCurrent temperature (65.0°F) is 6.3°F cooler than yesterday (71.3°F).",
+     "mono": true,
+     "password": false
+    },
+    {
+     "kind": "button",
+     "id": 5001,
+     "label": "Close",
+     "name": "button"
+    }
+   ],
+   "focus": 2
+  },
+  {
+   "name": "half degree",
+   "location": "Denver",
+   "weather": {
+    "current": {
+     "temperature": 70.5,
+     "temperature_f": 70.5,
+     "temperature_c": null,
+     "condition": null,
+     "humidity": null,
+     "wind_speed": null,
+     "dewpoint_f": null,
+     "dewpoint_c": null,
+     "wind_speed_mph": null,
+     "wind_speed_kph": null,
+     "wind_direction": null,
+     "pressure": null,
+     "pressure_in": null,
+     "pressure_mb": null,
+     "feels_like_f": null,
+     "feels_like_c": null,
+     "visibility_miles": null,
+     "visibility_km": null,
+     "uv_index": null,
+     "cloud_cover": null,
+     "wind_gust_mph": null,
+     "wind_gust_kph": null,
+     "precipitation_in": null,
+     "precipitation_mm": null,
+     "sunrise_time": null,
+     "sunset_time": null,
+     "moon_phase": null,
+     "moonrise_time": null,
+     "moonset_time": null,
+     "snow_depth_in": null,
+     "snow_depth_cm": null,
+     "snowfall_rate_in": null,
+     "wind_chill_f": null,
+     "wind_chill_c": null,
+     "freezing_level_ft": null,
+     "freezing_level_m": null,
+     "heat_index_f": null,
+     "heat_index_c": null,
+     "frost_risk": null,
+     "precipitation_type": null,
+     "severe_weather_risk": null
+    },
+    "daily_history": [
+     {
+      "name": "Yesterday",
+      "temperature": 70.0,
+      "temperature_low": null,
+      "temperature_unit": "F",
+      "short_forecast": "Sun",
+      "detailed_forecast": null,
+      "wind_speed": null,
+      "wind_speed_mph": null,
+      "wind_direction": null,
+      "icon": null,
+      "start_time": null,
+      "end_time": null,
+      "precipitation_probability": null,
+      "snowfall": null,
+      "uv_index": null,
+      "cloud_cover": null,
+      "wind_gust": null,
+      "precipitation_amount": null,
+      "snow_depth": null,
+      "wind_chill_min_f": null,
+      "wind_chill_max_f": null,
+      "freezing_level_ft": null,
+      "ice_risk": null,
+      "heat_index_max_f": null,
+      "heat_index_min_f": null,
+      "uv_index_max": null,
+      "air_quality_forecast": null,
+      "frost_risk": null,
+      "pollen_forecast": null,
+      "precipitation_type": null,
+      "severe_weather_risk": null,
+      "feels_like_high": null,
+      "feels_like_low": null
+     }
+    ],
+    "trend_insights": []
+   },
+   "sections": [
+    [
+     "Recent Weather History",
+     "Yesterday: 70.0°F - Sun"
+    ],
+    [
+     "Today vs Yesterday",
+     "Current temperature (70.5°F) is 0.5°F warmer than yesterday (70.0°F)."
+    ]
+   ],
+   "title": "Weather History - Denver",
+   "controls": [
+    {
+     "kind": "label",
+     "label": "Weather History for Denver",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.2,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "label",
+     "label": "Comparisons against previous days to provide context for current conditions.",
+     "name": "staticText",
+     "bold": false,
+     "scale": 1.0,
+     "gray": true,
+     "wrap": null
+    },
+    {
+     "kind": "text",
+     "name": "Weather history text",
+     "value": "=== Recent Weather History ===\nYesterday: 70.0°F - Sun\n\n=== Today vs Yesterday ===\nCurrent temperature (70.5°F) is 0.5°F warmer than yesterday (70.0°F).",
+     "mono": true,
+     "password": false
+    },
+    {
+     "kind": "button",
+     "id": 5001,
+     "label": "Close",
+     "name": "button"
+    }
+   ],
+   "focus": 2
+  },
+  {
+   "name": "no current temp",
+   "location": "Denver",
+   "weather": {
+    "current": {
+     "temperature": null,
+     "temperature_f": null,
+     "temperature_c": null,
+     "condition": null,
+     "humidity": null,
+     "wind_speed": null,
+     "dewpoint_f": null,
+     "dewpoint_c": null,
+     "wind_speed_mph": null,
+     "wind_speed_kph": null,
+     "wind_direction": null,
+     "pressure": null,
+     "pressure_in": null,
+     "pressure_mb": null,
+     "feels_like_f": null,
+     "feels_like_c": null,
+     "visibility_miles": null,
+     "visibility_km": null,
+     "uv_index": null,
+     "cloud_cover": null,
+     "wind_gust_mph": null,
+     "wind_gust_kph": null,
+     "precipitation_in": null,
+     "precipitation_mm": null,
+     "sunrise_time": null,
+     "sunset_time": null,
+     "moon_phase": null,
+     "moonrise_time": null,
+     "moonset_time": null,
+     "snow_depth_in": null,
+     "snow_depth_cm": null,
+     "snowfall_rate_in": null,
+     "wind_chill_f": null,
+     "wind_chill_c": null,
+     "freezing_level_ft": null,
+     "freezing_level_m": null,
+     "heat_index_f": null,
+     "heat_index_c": null,
+     "frost_risk": null,
+     "precipitation_type": null,
+     "severe_weather_risk": null
+    },
+    "daily_history": [
+     {
+      "name": "Yesterday",
+      "temperature": 70.0,
+      "temperature_low": null,
+      "temperature_unit": "F",
+      "short_forecast": "Partly Sunny",
+      "detailed_forecast": null,
+      "wind_speed": null,
+      "wind_speed_mph": null,
+      "wind_direction": null,
+      "icon": null,
+      "start_time": "2026-09-24T06:00:00-04:00",
+      "end_time": null,
+      "precipitation_probability": null,
+      "snowfall": null,
+      "uv_index": null,
+      "cloud_cover": null,
+      "wind_gust": null,
+      "precipitation_amount": null,
+      "snow_depth": null,
+      "wind_chill_min_f": null,
+      "wind_chill_max_f": null,
+      "freezing_level_ft": null,
+      "ice_risk": null,
+      "heat_index_max_f": null,
+      "heat_index_min_f": null,
+      "uv_index_max": null,
+      "air_quality_forecast": null,
+      "frost_risk": null,
+      "pollen_forecast": null,
+      "precipitation_type": null,
+      "severe_weather_risk": null,
+      "feels_like_high": null,
+      "feels_like_low": null
+     }
+    ],
+    "trend_insights": []
+   },
+   "sections": [
+    [
+     "Recent Weather History",
+     "Thursday, Sep 24: 70.0°F - Partly Sunny"
+    ]
+   ],
+   "title": "Weather History - Denver",
+   "controls": [
+    {
+     "kind": "label",
+     "label": "Weather History for Denver",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.2,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "label",
+     "label": "Comparisons against previous days to provide context for current conditions.",
+     "name": "staticText",
+     "bold": false,
+     "scale": 1.0,
+     "gray": true,
+     "wrap": null
+    },
+    {
+     "kind": "text",
+     "name": "Weather history text",
+     "value": "=== Recent Weather History ===\nThursday, Sep 24: 70.0°F - Partly Sunny",
+     "mono": true,
+     "password": false
+    },
+    {
+     "kind": "button",
+     "id": 5001,
+     "label": "Close",
+     "name": "button"
+    }
+   ],
+   "focus": 2
+  },
+  {
+   "name": "no current",
+   "location": "Denver",
+   "weather": {
+    "current": null,
+    "daily_history": [
+     {
+      "name": "Yesterday",
+      "temperature": 70.0,
+      "temperature_low": null,
+      "temperature_unit": "F",
+      "short_forecast": "Partly Sunny",
+      "detailed_forecast": null,
+      "wind_speed": null,
+      "wind_speed_mph": null,
+      "wind_direction": null,
+      "icon": null,
+      "start_time": "2026-09-24T06:00:00-04:00",
+      "end_time": null,
+      "precipitation_probability": null,
+      "snowfall": null,
+      "uv_index": null,
+      "cloud_cover": null,
+      "wind_gust": null,
+      "precipitation_amount": null,
+      "snow_depth": null,
+      "wind_chill_min_f": null,
+      "wind_chill_max_f": null,
+      "freezing_level_ft": null,
+      "ice_risk": null,
+      "heat_index_max_f": null,
+      "heat_index_min_f": null,
+      "uv_index_max": null,
+      "air_quality_forecast": null,
+      "frost_risk": null,
+      "pollen_forecast": null,
+      "precipitation_type": null,
+      "severe_weather_risk": null,
+      "feels_like_high": null,
+      "feels_like_low": null
+     }
+    ],
+    "trend_insights": []
+   },
+   "sections": [
+    [
+     "Recent Weather History",
+     "Thursday, Sep 24: 70.0°F - Partly Sunny"
+    ]
+   ],
+   "title": "Weather History - Denver",
+   "controls": [
+    {
+     "kind": "label",
+     "label": "Weather History for Denver",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.2,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "label",
+     "label": "Comparisons against previous days to provide context for current conditions.",
+     "name": "staticText",
+     "bold": false,
+     "scale": 1.0,
+     "gray": true,
+     "wrap": null
+    },
+    {
+     "kind": "text",
+     "name": "Weather history text",
+     "value": "=== Recent Weather History ===\nThursday, Sep 24: 70.0°F - Partly Sunny",
+     "mono": true,
+     "password": false
+    },
+    {
+     "kind": "button",
+     "id": 5001,
+     "label": "Close",
+     "name": "button"
+    }
+   ],
+   "focus": 2
+  },
+  {
+   "name": "no yesterday temp",
+   "location": "Denver",
+   "weather": {
+    "current": {
+     "temperature": 60.0,
+     "temperature_f": 60.0,
+     "temperature_c": null,
+     "condition": null,
+     "humidity": null,
+     "wind_speed": null,
+     "dewpoint_f": null,
+     "dewpoint_c": null,
+     "wind_speed_mph": null,
+     "wind_speed_kph": null,
+     "wind_direction": null,
+     "pressure": null,
+     "pressure_in": null,
+     "pressure_mb": null,
+     "feels_like_f": null,
+     "feels_like_c": null,
+     "visibility_miles": null,
+     "visibility_km": null,
+     "uv_index": null,
+     "cloud_cover": null,
+     "wind_gust_mph": null,
+     "wind_gust_kph": null,
+     "precipitation_in": null,
+     "precipitation_mm": null,
+     "sunrise_time": null,
+     "sunset_time": null,
+     "moon_phase": null,
+     "moonrise_time": null,
+     "moonset_time": null,
+     "snow_depth_in": null,
+     "snow_depth_cm": null,
+     "snowfall_rate_in": null,
+     "wind_chill_f": null,
+     "wind_chill_c": null,
+     "freezing_level_ft": null,
+     "freezing_level_m": null,
+     "heat_index_f": null,
+     "heat_index_c": null,
+     "frost_risk": null,
+     "precipitation_type": null,
+     "severe_weather_risk": null
+    },
+    "daily_history": [
+     {
+      "name": "Yesterday",
+      "temperature": null,
+      "temperature_low": null,
+      "temperature_unit": "F",
+      "short_forecast": "Fog",
+      "detailed_forecast": null,
+      "wind_speed": null,
+      "wind_speed_mph": null,
+      "wind_direction": null,
+      "icon": null,
+      "start_time": null,
+      "end_time": null,
+      "precipitation_probability": null,
+      "snowfall": null,
+      "uv_index": null,
+      "cloud_cover": null,
+      "wind_gust": null,
+      "precipitation_amount": null,
+      "snow_depth": null,
+      "wind_chill_min_f": null,
+      "wind_chill_max_f": null,
+      "freezing_level_ft": null,
+      "ice_risk": null,
+      "heat_index_max_f": null,
+      "heat_index_min_f": null,
+      "uv_index_max": null,
+      "air_quality_forecast": null,
+      "frost_risk": null,
+      "pollen_forecast": null,
+      "precipitation_type": null,
+      "severe_weather_risk": null,
+      "feels_like_high": null,
+      "feels_like_low": null
+     }
+    ],
+    "trend_insights": []
+   },
+   "sections": [
+    [
+     "Recent Weather History",
+     "Yesterday: Fog"
+    ]
+   ],
+   "title": "Weather History - Denver",
+   "controls": [
+    {
+     "kind": "label",
+     "label": "Weather History for Denver",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.2,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "label",
+     "label": "Comparisons against previous days to provide context for current conditions.",
+     "name": "staticText",
+     "bold": false,
+     "scale": 1.0,
+     "gray": true,
+     "wrap": null
+    },
+    {
+     "kind": "text",
+     "name": "Weather history text",
+     "value": "=== Recent Weather History ===\nYesterday: Fog",
+     "mono": true,
+     "password": false
+    },
+    {
+     "kind": "button",
+     "id": 5001,
+     "label": "Close",
+     "name": "button"
+    }
+   ],
+   "focus": 2
+  }
+ ],
+ "precipitation": [
+  {
+   "name": "new york",
+   "location": "Philadelphia, PA",
+   "timezone": "America/New_York",
+   "forecast": {
+    "summary": "  Light rain starting in 12 min.  ",
+    "icon": null,
+    "points": [
+     {
+      "time": "2026-09-25T13:58:00+00:00",
+      "precipitation_intensity": null,
+      "precipitation_probability": null,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T13:59:00+00:00",
+      "precipitation_intensity": 0.0,
+      "precipitation_probability": 0.0,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:00:00+00:00",
+      "precipitation_intensity": 0.2,
+      "precipitation_probability": 0.125,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:01:00+00:00",
+      "precipitation_intensity": 0.05,
+      "precipitation_probability": 0.135,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": 0.1,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:02:00+00:00",
+      "precipitation_intensity": 1.23456,
+      "precipitation_probability": 1.0,
+      "precipitation_type": "snow",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": 0.2,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:03:00+00:00",
+      "precipitation_intensity": null,
+      "precipitation_probability": 0.5,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:04:00+00:00",
+      "precipitation_intensity": null,
+      "precipitation_probability": 0.3,
+      "precipitation_type": "sleet",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:05:00+00:00",
+      "precipitation_intensity": 0.4,
+      "precipitation_probability": null,
+      "precipitation_type": "freezing-rain",
+      "precipitation_intensity_unit": "in/hr",
+      "precipitation_intensity_error": 0.01,
+      "precipitation_intensity_error_unit": "in/hr"
+     },
+     {
+      "time": "2026-09-25T14:06:00+00:00",
+      "precipitation_intensity": 2.0,
+      "precipitation_probability": null,
+      "precipitation_type": "hail",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:07:00+00:00",
+      "precipitation_intensity": 0.7,
+      "precipitation_probability": null,
+      "precipitation_type": "ice",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:08:00+00:00",
+      "precipitation_intensity": 0.3,
+      "precipitation_probability": 0.005,
+      "precipitation_type": "drizzle",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:09:00+00:00",
+      "precipitation_intensity": 0.0004,
+      "precipitation_probability": 0.025,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:10:00+00:00",
+      "precipitation_intensity": 0.5,
+      "precipitation_probability": 0.2,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:11:00+00:00",
+      "precipitation_intensity": 0.6000000000000001,
+      "precipitation_probability": 0.3,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:12:00+00:00",
+      "precipitation_intensity": 0.0,
+      "precipitation_probability": 0.4,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:13:00+00:00",
+      "precipitation_intensity": 0.1,
+      "precipitation_probability": 0.5,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:14:00+00:00",
+      "precipitation_intensity": 0.2,
+      "precipitation_probability": 0.6,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:15:00+00:00",
+      "precipitation_intensity": 0.30000000000000004,
+      "precipitation_probability": 0.7,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:16:00+00:00",
+      "precipitation_intensity": 0.4,
+      "precipitation_probability": 0.8,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:17:00+00:00",
+      "precipitation_intensity": 0.5,
+      "precipitation_probability": 0.9,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:18:00+00:00",
+      "precipitation_intensity": 0.6000000000000001,
+      "precipitation_probability": 0.0,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:19:00+00:00",
+      "precipitation_intensity": 0.0,
+      "precipitation_probability": 0.1,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:20:00+00:00",
+      "precipitation_intensity": 0.1,
+      "precipitation_probability": 0.2,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:21:00+00:00",
+      "precipitation_intensity": 0.2,
+      "precipitation_probability": 0.3,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:22:00+00:00",
+      "precipitation_intensity": 0.30000000000000004,
+      "precipitation_probability": 0.4,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:23:00+00:00",
+      "precipitation_intensity": 0.4,
+      "precipitation_probability": 0.5,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:24:00+00:00",
+      "precipitation_intensity": 0.5,
+      "precipitation_probability": 0.6,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:25:00+00:00",
+      "precipitation_intensity": 0.6000000000000001,
+      "precipitation_probability": 0.7,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:26:00+00:00",
+      "precipitation_intensity": 0.0,
+      "precipitation_probability": 0.8,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:27:00+00:00",
+      "precipitation_intensity": 0.1,
+      "precipitation_probability": 0.9,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:28:00+00:00",
+      "precipitation_intensity": 0.2,
+      "precipitation_probability": 0.0,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:29:00+00:00",
+      "precipitation_intensity": 0.30000000000000004,
+      "precipitation_probability": 0.1,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:30:00+00:00",
+      "precipitation_intensity": 0.4,
+      "precipitation_probability": 0.2,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:31:00+00:00",
+      "precipitation_intensity": 0.5,
+      "precipitation_probability": 0.3,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:32:00+00:00",
+      "precipitation_intensity": 0.6000000000000001,
+      "precipitation_probability": 0.4,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:33:00+00:00",
+      "precipitation_intensity": 0.0,
+      "precipitation_probability": 0.5,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:34:00+00:00",
+      "precipitation_intensity": 0.1,
+      "precipitation_probability": 0.6,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:35:00+00:00",
+      "precipitation_intensity": 0.2,
+      "precipitation_probability": 0.7,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:36:00+00:00",
+      "precipitation_intensity": 0.30000000000000004,
+      "precipitation_probability": 0.8,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:37:00+00:00",
+      "precipitation_intensity": 0.4,
+      "precipitation_probability": 0.9,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:38:00+00:00",
+      "precipitation_intensity": 0.5,
+      "precipitation_probability": 0.0,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:39:00+00:00",
+      "precipitation_intensity": 0.6000000000000001,
+      "precipitation_probability": 0.1,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:40:00+00:00",
+      "precipitation_intensity": 0.0,
+      "precipitation_probability": 0.2,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:41:00+00:00",
+      "precipitation_intensity": 0.1,
+      "precipitation_probability": 0.3,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:42:00+00:00",
+      "precipitation_intensity": 0.2,
+      "precipitation_probability": 0.4,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:43:00+00:00",
+      "precipitation_intensity": 0.30000000000000004,
+      "precipitation_probability": 0.5,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:44:00+00:00",
+      "precipitation_intensity": 0.4,
+      "precipitation_probability": 0.6,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:45:00+00:00",
+      "precipitation_intensity": 0.5,
+      "precipitation_probability": 0.7,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:46:00+00:00",
+      "precipitation_intensity": 0.6000000000000001,
+      "precipitation_probability": 0.8,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:47:00+00:00",
+      "precipitation_intensity": 0.0,
+      "precipitation_probability": 0.9,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:48:00+00:00",
+      "precipitation_intensity": 0.1,
+      "precipitation_probability": 0.0,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:49:00+00:00",
+      "precipitation_intensity": 0.2,
+      "precipitation_probability": 0.1,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:50:00+00:00",
+      "precipitation_intensity": 0.30000000000000004,
+      "precipitation_probability": 0.2,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:51:00+00:00",
+      "precipitation_intensity": 0.4,
+      "precipitation_probability": 0.3,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:52:00+00:00",
+      "precipitation_intensity": 0.5,
+      "precipitation_probability": 0.4,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:53:00+00:00",
+      "precipitation_intensity": 0.6000000000000001,
+      "precipitation_probability": 0.5,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:54:00+00:00",
+      "precipitation_intensity": 0.0,
+      "precipitation_probability": 0.6,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:55:00+00:00",
+      "precipitation_intensity": 0.1,
+      "precipitation_probability": 0.7,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:56:00+00:00",
+      "precipitation_intensity": 0.2,
+      "precipitation_probability": 0.8,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:57:00+00:00",
+      "precipitation_intensity": 0.30000000000000004,
+      "precipitation_probability": 0.9,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:58:00+00:00",
+      "precipitation_intensity": 0.4,
+      "precipitation_probability": 0.0,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     }
+    ]
+   },
+   "text": "Times shown in America/New_York.\n\nOffset  Time      Conditions\n------  --------  ----------\nNow     9:58 AM   Dry\n+01m    9:59 AM   Dry\n+02m    10:00 AM  Rain | 12% chance | 0.200 mm/hr\n+03m    10:01 AM  Dry | 14% chance | 0.050 mm/hr (+/- 0.100 mm/hr)\n+04m    10:02 AM  Snow | 100% chance | 1.235 mm/hr (+/- 0.200 mm/hr)\n+05m    10:03 AM  Precipitation | 50% chance\n+06m    10:04 AM  Sleet | 30% chance\n+07m    10:05 AM  Freezing rain | 0.400 in/hr (+/- 0.010 in/hr)\n+08m    10:06 AM  Hail | 2.000 mm/hr\n+09m    10:07 AM  Ice | 0.700 mm/hr\n+10m    10:08 AM  Precipitation | 0% chance | 0.300 mm/hr\n+11m    10:09 AM  Precipitation | 2% chance | 0.000 mm/hr\n+12m    10:10 AM  Precipitation | 20% chance | 0.500 mm/hr\n+13m    10:11 AM  Rain | 30% chance | 0.600 mm/hr\n+14m    10:12 AM  Dry | 40% chance\n+15m    10:13 AM  Precipitation | 50% chance | 0.100 mm/hr\n+16m    10:14 AM  Rain | 60% chance | 0.200 mm/hr\n+17m    10:15 AM  Rain | 70% chance | 0.300 mm/hr\n+18m    10:16 AM  Precipitation | 80% chance | 0.400 mm/hr\n+19m    10:17 AM  Rain | 90% chance | 0.500 mm/hr\n+20m    10:18 AM  Rain | 0.600 mm/hr\n+21m    10:19 AM  Dry | 10% chance\n+22m    10:20 AM  Rain | 20% chance | 0.100 mm/hr\n+23m    10:21 AM  Rain | 30% chance | 0.200 mm/hr\n+24m    10:22 AM  Precipitation | 40% chance | 0.300 mm/hr\n+25m    10:23 AM  Rain | 50% chance | 0.400 mm/hr\n+26m    10:24 AM  Rain | 60% chance | 0.500 mm/hr\n+27m    10:25 AM  Precipitation | 70% chance | 0.600 mm/hr\n+28m    10:26 AM  Dry | 80% chance\n+29m    10:27 AM  Rain | 90% chance | 0.100 mm/hr\n+30m    10:28 AM  Precipitation | 0.200 mm/hr\n+31m    10:29 AM  Rain | 10% chance | 0.300 mm/hr\n+32m    10:30 AM  Rain | 20% chance | 0.400 mm/hr\n+33m    10:31 AM  Precipitation | 30% chance | 0.500 mm/hr\n+34m    10:32 AM  Rain | 40% chance | 0.600 mm/hr\n+35m    10:33 AM  Dry | 50% chance\n+36m    10:34 AM  Precipitation | 60% chance | 0.100 mm/hr\n+37m    10:35 AM  Rain | 70% chance | 0.200 mm/hr\n+38m    10:36 AM  Rain | 80% chance | 0.300 mm/hr\n+39m    10:37 AM  Precipitation | 90% chance | 0.400 mm/hr\n+40m    10:38 AM  Rain | 0.500 mm/hr\n+41m    10:39 AM  Rain | 10% chance | 0.600 mm/hr\n+42m    10:40 AM  Dry | 20% chance\n+43m    10:41 AM  Rain | 30% chance | 0.100 mm/hr\n+44m    10:42 AM  Rain | 40% chance | 0.200 mm/hr\n+45m    10:43 AM  Precipitation | 50% chance | 0.300 mm/hr\n+46m    10:44 AM  Rain | 60% chance | 0.400 mm/hr\n+47m    10:45 AM  Rain | 70% chance | 0.500 mm/hr\n+48m    10:46 AM  Precipitation | 80% chance | 0.600 mm/hr\n+49m    10:47 AM  Dry | 90% chance\n+50m    10:48 AM  Rain | 0.100 mm/hr\n+51m    10:49 AM  Precipitation | 10% chance | 0.200 mm/hr\n+52m    10:50 AM  Rain | 20% chance | 0.300 mm/hr\n+53m    10:51 AM  Rain | 30% chance | 0.400 mm/hr\n+54m    10:52 AM  Precipitation | 40% chance | 0.500 mm/hr\n+55m    10:53 AM  Rain | 50% chance | 0.600 mm/hr\n+56m    10:54 AM  Dry | 60% chance\n+57m    10:55 AM  Precipitation | 70% chance | 0.100 mm/hr\n+58m    10:56 AM  Rain | 80% chance | 0.200 mm/hr\n+59m    10:57 AM  Rain | 90% chance | 0.300 mm/hr\n+60m    10:58 AM  Precipitation | 0.400 mm/hr",
+   "title": "Precipitation Timeline - Philadelphia, PA",
+   "controls": [
+    {
+     "kind": "label",
+     "label": "Precipitation Timeline for Philadelphia, PA",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.2,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "label",
+     "label": "Pirate Weather short-range precipitation guidance for the next hour. Minute rows are model-interpolated guidance.",
+     "name": "staticText",
+     "bold": false,
+     "scale": 1.0,
+     "gray": true,
+     "wrap": 650
+    },
+    {
+     "kind": "label",
+     "label": "Summary",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.05,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "label",
+     "label": "Light rain starting in 12 min.",
+     "name": "Precipitation summary",
+     "bold": false,
+     "scale": 1.0,
+     "gray": false,
+     "wrap": 650
+    },
+    {
+     "kind": "label",
+     "label": "Minute-by-minute timeline",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.05,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "text",
+     "name": "Precipitation timeline text",
+     "value": "Times shown in America/New_York.\n\nOffset  Time      Conditions\n------  --------  ----------\nNow     9:58 AM   Dry\n+01m    9:59 AM   Dry\n+02m    10:00 AM  Rain | 12% chance | 0.200 mm/hr\n+03m    10:01 AM  Dry | 14% chance | 0.050 mm/hr (+/- 0.100 mm/hr)\n+04m    10:02 AM  Snow | 100% chance | 1.235 mm/hr (+/- 0.200 mm/hr)\n+05m    10:03 AM  Precipitation | 50% chance\n+06m    10:04 AM  Sleet | 30% chance\n+07m    10:05 AM  Freezing rain | 0.400 in/hr (+/- 0.010 in/hr)\n+08m    10:06 AM  Hail | 2.000 mm/hr\n+09m    10:07 AM  Ice | 0.700 mm/hr\n+10m    10:08 AM  Precipitation | 0% chance | 0.300 mm/hr\n+11m    10:09 AM  Precipitation | 2% chance | 0.000 mm/hr\n+12m    10:10 AM  Precipitation | 20% chance | 0.500 mm/hr\n+13m    10:11 AM  Rain | 30% chance | 0.600 mm/hr\n+14m    10:12 AM  Dry | 40% chance\n+15m    10:13 AM  Precipitation | 50% chance | 0.100 mm/hr\n+16m    10:14 AM  Rain | 60% chance | 0.200 mm/hr\n+17m    10:15 AM  Rain | 70% chance | 0.300 mm/hr\n+18m    10:16 AM  Precipitation | 80% chance | 0.400 mm/hr\n+19m    10:17 AM  Rain | 90% chance | 0.500 mm/hr\n+20m    10:18 AM  Rain | 0.600 mm/hr\n+21m    10:19 AM  Dry | 10% chance\n+22m    10:20 AM  Rain | 20% chance | 0.100 mm/hr\n+23m    10:21 AM  Rain | 30% chance | 0.200 mm/hr\n+24m    10:22 AM  Precipitation | 40% chance | 0.300 mm/hr\n+25m    10:23 AM  Rain | 50% chance | 0.400 mm/hr\n+26m    10:24 AM  Rain | 60% chance | 0.500 mm/hr\n+27m    10:25 AM  Precipitation | 70% chance | 0.600 mm/hr\n+28m    10:26 AM  Dry | 80% chance\n+29m    10:27 AM  Rain | 90% chance | 0.100 mm/hr\n+30m    10:28 AM  Precipitation | 0.200 mm/hr\n+31m    10:29 AM  Rain | 10% chance | 0.300 mm/hr\n+32m    10:30 AM  Rain | 20% chance | 0.400 mm/hr\n+33m    10:31 AM  Precipitation | 30% chance | 0.500 mm/hr\n+34m    10:32 AM  Rain | 40% chance | 0.600 mm/hr\n+35m    10:33 AM  Dry | 50% chance\n+36m    10:34 AM  Precipitation | 60% chance | 0.100 mm/hr\n+37m    10:35 AM  Rain | 70% chance | 0.200 mm/hr\n+38m    10:36 AM  Rain | 80% chance | 0.300 mm/hr\n+39m    10:37 AM  Precipitation | 90% chance | 0.400 mm/hr\n+40m    10:38 AM  Rain | 0.500 mm/hr\n+41m    10:39 AM  Rain | 10% chance | 0.600 mm/hr\n+42m    10:40 AM  Dry | 20% chance\n+43m    10:41 AM  Rain | 30% chance | 0.100 mm/hr\n+44m    10:42 AM  Rain | 40% chance | 0.200 mm/hr\n+45m    10:43 AM  Precipitation | 50% chance | 0.300 mm/hr\n+46m    10:44 AM  Rain | 60% chance | 0.400 mm/hr\n+47m    10:45 AM  Rain | 70% chance | 0.500 mm/hr\n+48m    10:46 AM  Precipitation | 80% chance | 0.600 mm/hr\n+49m    10:47 AM  Dry | 90% chance\n+50m    10:48 AM  Rain | 0.100 mm/hr\n+51m    10:49 AM  Precipitation | 10% chance | 0.200 mm/hr\n+52m    10:50 AM  Rain | 20% chance | 0.300 mm/hr\n+53m    10:51 AM  Rain | 30% chance | 0.400 mm/hr\n+54m    10:52 AM  Precipitation | 40% chance | 0.500 mm/hr\n+55m    10:53 AM  Rain | 50% chance | 0.600 mm/hr\n+56m    10:54 AM  Dry | 60% chance\n+57m    10:55 AM  Precipitation | 70% chance | 0.100 mm/hr\n+58m    10:56 AM  Rain | 80% chance | 0.200 mm/hr\n+59m    10:57 AM  Rain | 90% chance | 0.300 mm/hr\n+60m    10:58 AM  Precipitation | 0.400 mm/hr",
+     "mono": true,
+     "password": false
+    },
+    {
+     "kind": "button",
+     "id": 5001,
+     "label": "Close",
+     "name": "button"
+    }
+   ],
+   "focus": 5
+  },
+  {
+   "name": "tokyo",
+   "location": "Tokyo",
+   "timezone": "Asia/Tokyo",
+   "forecast": {
+    "summary": "Rain stopping soon.",
+    "icon": null,
+    "points": [
+     {
+      "time": "2026-09-25T13:58:00+00:00",
+      "precipitation_intensity": null,
+      "precipitation_probability": null,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T13:59:00+00:00",
+      "precipitation_intensity": 0.0,
+      "precipitation_probability": 0.0,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:00:00+00:00",
+      "precipitation_intensity": 0.2,
+      "precipitation_probability": 0.125,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:01:00+00:00",
+      "precipitation_intensity": 0.05,
+      "precipitation_probability": 0.135,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": 0.1,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:02:00+00:00",
+      "precipitation_intensity": 1.23456,
+      "precipitation_probability": 1.0,
+      "precipitation_type": "snow",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": 0.2,
+      "precipitation_intensity_error_unit": "mm/hr"
+     }
+    ]
+   },
+   "text": "Times shown in Asia/Tokyo.\n\nOffset  Time      Conditions\n------  --------  ----------\nNow     10:58 PM  Dry\n+01m    10:59 PM  Dry\n+02m    11:00 PM  Rain | 12% chance | 0.200 mm/hr\n+03m    11:01 PM  Dry | 14% chance | 0.050 mm/hr (+/- 0.100 mm/hr)\n+04m    11:02 PM  Snow | 100% chance | 1.235 mm/hr (+/- 0.200 mm/hr)",
+   "title": "Precipitation Timeline - Tokyo",
+   "controls": [
+    {
+     "kind": "label",
+     "label": "Precipitation Timeline for Tokyo",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.2,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "label",
+     "label": "Pirate Weather short-range precipitation guidance for the next hour. Minute rows are model-interpolated guidance.",
+     "name": "staticText",
+     "bold": false,
+     "scale": 1.0,
+     "gray": true,
+     "wrap": 650
+    },
+    {
+     "kind": "label",
+     "label": "Summary",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.05,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "label",
+     "label": "Rain stopping soon.",
+     "name": "Precipitation summary",
+     "bold": false,
+     "scale": 1.0,
+     "gray": false,
+     "wrap": 650
+    },
+    {
+     "kind": "label",
+     "label": "Minute-by-minute timeline",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.05,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "text",
+     "name": "Precipitation timeline text",
+     "value": "Times shown in Asia/Tokyo.\n\nOffset  Time      Conditions\n------  --------  ----------\nNow     10:58 PM  Dry\n+01m    10:59 PM  Dry\n+02m    11:00 PM  Rain | 12% chance | 0.200 mm/hr\n+03m    11:01 PM  Dry | 14% chance | 0.050 mm/hr (+/- 0.100 mm/hr)\n+04m    11:02 PM  Snow | 100% chance | 1.235 mm/hr (+/- 0.200 mm/hr)",
+     "mono": true,
+     "password": false
+    },
+    {
+     "kind": "button",
+     "id": 5001,
+     "label": "Close",
+     "name": "button"
+    }
+   ],
+   "focus": 5
+  },
+  {
+   "name": "no zone",
+   "location": "Somewhere",
+   "timezone": null,
+   "forecast": {
+    "summary": null,
+    "icon": null,
+    "points": [
+     {
+      "time": "2026-09-25T14:00:00+00:00",
+      "precipitation_intensity": 0.2,
+      "precipitation_probability": 0.125,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:01:00+00:00",
+      "precipitation_intensity": 0.05,
+      "precipitation_probability": 0.135,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": 0.1,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:02:00+00:00",
+      "precipitation_intensity": 1.23456,
+      "precipitation_probability": 1.0,
+      "precipitation_type": "snow",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": 0.2,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:03:00+00:00",
+      "precipitation_intensity": null,
+      "precipitation_probability": 0.5,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     }
+    ]
+   },
+   "text": "Times shown in forecast time.\n\nOffset  Time      Conditions\n------  --------  ----------\nNow     2:00 PM   Rain | 12% chance | 0.200 mm/hr\n+01m    2:01 PM   Dry | 14% chance | 0.050 mm/hr (+/- 0.100 mm/hr)\n+02m    2:02 PM   Snow | 100% chance | 1.235 mm/hr (+/- 0.200 mm/hr)\n+03m    2:03 PM   Precipitation | 50% chance",
+   "title": "Precipitation Timeline - Somewhere",
+   "controls": [
+    {
+     "kind": "label",
+     "label": "Precipitation Timeline for Somewhere",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.2,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "label",
+     "label": "Pirate Weather short-range precipitation guidance for the next hour. Minute rows are model-interpolated guidance.",
+     "name": "staticText",
+     "bold": false,
+     "scale": 1.0,
+     "gray": true,
+     "wrap": 650
+    },
+    {
+     "kind": "label",
+     "label": "Summary",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.05,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "label",
+     "label": "No summary available.",
+     "name": "Precipitation summary",
+     "bold": false,
+     "scale": 1.0,
+     "gray": false,
+     "wrap": 650
+    },
+    {
+     "kind": "label",
+     "label": "Minute-by-minute timeline",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.05,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "text",
+     "name": "Precipitation timeline text",
+     "value": "Times shown in forecast time.\n\nOffset  Time      Conditions\n------  --------  ----------\nNow     2:00 PM   Rain | 12% chance | 0.200 mm/hr\n+01m    2:01 PM   Dry | 14% chance | 0.050 mm/hr (+/- 0.100 mm/hr)\n+02m    2:02 PM   Snow | 100% chance | 1.235 mm/hr (+/- 0.200 mm/hr)\n+03m    2:03 PM   Precipitation | 50% chance",
+     "mono": true,
+     "password": false
+    },
+    {
+     "kind": "button",
+     "id": 5001,
+     "label": "Close",
+     "name": "button"
+    }
+   ],
+   "focus": 5
+  },
+  {
+   "name": "bad zone",
+   "location": "Mars",
+   "timezone": "Mars/Olympus_Mons",
+   "forecast": {
+    "summary": "",
+    "icon": null,
+    "points": [
+     {
+      "time": "2026-09-25T13:58:00+00:00",
+      "precipitation_intensity": null,
+      "precipitation_probability": null,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T13:59:00+00:00",
+      "precipitation_intensity": 0.0,
+      "precipitation_probability": 0.0,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T14:00:00+00:00",
+      "precipitation_intensity": 0.2,
+      "precipitation_probability": 0.125,
+      "precipitation_type": "rain",
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     }
+    ]
+   },
+   "text": "Times shown in forecast time.\n\nOffset  Time      Conditions\n------  --------  ----------\nNow     1:58 PM   Dry\n+01m    1:59 PM   Dry\n+02m    2:00 PM   Rain | 12% chance | 0.200 mm/hr",
+   "title": "Precipitation Timeline - Mars",
+   "controls": [
+    {
+     "kind": "label",
+     "label": "Precipitation Timeline for Mars",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.2,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "label",
+     "label": "Pirate Weather short-range precipitation guidance for the next hour. Minute rows are model-interpolated guidance.",
+     "name": "staticText",
+     "bold": false,
+     "scale": 1.0,
+     "gray": true,
+     "wrap": 650
+    },
+    {
+     "kind": "label",
+     "label": "Summary",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.05,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "label",
+     "label": "No summary available.",
+     "name": "Precipitation summary",
+     "bold": false,
+     "scale": 1.0,
+     "gray": false,
+     "wrap": 650
+    },
+    {
+     "kind": "label",
+     "label": "Minute-by-minute timeline",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.05,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "text",
+     "name": "Precipitation timeline text",
+     "value": "Times shown in forecast time.\n\nOffset  Time      Conditions\n------  --------  ----------\nNow     1:58 PM   Dry\n+01m    1:59 PM   Dry\n+02m    2:00 PM   Rain | 12% chance | 0.200 mm/hr",
+     "mono": true,
+     "password": false
+    },
+    {
+     "kind": "button",
+     "id": 5001,
+     "label": "Close",
+     "name": "button"
+    }
+   ],
+   "focus": 5
+  },
+  {
+   "name": "midnight",
+   "location": "Honolulu",
+   "timezone": "Pacific/Honolulu",
+   "forecast": {
+    "summary": "Dry.",
+    "icon": null,
+    "points": [
+     {
+      "time": "2026-09-25T10:00:00+00:00",
+      "precipitation_intensity": null,
+      "precipitation_probability": null,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     },
+     {
+      "time": "2026-09-25T22:01:00+00:00",
+      "precipitation_intensity": null,
+      "precipitation_probability": null,
+      "precipitation_type": null,
+      "precipitation_intensity_unit": "mm/hr",
+      "precipitation_intensity_error": null,
+      "precipitation_intensity_error_unit": "mm/hr"
+     }
+    ]
+   },
+   "text": "Times shown in Pacific/Honolulu.\n\nOffset  Time      Conditions\n------  --------  ----------\nNow     12:00 AM  Dry\n+01m    12:01 PM  Dry",
+   "title": "Precipitation Timeline - Honolulu",
+   "controls": [
+    {
+     "kind": "label",
+     "label": "Precipitation Timeline for Honolulu",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.2,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "label",
+     "label": "Pirate Weather short-range precipitation guidance for the next hour. Minute rows are model-interpolated guidance.",
+     "name": "staticText",
+     "bold": false,
+     "scale": 1.0,
+     "gray": true,
+     "wrap": 650
+    },
+    {
+     "kind": "label",
+     "label": "Summary",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.05,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "label",
+     "label": "Dry.",
+     "name": "Precipitation summary",
+     "bold": false,
+     "scale": 1.0,
+     "gray": false,
+     "wrap": 650
+    },
+    {
+     "kind": "label",
+     "label": "Minute-by-minute timeline",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.05,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "text",
+     "name": "Precipitation timeline text",
+     "value": "Times shown in Pacific/Honolulu.\n\nOffset  Time      Conditions\n------  --------  ----------\nNow     12:00 AM  Dry\n+01m    12:01 PM  Dry",
+     "mono": true,
+     "password": false
+    },
+    {
+     "kind": "button",
+     "id": 5001,
+     "label": "Close",
+     "name": "button"
+    }
+   ],
+   "focus": 5
+  },
+  {
+   "name": "empty",
+   "location": "Nowhere",
+   "timezone": "UTC",
+   "forecast": {
+    "summary": "Nothing",
+    "icon": null,
+    "points": []
+   },
+   "text": "Times shown in UTC.\n\nOffset  Time      Conditions\n------  --------  ----------\nNo minutely precipitation data available.",
+   "title": "Precipitation Timeline - Nowhere",
+   "controls": [
+    {
+     "kind": "label",
+     "label": "Precipitation Timeline for Nowhere",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.2,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "label",
+     "label": "Pirate Weather short-range precipitation guidance for the next hour. Minute rows are model-interpolated guidance.",
+     "name": "staticText",
+     "bold": false,
+     "scale": 1.0,
+     "gray": true,
+     "wrap": 650
+    },
+    {
+     "kind": "label",
+     "label": "Summary",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.05,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "label",
+     "label": "Nothing",
+     "name": "Precipitation summary",
+     "bold": false,
+     "scale": 1.0,
+     "gray": false,
+     "wrap": 650
+    },
+    {
+     "kind": "label",
+     "label": "Minute-by-minute timeline",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.05,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "text",
+     "name": "Precipitation timeline text",
+     "value": "Times shown in UTC.\n\nOffset  Time      Conditions\n------  --------  ----------\nNo minutely precipitation data available.",
+     "mono": true,
+     "password": false
+    },
+    {
+     "kind": "button",
+     "id": 5001,
+     "label": "Close",
+     "name": "button"
+    }
+   ],
+   "focus": 5
+  }
+ ],
+ "environmental": [
+  {
+   "name": "none",
+   "location": "Philadelphia, PA",
+   "environmental": null,
+   "air_quality": {
+    "title": "Air Quality - Philadelphia, PA",
+    "controls": [
+     {
+      "kind": "label",
+      "label": "Air quality data is not available for this location.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "button",
+      "id": 5001,
+      "label": "Close",
+      "name": "button"
+     }
+    ],
+    "focus": 1
+   },
+   "uv_index": {
+    "title": "UV Index - Philadelphia, PA",
+    "controls": [
+     {
+      "kind": "label",
+      "label": "UV index data is not available for this location.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "button",
+      "id": 5001,
+      "label": "Close",
+      "name": "button"
+     }
+    ],
+    "focus": 1
+   }
+  },
+  {
+   "name": "empty",
+   "location": "Philadelphia, PA",
+   "environmental": {
+    "air_quality_index": null,
+    "air_quality_category": null,
+    "air_quality_pollutant": null,
+    "air_quality_updated_at": null,
+    "air_quality_reporting_area": null,
+    "air_quality_source": null,
+    "hourly_air_quality": [],
+    "uv_index": null,
+    "uv_category": null,
+    "hourly_uv_index": [],
+    "pollen_index": null,
+    "pollen_category": null,
+    "pollen_tree_index": null,
+    "pollen_grass_index": null,
+    "pollen_weed_index": null,
+    "pollen_primary_allergen": null,
+    "updated_at": null,
+    "sources": []
+   },
+   "air_quality": {
+    "title": "Air Quality - Philadelphia, PA",
+    "controls": [
+     {
+      "kind": "label",
+      "label": "Air quality data is not available for this location.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "button",
+      "id": 5001,
+      "label": "Close",
+      "name": "button"
+     }
+    ],
+    "focus": 1
+   },
+   "uv_index": {
+    "title": "UV Index - Philadelphia, PA",
+    "controls": [
+     {
+      "kind": "label",
+      "label": "UV index data is not available for this location.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "button",
+      "id": 5001,
+      "label": "Close",
+      "name": "button"
+     }
+    ],
+    "focus": 1
+   }
+  },
+  {
+   "name": "full airnow",
+   "location": "Philadelphia, PA",
+   "environmental": {
+    "air_quality_index": 42.5,
+    "air_quality_category": "Good",
+    "air_quality_pollutant": "pm2_5",
+    "air_quality_updated_at": "2026-09-25T14:00:00-04:00",
+    "air_quality_reporting_area": "  Philadelphia  ",
+    "air_quality_source": "AirNow",
+    "hourly_air_quality": [
+     {
+      "timestamp": "2026-09-25T00:00:00-04:00",
+      "aqi": 42,
+      "category": "Good",
+      "pm2_5": 8.25,
+      "pm10": 15.0,
+      "ozone": 61.349,
+      "nitrogen_dioxide": 12.05,
+      "sulphur_dioxide": 1.0,
+      "carbon_monoxide": 210.55
+     },
+     {
+      "timestamp": "2026-09-25T01:00:00-04:00",
+      "aqi": 41,
+      "category": "Good",
+      "pm2_5": 6.0,
+      "pm10": null,
+      "ozone": null,
+      "nitrogen_dioxide": null,
+      "sulphur_dioxide": null,
+      "carbon_monoxide": null
+     },
+     {
+      "timestamp": "2026-09-25T02:00:00-04:00",
+      "aqi": 42,
+      "category": "Good",
+      "pm2_5": 7.0,
+      "pm10": null,
+      "ozone": null,
+      "nitrogen_dioxide": null,
+      "sulphur_dioxide": null,
+      "carbon_monoxide": null
+     },
+     {
+      "timestamp": "2026-09-25T03:00:00-04:00",
+      "aqi": 43,
+      "category": "Good",
+      "pm2_5": 8.0,
+      "pm10": null,
+      "ozone": null,
+      "nitrogen_dioxide": null,
+      "sulphur_dioxide": null,
+      "carbon_monoxide": null
+     },
+     {
+      "timestamp": "2026-09-25T04:00:00-04:00",
+      "aqi": 44,
+      "category": "Good",
+      "pm2_5": 9.0,
+      "pm10": null,
+      "ozone": null,
+      "nitrogen_dioxide": null,
+      "sulphur_dioxide": null,
+      "carbon_monoxide": null
+     },
+     {
+      "timestamp": "2026-09-25T05:00:00-04:00",
+      "aqi": 45,
+      "category": "Good",
+      "pm2_5": 10.0,
+      "pm10": null,
+      "ozone": null,
+      "nitrogen_dioxide": null,
+      "sulphur_dioxide": null,
+      "carbon_monoxide": null
+     },
+     {
+      "timestamp": "2026-09-25T06:00:00-04:00",
+      "aqi": 46,
+      "category": "Good",
+      "pm2_5": 11.0,
+      "pm10": null,
+      "ozone": null,
+      "nitrogen_dioxide": null,
+      "sulphur_dioxide": null,
+      "carbon_monoxide": null
+     },
+     {
+      "timestamp": "2026-09-25T07:00:00-04:00",
+      "aqi": 47,
+      "category": "Good",
+      "pm2_5": 12.0,
+      "pm10": null,
+      "ozone": null,
+      "nitrogen_dioxide": null,
+      "sulphur_dioxide": null,
+      "carbon_monoxide": null
+     },
+     {
+      "timestamp": "2026-09-25T08:00:00-04:00",
+      "aqi": 48,
+      "category": "Good",
+      "pm2_5": 13.0,
+      "pm10": null,
+      "ozone": null,
+      "nitrogen_dioxide": null,
+      "sulphur_dioxide": null,
+      "carbon_monoxide": null
+     },
+     {
+      "timestamp": "2026-09-25T09:00:00-04:00",
+      "aqi": 49,
+      "category": "Good",
+      "pm2_5": 14.0,
+      "pm10": null,
+      "ozone": null,
+      "nitrogen_dioxide": null,
+      "sulphur_dioxide": null,
+      "carbon_monoxide": null
+     },
+     {
+      "timestamp": "2026-09-25T10:00:00-04:00",
+      "aqi": 50,
+      "category": "Good",
+      "pm2_5": 15.0,
+      "pm10": null,
+      "ozone": null,
+      "nitrogen_dioxide": null,
+      "sulphur_dioxide": null,
+      "carbon_monoxide": null
+     },
+     {
+      "timestamp": "2026-09-25T11:00:00-04:00",
+      "aqi": 51,
+      "category": "Good",
+      "pm2_5": 16.0,
+      "pm10": null,
+      "ozone": null,
+      "nitrogen_dioxide": null,
+      "sulphur_dioxide": null,
+      "carbon_monoxide": null
+     },
+     {
+      "timestamp": "2026-09-25T12:00:00-04:00",
+      "aqi": 52,
+      "category": "Good",
+      "pm2_5": 17.0,
+      "pm10": null,
+      "ozone": null,
+      "nitrogen_dioxide": null,
+      "sulphur_dioxide": null,
+      "carbon_monoxide": null
+     },
+     {
+      "timestamp": "2026-09-25T13:00:00-04:00",
+      "aqi": 53,
+      "category": "Good",
+      "pm2_5": 18.0,
+      "pm10": null,
+      "ozone": null,
+      "nitrogen_dioxide": null,
+      "sulphur_dioxide": null,
+      "carbon_monoxide": null
+     }
+    ],
+    "uv_index": 7.5,
+    "uv_category": "High",
+    "hourly_uv_index": [
+     {
+      "timestamp": "2026-09-25T06:00:00-04:00",
+      "uv_index": 0.0,
+      "category": "Moderate"
+     },
+     {
+      "timestamp": "2026-09-25T07:00:00-04:00",
+      "uv_index": 0.4,
+      "category": "Moderate"
+     },
+     {
+      "timestamp": "2026-09-25T08:00:00-04:00",
+      "uv_index": 1.5,
+      "category": "Moderate"
+     },
+     {
+      "timestamp": "2026-09-25T09:00:00-04:00",
+      "uv_index": 2.5,
+      "category": "Moderate"
+     },
+     {
+      "timestamp": "2026-09-25T10:00:00-04:00",
+      "uv_index": 3.49,
+      "category": "Moderate"
+     },
+     {
+      "timestamp": "2026-09-25T11:00:00-04:00",
+      "uv_index": 5.5,
+      "category": "Moderate"
+     },
+     {
+      "timestamp": "2026-09-25T12:00:00-04:00",
+      "uv_index": 7.5,
+      "category": "Moderate"
+     },
+     {
+      "timestamp": "2026-09-25T13:00:00-04:00",
+      "uv_index": 8.2,
+      "category": "Moderate"
+     },
+     {
+      "timestamp": "2026-09-25T14:00:00-04:00",
+      "uv_index": 9.0,
+      "category": "Moderate"
+     },
+     {
+      "timestamp": "2026-09-25T15:00:00-04:00",
+      "uv_index": 10.5,
+      "category": "Moderate"
+     },
+     {
+      "timestamp": "2026-09-25T16:00:00-04:00",
+      "uv_index": 11.0,
+      "category": "Moderate"
+     },
+     {
+      "timestamp": "2026-09-25T17:00:00-04:00",
+      "uv_index": 6.0,
+      "category": "Moderate"
+     },
+     {
+      "timestamp": "2026-09-25T18:00:00-04:00",
+      "uv_index": 3.0,
+      "category": "Moderate"
+     },
+     {
+      "timestamp": "2026-09-25T19:00:00-04:00",
+      "uv_index": 1.0,
+      "category": "Moderate"
+     }
+    ],
+    "pollen_index": null,
+    "pollen_category": null,
+    "pollen_tree_index": null,
+    "pollen_grass_index": null,
+    "pollen_weed_index": null,
+    "pollen_primary_allergen": null,
+    "updated_at": "2026-09-25T09:05:00-04:00",
+    "sources": [
+     "AirNow",
+     "Open-Meteo Air Quality",
+     "Open-Meteo Air Quality",
+     "Pollen.com"
+    ]
+   },
+   "air_quality": {
+    "title": "Air Quality - Philadelphia, PA",
+    "controls": [
+     {
+      "kind": "label",
+      "label": "Current Air Quality",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "text",
+      "name": "Current air quality summary",
+      "value": "AQI: 42 (Good)\nDominant pollutant: PM2.5 (Fine Particles)\nHealth guidance: Air quality is satisfactory. No precautions needed.\nLast updated: 2:00 PM on September 25, 2026\nReporting area: Philadelphia\nSource: EPA AirNow and participating air quality agencies\nHourly forecast and pollutant concentrations: Open-Meteo Air Quality\nStatus: Preliminary data; values may change after quality control.",
+      "mono": false,
+      "password": false
+     },
+     {
+      "kind": "label",
+      "label": "Hourly Forecast",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "text",
+      "name": "Hourly Forecast",
+      "value": "12:00 AM: AQI 42\n1:00 AM: AQI 41\n2:00 AM: AQI 42\n3:00 AM: AQI 43\n4:00 AM: AQI 44\n5:00 AM: AQI 45\n6:00 AM: AQI 46\n7:00 AM: AQI 47\n8:00 AM: AQI 48\n9:00 AM: AQI 49\n10:00 AM: AQI 50\n11:00 AM: AQI 51",
+      "mono": false,
+      "password": false
+     },
+     {
+      "kind": "label",
+      "label": "Current Pollutant Levels",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "text",
+      "name": "Current Pollutant Levels",
+      "value": "PM2.5 (Fine Particles): 8.2 µg/m³ (dominant)\nPM10 (Coarse Particles): 15.0 µg/m³\nOzone: 61.3 µg/m³\nNitrogen Dioxide: 12.1 µg/m³\nSulfur Dioxide: 1.0 µg/m³\nCarbon Monoxide: 210.6 µg/m³",
+      "mono": false,
+      "password": false
+     },
+     {
+      "kind": "button",
+      "id": 5001,
+      "label": "Close",
+      "name": "button"
+     }
+    ],
+    "focus": 1
+   },
+   "uv_index": {
+    "title": "UV Index - Philadelphia, PA",
+    "controls": [
+     {
+      "kind": "label",
+      "label": "Current UV Index",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "UV Index: 8 (High)",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.05,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Health guidance: Reduce time in the sun between 10am and 4pm. Seek shade, wear protective clothing.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": 550
+     },
+     {
+      "kind": "label",
+      "label": "Last updated: 9:05 AM on September 25, 2026",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Hourly Forecast",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "text",
+      "name": "Hourly Forecast",
+      "value": "Hour 1: UV 0\nHour 2: UV 0\nHour 3: UV 2\nHour 4: UV 2\nHour 5: UV 3\nHour 6: UV 6\nHour 7: UV 8\nHour 8: UV 8\nHour 9: UV 9\nHour 10: UV 10\nHour 11: UV 11\nHour 12: UV 6",
+      "mono": false,
+      "password": false
+     },
+     {
+      "kind": "label",
+      "label": "Sun Safety Recommendations",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "text",
+      "name": "Sun Safety Recommendations",
+      "value": "• SPF 30+ sunscreen is essential\n• Wear protective clothing, hat, and sunglasses\n• Seek shade, especially during midday\n• Limit time in direct sun between 10am-4pm\n• Stay hydrated",
+      "mono": false,
+      "password": false
+     },
+     {
+      "kind": "button",
+      "id": 5001,
+      "label": "Close",
+      "name": "button"
+     }
+    ],
+    "focus": 5
+   }
+  },
+  {
+   "name": "category only",
+   "location": "Philadelphia, PA",
+   "environmental": {
+    "air_quality_index": null,
+    "air_quality_category": "Moderate",
+    "air_quality_pollutant": "OZONE",
+    "air_quality_updated_at": null,
+    "air_quality_reporting_area": null,
+    "air_quality_source": null,
+    "hourly_air_quality": [],
+    "uv_index": null,
+    "uv_category": "Moderate",
+    "hourly_uv_index": [],
+    "pollen_index": 3.0,
+    "pollen_category": null,
+    "pollen_tree_index": null,
+    "pollen_grass_index": null,
+    "pollen_weed_index": null,
+    "pollen_primary_allergen": null,
+    "updated_at": "2026-01-05T00:30:00+00:00",
+    "sources": [
+     "Open-Meteo"
+    ]
+   },
+   "air_quality": {
+    "title": "Air Quality - Philadelphia, PA",
+    "controls": [
+     {
+      "kind": "label",
+      "label": "Current Air Quality",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "text",
+      "name": "Current air quality summary",
+      "value": "Moderate\nDominant pollutant: Ozone\nHealth guidance: Unusually sensitive people should consider limiting prolonged outdoor exertion.\nLast updated: 12:30 AM on January 05, 2026\nSource: Open-Meteo",
+      "mono": false,
+      "password": false
+     },
+     {
+      "kind": "label",
+      "label": "Hourly Forecast",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Hourly forecast data is not available.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Current Pollutant Levels",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Pollutant data is not available.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": null
+     },
+     {
+      "kind": "button",
+      "id": 5001,
+      "label": "Close",
+      "name": "button"
+     }
+    ],
+    "focus": 1
+   },
+   "uv_index": {
+    "title": "UV Index - Philadelphia, PA",
+    "controls": [
+     {
+      "kind": "label",
+      "label": "Current UV Index",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Moderate",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.05,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Health guidance: Seek shade during midday hours. Wear protective clothing.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": 550
+     },
+     {
+      "kind": "label",
+      "label": "Last updated: 12:30 AM on January 05, 2026",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Hourly Forecast",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Hourly forecast data is not available.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Sun Safety Recommendations",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "text",
+      "name": "Sun Safety Recommendations",
+      "value": "• SPF 30+ sunscreen, reapply every 2 hours\n• Wear sunglasses and a wide-brimmed hat\n• Seek shade during midday hours\n• Cover up with clothing when possible",
+      "mono": false,
+      "password": false
+     },
+     {
+      "kind": "button",
+      "id": 5001,
+      "label": "Close",
+      "name": "button"
+     }
+    ],
+    "focus": 8
+   }
+  },
+  {
+   "name": "measurements missing",
+   "location": "Philadelphia, PA",
+   "environmental": {
+    "air_quality_index": 150.0,
+    "air_quality_category": "Unhealthy for Sensitive Groups",
+    "air_quality_pollutant": "NO2",
+    "air_quality_updated_at": null,
+    "air_quality_reporting_area": null,
+    "air_quality_source": "Open-Meteo Air Quality",
+    "hourly_air_quality": [
+     {
+      "timestamp": "2026-09-25T12:00:00-04:00",
+      "aqi": 150,
+      "category": "Good",
+      "pm2_5": null,
+      "pm10": null,
+      "ozone": null,
+      "nitrogen_dioxide": null,
+      "sulphur_dioxide": null,
+      "carbon_monoxide": null
+     }
+    ],
+    "uv_index": 3.2,
+    "uv_category": null,
+    "hourly_uv_index": [],
+    "pollen_index": null,
+    "pollen_category": null,
+    "pollen_tree_index": null,
+    "pollen_grass_index": null,
+    "pollen_weed_index": null,
+    "pollen_primary_allergen": null,
+    "updated_at": null,
+    "sources": []
+   },
+   "air_quality": {
+    "title": "Air Quality - Philadelphia, PA",
+    "controls": [
+     {
+      "kind": "label",
+      "label": "Current Air Quality",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "text",
+      "name": "Current air quality summary",
+      "value": "AQI: 150 (Unhealthy for Sensitive Groups)\nDominant pollutant: Nitrogen Dioxide\nHealth guidance: People with respiratory conditions, children, and older adults should limit prolonged outdoor exertion.\nLast updated: Not available\nSource: Open-Meteo Air Quality",
+      "mono": false,
+      "password": false
+     },
+     {
+      "kind": "label",
+      "label": "Hourly Forecast",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "text",
+      "name": "Hourly Forecast",
+      "value": "12:00 PM: AQI 150",
+      "mono": false,
+      "password": false
+     },
+     {
+      "kind": "label",
+      "label": "Current Pollutant Levels",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "text",
+      "name": "Current Pollutant Levels",
+      "value": "No measurements available.",
+      "mono": false,
+      "password": false
+     },
+     {
+      "kind": "button",
+      "id": 5001,
+      "label": "Close",
+      "name": "button"
+     }
+    ],
+    "focus": 1
+   },
+   "uv_index": {
+    "title": "UV Index - Philadelphia, PA",
+    "controls": [
+     {
+      "kind": "label",
+      "label": "Current UV Index",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "UV Index: 3",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.05,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Health guidance: Monitor UV levels and use sun protection as needed.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": 550
+     },
+     {
+      "kind": "label",
+      "label": "Hourly Forecast",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Hourly forecast data is not available.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Sun Safety Recommendations",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Sun safety recommendations are not available.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": null
+     },
+     {
+      "kind": "button",
+      "id": 5001,
+      "label": "Close",
+      "name": "button"
+     }
+    ],
+    "focus": 7
+   }
+  },
+  {
+   "name": "no2 dominant",
+   "location": "Philadelphia, PA",
+   "environmental": {
+    "air_quality_index": 99.0,
+    "air_quality_category": "Moderate",
+    "air_quality_pollutant": "no2",
+    "air_quality_updated_at": null,
+    "air_quality_reporting_area": null,
+    "air_quality_source": null,
+    "hourly_air_quality": [
+     {
+      "timestamp": "2026-09-25T03:00:00-04:00",
+      "aqi": 99,
+      "category": "Good",
+      "pm2_5": null,
+      "pm10": null,
+      "ozone": null,
+      "nitrogen_dioxide": 40.0,
+      "sulphur_dioxide": null,
+      "carbon_monoxide": 300.0
+     }
+    ],
+    "uv_index": null,
+    "uv_category": "Unknown Category",
+    "hourly_uv_index": [
+     {
+      "timestamp": "2026-09-25T06:00:00-04:00",
+      "uv_index": 0.0,
+      "category": "Moderate"
+     },
+     {
+      "timestamp": "2026-09-25T07:00:00-04:00",
+      "uv_index": 0.4,
+      "category": "Moderate"
+     },
+     {
+      "timestamp": "2026-09-25T08:00:00-04:00",
+      "uv_index": 1.5,
+      "category": "Moderate"
+     }
+    ],
+    "pollen_index": null,
+    "pollen_category": null,
+    "pollen_tree_index": null,
+    "pollen_grass_index": null,
+    "pollen_weed_index": null,
+    "pollen_primary_allergen": null,
+    "updated_at": null,
+    "sources": []
+   },
+   "air_quality": {
+    "title": "Air Quality - Philadelphia, PA",
+    "controls": [
+     {
+      "kind": "label",
+      "label": "Current Air Quality",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "text",
+      "name": "Current air quality summary",
+      "value": "AQI: 99 (Moderate)\nDominant pollutant: Nitrogen Dioxide\nHealth guidance: Unusually sensitive people should consider limiting prolonged outdoor exertion.\nLast updated: Not available\nSource: Not available",
+      "mono": false,
+      "password": false
+     },
+     {
+      "kind": "label",
+      "label": "Hourly Forecast",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "text",
+      "name": "Hourly Forecast",
+      "value": "3:00 AM: AQI 99",
+      "mono": false,
+      "password": false
+     },
+     {
+      "kind": "label",
+      "label": "Current Pollutant Levels",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "text",
+      "name": "Current Pollutant Levels",
+      "value": "Nitrogen Dioxide: 40.0 µg/m³ (dominant)\nCarbon Monoxide: 300.0 µg/m³",
+      "mono": false,
+      "password": false
+     },
+     {
+      "kind": "button",
+      "id": 5001,
+      "label": "Close",
+      "name": "button"
+     }
+    ],
+    "focus": 1
+   },
+   "uv_index": {
+    "title": "UV Index - Philadelphia, PA",
+    "controls": [
+     {
+      "kind": "label",
+      "label": "Current UV Index",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Unknown Category",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.05,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Health guidance: Monitor UV levels and use sun protection as needed.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": 550
+     },
+     {
+      "kind": "label",
+      "label": "Hourly Forecast",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "text",
+      "name": "Hourly Forecast",
+      "value": "Hour 1: UV 0\nHour 2: UV 0\nHour 3: UV 2",
+      "mono": false,
+      "password": false
+     },
+     {
+      "kind": "label",
+      "label": "Sun Safety Recommendations",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Sun safety recommendations are not available.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": null
+     },
+     {
+      "kind": "button",
+      "id": 5001,
+      "label": "Close",
+      "name": "button"
+     }
+    ],
+    "focus": 4
+   }
+  },
+  {
+   "name": "uv only",
+   "location": "Philadelphia, PA",
+   "environmental": {
+    "air_quality_index": null,
+    "air_quality_category": null,
+    "air_quality_pollutant": null,
+    "air_quality_updated_at": null,
+    "air_quality_reporting_area": null,
+    "air_quality_source": null,
+    "hourly_air_quality": [],
+    "uv_index": 0.5,
+    "uv_category": null,
+    "hourly_uv_index": [
+     {
+      "timestamp": "2026-09-25T06:00:00-04:00",
+      "uv_index": 0.0,
+      "category": "Moderate"
+     },
+     {
+      "timestamp": "2026-09-25T07:00:00-04:00",
+      "uv_index": 0.4,
+      "category": "Moderate"
+     }
+    ],
+    "pollen_index": null,
+    "pollen_category": null,
+    "pollen_tree_index": null,
+    "pollen_grass_index": null,
+    "pollen_weed_index": null,
+    "pollen_primary_allergen": null,
+    "updated_at": null,
+    "sources": []
+   },
+   "air_quality": {
+    "title": "Air Quality - Philadelphia, PA",
+    "controls": [
+     {
+      "kind": "label",
+      "label": "Current Air Quality",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "text",
+      "name": "Current air quality summary",
+      "value": "AQI: Not available\nDominant pollutant: Not available\nHealth guidance: Check current local air quality guidance before prolonged outdoor activity.\nLast updated: Not available\nSource: Not available",
+      "mono": false,
+      "password": false
+     },
+     {
+      "kind": "label",
+      "label": "Hourly Forecast",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Hourly forecast data is not available.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Current Pollutant Levels",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Pollutant data is not available.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": null
+     },
+     {
+      "kind": "button",
+      "id": 5001,
+      "label": "Close",
+      "name": "button"
+     }
+    ],
+    "focus": 1
+   },
+   "uv_index": {
+    "title": "UV Index - Philadelphia, PA",
+    "controls": [
+     {
+      "kind": "label",
+      "label": "Current UV Index",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "UV Index: 0",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.05,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Health guidance: Monitor UV levels and use sun protection as needed.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": 550
+     },
+     {
+      "kind": "label",
+      "label": "Hourly Forecast",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "text",
+      "name": "Hourly Forecast",
+      "value": "Hour 1: UV 0\nHour 2: UV 0",
+      "mono": false,
+      "password": false
+     },
+     {
+      "kind": "label",
+      "label": "Sun Safety Recommendations",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Sun safety recommendations are not available.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": null
+     },
+     {
+      "kind": "button",
+      "id": 5001,
+      "label": "Close",
+      "name": "button"
+     }
+    ],
+    "focus": 4
+   }
+  },
+  {
+   "name": "aq only",
+   "location": "Philadelphia, PA",
+   "environmental": {
+    "air_quality_index": 301.5,
+    "air_quality_category": "Hazardous",
+    "air_quality_pollutant": "Smoke",
+    "air_quality_updated_at": null,
+    "air_quality_reporting_area": null,
+    "air_quality_source": null,
+    "hourly_air_quality": [],
+    "uv_index": null,
+    "uv_category": null,
+    "hourly_uv_index": [],
+    "pollen_index": null,
+    "pollen_category": null,
+    "pollen_tree_index": null,
+    "pollen_grass_index": null,
+    "pollen_weed_index": null,
+    "pollen_primary_allergen": null,
+    "updated_at": null,
+    "sources": []
+   },
+   "air_quality": {
+    "title": "Air Quality - Philadelphia, PA",
+    "controls": [
+     {
+      "kind": "label",
+      "label": "Current Air Quality",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "text",
+      "name": "Current air quality summary",
+      "value": "AQI: 302 (Hazardous)\nDominant pollutant: Smoke\nHealth guidance: Everyone should avoid all outdoor exertion. Stay indoors.\nLast updated: Not available\nSource: Not available",
+      "mono": false,
+      "password": false
+     },
+     {
+      "kind": "label",
+      "label": "Hourly Forecast",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Hourly forecast data is not available.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Current Pollutant Levels",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Pollutant data is not available.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": null
+     },
+     {
+      "kind": "button",
+      "id": 5001,
+      "label": "Close",
+      "name": "button"
+     }
+    ],
+    "focus": 1
+   },
+   "uv_index": {
+    "title": "UV Index - Philadelphia, PA",
+    "controls": [
+     {
+      "kind": "label",
+      "label": "Current UV Index",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Health guidance: Monitor UV levels and use sun protection as needed.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": 550
+     },
+     {
+      "kind": "label",
+      "label": "Hourly Forecast",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Hourly forecast data is not available.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Sun Safety Recommendations",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Sun safety recommendations are not available.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": null
+     },
+     {
+      "kind": "button",
+      "id": 5001,
+      "label": "Close",
+      "name": "button"
+     }
+    ],
+    "focus": 6
+   }
+  },
+  {
+   "name": "sources airnow",
+   "location": "Philadelphia, PA",
+   "environmental": {
+    "air_quality_index": 12.0,
+    "air_quality_category": "Very Unhealthy",
+    "air_quality_pollutant": null,
+    "air_quality_updated_at": null,
+    "air_quality_reporting_area": "   ",
+    "air_quality_source": null,
+    "hourly_air_quality": [],
+    "uv_index": 11.5,
+    "uv_category": "Extreme",
+    "hourly_uv_index": [],
+    "pollen_index": null,
+    "pollen_category": null,
+    "pollen_tree_index": null,
+    "pollen_grass_index": null,
+    "pollen_weed_index": null,
+    "pollen_primary_allergen": null,
+    "updated_at": null,
+    "sources": [
+     "  ",
+     "airnow.gov",
+     "Open-Meteo Air Quality",
+     "CAMS",
+     "air quality lab"
+    ]
+   },
+   "air_quality": {
+    "title": "Air Quality - Philadelphia, PA",
+    "controls": [
+     {
+      "kind": "label",
+      "label": "Current Air Quality",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "text",
+      "name": "Current air quality summary",
+      "value": "AQI: 12 (Very Unhealthy)\nDominant pollutant: Not available\nHealth guidance: Everyone should avoid prolonged outdoor exertion.\nLast updated: Not available\nSource: EPA AirNow and participating air quality agencies\nHourly forecast and pollutant concentrations: Open-Meteo Air Quality, air quality lab\nStatus: Preliminary data; values may change after quality control.",
+      "mono": false,
+      "password": false
+     },
+     {
+      "kind": "label",
+      "label": "Hourly Forecast",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Hourly forecast data is not available.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Current Pollutant Levels",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Pollutant data is not available.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": null
+     },
+     {
+      "kind": "button",
+      "id": 5001,
+      "label": "Close",
+      "name": "button"
+     }
+    ],
+    "focus": 1
+   },
+   "uv_index": {
+    "title": "UV Index - Philadelphia, PA",
+    "controls": [
+     {
+      "kind": "label",
+      "label": "Current UV Index",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "UV Index: 12 (Extreme)",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.05,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Health guidance: Try to avoid sun exposure between 10am and 4pm. Shirt, sunscreen, and hat are essential.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": 550
+     },
+     {
+      "kind": "label",
+      "label": "Hourly Forecast",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Hourly forecast data is not available.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Sun Safety Recommendations",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "text",
+      "name": "Sun Safety Recommendations",
+      "value": "• AVOID outdoor activities between 10am-4pm if possible\n• SPF 50+ sunscreen is critical, reapply every 1-2 hours\n• Full protective clothing, hat, and sunglasses required\n• Seek air-conditioned spaces\n• Watch for signs of heat illness\n• Extremely high risk of skin and eye damage",
+      "mono": false,
+      "password": false
+     },
+     {
+      "kind": "button",
+      "id": 5001,
+      "label": "Close",
+      "name": "button"
+     }
+    ],
+    "focus": 7
+   }
+  },
+  {
+   "name": "unknown category",
+   "location": "Philadelphia, PA",
+   "environmental": {
+    "air_quality_index": 55.0,
+    "air_quality_category": "Mystery",
+    "air_quality_pollutant": null,
+    "air_quality_updated_at": null,
+    "air_quality_reporting_area": null,
+    "air_quality_source": "  ",
+    "hourly_air_quality": [],
+    "uv_index": null,
+    "uv_category": "Very High",
+    "hourly_uv_index": [],
+    "pollen_index": null,
+    "pollen_category": null,
+    "pollen_tree_index": null,
+    "pollen_grass_index": null,
+    "pollen_weed_index": null,
+    "pollen_primary_allergen": null,
+    "updated_at": null,
+    "sources": [
+     "Pirate",
+     "Pirate",
+     "Open-Meteo"
+    ]
+   },
+   "air_quality": {
+    "title": "Air Quality - Philadelphia, PA",
+    "controls": [
+     {
+      "kind": "label",
+      "label": "Current Air Quality",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "text",
+      "name": "Current air quality summary",
+      "value": "AQI: 55 (Mystery)\nDominant pollutant: Not available\nHealth guidance: Check current local air quality guidance before prolonged outdoor activity.\nLast updated: Not available\nSource: Pirate, Open-Meteo",
+      "mono": false,
+      "password": false
+     },
+     {
+      "kind": "label",
+      "label": "Hourly Forecast",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Hourly forecast data is not available.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Current Pollutant Levels",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Pollutant data is not available.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": null
+     },
+     {
+      "kind": "button",
+      "id": 5001,
+      "label": "Close",
+      "name": "button"
+     }
+    ],
+    "focus": 1
+   },
+   "uv_index": {
+    "title": "UV Index - Philadelphia, PA",
+    "controls": [
+     {
+      "kind": "label",
+      "label": "Current UV Index",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Very High",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.05,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Health guidance: Take extra precautions. Minimize sun exposure between 10am and 4pm.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": 550
+     },
+     {
+      "kind": "label",
+      "label": "Hourly Forecast",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Hourly forecast data is not available.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Sun Safety Recommendations",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "text",
+      "name": "Sun Safety Recommendations",
+      "value": "• SPF 50+ sunscreen, reapply frequently\n• Protective clothing, wide-brimmed hat, UV-blocking sunglasses\n• Stay in shade whenever possible\n• Minimize outdoor activities between 10am-4pm\n• Extra caution for children and sensitive skin",
+      "mono": false,
+      "password": false
+     },
+     {
+      "kind": "button",
+      "id": 5001,
+      "label": "Close",
+      "name": "button"
+     }
+    ],
+    "focus": 7
+   }
+  },
+  {
+   "name": "uv category only",
+   "location": "Philadelphia, PA",
+   "environmental": {
+    "air_quality_index": null,
+    "air_quality_category": null,
+    "air_quality_pollutant": null,
+    "air_quality_updated_at": null,
+    "air_quality_reporting_area": null,
+    "air_quality_source": null,
+    "hourly_air_quality": [],
+    "uv_index": null,
+    "uv_category": "Low",
+    "hourly_uv_index": [],
+    "pollen_index": null,
+    "pollen_category": null,
+    "pollen_tree_index": 1.0,
+    "pollen_grass_index": null,
+    "pollen_weed_index": null,
+    "pollen_primary_allergen": null,
+    "updated_at": null,
+    "sources": []
+   },
+   "air_quality": {
+    "title": "Air Quality - Philadelphia, PA",
+    "controls": [
+     {
+      "kind": "label",
+      "label": "Current Air Quality",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "text",
+      "name": "Current air quality summary",
+      "value": "AQI: Not available\nDominant pollutant: Not available\nHealth guidance: Check current local air quality guidance before prolonged outdoor activity.\nLast updated: Not available\nSource: Not available",
+      "mono": false,
+      "password": false
+     },
+     {
+      "kind": "label",
+      "label": "Hourly Forecast",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Hourly forecast data is not available.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Current Pollutant Levels",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Pollutant data is not available.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": null
+     },
+     {
+      "kind": "button",
+      "id": 5001,
+      "label": "Close",
+      "name": "button"
+     }
+    ],
+    "focus": 1
+   },
+   "uv_index": {
+    "title": "UV Index - Philadelphia, PA",
+    "controls": [
+     {
+      "kind": "label",
+      "label": "Current UV Index",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Low",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.05,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Health guidance: No protection needed. You can safely stay outside.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": 550
+     },
+     {
+      "kind": "label",
+      "label": "Hourly Forecast",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Hourly forecast data is not available.",
+      "name": "staticText",
+      "bold": false,
+      "scale": 1.0,
+      "gray": true,
+      "wrap": null
+     },
+     {
+      "kind": "label",
+      "label": "Sun Safety Recommendations",
+      "name": "staticText",
+      "bold": true,
+      "scale": 1.1,
+      "gray": false,
+      "wrap": null
+     },
+     {
+      "kind": "text",
+      "name": "Sun Safety Recommendations",
+      "value": "• SPF 15+ sunscreen for extended outdoor activities\n• Sunglasses on bright days\n• No special precautions needed for most people",
+      "mono": false,
+      "password": false
+     },
+     {
+      "kind": "button",
+      "id": 5001,
+      "label": "Close",
+      "name": "button"
+     }
+    ],
+    "focus": 7
+   }
+  }
+ ],
+ "aviation": {
+  "initial": {
+   "title": "Aviation Weather",
+   "controls": [
+    {
+     "kind": "label",
+     "label": "Fetch decoded aviation weather by entering a four-letter ICAO airport code.",
+     "name": "staticText",
+     "bold": false,
+     "scale": 1.0,
+     "gray": true,
+     "wrap": null
+    },
+    {
+     "kind": "label",
+     "label": "Airport code:",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.0,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "text",
+     "name": "ICAO airport code input",
+     "value": "",
+     "mono": false,
+     "password": false
+    },
+    {
+     "kind": "button",
+     "id": -31729,
+     "label": "Get Aviation Data",
+     "name": "button"
+    },
+    {
+     "kind": "label",
+     "label": "AVWX API Key (optional):",
+     "name": "staticText",
+     "bold": false,
+     "scale": 1.0,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "text",
+     "name": "AVWX API Key (optional)",
+     "value": "secret-key",
+     "mono": false,
+     "password": true
+    },
+    {
+     "kind": "button",
+     "id": -31726,
+     "label": "Get Free Key",
+     "name": "Get free AVWX API key, opens browser"
+    },
+    {
+     "kind": "label",
+     "label": "Enables enhanced translations, flight rules, and screen-reader speech for international airports. US airports use NWS by default.",
+     "name": "staticText",
+     "bold": false,
+     "scale": 1.0,
+     "gray": true,
+     "wrap": null
+    },
+    {
+     "kind": "label",
+     "label": "Enter a code and press Enter to fetch the latest TAF.",
+     "name": "staticText",
+     "bold": false,
+     "scale": 1.0,
+     "gray": true,
+     "wrap": null
+    },
+    {
+     "kind": "label",
+     "label": "Raw TAF",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.0,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "text",
+     "name": "Raw TAF display",
+     "value": "No TAF loaded.",
+     "mono": true,
+     "password": false
+    },
+    {
+     "kind": "label",
+     "label": "Decoded TAF",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.0,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "text",
+     "name": "Decoded TAF display",
+     "value": "Decoded TAF will appear here.",
+     "mono": false,
+     "password": false
+    },
+    {
+     "kind": "label",
+     "label": "Advisories",
+     "name": "staticText",
+     "bold": true,
+     "scale": 1.0,
+     "gray": false,
+     "wrap": null
+    },
+    {
+     "kind": "list",
+     "name": "Aviation advisories list",
+     "columns": [
+      [
+       "Type",
+       80
+      ],
+      [
+       "Event",
+       150
+      ],
+      [
+       "Valid",
+       200
+      ],
+      [
+       "Summary",
+       350
+      ]
+     ]
+    },
+    {
+     "kind": "label",
+     "label": "No advisories available.",
+     "name": "staticText",
+     "bold": false,
+     "scale": 1.0,
+     "gray": true,
+     "wrap": null
+    },
+    {
+     "kind": "button",
+     "id": 5001,
+     "label": "Close",
+     "name": "button"
+    }
+   ],
+   "focus": 2,
+   "status": "Enter a code and press Enter to fetch the latest TAF.",
+   "status_gray": true,
+   "raw": "No TAF loaded.",
+   "decoded": "Decoded TAF will appear here.",
+   "rows": [],
+   "info": "No advisories available.",
+   "fetch_enabled": true
+  },
+  "validation": [
+   {
+    "input": "",
+    "valid": false,
+    "status": "Please enter a four-letter ICAO airport code."
+   },
+   {
+    "input": "   ",
+    "valid": false,
+    "status": "Please enter a four-letter ICAO airport code."
+   },
+   {
+    "input": "kjf",
+    "valid": false,
+    "status": "Airport codes must be exactly four letters (e.g., KJFK)."
+   },
+   {
+    "input": "kjfk",
+    "valid": true,
+    "status": null
+   },
+   {
+    "input": " egll ",
+    "valid": true,
+    "status": null
+   },
+   {
+    "input": "K1FK",
+    "valid": false,
+    "status": "Airport codes must be exactly four letters (e.g., KJFK)."
+   },
+   {
+    "input": "KJFKX",
+    "valid": false,
+    "status": "Airport codes must be exactly four letters (e.g., KJFK)."
+   },
+   {
+    "input": "ßabc",
+    "valid": false,
+    "status": "Airport codes must be exactly four letters (e.g., KJFK)."
+   },
+   {
+    "input": "ﬀab",
+    "valid": true,
+    "status": null
+   },
+   {
+    "input": "k j f",
+    "valid": false,
+    "status": "Airport codes must be exactly four letters (e.g., KJFK)."
+   }
+  ],
+  "fetches": [
+   {
+    "name": "none",
+    "code": "KJFK",
+    "aviation": null,
+    "status": "No TAF available for KJFK. The station may not publish TAF data.",
+    "status_gray": true,
+    "raw": "No TAF available.",
+    "decoded": "No decoded TAF available.",
+    "rows": [],
+    "info": "No advisories available.",
+    "fetch_enabled": true
+   },
+   {
+    "name": "blank taf",
+    "code": "KJFK",
+    "aviation": {
+     "raw_taf": null,
+     "decoded_taf": "   ",
+     "station_id": "KJFK",
+     "airport_name": null,
+     "active_sigmets": [],
+     "active_cwas": []
+    },
+    "status": "No TAF available for KJFK. The station may not publish TAF data.",
+    "status_gray": true,
+    "raw": "No TAF available.",
+    "decoded": "No decoded TAF available.",
+    "rows": [],
+    "info": "No advisories available.",
+    "fetch_enabled": true
+   },
+   {
+    "name": "full",
+    "code": "KJFK",
+    "aviation": {
+     "raw_taf": "TAF KJFK 251720Z 2518/2624 20012KT P6SM FEW250",
+     "decoded_taf": "Forecast for KJFK\nWinds from 200 at 12 knots.",
+     "station_id": "KJFK",
+     "airport_name": "John F Kennedy International Airport",
+     "active_sigmets": [
+      {
+       "event": "Convective SIGMET 45E",
+       "description": "  Embedded thunderstorms.  ",
+       "startTime": "2026-09-25T14:55:00Z",
+       "endTime": "2026-09-25T16:55:00Z"
+      },
+      {
+       "event": "",
+       "name": "SIGMET NOVEMBER 3",
+       "summary": "Severe turbulence Severe turbulence Severe turbulence Severe turbulence Severe turbulence Severe turbulence Severe turbulence Severe turbulence Severe turbulence Severe turbulence Severe turbulence Severe turbulence Severe turbulence Severe turbulence Severe turbulence Severe turbulence Severe turbulence Severe turbulence Severe turbulence Severe turbulence ",
+       "expires": "2026-09-25T18:00:00Z"
+      },
+      {
+       "hazard": "ICE",
+       "text": "\n",
+       "validTimeStart": "2026-09-25T12:00:00Z"
+      },
+      {
+       "issueTime": 1790000000,
+       "validUntil": 1790003600
+      },
+      {
+       "beginTime": 1.5
+      },
+      {
+       "description": null,
+       "summary": "",
+       "text": "Mountain obscuration."
+      },
+      {
+       "event": "SIGMET 0",
+       "validTimeEnd": "T0"
+      },
+      {
+       "event": "SIGMET 1",
+       "validTimeEnd": "T1"
+      },
+      {
+       "event": "SIGMET 2",
+       "validTimeEnd": "T2"
+      },
+      {
+       "event": "SIGMET 3",
+       "validTimeEnd": "T3"
+      },
+      {
+       "event": "SIGMET 4",
+       "validTimeEnd": "T4"
+      },
+      {
+       "event": "SIGMET 5",
+       "validTimeEnd": "T5"
+      }
+     ],
+     "active_cwas": [
+      {
+       "event": "CWA 101",
+       "description": "IFR conditions",
+       "startTime": "a",
+       "expires": "b"
+      },
+      {}
+     ]
+    },
+    "status": "Latest TAF loaded for John F Kennedy International Airport.",
+    "status_gray": false,
+    "raw": "TAF KJFK 251720Z 2518/2624 20012KT P6SM FEW250",
+    "decoded": "Forecast for KJFK\nWinds from 200 at 12 knots.",
+    "rows": [
+     [
+      "SIGMET",
+      "Convective SIGMET 45E",
+      "2026-09-25T14:55:00Z → 2026-09-25T16:55:00Z",
+      "Embedded thunderstorms."
+     ],
+     [
+      "SIGMET",
+      "SIGMET NOVEMBER 3",
+      "Until 2026-09-25T18:00:00Z",
+      "Severe turbulence Severe turbulence Severe turbulence Severe turbulence Severe turbulence Severe turbulence Severe turbulence Severe turbulence Severe turbulence Severe turbulence Severe turbulence Se"
+     ],
+     [
+      "SIGMET",
+      "ICE",
+      "2026-09-25T12:00:00Z",
+      "No description provided."
+     ],
+     [
+      "SIGMET",
+      "SIGMET",
+      "1790000000 → 1790003600",
+      "No description provided."
+     ],
+     [
+      "SIGMET",
+      "SIGMET",
+      "1.5",
+      "No description provided."
+     ],
+     [
+      "SIGMET",
+      "SIGMET",
+      "--",
+      "Mountain obscuration."
+     ],
+     [
+      "SIGMET",
+      "SIGMET 0",
+      "Until T0",
+      "No description provided."
+     ],
+     [
+      "SIGMET",
+      "SIGMET 1",
+      "Until T1",
+      "No description provided."
+     ],
+     [
+      "SIGMET",
+      "SIGMET 2",
+      "Until T2",
+      "No description provided."
+     ],
+     [
+      "SIGMET",
+      "SIGMET 3",
+      "Until T3",
+      "No description provided."
+     ],
+     [
+      "CWA",
+      "CWA 101",
+      "a → b",
+      "IFR conditions"
+     ],
+     [
+      "CWA",
+      "CWA",
+      "--",
+      "No description provided."
+     ]
+    ],
+    "info": "12 advisories loaded.",
+    "fetch_enabled": true
+   },
+   {
+    "name": "raw only",
+    "code": "EGLL",
+    "aviation": {
+     "raw_taf": "TAF EGLL NIL",
+     "decoded_taf": null,
+     "station_id": "EGLL",
+     "airport_name": null,
+     "active_sigmets": [],
+     "active_cwas": []
+    },
+    "status": "Latest TAF loaded for EGLL.",
+    "status_gray": false,
+    "raw": "TAF EGLL NIL",
+    "decoded": "Unable to decode TAF.",
+    "rows": [],
+    "info": "No advisories available.",
+    "fetch_enabled": true
+   },
+   {
+    "name": "decoded only",
+    "code": "LFPG",
+    "aviation": {
+     "raw_taf": null,
+     "decoded_taf": "Decoded only.",
+     "station_id": null,
+     "airport_name": null,
+     "active_sigmets": [],
+     "active_cwas": [
+      {
+       "event": "CWA 101",
+       "description": "IFR conditions",
+       "startTime": "a",
+       "expires": "b"
+      }
+     ]
+    },
+    "status": "Latest TAF loaded for LFPG.",
+    "status_gray": false,
+    "raw": "No TAF available.",
+    "decoded": "Decoded only.",
+    "rows": [
+     [
+      "CWA",
+      "CWA 101",
+      "a → b",
+      "IFR conditions"
+     ]
+    ],
+    "info": "1 advisories loaded.",
+    "fetch_enabled": true
+   },
+   {
+    "name": "cwas only",
+    "code": "KORD",
+    "aviation": {
+     "raw_taf": "TAF KORD",
+     "decoded_taf": "",
+     "station_id": "",
+     "airport_name": "",
+     "active_sigmets": [],
+     "active_cwas": [
+      {
+       "event": "CWA 101",
+       "description": "IFR conditions",
+       "startTime": "a",
+       "expires": "b"
+      },
+      {}
+     ]
+    },
+    "status": "Latest TAF loaded for KORD.",
+    "status_gray": false,
+    "raw": "TAF KORD",
+    "decoded": "Unable to decode TAF.",
+    "rows": [
+     [
+      "CWA",
+      "CWA 101",
+      "a → b",
+      "IFR conditions"
+     ],
+     [
+      "CWA",
+      "CWA",
+      "--",
+      "No description provided."
+     ]
+    ],
+    "info": "2 advisories loaded.",
+    "fetch_enabled": true
+   }
+  ],
+  "error": {
+   "status": "Failed to retrieve aviation weather: boom",
+   "status_gray": true,
+   "raw": "TAF KORD",
+   "decoded": "Unable to decode TAF.",
+   "rows": [
+    [
+     "CWA",
+     "CWA 101",
+     "a → b",
+     "IFR conditions"
+    ],
+    [
+     "CWA",
+     "CWA",
+     "--",
+     "No description provided."
+    ]
+   ],
+   "info": "2 advisories loaded.",
+   "fetch_enabled": true
+  }
+ }
+}

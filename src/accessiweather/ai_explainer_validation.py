@@ -5,56 +5,74 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from .ai_explainer_models import InvalidAPIKeyError
+import httpx
+
 from .ai_explainer_openrouter import DEFAULT_FREE_MODEL
 
 logger = logging.getLogger(__name__)
+
+
+async def validate_openrouter_api_key(api_key: str) -> tuple[bool, str]:
+    """Check authentication without generating text or exposing remote error details."""
+    if not api_key or not api_key.strip():
+        return False, "Please enter your OpenRouter API key first."
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.get(
+                "https://openrouter.ai/api/v1/key",
+                headers={"Authorization": f"Bearer {api_key.strip()}"},
+            )
+        status = response.status_code
+        if status == 200:
+            try:
+                payload = response.json()
+                data = payload.get("data") if isinstance(payload, dict) else None
+                remaining = data.get("limit_remaining") if isinstance(data, dict) else None
+            except ValueError:
+                remaining = None
+            if (
+                isinstance(remaining, (int, float))
+                and not isinstance(remaining, bool)
+                and remaining <= 0
+            ):
+                return True, (
+                    "OpenRouter API key is valid, but its spending allowance is exhausted. "
+                    "Paid models may fail; free models may still work."
+                )
+            return True, (
+                "OpenRouter API key is valid. Account credits and model access "
+                "are checked when you use a model."
+            )
+        if status == 401:
+            return False, "OpenRouter rejected this API key. Check your key and try again."
+        if status == 403:
+            return False, "OpenRouter denied access. Check your key and account permissions."
+        if status == 429:
+            return False, "OpenRouter rate limit reached. Wait a moment and try validation again."
+        return False, "OpenRouter key validation is unavailable. Please try again later."
+    except httpx.TimeoutException:
+        return False, "OpenRouter key validation timed out. Please try again."
+    except httpx.RequestError:
+        return False, "Could not reach OpenRouter. Check your connection and try again."
+    except Exception:
+        # Exception text can contain credentials, request headers, or response bodies.
+        logger.warning("OpenRouter key validation could not be completed")
+        return False, "Unable to validate the OpenRouter key. Please try again later."
 
 
 class AIExplainerValidationMixin:
     """API-key, model, and source-selection helpers."""
 
     async def validate_api_key(self, api_key: str) -> bool:
-        """
-        Test if API key is valid by making a minimal API call.
-
-        Args:
-            api_key: API key to validate
-
-        Returns:
-            True if valid, False otherwise
-
-        """
-        import asyncio
-
+        """Return whether provider authentication was successfully verified."""
         if self.provider == "venice":
             from .ai_provider import validate_venice_api_key
 
             valid, _message = await validate_venice_api_key(api_key)
             return valid
 
-        # Temporarily set the API key
-        original_key = self.api_key
-        self.api_key = api_key
-        self._client = None  # Reset client to use new key
-
-        try:
-            # Make a minimal API call
-            await asyncio.to_thread(
-                self._call_openrouter,
-                "You are a test assistant.",
-                "Say 'OK' if you can hear me.",
-            )
-            return True
-        except InvalidAPIKeyError:
-            return False
-        except Exception as e:
-            logger.warning(f"API key validation failed: {e}")
-            return False
-        finally:
-            # Restore original key
-            self.api_key = original_key
-            self._client = None
+        valid, _message = await validate_openrouter_api_key(api_key)
+        return valid
 
     @staticmethod
     async def validate_model_id(model_id: str) -> bool:

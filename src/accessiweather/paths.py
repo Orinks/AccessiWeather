@@ -171,6 +171,10 @@ class RuntimeStoragePaths:
         return self.config_root / "noaa_radio_availability.json"
 
     @property
+    def noaa_radio_station_directory_file(self) -> Path:
+        return self.cache_dir / "noaa_radio_stations.json"
+
+    @property
     def activation_request_file(self) -> Path:
         return self.state_dir / "activation_request.json"
 

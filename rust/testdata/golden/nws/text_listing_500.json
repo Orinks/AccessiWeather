@@ -1,0 +1,29 @@
+{
+ "now": "2026-01-20T18:21:00+00:00",
+ "call": "text_product",
+ "product_type": "AFD",
+ "office": "BAD",
+ "responses": [
+  {
+   "url": "https://api.weather.gov/products/types/AFD/locations/BAD",
+   "status": 500,
+   "body": "err"
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://api.weather.gov/products/types/AFD/locations/BAD",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  }
+ ],
+ "result": {
+  "error": "TextProductFetchError",
+  "message": "HTTP 500 fetching AFD listing for BAD"
+ }
+}

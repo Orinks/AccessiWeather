@@ -1,0 +1,34 @@
+{
+ "exchanges": [
+  {
+   "url": "https://api.open-meteo.com/v1/forecast?latitude=40.7128&longitude=-74.006&current=temperature_2m&current=relative_humidity_2m&current=dew_point_2m&current=apparent_temperature&current=is_day&current=precipitation&current=weather_code&current=cloud_cover&current=pressure_msl&current=surface_pressure&current=wind_speed_10m&current=wind_direction_10m&current=wind_gusts_10m&current=uv_index&current=snowfall&current=snow_depth&current=visibility&daily=sunrise&daily=sunset&daily=uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=1",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "ok": true
+   }
+  },
+  {
+   "url": "https://api.open-meteo.com/v1/forecast?latitude=40.0&longitude=-74.0&daily=weather_code&daily=temperature_2m_max&daily=temperature_2m_min&daily=apparent_temperature_max&daily=apparent_temperature_min&daily=sunrise&daily=sunset&daily=precipitation_sum&daily=precipitation_probability_max&daily=wind_speed_10m_max&daily=wind_gusts_10m_max&daily=wind_direction_10m_dominant&daily=uv_index_max&daily=snowfall_sum&temperature_unit=celsius&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=16&models=gfs_seamless",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "ok": true
+   }
+  },
+  {
+   "url": "https://api.open-meteo.com/v1/forecast?latitude=51.5&longitude=-0.12&hourly=temperature_2m&hourly=relative_humidity_2m&hourly=apparent_temperature&hourly=precipitation_probability&hourly=precipitation&hourly=weather_code&hourly=pressure_msl&hourly=surface_pressure&hourly=cloud_cover&hourly=wind_speed_10m&hourly=wind_direction_10m&hourly=wind_gusts_10m&hourly=is_day&hourly=snowfall&hourly=uv_index&hourly=snow_depth&hourly=freezing_level_height&hourly=visibility&temperature_unit=fahrenheit&wind_speed_unit=kmh&precipitation_unit=mm&timezone=auto&forecast_hours=384",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "ok": true
+   }
+  }
+ ]
+}

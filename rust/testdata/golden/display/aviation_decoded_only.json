@@ -1,0 +1,1322 @@
+{
+"name": "aviation_decoded_only",
+"now": "2026-04-02T16:00:00+00:00",
+"local_tz": "America/New_York",
+"weather_data": {
+"location": {
+"name": "KJFK",
+"latitude": 40.64,
+"longitude": -73.78,
+"timezone": "America/New_York",
+"country_code": "US",
+"marine_mode": false,
+"forecast_zone_id": null,
+"cwa_office": null,
+"county_zone_id": null,
+"fire_zone_id": null,
+"radar_station": null
+},
+"current": null,
+"forecast": null,
+"hourly_forecast": null,
+"daily_history": [],
+"discussion": null,
+"discussion_issuance_time": null,
+"minutely_precipitation": null,
+"alerts": null,
+"environmental": null,
+"aviation": {
+"raw_taf": null,
+"decoded_taf": "Forecast for station KJFK.\nBase forecast: Calm winds.",
+"station_id": "kjfk",
+"airport_name": null,
+"active_sigmets": [],
+"active_cwas": []
+},
+"marine": null,
+"trend_insights": [],
+"stale": false,
+"stale_since": null,
+"stale_reason": null,
+"source_attribution": null,
+"incomplete_sections": [],
+"alert_lifecycle_diff": null,
+"forecast_confidence": null,
+"anomaly_callout": null
+},
+"variants": [
+{
+"settings": {},
+"presentation": {
+"location_name": "KJFK",
+"summary_text": "KJFK",
+"current_conditions": null,
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": null,
+"station_id": "kjfk",
+"taf_summary": "Forecast for station KJFK.\nBase forecast: Calm winds.",
+"raw_taf": null,
+"sigmets": [],
+"cwas": [],
+"fallback_text": "Aviation weather for kjfk.\nTerminal Aerodrome Forecast:\nForecast for station KJFK.\nBase forecast: Calm winds."
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "AccessiWeather",
+"preview": "72F/22C Partly Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "AccessiWeather",
+"preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "AccessiWeather",
+"preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "Feels like: 74F/23C | 72F/22C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK Partly Cloudy NW at 8.0 mph (12.9 km/h) KJFK Partly Cloudy NW at 8.0 mph (12.9 km/h) KJFK Partly Cloudy NW at 8.0 mph (...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+},
+"present_current": null,
+"present_forecast": null,
+"present_alerts": null
+},
+{
+"settings": {
+"temperature_unit": "f"
+},
+"presentation": {
+"location_name": "KJFK",
+"summary_text": "KJFK",
+"current_conditions": null,
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": null,
+"station_id": "kjfk",
+"taf_summary": "Forecast for station KJFK.\nBase forecast: Calm winds.",
+"raw_taf": null,
+"sigmets": [],
+"cwas": [],
+"fallback_text": "Aviation weather for kjfk.\nTerminal Aerodrome Forecast:\nForecast for station KJFK.\nBase forecast: Calm winds."
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "AccessiWeather",
+"preview": "72F Partly Cloudy",
+"sample_preview": "72F Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK: 72F (feels like 74F) NW at 8.0 mph 55%",
+"sample_preview": "Sample Location: 72F (feels like 74F) NW at 8.0 mph 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "AccessiWeather",
+"preview": "78F/61F 0.00 in 20% UV 5 10.0 mi 30.10 inHg",
+"sample_preview": "78F/61F 0.00 in 20% UV 5 10.0 mi 30.10 inHg"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "AccessiWeather",
+"preview": "72F 22C NW 8.0 mph {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "Feels like: 74F | 72F",
+"sample_preview": "Feels like: 74F | 72F"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK Partly Cloudy NW at 8.0 mph KJFK Partly Cloudy NW at 8.0 mph KJFK Partly Cloudy NW at 8.0 mph KJFK",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "c"
+},
+"presentation": {
+"location_name": "KJFK",
+"summary_text": "KJFK",
+"current_conditions": null,
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": null,
+"station_id": "kjfk",
+"taf_summary": "Forecast for station KJFK.\nBase forecast: Calm winds.",
+"raw_taf": null,
+"sigmets": [],
+"cwas": [],
+"fallback_text": "Aviation weather for kjfk.\nTerminal Aerodrome Forecast:\nForecast for station KJFK.\nBase forecast: Calm winds."
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "AccessiWeather",
+"preview": "22C Partly Cloudy",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK: 22C (feels like 23C) NW at 12.9 km/h 55%",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 12.9 km/h 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "AccessiWeather",
+"preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "AccessiWeather",
+"preview": "72F 22C NW 12.9 km/h {unknown}",
+"sample_preview": "72F 22C NW 12.9 km/h {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "Feels like: 23C | 22C",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK Partly Cloudy NW at 12.9 km/h KJFK Partly Cloudy NW at 12.9 km/h KJFK Partly Cloudy NW at 12.9 km/h KJFK",
+"sample_preview": "Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "auto"
+},
+"presentation": {
+"location_name": "KJFK",
+"summary_text": "KJFK",
+"current_conditions": null,
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": null,
+"station_id": "kjfk",
+"taf_summary": "Forecast for station KJFK.\nBase forecast: Calm winds.",
+"raw_taf": null,
+"sigmets": [],
+"cwas": [],
+"fallback_text": "Aviation weather for kjfk.\nTerminal Aerodrome Forecast:\nForecast for station KJFK.\nBase forecast: Calm winds."
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "AccessiWeather",
+"preview": "22C Partly Cloudy",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK: 22C (feels like 23C) NW at 3.6 m/s 55%",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 3.6 m/s 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "AccessiWeather",
+"preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "AccessiWeather",
+"preview": "72F 22C NW 3.6 m/s {unknown}",
+"sample_preview": "72F 22C NW 3.6 m/s {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "Feels like: 23C | 22C",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK Partly Cloudy NW at 3.6 m/s KJFK Partly Cloudy NW at 3.6 m/s KJFK Partly Cloudy NW at 3.6 m/s KJFK",
+"sample_preview": "Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "auto",
+"wind_speed_unit": "m/s"
+},
+"presentation": {
+"location_name": "KJFK",
+"summary_text": "KJFK",
+"current_conditions": null,
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": null,
+"station_id": "kjfk",
+"taf_summary": "Forecast for station KJFK.\nBase forecast: Calm winds.",
+"raw_taf": null,
+"sigmets": [],
+"cwas": [],
+"fallback_text": "Aviation weather for kjfk.\nTerminal Aerodrome Forecast:\nForecast for station KJFK.\nBase forecast: Calm winds."
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "AccessiWeather",
+"preview": "22C Partly Cloudy",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK: 22C (feels like 23C) NW at 3.6 m/s 55%",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 3.6 m/s 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "AccessiWeather",
+"preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "AccessiWeather",
+"preview": "72F 22C NW 3.6 m/s {unknown}",
+"sample_preview": "72F 22C NW 3.6 m/s {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "Feels like: 23C | 22C",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK Partly Cloudy NW at 3.6 m/s KJFK Partly Cloudy NW at 3.6 m/s KJFK Partly Cloudy NW at 3.6 m/s KJFK",
+"sample_preview": "Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "both",
+"wind_speed_unit": "kph"
+},
+"presentation": {
+"location_name": "KJFK",
+"summary_text": "KJFK",
+"current_conditions": null,
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": null,
+"station_id": "kjfk",
+"taf_summary": "Forecast for station KJFK.\nBase forecast: Calm winds.",
+"raw_taf": null,
+"sigmets": [],
+"cwas": [],
+"fallback_text": "Aviation weather for kjfk.\nTerminal Aerodrome Forecast:\nForecast for station KJFK.\nBase forecast: Calm winds."
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "AccessiWeather",
+"preview": "72F/22C Partly Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK: 72F/22C (feels like 74F/23C) NW at 12.9 km/h 55%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 12.9 km/h 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "AccessiWeather",
+"preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "AccessiWeather",
+"preview": "72F 22C NW 12.9 km/h {unknown}",
+"sample_preview": "72F 22C NW 12.9 km/h {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "Feels like: 74F/23C | 72F/22C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK Partly Cloudy NW at 12.9 km/h KJFK Partly Cloudy NW at 12.9 km/h KJFK Partly Cloudy NW at 12.9 km/h KJFK",
+"sample_preview": "Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "fahrenheit",
+"wind_speed_unit": "mph",
+"verbosity_level": "detailed",
+"show_impact_summaries": true
+},
+"presentation": {
+"location_name": "KJFK",
+"summary_text": "KJFK",
+"current_conditions": null,
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": null,
+"station_id": "kjfk",
+"taf_summary": "Forecast for station KJFK.\nBase forecast: Calm winds.",
+"raw_taf": null,
+"sigmets": [],
+"cwas": [],
+"fallback_text": "Aviation weather for kjfk.\nTerminal Aerodrome Forecast:\nForecast for station KJFK.\nBase forecast: Calm winds."
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "AccessiWeather",
+"preview": "72F Partly Cloudy",
+"sample_preview": "72F Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK: 72F (feels like 74F) NW at 8.0 mph 55%",
+"sample_preview": "Sample Location: 72F (feels like 74F) NW at 8.0 mph 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "AccessiWeather",
+"preview": "78F/61F 0.00 in 20% UV 5 10.0 mi 30.10 inHg",
+"sample_preview": "78F/61F 0.00 in 20% UV 5 10.0 mi 30.10 inHg"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "AccessiWeather",
+"preview": "72F 22C NW 8.0 mph {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "Feels like: 74F | 72F",
+"sample_preview": "Feels like: 74F | 72F"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK Partly Cloudy NW at 8.0 mph KJFK Partly Cloudy NW at 8.0 mph KJFK Partly Cloudy NW at 8.0 mph KJFK",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"verbosity_level": "minimal",
+"round_values": true
+},
+"presentation": {
+"location_name": "KJFK",
+"summary_text": "KJFK",
+"current_conditions": null,
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": null,
+"station_id": "kjfk",
+"taf_summary": "Forecast for station KJFK.\nBase forecast: Calm winds.",
+"raw_taf": null,
+"sigmets": [],
+"cwas": [],
+"fallback_text": "Aviation weather for kjfk.\nTerminal Aerodrome Forecast:\nForecast for station KJFK.\nBase forecast: Calm winds."
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "AccessiWeather",
+"preview": "72F/22C Partly Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK: 72F/22C (feels like 74F/23C) NW at 8 mph (13 km/h) 55%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8 mph (13 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "AccessiWeather",
+"preview": "78F/26C/61F/16C 0 in (0 mm) 20% UV 5 10 mi (16 km) 30 inHg (1019 hPa)",
+"sample_preview": "78F/26C/61F/16C 0 in (0 mm) 20% UV 5 10 mi (16 km) 30 inHg (1019 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "AccessiWeather",
+"preview": "72F 22C NW 8 mph (13 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8 mph (13 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "Feels like: 74F/23C | 72F/22C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK Partly Cloudy NW at 8 mph (13 km/h) KJFK Partly Cloudy NW at 8 mph (13 km/h) KJFK Partly Cloudy NW at 8 mph (13 km/h) KJFK",
+"sample_preview": "Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Part..."
+}
+}
+},
+{
+"settings": {
+"verbosity_level": "detailed",
+"time_format_12hour": false,
+"show_timezone_suffix": true
+},
+"presentation": {
+"location_name": "KJFK",
+"summary_text": "KJFK",
+"current_conditions": null,
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": null,
+"station_id": "kjfk",
+"taf_summary": "Forecast for station KJFK.\nBase forecast: Calm winds.",
+"raw_taf": null,
+"sigmets": [],
+"cwas": [],
+"fallback_text": "Aviation weather for kjfk.\nTerminal Aerodrome Forecast:\nForecast for station KJFK.\nBase forecast: Calm winds."
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "AccessiWeather",
+"preview": "72F/22C Partly Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "AccessiWeather",
+"preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "AccessiWeather",
+"preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "Feels like: 74F/23C | 72F/22C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK Partly Cloudy NW at 8.0 mph (12.9 km/h) KJFK Partly Cloudy NW at 8.0 mph (12.9 km/h) KJFK Partly Cloudy NW at 8.0 mph (...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"time_display_mode": "utc",
+"show_timezone_suffix": true
+},
+"presentation": {
+"location_name": "KJFK",
+"summary_text": "KJFK",
+"current_conditions": null,
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": null,
+"station_id": "kjfk",
+"taf_summary": "Forecast for station KJFK.\nBase forecast: Calm winds.",
+"raw_taf": null,
+"sigmets": [],
+"cwas": [],
+"fallback_text": "Aviation weather for kjfk.\nTerminal Aerodrome Forecast:\nForecast for station KJFK.\nBase forecast: Calm winds."
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "AccessiWeather",
+"preview": "72F/22C Partly Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "AccessiWeather",
+"preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "AccessiWeather",
+"preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "Feels like: 74F/23C | 72F/22C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK Partly Cloudy NW at 8.0 mph (12.9 km/h) KJFK Partly Cloudy NW at 8.0 mph (12.9 km/h) KJFK Partly Cloudy NW at 8.0 mph (...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"time_display_mode": "both",
+"show_timezone_suffix": true,
+"time_format_12hour": false
+},
+"presentation": {
+"location_name": "KJFK",
+"summary_text": "KJFK",
+"current_conditions": null,
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": null,
+"station_id": "kjfk",
+"taf_summary": "Forecast for station KJFK.\nBase forecast: Calm winds.",
+"raw_taf": null,
+"sigmets": [],
+"cwas": [],
+"fallback_text": "Aviation weather for kjfk.\nTerminal Aerodrome Forecast:\nForecast for station KJFK.\nBase forecast: Calm winds."
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "AccessiWeather",
+"preview": "72F/22C Partly Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "AccessiWeather",
+"preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "AccessiWeather",
+"preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "Feels like: 74F/23C | 72F/22C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK Partly Cloudy NW at 8.0 mph (12.9 km/h) KJFK Partly Cloudy NW at 8.0 mph (12.9 km/h) KJFK Partly Cloudy NW at 8.0 mph (...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"forecast_time_reference": "user_local",
+"show_timezone_suffix": true
+},
+"presentation": {
+"location_name": "KJFK",
+"summary_text": "KJFK",
+"current_conditions": null,
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": null,
+"station_id": "kjfk",
+"taf_summary": "Forecast for station KJFK.\nBase forecast: Calm winds.",
+"raw_taf": null,
+"sigmets": [],
+"cwas": [],
+"fallback_text": "Aviation weather for kjfk.\nTerminal Aerodrome Forecast:\nForecast for station KJFK.\nBase forecast: Calm winds."
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "AccessiWeather",
+"preview": "72F/22C Partly Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "AccessiWeather",
+"preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "AccessiWeather",
+"preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "Feels like: 74F/23C | 72F/22C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK Partly Cloudy NW at 8.0 mph (12.9 km/h) KJFK Partly Cloudy NW at 8.0 mph (12.9 km/h) KJFK Partly Cloudy NW at 8.0 mph (...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"show_dewpoint": false,
+"show_visibility": false,
+"show_uv_index": false,
+"show_pressure_trend": false,
+"show_seasonal_data": false
+},
+"presentation": {
+"location_name": "KJFK",
+"summary_text": "KJFK",
+"current_conditions": null,
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": null,
+"station_id": "kjfk",
+"taf_summary": "Forecast for station KJFK.\nBase forecast: Calm winds.",
+"raw_taf": null,
+"sigmets": [],
+"cwas": [],
+"fallback_text": "Aviation weather for kjfk.\nTerminal Aerodrome Forecast:\nForecast for station KJFK.\nBase forecast: Calm winds."
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "AccessiWeather",
+"preview": "72F/22C Partly Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "AccessiWeather",
+"preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "AccessiWeather",
+"preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "Feels like: 74F/23C | 72F/22C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK Partly Cloudy NW at 8.0 mph (12.9 km/h) KJFK Partly Cloudy NW at 8.0 mph (12.9 km/h) KJFK Partly Cloudy NW at 8.0 mph (...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"severe_weather_override": true,
+"category_order": [
+"uv_index",
+"visibility_clouds",
+"humidity_pressure",
+"wind",
+"precipitation",
+"temperature"
+]
+},
+"presentation": {
+"location_name": "KJFK",
+"summary_text": "KJFK",
+"current_conditions": null,
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": null,
+"station_id": "kjfk",
+"taf_summary": "Forecast for station KJFK.\nBase forecast: Calm winds.",
+"raw_taf": null,
+"sigmets": [],
+"cwas": [],
+"fallback_text": "Aviation weather for kjfk.\nTerminal Aerodrome Forecast:\nForecast for station KJFK.\nBase forecast: Calm winds."
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "AccessiWeather",
+"preview": "72F/22C Partly Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "AccessiWeather",
+"preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "AccessiWeather",
+"preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "Feels like: 74F/23C | 72F/22C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK Partly Cloudy NW at 8.0 mph (12.9 km/h) KJFK Partly Cloudy NW at 8.0 mph (12.9 km/h) KJFK Partly Cloudy NW at 8.0 mph (...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"severe_weather_override": true,
+"show_impact_summaries": true,
+"temperature_unit": "celsius"
+},
+"presentation": {
+"location_name": "KJFK",
+"summary_text": "KJFK",
+"current_conditions": null,
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": null,
+"station_id": "kjfk",
+"taf_summary": "Forecast for station KJFK.\nBase forecast: Calm winds.",
+"raw_taf": null,
+"sigmets": [],
+"cwas": [],
+"fallback_text": "Aviation weather for kjfk.\nTerminal Aerodrome Forecast:\nForecast for station KJFK.\nBase forecast: Calm winds."
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "AccessiWeather",
+"preview": "22C Partly Cloudy",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK: 22C (feels like 23C) NW at 12.9 km/h 55%",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 12.9 km/h 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "AccessiWeather",
+"preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "AccessiWeather",
+"preview": "72F 22C NW 12.9 km/h {unknown}",
+"sample_preview": "72F 22C NW 12.9 km/h {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "Feels like: 23C | 22C",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK Partly Cloudy NW at 12.9 km/h KJFK Partly Cloudy NW at 12.9 km/h KJFK Partly Cloudy NW at 12.9 km/h KJFK",
+"sample_preview": "Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW..."
+}
+}
+},
+{
+"settings": {
+"forecast_duration_days": 3,
+"hourly_forecast_hours": 12,
+"round_values": true
+},
+"presentation": {
+"location_name": "KJFK",
+"summary_text": "KJFK",
+"current_conditions": null,
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": null,
+"station_id": "kjfk",
+"taf_summary": "Forecast for station KJFK.\nBase forecast: Calm winds.",
+"raw_taf": null,
+"sigmets": [],
+"cwas": [],
+"fallback_text": "Aviation weather for kjfk.\nTerminal Aerodrome Forecast:\nForecast for station KJFK.\nBase forecast: Calm winds."
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "AccessiWeather",
+"preview": "72F/22C Partly Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK: 72F/22C (feels like 74F/23C) NW at 8 mph (13 km/h) 55%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8 mph (13 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "AccessiWeather",
+"preview": "78F/26C/61F/16C 0 in (0 mm) 20% UV 5 10 mi (16 km) 30 inHg (1019 hPa)",
+"sample_preview": "78F/26C/61F/16C 0 in (0 mm) 20% UV 5 10 mi (16 km) 30 inHg (1019 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "AccessiWeather",
+"preview": "72F 22C NW 8 mph (13 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8 mph (13 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "Feels like: 74F/23C | 72F/22C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK Partly Cloudy NW at 8 mph (13 km/h) KJFK Partly Cloudy NW at 8 mph (13 km/h) KJFK Partly Cloudy NW at 8 mph (13 km/h) KJFK",
+"sample_preview": "Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Part..."
+}
+}
+},
+{
+"settings": {
+"forecast_duration_days": 16,
+"hourly_forecast_hours": 48,
+"date_format": "eu",
+"time_display_mode": "both"
+},
+"presentation": {
+"location_name": "KJFK",
+"summary_text": "KJFK",
+"current_conditions": null,
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": null,
+"station_id": "kjfk",
+"taf_summary": "Forecast for station KJFK.\nBase forecast: Calm winds.",
+"raw_taf": null,
+"sigmets": [],
+"cwas": [],
+"fallback_text": "Aviation weather for kjfk.\nTerminal Aerodrome Forecast:\nForecast for station KJFK.\nBase forecast: Calm winds."
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "AccessiWeather",
+"preview": "72F/22C Partly Cloudy",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "AccessiWeather",
+"preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "AccessiWeather",
+"preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "Feels like: 74F/23C | 72F/22C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "AccessiWeather",
+"preview": "KJFK Partly Cloudy NW at 8.0 mph (12.9 km/h) KJFK Partly Cloudy NW at 8.0 mph (12.9 km/h) KJFK Partly Cloudy NW at 8.0 mph (...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+}
+]
+}

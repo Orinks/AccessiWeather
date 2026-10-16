@@ -1,0 +1,6276 @@
+{
+"name": "sparse",
+"now": "2026-10-10T22:00:00+00:00",
+"local_tz": "America/New_York",
+"weather_data": {
+"location": {
+"name": "Somewhere",
+"latitude": 10.0,
+"longitude": 10.0,
+"timezone": null,
+"country_code": null,
+"marine_mode": false,
+"forecast_zone_id": null,
+"cwa_office": null,
+"county_zone_id": null,
+"fire_zone_id": null,
+"radar_station": null
+},
+"current": {
+"temperature": 13.0,
+"temperature_f": null,
+"temperature_c": 13.0,
+"condition": "Rain",
+"humidity": null,
+"wind_speed": 0.0,
+"dewpoint_f": null,
+"dewpoint_c": 11.0,
+"wind_speed_mph": null,
+"wind_speed_kph": null,
+"wind_direction": "",
+"pressure": 1009.0,
+"pressure_in": null,
+"pressure_mb": 1009.0,
+"feels_like_f": null,
+"feels_like_c": null,
+"visibility_miles": null,
+"visibility_km": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust_mph": null,
+"wind_gust_kph": null,
+"precipitation_in": null,
+"precipitation_mm": null,
+"sunrise_time": null,
+"sunset_time": null,
+"moon_phase": null,
+"moonrise_time": null,
+"moonset_time": null,
+"snow_depth_in": null,
+"snow_depth_cm": null,
+"snowfall_rate_in": null,
+"wind_chill_f": null,
+"wind_chill_c": null,
+"freezing_level_ft": null,
+"freezing_level_m": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"frost_risk": null,
+"precipitation_type": null,
+"severe_weather_risk": null
+},
+"forecast": {
+"periods": [
+{
+"name": "Tonight",
+"temperature": 10.0,
+"temperature_low": null,
+"temperature_unit": "C",
+"short_forecast": null,
+"detailed_forecast": null,
+"wind_speed": "",
+"wind_speed_mph": null,
+"wind_direction": null,
+"icon": null,
+"start_time": null,
+"end_time": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"wind_chill_min_f": null,
+"wind_chill_max_f": null,
+"freezing_level_ft": null,
+"ice_risk": null,
+"heat_index_max_f": null,
+"heat_index_min_f": null,
+"uv_index_max": null,
+"air_quality_forecast": null,
+"frost_risk": null,
+"pollen_forecast": null,
+"precipitation_type": null,
+"severe_weather_risk": null,
+"feels_like_high": null,
+"feels_like_low": null
+},
+{
+"name": "Sunday",
+"temperature": 15.0,
+"temperature_low": 8.0,
+"temperature_unit": "C",
+"short_forecast": null,
+"detailed_forecast": null,
+"wind_speed": "Light",
+"wind_speed_mph": null,
+"wind_direction": null,
+"icon": null,
+"start_time": null,
+"end_time": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"wind_chill_min_f": null,
+"wind_chill_max_f": null,
+"freezing_level_ft": null,
+"ice_risk": null,
+"heat_index_max_f": null,
+"heat_index_min_f": null,
+"uv_index_max": null,
+"air_quality_forecast": null,
+"frost_risk": null,
+"pollen_forecast": null,
+"precipitation_type": null,
+"severe_weather_risk": null,
+"feels_like_high": null,
+"feels_like_low": null
+},
+{
+"name": "Sunday Night",
+"temperature": 8.0,
+"temperature_low": null,
+"temperature_unit": "C",
+"short_forecast": null,
+"detailed_forecast": null,
+"wind_speed": null,
+"wind_speed_mph": null,
+"wind_direction": null,
+"icon": null,
+"start_time": null,
+"end_time": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"wind_chill_min_f": null,
+"wind_chill_max_f": null,
+"freezing_level_ft": null,
+"ice_risk": null,
+"heat_index_max_f": null,
+"heat_index_min_f": null,
+"uv_index_max": null,
+"air_quality_forecast": null,
+"frost_risk": null,
+"pollen_forecast": null,
+"precipitation_type": null,
+"severe_weather_risk": null,
+"feels_like_high": null,
+"feels_like_low": null
+},
+{
+"name": "",
+"temperature": null,
+"temperature_low": null,
+"temperature_unit": "C",
+"short_forecast": null,
+"detailed_forecast": null,
+"wind_speed": null,
+"wind_speed_mph": null,
+"wind_direction": null,
+"icon": null,
+"start_time": null,
+"end_time": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"wind_chill_min_f": null,
+"wind_chill_max_f": null,
+"freezing_level_ft": null,
+"ice_risk": null,
+"heat_index_max_f": null,
+"heat_index_min_f": null,
+"uv_index_max": null,
+"air_quality_forecast": null,
+"frost_risk": null,
+"pollen_forecast": null,
+"precipitation_type": null,
+"severe_weather_risk": null,
+"feels_like_high": null,
+"feels_like_low": null
+},
+{
+"name": "Monday",
+"temperature": 16.0,
+"temperature_low": 9.0,
+"temperature_unit": "C",
+"short_forecast": null,
+"detailed_forecast": null,
+"wind_speed": null,
+"wind_speed_mph": null,
+"wind_direction": null,
+"icon": null,
+"start_time": null,
+"end_time": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"wind_chill_min_f": null,
+"wind_chill_max_f": null,
+"freezing_level_ft": null,
+"ice_risk": null,
+"heat_index_max_f": null,
+"heat_index_min_f": null,
+"uv_index_max": null,
+"air_quality_forecast": null,
+"frost_risk": null,
+"pollen_forecast": null,
+"precipitation_type": null,
+"severe_weather_risk": null,
+"feels_like_high": null,
+"feels_like_low": null
+},
+{
+"name": "Monday Night",
+"temperature": 9.0,
+"temperature_low": null,
+"temperature_unit": "C",
+"short_forecast": null,
+"detailed_forecast": null,
+"wind_speed": null,
+"wind_speed_mph": null,
+"wind_direction": null,
+"icon": null,
+"start_time": null,
+"end_time": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"wind_chill_min_f": null,
+"wind_chill_max_f": null,
+"freezing_level_ft": null,
+"ice_risk": null,
+"heat_index_max_f": null,
+"heat_index_min_f": null,
+"uv_index_max": null,
+"air_quality_forecast": null,
+"frost_risk": null,
+"pollen_forecast": null,
+"precipitation_type": null,
+"severe_weather_risk": null,
+"feels_like_high": null,
+"feels_like_low": null
+},
+{
+"name": "Tuesday",
+"temperature": 14.0,
+"temperature_low": null,
+"temperature_unit": "C",
+"short_forecast": null,
+"detailed_forecast": null,
+"wind_speed": null,
+"wind_speed_mph": null,
+"wind_direction": null,
+"icon": null,
+"start_time": null,
+"end_time": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"wind_chill_min_f": null,
+"wind_chill_max_f": null,
+"freezing_level_ft": null,
+"ice_risk": null,
+"heat_index_max_f": null,
+"heat_index_min_f": null,
+"uv_index_max": null,
+"air_quality_forecast": null,
+"frost_risk": null,
+"pollen_forecast": null,
+"precipitation_type": null,
+"severe_weather_risk": null,
+"feels_like_high": null,
+"feels_like_low": null
+},
+{
+"name": "Tuesday Night",
+"temperature": 7.0,
+"temperature_low": null,
+"temperature_unit": "C",
+"short_forecast": null,
+"detailed_forecast": null,
+"wind_speed": null,
+"wind_speed_mph": null,
+"wind_direction": null,
+"icon": null,
+"start_time": null,
+"end_time": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"wind_chill_min_f": null,
+"wind_chill_max_f": null,
+"freezing_level_ft": null,
+"ice_risk": null,
+"heat_index_max_f": null,
+"heat_index_min_f": null,
+"uv_index_max": null,
+"air_quality_forecast": null,
+"frost_risk": null,
+"pollen_forecast": null,
+"precipitation_type": null,
+"severe_weather_risk": null,
+"feels_like_high": null,
+"feels_like_low": null
+},
+{
+"name": "Wednesday",
+"temperature": 12.0,
+"temperature_low": null,
+"temperature_unit": "C",
+"short_forecast": null,
+"detailed_forecast": null,
+"wind_speed": null,
+"wind_speed_mph": null,
+"wind_direction": null,
+"icon": null,
+"start_time": null,
+"end_time": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"wind_chill_min_f": null,
+"wind_chill_max_f": null,
+"freezing_level_ft": null,
+"ice_risk": null,
+"heat_index_max_f": null,
+"heat_index_min_f": null,
+"uv_index_max": null,
+"air_quality_forecast": null,
+"frost_risk": null,
+"pollen_forecast": null,
+"precipitation_type": null,
+"severe_weather_risk": null,
+"feels_like_high": null,
+"feels_like_low": null
+}
+],
+"generated_at": null,
+"summary": ""
+},
+"hourly_forecast": {
+"periods": [
+{
+"start_time": "2026-10-10T20:00:00-04:00",
+"temperature": 13.0,
+"temperature_unit": "C",
+"short_forecast": "Mostly Clear",
+"wind_speed": null,
+"wind_direction": null,
+"icon": null,
+"end_time": null,
+"humidity": 0,
+"dewpoint_f": null,
+"dewpoint_c": null,
+"pressure_mb": null,
+"pressure_in": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_speed_mph": null,
+"wind_gust_mph": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"freezing_level_ft": null,
+"wind_chill_f": null,
+"wind_chill_c": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"air_quality_index": null,
+"frost_risk": null,
+"pollen_level": null,
+"precipitation_type": null,
+"feels_like": null,
+"visibility_miles": null,
+"visibility_km": null
+},
+{
+"start_time": "2026-10-10T21:00:00-04:00",
+"temperature": 12.75,
+"temperature_unit": "C",
+"short_forecast": null,
+"wind_speed": null,
+"wind_direction": null,
+"icon": null,
+"end_time": null,
+"humidity": 80,
+"dewpoint_f": null,
+"dewpoint_c": null,
+"pressure_mb": null,
+"pressure_in": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_speed_mph": null,
+"wind_gust_mph": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"freezing_level_ft": null,
+"wind_chill_f": null,
+"wind_chill_c": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"air_quality_index": null,
+"frost_risk": null,
+"pollen_level": null,
+"precipitation_type": null,
+"feels_like": null,
+"visibility_miles": null,
+"visibility_km": null
+},
+{
+"start_time": "2026-10-10T22:00:00-04:00",
+"temperature": 12.5,
+"temperature_unit": "C",
+"short_forecast": null,
+"wind_speed": null,
+"wind_direction": null,
+"icon": null,
+"end_time": null,
+"humidity": 80,
+"dewpoint_f": null,
+"dewpoint_c": null,
+"pressure_mb": null,
+"pressure_in": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_speed_mph": null,
+"wind_gust_mph": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"freezing_level_ft": null,
+"wind_chill_f": null,
+"wind_chill_c": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"air_quality_index": null,
+"frost_risk": null,
+"pollen_level": null,
+"precipitation_type": null,
+"feels_like": null,
+"visibility_miles": null,
+"visibility_km": null
+},
+{
+"start_time": "2026-10-10T23:00:00-04:00",
+"temperature": 12.25,
+"temperature_unit": "C",
+"short_forecast": null,
+"wind_speed": null,
+"wind_direction": null,
+"icon": null,
+"end_time": null,
+"humidity": 80,
+"dewpoint_f": null,
+"dewpoint_c": null,
+"pressure_mb": null,
+"pressure_in": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_speed_mph": null,
+"wind_gust_mph": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"freezing_level_ft": null,
+"wind_chill_f": null,
+"wind_chill_c": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"air_quality_index": null,
+"frost_risk": null,
+"pollen_level": null,
+"precipitation_type": null,
+"feels_like": null,
+"visibility_miles": null,
+"visibility_km": null
+},
+{
+"start_time": "2026-10-11T00:00:00-04:00",
+"temperature": 12.0,
+"temperature_unit": "C",
+"short_forecast": null,
+"wind_speed": null,
+"wind_direction": null,
+"icon": null,
+"end_time": null,
+"humidity": 80,
+"dewpoint_f": null,
+"dewpoint_c": null,
+"pressure_mb": null,
+"pressure_in": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_speed_mph": null,
+"wind_gust_mph": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"freezing_level_ft": null,
+"wind_chill_f": null,
+"wind_chill_c": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"air_quality_index": null,
+"frost_risk": null,
+"pollen_level": null,
+"precipitation_type": null,
+"feels_like": null,
+"visibility_miles": null,
+"visibility_km": null
+},
+{
+"start_time": "2026-10-11T01:00:00-04:00",
+"temperature": 11.75,
+"temperature_unit": "C",
+"short_forecast": null,
+"wind_speed": null,
+"wind_direction": null,
+"icon": null,
+"end_time": null,
+"humidity": 80,
+"dewpoint_f": null,
+"dewpoint_c": null,
+"pressure_mb": 1010.2,
+"pressure_in": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_speed_mph": null,
+"wind_gust_mph": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"freezing_level_ft": null,
+"wind_chill_f": null,
+"wind_chill_c": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"air_quality_index": null,
+"frost_risk": null,
+"pollen_level": null,
+"precipitation_type": null,
+"feels_like": null,
+"visibility_miles": null,
+"visibility_km": null
+},
+{
+"start_time": "2026-10-10T19:00:00-04:00",
+"temperature": null,
+"temperature_unit": "F",
+"short_forecast": null,
+"wind_speed": null,
+"wind_direction": null,
+"icon": null,
+"end_time": null,
+"humidity": null,
+"dewpoint_f": null,
+"dewpoint_c": null,
+"pressure_mb": null,
+"pressure_in": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_speed_mph": null,
+"wind_gust_mph": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"freezing_level_ft": null,
+"wind_chill_f": null,
+"wind_chill_c": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"air_quality_index": null,
+"frost_risk": null,
+"pollen_level": null,
+"precipitation_type": null,
+"feels_like": null,
+"visibility_miles": null,
+"visibility_km": null
+}
+],
+"generated_at": null,
+"summary": "Clearing later."
+},
+"daily_history": [],
+"discussion": null,
+"discussion_issuance_time": null,
+"minutely_precipitation": {
+"summary": "Clear for the hour.",
+"icon": null,
+"points": []
+},
+"alerts": null,
+"environmental": null,
+"aviation": null,
+"marine": null,
+"trend_insights": [],
+"stale": true,
+"stale_since": null,
+"stale_reason": null,
+"source_attribution": {
+"field_sources": {
+"condition": "openmeteo",
+"hourly_source": "customsource",
+"hourly_summary": "pirateweather"
+},
+"conflicts": [],
+"contributing_sources": [
+"customsource",
+"openmeteo"
+],
+"failed_sources": []
+},
+"incomplete_sections": [
+"hourly"
+],
+"alert_lifecycle_diff": null,
+"forecast_confidence": null,
+"anomaly_callout": null
+},
+"variants": [
+{
+"settings": {},
+"presentation": {
+"location_name": "Somewhere",
+"summary_text": "Somewhere - 55°F (13°C) - Rain - Cached data",
+"current_conditions": {
+"title": "Current conditions for Somewhere",
+"description": "Rain",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Clear for the hour."
+},
+{
+"label": "Temperature",
+"value": "55.4°F (13°C)"
+},
+{
+"label": "Dewpoint",
+"value": "51.8°F (11°C)"
+},
+{
+"label": "Wind",
+"value": "N/A"
+},
+{
+"label": "Pressure",
+"value": "29.8 inHg (1009.0 hPa)"
+}
+],
+"fallback_text": "Current conditions for Somewhere: Rain\nPrecipitation outlook: Clear for the hour.\nTemperature: 55.4°F (13°C)\nDewpoint: 51.8°F (11°C)\nWind: N/A\nPressure: 29.8 inHg (1009.0 hPa)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Somewhere",
+"periods": [
+{
+"name": "Tonight",
+"temperature": "50°F (10°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "59°F (15°C) / 46.4°F (8°C)",
+"conditions": null,
+"wind": "Light",
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday Night",
+"temperature": "46.4°F (8°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Unknown",
+"temperature": null,
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "60.8°F (16°C) / 48.2°F (9°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday Night",
+"temperature": "48.2°F (9°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday",
+"temperature": "57.2°F (14°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday Night",
+"temperature": "44.6°F (7°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Wednesday",
+"temperature": "53.6°F (12°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:00 PM",
+"temperature": "55.4°F (13°C)",
+"conditions": "Mostly Clear",
+"wind": null,
+"humidity": "0%",
+"dewpoint": "N/A",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 PM",
+"temperature": "55.0°F (12.8°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.9°F (9.4°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 PM",
+"temperature": "54.5°F (12.5°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.5°F (9.1°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "11:00 PM",
+"temperature": "54.0°F (12.2°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.0°F (8.9°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "12:00 AM",
+"temperature": "53.6°F (12°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "47.6°F (8.7°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": "Hourly outlook: Clearing later.",
+"generated_at": null,
+"fallback_text": "Daily forecast for Somewhere:\nTonight: 50°F (10°C)\nSunday: 59°F (15°C) / 46.4°F (8°C)\n  Wind: Light\nSunday Night: 46.4°F (8°C)\nUnknown: N/A\nMonday: 60.8°F (16°C) / 48.2°F (9°C)\nMonday Night: 48.2°F (9°C)\nTuesday: 57.2°F (14°C)\nTuesday Night: 44.6°F (7°C)\nWednesday: 53.6°F (12°C)\n\nHourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM - 55.4°F (13°C) - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM - 55.0°F (12.8°C) - Humidity 80% - Dewpoint 48.9°F (9.4°C)\n  10:00 PM - 54.5°F (12.5°C) - Humidity 80% - Dewpoint 48.5°F (9.1°C)\n  11:00 PM - 54.0°F (12.2°C) - Humidity 80% - Dewpoint 48.0°F (8.9°C)\n  12:00 AM - 53.6°F (12°C) - Humidity 80% - Dewpoint 47.6°F (8.7°C)",
+"daily_section_text": "Daily forecast for Somewhere:\nTonight: 50°F (10°C)\nSunday: 59°F (15°C) / 46.4°F (8°C)\n  Wind: Light\nSunday Night: 46.4°F (8°C)\nUnknown: N/A\nMonday: 60.8°F (16°C) / 48.2°F (9°C)\nMonday Night: 48.2°F (9°C)\nTuesday: 57.2°F (14°C)\nTuesday Night: 44.6°F (7°C)\nWednesday: 53.6°F (12°C)",
+"hourly_section_text": "Hourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM - 55.4°F (13°C) - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM - 55.0°F (12.8°C) - Humidity 80% - Dewpoint 48.9°F (9.4°C)\n  10:00 PM - 54.5°F (12.5°C) - Humidity 80% - Dewpoint 48.5°F (9.1°C)\n  11:00 PM - 54.0°F (12.2°C) - Humidity 80% - Dewpoint 48.0°F (8.9°C)\n  12:00 AM - 53.6°F (12°C) - Humidity 80% - Dewpoint 47.6°F (8.7°C)",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [
+"Showing cached weather data (cached data)."
+],
+"source_attribution": {
+"contributing_sources": [
+"Customsource",
+"Open-Meteo"
+],
+"failed_sources": [],
+"incomplete_sections": [
+"hourly"
+],
+"summary_text": "Data from: Customsource, Open-Meteo. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour.",
+"aria_label": "Weather data provided by Customsource, Open-Meteo. Missing sections: hourly. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "13C Rain",
+"preview": "13C Rain",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Somewhere: 13C  at 0 mph N/A",
+"preview": "Somewhere: 13C  at 0 mph N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "59F/15C/50F/10C N/A N/A% UV N/A N/A 29.80 inHg (1009.00 hPa)",
+"preview": "59F/15C/50F/10C N/A N/A% UV N/A N/A 29.80 inHg (1009.00 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 13C  N/A {unknown}",
+"preview": "N/A 13C  N/A {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "13C",
+"preview": "13C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"preview": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+},
+"present_current": {
+"title": "Current conditions for Somewhere",
+"description": "Rain",
+"metrics": [
+{
+"label": "Temperature",
+"value": "55.4°F (13°C)"
+},
+{
+"label": "Dewpoint",
+"value": "51.8°F (11°C)"
+},
+{
+"label": "Wind",
+"value": "N/A"
+},
+{
+"label": "Pressure",
+"value": "29.8 inHg (1009.0 hPa)"
+}
+],
+"fallback_text": "Current conditions for Somewhere: Rain\nTemperature: 55.4°F (13°C)\nDewpoint: 51.8°F (11°C)\nWind: N/A\nPressure: 29.8 inHg (1009.0 hPa)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"present_forecast": {
+"title": "Forecast for Somewhere",
+"periods": [
+{
+"name": "Tonight",
+"temperature": "50°F (10°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "59°F (15°C) / 46.4°F (8°C)",
+"conditions": null,
+"wind": "Light",
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday Night",
+"temperature": "46.4°F (8°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Unknown",
+"temperature": null,
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "60.8°F (16°C) / 48.2°F (9°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday Night",
+"temperature": "48.2°F (9°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday",
+"temperature": "57.2°F (14°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday Night",
+"temperature": "44.6°F (7°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Wednesday",
+"temperature": "53.6°F (12°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:00 PM",
+"temperature": "55.4°F (13°C)",
+"conditions": "Mostly Clear",
+"wind": null,
+"humidity": "0%",
+"dewpoint": "N/A",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 PM",
+"temperature": "55.0°F (12.8°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.9°F (9.4°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 PM",
+"temperature": "54.5°F (12.5°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.5°F (9.1°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "11:00 PM",
+"temperature": "54.0°F (12.2°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.0°F (8.9°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "12:00 AM",
+"temperature": "53.6°F (12°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "47.6°F (8.7°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": "Hourly outlook: Clearing later.",
+"generated_at": null,
+"fallback_text": "Daily forecast for Somewhere:\nTonight: 50°F (10°C)\nSunday: 59°F (15°C) / 46.4°F (8°C)\n  Wind: Light\nSunday Night: 46.4°F (8°C)\nUnknown: N/A\nMonday: 60.8°F (16°C) / 48.2°F (9°C)\nMonday Night: 48.2°F (9°C)\nTuesday: 57.2°F (14°C)\nTuesday Night: 44.6°F (7°C)\nWednesday: 53.6°F (12°C)\n\nHourly forecast:\nMobility briefing: Stay dry.\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM - 55.4°F (13°C) - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM - 55.0°F (12.8°C) - Humidity 80% - Dewpoint 48.9°F (9.4°C)\n  10:00 PM - 54.5°F (12.5°C) - Humidity 80% - Dewpoint 48.5°F (9.1°C)\n  11:00 PM - 54.0°F (12.2°C) - Humidity 80% - Dewpoint 48.0°F (8.9°C)\n  12:00 AM - 53.6°F (12°C) - Humidity 80% - Dewpoint 47.6°F (8.7°C)",
+"daily_section_text": "Daily forecast for Somewhere:\nTonight: 50°F (10°C)\nSunday: 59°F (15°C) / 46.4°F (8°C)\n  Wind: Light\nSunday Night: 46.4°F (8°C)\nUnknown: N/A\nMonday: 60.8°F (16°C) / 48.2°F (9°C)\nMonday Night: 48.2°F (9°C)\nTuesday: 57.2°F (14°C)\nTuesday Night: 44.6°F (7°C)\nWednesday: 53.6°F (12°C)",
+"hourly_section_text": "Hourly forecast:\nMobility briefing: Stay dry.\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM - 55.4°F (13°C) - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM - 55.0°F (12.8°C) - Humidity 80% - Dewpoint 48.9°F (9.4°C)\n  10:00 PM - 54.5°F (12.5°C) - Humidity 80% - Dewpoint 48.5°F (9.1°C)\n  11:00 PM - 54.0°F (12.2°C) - Humidity 80% - Dewpoint 48.0°F (8.9°C)\n  12:00 AM - 53.6°F (12°C) - Humidity 80% - Dewpoint 47.6°F (8.7°C)",
+"mobility_briefing": "Stay dry.",
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"present_alerts": null
+},
+{
+"settings": {
+"temperature_unit": "f"
+},
+"presentation": {
+"location_name": "Somewhere",
+"summary_text": "Somewhere - 55°F - Rain - Cached data",
+"current_conditions": {
+"title": "Current conditions for Somewhere",
+"description": "Rain",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Clear for the hour."
+},
+{
+"label": "Temperature",
+"value": "55.4°F"
+},
+{
+"label": "Dewpoint",
+"value": "51.8°F"
+},
+{
+"label": "Wind",
+"value": "N/A"
+},
+{
+"label": "Pressure",
+"value": "29.8 inHg"
+}
+],
+"fallback_text": "Current conditions for Somewhere: Rain\nPrecipitation outlook: Clear for the hour.\nTemperature: 55.4°F\nDewpoint: 51.8°F\nWind: N/A\nPressure: 29.8 inHg",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Somewhere",
+"periods": [
+{
+"name": "Tonight",
+"temperature": "50°F",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "59°F / 46.4°F",
+"conditions": null,
+"wind": "Light",
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday Night",
+"temperature": "46.4°F",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Unknown",
+"temperature": null,
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "60.8°F / 48.2°F",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday Night",
+"temperature": "48.2°F",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday",
+"temperature": "57.2°F",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday Night",
+"temperature": "44.6°F",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Wednesday",
+"temperature": "53.6°F",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:00 PM",
+"temperature": "55.4°F",
+"conditions": "Mostly Clear",
+"wind": null,
+"humidity": "0%",
+"dewpoint": "N/A",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 PM",
+"temperature": "55.0°F",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.9°F",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 PM",
+"temperature": "54.5°F",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.5°F",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "11:00 PM",
+"temperature": "54.0°F",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.0°F",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "12:00 AM",
+"temperature": "53.6°F",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "47.6°F",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": "Hourly outlook: Clearing later.",
+"generated_at": null,
+"fallback_text": "Daily forecast for Somewhere:\nTonight: 50°F\nSunday: 59°F / 46.4°F\n  Wind: Light\nSunday Night: 46.4°F\nUnknown: N/A\nMonday: 60.8°F / 48.2°F\nMonday Night: 48.2°F\nTuesday: 57.2°F\nTuesday Night: 44.6°F\nWednesday: 53.6°F\n\nHourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM - 55.4°F - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM - 55.0°F - Humidity 80% - Dewpoint 48.9°F\n  10:00 PM - 54.5°F - Humidity 80% - Dewpoint 48.5°F\n  11:00 PM - 54.0°F - Humidity 80% - Dewpoint 48.0°F\n  12:00 AM - 53.6°F - Humidity 80% - Dewpoint 47.6°F",
+"daily_section_text": "Daily forecast for Somewhere:\nTonight: 50°F\nSunday: 59°F / 46.4°F\n  Wind: Light\nSunday Night: 46.4°F\nUnknown: N/A\nMonday: 60.8°F / 48.2°F\nMonday Night: 48.2°F\nTuesday: 57.2°F\nTuesday Night: 44.6°F\nWednesday: 53.6°F",
+"hourly_section_text": "Hourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM - 55.4°F - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM - 55.0°F - Humidity 80% - Dewpoint 48.9°F\n  10:00 PM - 54.5°F - Humidity 80% - Dewpoint 48.5°F\n  11:00 PM - 54.0°F - Humidity 80% - Dewpoint 48.0°F\n  12:00 AM - 53.6°F - Humidity 80% - Dewpoint 47.6°F",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [
+"Showing cached weather data (cached data)."
+],
+"source_attribution": {
+"contributing_sources": [
+"Customsource",
+"Open-Meteo"
+],
+"failed_sources": [],
+"incomplete_sections": [
+"hourly"
+],
+"summary_text": "Data from: Customsource, Open-Meteo. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour.",
+"aria_label": "Weather data provided by Customsource, Open-Meteo. Missing sections: hourly. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "N/A Rain",
+"preview": "N/A Rain",
+"sample_preview": "72F Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Somewhere: N/A  at 0 mph N/A",
+"preview": "Somewhere: N/A  at 0 mph N/A",
+"sample_preview": "Sample Location: 72F (feels like 74F) NW at 8.0 mph 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "59F/50F N/A N/A% UV N/A N/A 29.80 inHg",
+"preview": "59F/50F N/A N/A% UV N/A N/A 29.80 inHg",
+"sample_preview": "78F/61F 0.00 in 20% UV 5 10.0 mi 30.10 inHg"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 13C  N/A {unknown}",
+"preview": "N/A 13C  N/A {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "N/A",
+"preview": "N/A",
+"sample_preview": "Feels like: 74F | 72F"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"preview": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "c"
+},
+"presentation": {
+"location_name": "Somewhere",
+"summary_text": "Somewhere - 13°C - Rain - Cached data",
+"current_conditions": {
+"title": "Current conditions for Somewhere",
+"description": "Rain",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Clear for the hour."
+},
+{
+"label": "Temperature",
+"value": "13°C"
+},
+{
+"label": "Dewpoint",
+"value": "11°C"
+},
+{
+"label": "Wind",
+"value": "N/A"
+},
+{
+"label": "Pressure",
+"value": "1009.0 hPa"
+}
+],
+"fallback_text": "Current conditions for Somewhere: Rain\nPrecipitation outlook: Clear for the hour.\nTemperature: 13°C\nDewpoint: 11°C\nWind: N/A\nPressure: 1009.0 hPa",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Somewhere",
+"periods": [
+{
+"name": "Tonight",
+"temperature": "10°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "15°C / 8°C",
+"conditions": null,
+"wind": "Light",
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday Night",
+"temperature": "8°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Unknown",
+"temperature": null,
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "16°C / 9°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday Night",
+"temperature": "9°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday",
+"temperature": "14°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday Night",
+"temperature": "7°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Wednesday",
+"temperature": "12°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:00 PM",
+"temperature": "13°C",
+"conditions": "Mostly Clear",
+"wind": null,
+"humidity": "0%",
+"dewpoint": "N/A",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 PM",
+"temperature": "12.8°C",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "9.4°C",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 PM",
+"temperature": "12.5°C",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "9.1°C",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "11:00 PM",
+"temperature": "12.2°C",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "8.9°C",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "12:00 AM",
+"temperature": "12°C",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "8.7°C",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": "Hourly outlook: Clearing later.",
+"generated_at": null,
+"fallback_text": "Daily forecast for Somewhere:\nTonight: 10°C\nSunday: 15°C / 8°C\n  Wind: Light\nSunday Night: 8°C\nUnknown: N/A\nMonday: 16°C / 9°C\nMonday Night: 9°C\nTuesday: 14°C\nTuesday Night: 7°C\nWednesday: 12°C\n\nHourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM - 13°C - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM - 12.8°C - Humidity 80% - Dewpoint 9.4°C\n  10:00 PM - 12.5°C - Humidity 80% - Dewpoint 9.1°C\n  11:00 PM - 12.2°C - Humidity 80% - Dewpoint 8.9°C\n  12:00 AM - 12°C - Humidity 80% - Dewpoint 8.7°C",
+"daily_section_text": "Daily forecast for Somewhere:\nTonight: 10°C\nSunday: 15°C / 8°C\n  Wind: Light\nSunday Night: 8°C\nUnknown: N/A\nMonday: 16°C / 9°C\nMonday Night: 9°C\nTuesday: 14°C\nTuesday Night: 7°C\nWednesday: 12°C",
+"hourly_section_text": "Hourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM - 13°C - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM - 12.8°C - Humidity 80% - Dewpoint 9.4°C\n  10:00 PM - 12.5°C - Humidity 80% - Dewpoint 9.1°C\n  11:00 PM - 12.2°C - Humidity 80% - Dewpoint 8.9°C\n  12:00 AM - 12°C - Humidity 80% - Dewpoint 8.7°C",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [
+"Showing cached weather data (cached data)."
+],
+"source_attribution": {
+"contributing_sources": [
+"Customsource",
+"Open-Meteo"
+],
+"failed_sources": [],
+"incomplete_sections": [
+"hourly"
+],
+"summary_text": "Data from: Customsource, Open-Meteo. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour.",
+"aria_label": "Weather data provided by Customsource, Open-Meteo. Missing sections: hourly. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "13C Rain",
+"preview": "13C Rain",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Somewhere: 13C  at 0 mph N/A",
+"preview": "Somewhere: 13C  at 0 mph N/A",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 12.9 km/h 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "15C/10C N/A N/A% UV N/A N/A 1009.00 hPa",
+"preview": "15C/10C N/A N/A% UV N/A N/A 1009.00 hPa",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 13C  N/A {unknown}",
+"preview": "N/A 13C  N/A {unknown}",
+"sample_preview": "72F 22C NW 12.9 km/h {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "13C",
+"preview": "13C",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"preview": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"sample_preview": "Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "auto"
+},
+"presentation": {
+"location_name": "Somewhere",
+"summary_text": "Somewhere - 13°C - Rain - Cached data",
+"current_conditions": {
+"title": "Current conditions for Somewhere",
+"description": "Rain",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Clear for the hour."
+},
+{
+"label": "Temperature",
+"value": "13°C"
+},
+{
+"label": "Dewpoint",
+"value": "11°C"
+},
+{
+"label": "Wind",
+"value": "N/A"
+},
+{
+"label": "Pressure",
+"value": "1009.0 hPa"
+}
+],
+"fallback_text": "Current conditions for Somewhere: Rain\nPrecipitation outlook: Clear for the hour.\nTemperature: 13°C\nDewpoint: 11°C\nWind: N/A\nPressure: 1009.0 hPa",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Somewhere",
+"periods": [
+{
+"name": "Tonight",
+"temperature": "10°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "15°C / 8°C",
+"conditions": null,
+"wind": "Light",
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday Night",
+"temperature": "8°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Unknown",
+"temperature": null,
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "16°C / 9°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday Night",
+"temperature": "9°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday",
+"temperature": "14°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday Night",
+"temperature": "7°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Wednesday",
+"temperature": "12°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:00 PM",
+"temperature": "13°C",
+"conditions": "Mostly Clear",
+"wind": null,
+"humidity": "0%",
+"dewpoint": "N/A",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 PM",
+"temperature": "12.8°C",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "9.4°C",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 PM",
+"temperature": "12.5°C",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "9.1°C",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "11:00 PM",
+"temperature": "12.2°C",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "8.9°C",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "12:00 AM",
+"temperature": "12°C",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "8.7°C",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": "Hourly outlook: Clearing later.",
+"generated_at": null,
+"fallback_text": "Daily forecast for Somewhere:\nTonight: 10°C\nSunday: 15°C / 8°C\n  Wind: Light\nSunday Night: 8°C\nUnknown: N/A\nMonday: 16°C / 9°C\nMonday Night: 9°C\nTuesday: 14°C\nTuesday Night: 7°C\nWednesday: 12°C\n\nHourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM - 13°C - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM - 12.8°C - Humidity 80% - Dewpoint 9.4°C\n  10:00 PM - 12.5°C - Humidity 80% - Dewpoint 9.1°C\n  11:00 PM - 12.2°C - Humidity 80% - Dewpoint 8.9°C\n  12:00 AM - 12°C - Humidity 80% - Dewpoint 8.7°C",
+"daily_section_text": "Daily forecast for Somewhere:\nTonight: 10°C\nSunday: 15°C / 8°C\n  Wind: Light\nSunday Night: 8°C\nUnknown: N/A\nMonday: 16°C / 9°C\nMonday Night: 9°C\nTuesday: 14°C\nTuesday Night: 7°C\nWednesday: 12°C",
+"hourly_section_text": "Hourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM - 13°C - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM - 12.8°C - Humidity 80% - Dewpoint 9.4°C\n  10:00 PM - 12.5°C - Humidity 80% - Dewpoint 9.1°C\n  11:00 PM - 12.2°C - Humidity 80% - Dewpoint 8.9°C\n  12:00 AM - 12°C - Humidity 80% - Dewpoint 8.7°C",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [
+"Showing cached weather data (cached data)."
+],
+"source_attribution": {
+"contributing_sources": [
+"Customsource",
+"Open-Meteo"
+],
+"failed_sources": [],
+"incomplete_sections": [
+"hourly"
+],
+"summary_text": "Data from: Customsource, Open-Meteo. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour.",
+"aria_label": "Weather data provided by Customsource, Open-Meteo. Missing sections: hourly. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "13C Rain",
+"preview": "13C Rain",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Somewhere: 13C  at 0 mph N/A",
+"preview": "Somewhere: 13C  at 0 mph N/A",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 3.6 m/s 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "15C/10C N/A N/A% UV N/A N/A 1009.00 hPa",
+"preview": "15C/10C N/A N/A% UV N/A N/A 1009.00 hPa",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 13C  N/A {unknown}",
+"preview": "N/A 13C  N/A {unknown}",
+"sample_preview": "72F 22C NW 3.6 m/s {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "13C",
+"preview": "13C",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"preview": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"sample_preview": "Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "auto",
+"wind_speed_unit": "m/s"
+},
+"presentation": {
+"location_name": "Somewhere",
+"summary_text": "Somewhere - 13°C - Rain - Cached data",
+"current_conditions": {
+"title": "Current conditions for Somewhere",
+"description": "Rain",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Clear for the hour."
+},
+{
+"label": "Temperature",
+"value": "13°C"
+},
+{
+"label": "Dewpoint",
+"value": "11°C"
+},
+{
+"label": "Wind",
+"value": "N/A"
+},
+{
+"label": "Pressure",
+"value": "1009.0 hPa"
+}
+],
+"fallback_text": "Current conditions for Somewhere: Rain\nPrecipitation outlook: Clear for the hour.\nTemperature: 13°C\nDewpoint: 11°C\nWind: N/A\nPressure: 1009.0 hPa",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Somewhere",
+"periods": [
+{
+"name": "Tonight",
+"temperature": "10°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "15°C / 8°C",
+"conditions": null,
+"wind": "Light",
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday Night",
+"temperature": "8°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Unknown",
+"temperature": null,
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "16°C / 9°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday Night",
+"temperature": "9°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday",
+"temperature": "14°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday Night",
+"temperature": "7°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Wednesday",
+"temperature": "12°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:00 PM",
+"temperature": "13°C",
+"conditions": "Mostly Clear",
+"wind": null,
+"humidity": "0%",
+"dewpoint": "N/A",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 PM",
+"temperature": "12.8°C",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "9.4°C",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 PM",
+"temperature": "12.5°C",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "9.1°C",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "11:00 PM",
+"temperature": "12.2°C",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "8.9°C",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "12:00 AM",
+"temperature": "12°C",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "8.7°C",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": "Hourly outlook: Clearing later.",
+"generated_at": null,
+"fallback_text": "Daily forecast for Somewhere:\nTonight: 10°C\nSunday: 15°C / 8°C\n  Wind: Light\nSunday Night: 8°C\nUnknown: N/A\nMonday: 16°C / 9°C\nMonday Night: 9°C\nTuesday: 14°C\nTuesday Night: 7°C\nWednesday: 12°C\n\nHourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM - 13°C - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM - 12.8°C - Humidity 80% - Dewpoint 9.4°C\n  10:00 PM - 12.5°C - Humidity 80% - Dewpoint 9.1°C\n  11:00 PM - 12.2°C - Humidity 80% - Dewpoint 8.9°C\n  12:00 AM - 12°C - Humidity 80% - Dewpoint 8.7°C",
+"daily_section_text": "Daily forecast for Somewhere:\nTonight: 10°C\nSunday: 15°C / 8°C\n  Wind: Light\nSunday Night: 8°C\nUnknown: N/A\nMonday: 16°C / 9°C\nMonday Night: 9°C\nTuesday: 14°C\nTuesday Night: 7°C\nWednesday: 12°C",
+"hourly_section_text": "Hourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM - 13°C - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM - 12.8°C - Humidity 80% - Dewpoint 9.4°C\n  10:00 PM - 12.5°C - Humidity 80% - Dewpoint 9.1°C\n  11:00 PM - 12.2°C - Humidity 80% - Dewpoint 8.9°C\n  12:00 AM - 12°C - Humidity 80% - Dewpoint 8.7°C",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [
+"Showing cached weather data (cached data)."
+],
+"source_attribution": {
+"contributing_sources": [
+"Customsource",
+"Open-Meteo"
+],
+"failed_sources": [],
+"incomplete_sections": [
+"hourly"
+],
+"summary_text": "Data from: Customsource, Open-Meteo. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour.",
+"aria_label": "Weather data provided by Customsource, Open-Meteo. Missing sections: hourly. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "13C Rain",
+"preview": "13C Rain",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Somewhere: 13C  at 0 mph N/A",
+"preview": "Somewhere: 13C  at 0 mph N/A",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 3.6 m/s 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "15C/10C N/A N/A% UV N/A N/A 1009.00 hPa",
+"preview": "15C/10C N/A N/A% UV N/A N/A 1009.00 hPa",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 13C  N/A {unknown}",
+"preview": "N/A 13C  N/A {unknown}",
+"sample_preview": "72F 22C NW 3.6 m/s {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "13C",
+"preview": "13C",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"preview": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"sample_preview": "Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "both",
+"wind_speed_unit": "kph"
+},
+"presentation": {
+"location_name": "Somewhere",
+"summary_text": "Somewhere - 55°F (13°C) - Rain - Cached data",
+"current_conditions": {
+"title": "Current conditions for Somewhere",
+"description": "Rain",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Clear for the hour."
+},
+{
+"label": "Temperature",
+"value": "55.4°F (13°C)"
+},
+{
+"label": "Dewpoint",
+"value": "51.8°F (11°C)"
+},
+{
+"label": "Wind",
+"value": "N/A"
+},
+{
+"label": "Pressure",
+"value": "29.8 inHg (1009.0 hPa)"
+}
+],
+"fallback_text": "Current conditions for Somewhere: Rain\nPrecipitation outlook: Clear for the hour.\nTemperature: 55.4°F (13°C)\nDewpoint: 51.8°F (11°C)\nWind: N/A\nPressure: 29.8 inHg (1009.0 hPa)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Somewhere",
+"periods": [
+{
+"name": "Tonight",
+"temperature": "50°F (10°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "59°F (15°C) / 46.4°F (8°C)",
+"conditions": null,
+"wind": "Light",
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday Night",
+"temperature": "46.4°F (8°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Unknown",
+"temperature": null,
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "60.8°F (16°C) / 48.2°F (9°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday Night",
+"temperature": "48.2°F (9°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday",
+"temperature": "57.2°F (14°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday Night",
+"temperature": "44.6°F (7°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Wednesday",
+"temperature": "53.6°F (12°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:00 PM",
+"temperature": "55.4°F (13°C)",
+"conditions": "Mostly Clear",
+"wind": null,
+"humidity": "0%",
+"dewpoint": "N/A",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 PM",
+"temperature": "55.0°F (12.8°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.9°F (9.4°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 PM",
+"temperature": "54.5°F (12.5°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.5°F (9.1°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "11:00 PM",
+"temperature": "54.0°F (12.2°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.0°F (8.9°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "12:00 AM",
+"temperature": "53.6°F (12°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "47.6°F (8.7°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": "Hourly outlook: Clearing later.",
+"generated_at": null,
+"fallback_text": "Daily forecast for Somewhere:\nTonight: 50°F (10°C)\nSunday: 59°F (15°C) / 46.4°F (8°C)\n  Wind: Light\nSunday Night: 46.4°F (8°C)\nUnknown: N/A\nMonday: 60.8°F (16°C) / 48.2°F (9°C)\nMonday Night: 48.2°F (9°C)\nTuesday: 57.2°F (14°C)\nTuesday Night: 44.6°F (7°C)\nWednesday: 53.6°F (12°C)\n\nHourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM - 55.4°F (13°C) - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM - 55.0°F (12.8°C) - Humidity 80% - Dewpoint 48.9°F (9.4°C)\n  10:00 PM - 54.5°F (12.5°C) - Humidity 80% - Dewpoint 48.5°F (9.1°C)\n  11:00 PM - 54.0°F (12.2°C) - Humidity 80% - Dewpoint 48.0°F (8.9°C)\n  12:00 AM - 53.6°F (12°C) - Humidity 80% - Dewpoint 47.6°F (8.7°C)",
+"daily_section_text": "Daily forecast for Somewhere:\nTonight: 50°F (10°C)\nSunday: 59°F (15°C) / 46.4°F (8°C)\n  Wind: Light\nSunday Night: 46.4°F (8°C)\nUnknown: N/A\nMonday: 60.8°F (16°C) / 48.2°F (9°C)\nMonday Night: 48.2°F (9°C)\nTuesday: 57.2°F (14°C)\nTuesday Night: 44.6°F (7°C)\nWednesday: 53.6°F (12°C)",
+"hourly_section_text": "Hourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM - 55.4°F (13°C) - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM - 55.0°F (12.8°C) - Humidity 80% - Dewpoint 48.9°F (9.4°C)\n  10:00 PM - 54.5°F (12.5°C) - Humidity 80% - Dewpoint 48.5°F (9.1°C)\n  11:00 PM - 54.0°F (12.2°C) - Humidity 80% - Dewpoint 48.0°F (8.9°C)\n  12:00 AM - 53.6°F (12°C) - Humidity 80% - Dewpoint 47.6°F (8.7°C)",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [
+"Showing cached weather data (cached data)."
+],
+"source_attribution": {
+"contributing_sources": [
+"Customsource",
+"Open-Meteo"
+],
+"failed_sources": [],
+"incomplete_sections": [
+"hourly"
+],
+"summary_text": "Data from: Customsource, Open-Meteo. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour.",
+"aria_label": "Weather data provided by Customsource, Open-Meteo. Missing sections: hourly. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "13C Rain",
+"preview": "13C Rain",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Somewhere: 13C  at 0 mph N/A",
+"preview": "Somewhere: 13C  at 0 mph N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 12.9 km/h 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "59F/15C/50F/10C N/A N/A% UV N/A N/A 29.80 inHg (1009.00 hPa)",
+"preview": "59F/15C/50F/10C N/A N/A% UV N/A N/A 29.80 inHg (1009.00 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 13C  N/A {unknown}",
+"preview": "N/A 13C  N/A {unknown}",
+"sample_preview": "72F 22C NW 12.9 km/h {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "13C",
+"preview": "13C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"preview": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"sample_preview": "Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "fahrenheit",
+"wind_speed_unit": "mph",
+"verbosity_level": "detailed",
+"show_impact_summaries": true
+},
+"presentation": {
+"location_name": "Somewhere",
+"summary_text": "Somewhere - 55°F - Rain - Cached data",
+"current_conditions": {
+"title": "Current conditions for Somewhere",
+"description": "Rain",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Clear for the hour."
+},
+{
+"label": "Temperature",
+"value": "55.4°F"
+},
+{
+"label": "Dewpoint",
+"value": "51.8°F"
+},
+{
+"label": "Wind",
+"value": "N/A"
+},
+{
+"label": "Pressure",
+"value": "29.8 inHg"
+},
+{
+"label": "Impact: Driving",
+"value": "Caution: wet roads - allow extra stopping distance"
+}
+],
+"fallback_text": "Current conditions for Somewhere: Rain\nPrecipitation outlook: Clear for the hour.\nTemperature: 55.4°F\nDewpoint: 51.8°F\nWind: N/A\nPressure: 29.8 inHg\nImpact: Driving: Caution: wet roads - allow extra stopping distance",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": "Caution: wet roads - allow extra stopping distance",
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Somewhere",
+"periods": [
+{
+"name": "Tonight",
+"temperature": "50°F",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "59°F / 46.4°F",
+"conditions": null,
+"wind": "Light",
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday Night",
+"temperature": "46.4°F",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Unknown",
+"temperature": null,
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "60.8°F / 48.2°F",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday Night",
+"temperature": "48.2°F",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday",
+"temperature": "57.2°F",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday Night",
+"temperature": "44.6°F",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Wednesday",
+"temperature": "53.6°F",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:00 PM",
+"temperature": "55.4°F",
+"conditions": "Mostly Clear",
+"wind": null,
+"humidity": "0%",
+"dewpoint": "N/A",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 PM",
+"temperature": "55.0°F",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.9°F",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 PM",
+"temperature": "54.5°F",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.5°F",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "11:00 PM",
+"temperature": "54.0°F",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.0°F",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "12:00 AM",
+"temperature": "53.6°F",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "47.6°F",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": "Hourly outlook: Clearing later.",
+"generated_at": null,
+"fallback_text": "Daily forecast for Somewhere:\nTonight: 50°F\nSunday: 59°F / 46.4°F\n  Wind: Light\nSunday Night: 46.4°F\nUnknown: N/A\nMonday: 60.8°F / 48.2°F\nMonday Night: 48.2°F\nTuesday: 57.2°F\nTuesday Night: 44.6°F\nWednesday: 53.6°F\n\nHourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM - 55.4°F - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM - 55.0°F - Humidity 80% - Dewpoint 48.9°F\n  10:00 PM - 54.5°F - Humidity 80% - Dewpoint 48.5°F\n  11:00 PM - 54.0°F - Humidity 80% - Dewpoint 48.0°F\n  12:00 AM - 53.6°F - Humidity 80% - Dewpoint 47.6°F",
+"daily_section_text": "Daily forecast for Somewhere:\nTonight: 50°F\nSunday: 59°F / 46.4°F\n  Wind: Light\nSunday Night: 46.4°F\nUnknown: N/A\nMonday: 60.8°F / 48.2°F\nMonday Night: 48.2°F\nTuesday: 57.2°F\nTuesday Night: 44.6°F\nWednesday: 53.6°F",
+"hourly_section_text": "Hourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM - 55.4°F - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM - 55.0°F - Humidity 80% - Dewpoint 48.9°F\n  10:00 PM - 54.5°F - Humidity 80% - Dewpoint 48.5°F\n  11:00 PM - 54.0°F - Humidity 80% - Dewpoint 48.0°F\n  12:00 AM - 53.6°F - Humidity 80% - Dewpoint 47.6°F",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": {
+"outdoor": "Mild - light jacket may be needed",
+"driving": "Normal driving conditions",
+"allergy": null
+}
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [
+"Showing cached weather data (cached data)."
+],
+"source_attribution": {
+"contributing_sources": [
+"Customsource",
+"Open-Meteo"
+],
+"failed_sources": [],
+"incomplete_sections": [
+"hourly"
+],
+"summary_text": "Data from: Customsource, Open-Meteo. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour.",
+"aria_label": "Weather data provided by Customsource, Open-Meteo. Missing sections: hourly. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "N/A Rain",
+"preview": "N/A Rain",
+"sample_preview": "72F Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Somewhere: N/A  at 0 mph N/A",
+"preview": "Somewhere: N/A  at 0 mph N/A",
+"sample_preview": "Sample Location: 72F (feels like 74F) NW at 8.0 mph 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "59F/50F N/A N/A% UV N/A N/A 29.80 inHg",
+"preview": "59F/50F N/A N/A% UV N/A N/A 29.80 inHg",
+"sample_preview": "78F/61F 0.00 in 20% UV 5 10.0 mi 30.10 inHg"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 13C  N/A {unknown}",
+"preview": "N/A 13C  N/A {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "N/A",
+"preview": "N/A",
+"sample_preview": "Feels like: 74F | 72F"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"preview": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"verbosity_level": "minimal",
+"round_values": true
+},
+"presentation": {
+"location_name": "Somewhere",
+"summary_text": "Somewhere - 55°F (13°C) - Rain - Cached data",
+"current_conditions": {
+"title": "Current conditions for Somewhere",
+"description": "Rain",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Clear for the hour."
+},
+{
+"label": "Temperature",
+"value": "55°F (13°C)"
+},
+{
+"label": "Dewpoint",
+"value": "52°F (11°C)"
+},
+{
+"label": "Wind",
+"value": "N/A"
+},
+{
+"label": "Pressure",
+"value": "30 inHg (1009 hPa)"
+}
+],
+"fallback_text": "Current conditions for Somewhere: Rain\nPrecipitation outlook: Clear for the hour.\nTemperature: 55°F (13°C)\nDewpoint: 52°F (11°C)\nWind: N/A\nPressure: 30 inHg (1009 hPa)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Somewhere",
+"periods": [
+{
+"name": "Tonight",
+"temperature": "50°F (10°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "59°F (15°C) / 46°F (8°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday Night",
+"temperature": "46°F (8°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Unknown",
+"temperature": null,
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "61°F (16°C) / 48°F (9°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday Night",
+"temperature": "48°F (9°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday",
+"temperature": "57°F (14°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday Night",
+"temperature": "45°F (7°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Wednesday",
+"temperature": "54°F (12°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:00 PM",
+"temperature": "55°F (13°C)",
+"conditions": "Mostly Clear",
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 PM",
+"temperature": "55°F (13°C)",
+"conditions": null,
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 PM",
+"temperature": "54°F (12°C)",
+"conditions": null,
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "11:00 PM",
+"temperature": "54°F (12°C)",
+"conditions": null,
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "12:00 AM",
+"temperature": "54°F (12°C)",
+"conditions": null,
+"wind": null,
+"humidity": null,
+"dewpoint": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": "Hourly outlook: Clearing later.",
+"generated_at": null,
+"fallback_text": "Daily forecast for Somewhere:\nTonight: 50°F (10°C)\nSunday: 59°F (15°C) / 46°F (8°C)\nSunday Night: 46°F (8°C)\nUnknown: N/A\nMonday: 61°F (16°C) / 48°F (9°C)\nMonday Night: 48°F (9°C)\nTuesday: 57°F (14°C)\nTuesday Night: 45°F (7°C)\nWednesday: 54°F (12°C)\n\nHourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM - 55°F (13°C) - Mostly Clear\n  9:00 PM - 55°F (13°C)\n  10:00 PM - 54°F (12°C)\n  11:00 PM - 54°F (12°C)\n  12:00 AM - 54°F (12°C)",
+"daily_section_text": "Daily forecast for Somewhere:\nTonight: 50°F (10°C)\nSunday: 59°F (15°C) / 46°F (8°C)\nSunday Night: 46°F (8°C)\nUnknown: N/A\nMonday: 61°F (16°C) / 48°F (9°C)\nMonday Night: 48°F (9°C)\nTuesday: 57°F (14°C)\nTuesday Night: 45°F (7°C)\nWednesday: 54°F (12°C)",
+"hourly_section_text": "Hourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM - 55°F (13°C) - Mostly Clear\n  9:00 PM - 55°F (13°C)\n  10:00 PM - 54°F (12°C)\n  11:00 PM - 54°F (12°C)\n  12:00 AM - 54°F (12°C)",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [
+"Showing cached weather data (cached data)."
+],
+"source_attribution": {
+"contributing_sources": [
+"Customsource",
+"Open-Meteo"
+],
+"failed_sources": [],
+"incomplete_sections": [
+"hourly"
+],
+"summary_text": "Data from: Customsource, Open-Meteo. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour.",
+"aria_label": "Weather data provided by Customsource, Open-Meteo. Missing sections: hourly. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "13C Rain",
+"preview": "13C Rain",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Somewhere: 13C  at 0 mph N/A",
+"preview": "Somewhere: 13C  at 0 mph N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8 mph (13 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "59F/15C/50F/10C N/A N/A% UV N/A N/A 30 inHg (1009 hPa)",
+"preview": "59F/15C/50F/10C N/A N/A% UV N/A N/A 30 inHg (1009 hPa)",
+"sample_preview": "78F/26C/61F/16C 0 in (0 mm) 20% UV 5 10 mi (16 km) 30 inHg (1019 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 13C  N/A {unknown}",
+"preview": "N/A 13C  N/A {unknown}",
+"sample_preview": "72F 22C NW 8 mph (13 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "13C",
+"preview": "13C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"preview": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"sample_preview": "Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Part..."
+}
+}
+},
+{
+"settings": {
+"verbosity_level": "detailed",
+"time_format_12hour": false,
+"show_timezone_suffix": true
+},
+"presentation": {
+"location_name": "Somewhere",
+"summary_text": "Somewhere - 55°F (13°C) - Rain - Cached data",
+"current_conditions": {
+"title": "Current conditions for Somewhere",
+"description": "Rain",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Clear for the hour."
+},
+{
+"label": "Temperature",
+"value": "55.4°F (13°C)"
+},
+{
+"label": "Dewpoint",
+"value": "51.8°F (11°C)"
+},
+{
+"label": "Wind",
+"value": "N/A"
+},
+{
+"label": "Pressure",
+"value": "29.8 inHg (1009.0 hPa)"
+}
+],
+"fallback_text": "Current conditions for Somewhere: Rain\nPrecipitation outlook: Clear for the hour.\nTemperature: 55.4°F (13°C)\nDewpoint: 51.8°F (11°C)\nWind: N/A\nPressure: 29.8 inHg (1009.0 hPa)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Somewhere",
+"periods": [
+{
+"name": "Tonight",
+"temperature": "50°F (10°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "59°F (15°C) / 46.4°F (8°C)",
+"conditions": null,
+"wind": "Light",
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday Night",
+"temperature": "46.4°F (8°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Unknown",
+"temperature": null,
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "60.8°F (16°C) / 48.2°F (9°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday Night",
+"temperature": "48.2°F (9°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday",
+"temperature": "57.2°F (14°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday Night",
+"temperature": "44.6°F (7°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Wednesday",
+"temperature": "53.6°F (12°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "20:00 UTC-04:00",
+"temperature": "55.4°F (13°C)",
+"conditions": "Mostly Clear",
+"wind": null,
+"humidity": "0%",
+"dewpoint": "N/A",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "21:00 UTC-04:00",
+"temperature": "55.0°F (12.8°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.9°F (9.4°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "22:00 UTC-04:00",
+"temperature": "54.5°F (12.5°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.5°F (9.1°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "23:00 UTC-04:00",
+"temperature": "54.0°F (12.2°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.0°F (8.9°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "00:00 UTC-04:00",
+"temperature": "53.6°F (12°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "47.6°F (8.7°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": "Hourly outlook: Clearing later.",
+"generated_at": null,
+"fallback_text": "Daily forecast for Somewhere:\nTonight: 50°F (10°C)\nSunday: 59°F (15°C) / 46.4°F (8°C)\n  Wind: Light\nSunday Night: 46.4°F (8°C)\nUnknown: N/A\nMonday: 60.8°F (16°C) / 48.2°F (9°C)\nMonday Night: 48.2°F (9°C)\nTuesday: 57.2°F (14°C)\nTuesday Night: 44.6°F (7°C)\nWednesday: 53.6°F (12°C)\n\nHourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  20:00 UTC-04:00 - 55.4°F (13°C) - Mostly Clear - Humidity 0% - Dewpoint N/A\n  21:00 UTC-04:00 - 55.0°F (12.8°C) - Humidity 80% - Dewpoint 48.9°F (9.4°C)\n  22:00 UTC-04:00 - 54.5°F (12.5°C) - Humidity 80% - Dewpoint 48.5°F (9.1°C)\n  23:00 UTC-04:00 - 54.0°F (12.2°C) - Humidity 80% - Dewpoint 48.0°F (8.9°C)\n  00:00 UTC-04:00 - 53.6°F (12°C) - Humidity 80% - Dewpoint 47.6°F (8.7°C)",
+"daily_section_text": "Daily forecast for Somewhere:\nTonight: 50°F (10°C)\nSunday: 59°F (15°C) / 46.4°F (8°C)\n  Wind: Light\nSunday Night: 46.4°F (8°C)\nUnknown: N/A\nMonday: 60.8°F (16°C) / 48.2°F (9°C)\nMonday Night: 48.2°F (9°C)\nTuesday: 57.2°F (14°C)\nTuesday Night: 44.6°F (7°C)\nWednesday: 53.6°F (12°C)",
+"hourly_section_text": "Hourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  20:00 UTC-04:00 - 55.4°F (13°C) - Mostly Clear - Humidity 0% - Dewpoint N/A\n  21:00 UTC-04:00 - 55.0°F (12.8°C) - Humidity 80% - Dewpoint 48.9°F (9.4°C)\n  22:00 UTC-04:00 - 54.5°F (12.5°C) - Humidity 80% - Dewpoint 48.5°F (9.1°C)\n  23:00 UTC-04:00 - 54.0°F (12.2°C) - Humidity 80% - Dewpoint 48.0°F (8.9°C)\n  00:00 UTC-04:00 - 53.6°F (12°C) - Humidity 80% - Dewpoint 47.6°F (8.7°C)",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [
+"Showing cached weather data (cached data)."
+],
+"source_attribution": {
+"contributing_sources": [
+"Customsource",
+"Open-Meteo"
+],
+"failed_sources": [],
+"incomplete_sections": [
+"hourly"
+],
+"summary_text": "Data from: Customsource, Open-Meteo. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour.",
+"aria_label": "Weather data provided by Customsource, Open-Meteo. Missing sections: hourly. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "13C Rain",
+"preview": "13C Rain",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Somewhere: 13C  at 0 mph N/A",
+"preview": "Somewhere: 13C  at 0 mph N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "59F/15C/50F/10C N/A N/A% UV N/A N/A 29.80 inHg (1009.00 hPa)",
+"preview": "59F/15C/50F/10C N/A N/A% UV N/A N/A 29.80 inHg (1009.00 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 13C  N/A {unknown}",
+"preview": "N/A 13C  N/A {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "13C",
+"preview": "13C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"preview": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"time_display_mode": "utc",
+"show_timezone_suffix": true
+},
+"presentation": {
+"location_name": "Somewhere",
+"summary_text": "Somewhere - 55°F (13°C) - Rain - Cached data",
+"current_conditions": {
+"title": "Current conditions for Somewhere",
+"description": "Rain",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Clear for the hour."
+},
+{
+"label": "Temperature",
+"value": "55.4°F (13°C)"
+},
+{
+"label": "Dewpoint",
+"value": "51.8°F (11°C)"
+},
+{
+"label": "Wind",
+"value": "N/A"
+},
+{
+"label": "Pressure",
+"value": "29.8 inHg (1009.0 hPa)"
+}
+],
+"fallback_text": "Current conditions for Somewhere: Rain\nPrecipitation outlook: Clear for the hour.\nTemperature: 55.4°F (13°C)\nDewpoint: 51.8°F (11°C)\nWind: N/A\nPressure: 29.8 inHg (1009.0 hPa)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Somewhere",
+"periods": [
+{
+"name": "Tonight",
+"temperature": "50°F (10°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "59°F (15°C) / 46.4°F (8°C)",
+"conditions": null,
+"wind": "Light",
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday Night",
+"temperature": "46.4°F (8°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Unknown",
+"temperature": null,
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "60.8°F (16°C) / 48.2°F (9°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday Night",
+"temperature": "48.2°F (9°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday",
+"temperature": "57.2°F (14°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday Night",
+"temperature": "44.6°F (7°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Wednesday",
+"temperature": "53.6°F (12°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "12:00 AM UTC",
+"temperature": "55.4°F (13°C)",
+"conditions": "Mostly Clear",
+"wind": null,
+"humidity": "0%",
+"dewpoint": "N/A",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "1:00 AM UTC",
+"temperature": "55.0°F (12.8°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.9°F (9.4°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "2:00 AM UTC",
+"temperature": "54.5°F (12.5°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.5°F (9.1°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "3:00 AM UTC",
+"temperature": "54.0°F (12.2°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.0°F (8.9°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "4:00 AM UTC",
+"temperature": "53.6°F (12°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "47.6°F (8.7°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": "Hourly outlook: Clearing later.",
+"generated_at": null,
+"fallback_text": "Daily forecast for Somewhere:\nTonight: 50°F (10°C)\nSunday: 59°F (15°C) / 46.4°F (8°C)\n  Wind: Light\nSunday Night: 46.4°F (8°C)\nUnknown: N/A\nMonday: 60.8°F (16°C) / 48.2°F (9°C)\nMonday Night: 48.2°F (9°C)\nTuesday: 57.2°F (14°C)\nTuesday Night: 44.6°F (7°C)\nWednesday: 53.6°F (12°C)\n\nHourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  12:00 AM UTC - 55.4°F (13°C) - Mostly Clear - Humidity 0% - Dewpoint N/A\n  1:00 AM UTC - 55.0°F (12.8°C) - Humidity 80% - Dewpoint 48.9°F (9.4°C)\n  2:00 AM UTC - 54.5°F (12.5°C) - Humidity 80% - Dewpoint 48.5°F (9.1°C)\n  3:00 AM UTC - 54.0°F (12.2°C) - Humidity 80% - Dewpoint 48.0°F (8.9°C)\n  4:00 AM UTC - 53.6°F (12°C) - Humidity 80% - Dewpoint 47.6°F (8.7°C)",
+"daily_section_text": "Daily forecast for Somewhere:\nTonight: 50°F (10°C)\nSunday: 59°F (15°C) / 46.4°F (8°C)\n  Wind: Light\nSunday Night: 46.4°F (8°C)\nUnknown: N/A\nMonday: 60.8°F (16°C) / 48.2°F (9°C)\nMonday Night: 48.2°F (9°C)\nTuesday: 57.2°F (14°C)\nTuesday Night: 44.6°F (7°C)\nWednesday: 53.6°F (12°C)",
+"hourly_section_text": "Hourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  12:00 AM UTC - 55.4°F (13°C) - Mostly Clear - Humidity 0% - Dewpoint N/A\n  1:00 AM UTC - 55.0°F (12.8°C) - Humidity 80% - Dewpoint 48.9°F (9.4°C)\n  2:00 AM UTC - 54.5°F (12.5°C) - Humidity 80% - Dewpoint 48.5°F (9.1°C)\n  3:00 AM UTC - 54.0°F (12.2°C) - Humidity 80% - Dewpoint 48.0°F (8.9°C)\n  4:00 AM UTC - 53.6°F (12°C) - Humidity 80% - Dewpoint 47.6°F (8.7°C)",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [
+"Showing cached weather data (cached data)."
+],
+"source_attribution": {
+"contributing_sources": [
+"Customsource",
+"Open-Meteo"
+],
+"failed_sources": [],
+"incomplete_sections": [
+"hourly"
+],
+"summary_text": "Data from: Customsource, Open-Meteo. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour.",
+"aria_label": "Weather data provided by Customsource, Open-Meteo. Missing sections: hourly. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "13C Rain",
+"preview": "13C Rain",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Somewhere: 13C  at 0 mph N/A",
+"preview": "Somewhere: 13C  at 0 mph N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "59F/15C/50F/10C N/A N/A% UV N/A N/A 29.80 inHg (1009.00 hPa)",
+"preview": "59F/15C/50F/10C N/A N/A% UV N/A N/A 29.80 inHg (1009.00 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 13C  N/A {unknown}",
+"preview": "N/A 13C  N/A {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "13C",
+"preview": "13C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"preview": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"time_display_mode": "both",
+"show_timezone_suffix": true,
+"time_format_12hour": false
+},
+"presentation": {
+"location_name": "Somewhere",
+"summary_text": "Somewhere - 55°F (13°C) - Rain - Cached data",
+"current_conditions": {
+"title": "Current conditions for Somewhere",
+"description": "Rain",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Clear for the hour."
+},
+{
+"label": "Temperature",
+"value": "55.4°F (13°C)"
+},
+{
+"label": "Dewpoint",
+"value": "51.8°F (11°C)"
+},
+{
+"label": "Wind",
+"value": "N/A"
+},
+{
+"label": "Pressure",
+"value": "29.8 inHg (1009.0 hPa)"
+}
+],
+"fallback_text": "Current conditions for Somewhere: Rain\nPrecipitation outlook: Clear for the hour.\nTemperature: 55.4°F (13°C)\nDewpoint: 51.8°F (11°C)\nWind: N/A\nPressure: 29.8 inHg (1009.0 hPa)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Somewhere",
+"periods": [
+{
+"name": "Tonight",
+"temperature": "50°F (10°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "59°F (15°C) / 46.4°F (8°C)",
+"conditions": null,
+"wind": "Light",
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday Night",
+"temperature": "46.4°F (8°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Unknown",
+"temperature": null,
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "60.8°F (16°C) / 48.2°F (9°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday Night",
+"temperature": "48.2°F (9°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday",
+"temperature": "57.2°F (14°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday Night",
+"temperature": "44.6°F (7°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Wednesday",
+"temperature": "53.6°F (12°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "20:00 UTC-04:00 (00:00 UTC)",
+"temperature": "55.4°F (13°C)",
+"conditions": "Mostly Clear",
+"wind": null,
+"humidity": "0%",
+"dewpoint": "N/A",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "21:00 UTC-04:00 (01:00 UTC)",
+"temperature": "55.0°F (12.8°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.9°F (9.4°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "22:00 UTC-04:00 (02:00 UTC)",
+"temperature": "54.5°F (12.5°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.5°F (9.1°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "23:00 UTC-04:00 (03:00 UTC)",
+"temperature": "54.0°F (12.2°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.0°F (8.9°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "00:00 UTC-04:00 (04:00 UTC)",
+"temperature": "53.6°F (12°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "47.6°F (8.7°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": "Hourly outlook: Clearing later.",
+"generated_at": null,
+"fallback_text": "Daily forecast for Somewhere:\nTonight: 50°F (10°C)\nSunday: 59°F (15°C) / 46.4°F (8°C)\n  Wind: Light\nSunday Night: 46.4°F (8°C)\nUnknown: N/A\nMonday: 60.8°F (16°C) / 48.2°F (9°C)\nMonday Night: 48.2°F (9°C)\nTuesday: 57.2°F (14°C)\nTuesday Night: 44.6°F (7°C)\nWednesday: 53.6°F (12°C)\n\nHourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  20:00 UTC-04:00 (00:00 UTC) - 55.4°F (13°C) - Mostly Clear - Humidity 0% - Dewpoint N/A\n  21:00 UTC-04:00 (01:00 UTC) - 55.0°F (12.8°C) - Humidity 80% - Dewpoint 48.9°F (9.4°C)\n  22:00 UTC-04:00 (02:00 UTC) - 54.5°F (12.5°C) - Humidity 80% - Dewpoint 48.5°F (9.1°C)\n  23:00 UTC-04:00 (03:00 UTC) - 54.0°F (12.2°C) - Humidity 80% - Dewpoint 48.0°F (8.9°C)\n  00:00 UTC-04:00 (04:00 UTC) - 53.6°F (12°C) - Humidity 80% - Dewpoint 47.6°F (8.7°C)",
+"daily_section_text": "Daily forecast for Somewhere:\nTonight: 50°F (10°C)\nSunday: 59°F (15°C) / 46.4°F (8°C)\n  Wind: Light\nSunday Night: 46.4°F (8°C)\nUnknown: N/A\nMonday: 60.8°F (16°C) / 48.2°F (9°C)\nMonday Night: 48.2°F (9°C)\nTuesday: 57.2°F (14°C)\nTuesday Night: 44.6°F (7°C)\nWednesday: 53.6°F (12°C)",
+"hourly_section_text": "Hourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  20:00 UTC-04:00 (00:00 UTC) - 55.4°F (13°C) - Mostly Clear - Humidity 0% - Dewpoint N/A\n  21:00 UTC-04:00 (01:00 UTC) - 55.0°F (12.8°C) - Humidity 80% - Dewpoint 48.9°F (9.4°C)\n  22:00 UTC-04:00 (02:00 UTC) - 54.5°F (12.5°C) - Humidity 80% - Dewpoint 48.5°F (9.1°C)\n  23:00 UTC-04:00 (03:00 UTC) - 54.0°F (12.2°C) - Humidity 80% - Dewpoint 48.0°F (8.9°C)\n  00:00 UTC-04:00 (04:00 UTC) - 53.6°F (12°C) - Humidity 80% - Dewpoint 47.6°F (8.7°C)",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [
+"Showing cached weather data (cached data)."
+],
+"source_attribution": {
+"contributing_sources": [
+"Customsource",
+"Open-Meteo"
+],
+"failed_sources": [],
+"incomplete_sections": [
+"hourly"
+],
+"summary_text": "Data from: Customsource, Open-Meteo. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour.",
+"aria_label": "Weather data provided by Customsource, Open-Meteo. Missing sections: hourly. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "13C Rain",
+"preview": "13C Rain",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Somewhere: 13C  at 0 mph N/A",
+"preview": "Somewhere: 13C  at 0 mph N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "59F/15C/50F/10C N/A N/A% UV N/A N/A 29.80 inHg (1009.00 hPa)",
+"preview": "59F/15C/50F/10C N/A N/A% UV N/A N/A 29.80 inHg (1009.00 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 13C  N/A {unknown}",
+"preview": "N/A 13C  N/A {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "13C",
+"preview": "13C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"preview": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"forecast_time_reference": "user_local",
+"show_timezone_suffix": true
+},
+"presentation": {
+"location_name": "Somewhere",
+"summary_text": "Somewhere - 55°F (13°C) - Rain - Cached data",
+"current_conditions": {
+"title": "Current conditions for Somewhere",
+"description": "Rain",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Clear for the hour."
+},
+{
+"label": "Temperature",
+"value": "55.4°F (13°C)"
+},
+{
+"label": "Dewpoint",
+"value": "51.8°F (11°C)"
+},
+{
+"label": "Wind",
+"value": "N/A"
+},
+{
+"label": "Pressure",
+"value": "29.8 inHg (1009.0 hPa)"
+}
+],
+"fallback_text": "Current conditions for Somewhere: Rain\nPrecipitation outlook: Clear for the hour.\nTemperature: 55.4°F (13°C)\nDewpoint: 51.8°F (11°C)\nWind: N/A\nPressure: 29.8 inHg (1009.0 hPa)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Somewhere",
+"periods": [
+{
+"name": "Tonight",
+"temperature": "50°F (10°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "59°F (15°C) / 46.4°F (8°C)",
+"conditions": null,
+"wind": "Light",
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday Night",
+"temperature": "46.4°F (8°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Unknown",
+"temperature": null,
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "60.8°F (16°C) / 48.2°F (9°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday Night",
+"temperature": "48.2°F (9°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday",
+"temperature": "57.2°F (14°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday Night",
+"temperature": "44.6°F (7°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Wednesday",
+"temperature": "53.6°F (12°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:00 PM EDT",
+"temperature": "55.4°F (13°C)",
+"conditions": "Mostly Clear",
+"wind": null,
+"humidity": "0%",
+"dewpoint": "N/A",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 PM EDT",
+"temperature": "55.0°F (12.8°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.9°F (9.4°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 PM EDT",
+"temperature": "54.5°F (12.5°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.5°F (9.1°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "11:00 PM EDT",
+"temperature": "54.0°F (12.2°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.0°F (8.9°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "12:00 AM EDT",
+"temperature": "53.6°F (12°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "47.6°F (8.7°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": "Hourly outlook: Clearing later.",
+"generated_at": null,
+"fallback_text": "Daily forecast for Somewhere:\nTonight: 50°F (10°C)\nSunday: 59°F (15°C) / 46.4°F (8°C)\n  Wind: Light\nSunday Night: 46.4°F (8°C)\nUnknown: N/A\nMonday: 60.8°F (16°C) / 48.2°F (9°C)\nMonday Night: 48.2°F (9°C)\nTuesday: 57.2°F (14°C)\nTuesday Night: 44.6°F (7°C)\nWednesday: 53.6°F (12°C)\n\nHourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM EDT - 55.4°F (13°C) - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM EDT - 55.0°F (12.8°C) - Humidity 80% - Dewpoint 48.9°F (9.4°C)\n  10:00 PM EDT - 54.5°F (12.5°C) - Humidity 80% - Dewpoint 48.5°F (9.1°C)\n  11:00 PM EDT - 54.0°F (12.2°C) - Humidity 80% - Dewpoint 48.0°F (8.9°C)\n  12:00 AM EDT - 53.6°F (12°C) - Humidity 80% - Dewpoint 47.6°F (8.7°C)",
+"daily_section_text": "Daily forecast for Somewhere:\nTonight: 50°F (10°C)\nSunday: 59°F (15°C) / 46.4°F (8°C)\n  Wind: Light\nSunday Night: 46.4°F (8°C)\nUnknown: N/A\nMonday: 60.8°F (16°C) / 48.2°F (9°C)\nMonday Night: 48.2°F (9°C)\nTuesday: 57.2°F (14°C)\nTuesday Night: 44.6°F (7°C)\nWednesday: 53.6°F (12°C)",
+"hourly_section_text": "Hourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM EDT - 55.4°F (13°C) - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM EDT - 55.0°F (12.8°C) - Humidity 80% - Dewpoint 48.9°F (9.4°C)\n  10:00 PM EDT - 54.5°F (12.5°C) - Humidity 80% - Dewpoint 48.5°F (9.1°C)\n  11:00 PM EDT - 54.0°F (12.2°C) - Humidity 80% - Dewpoint 48.0°F (8.9°C)\n  12:00 AM EDT - 53.6°F (12°C) - Humidity 80% - Dewpoint 47.6°F (8.7°C)",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [
+"Showing cached weather data (cached data)."
+],
+"source_attribution": {
+"contributing_sources": [
+"Customsource",
+"Open-Meteo"
+],
+"failed_sources": [],
+"incomplete_sections": [
+"hourly"
+],
+"summary_text": "Data from: Customsource, Open-Meteo. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour.",
+"aria_label": "Weather data provided by Customsource, Open-Meteo. Missing sections: hourly. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "13C Rain",
+"preview": "13C Rain",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Somewhere: 13C  at 0 mph N/A",
+"preview": "Somewhere: 13C  at 0 mph N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "59F/15C/50F/10C N/A N/A% UV N/A N/A 29.80 inHg (1009.00 hPa)",
+"preview": "59F/15C/50F/10C N/A N/A% UV N/A N/A 29.80 inHg (1009.00 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 13C  N/A {unknown}",
+"preview": "N/A 13C  N/A {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "13C",
+"preview": "13C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"preview": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"show_dewpoint": false,
+"show_visibility": false,
+"show_uv_index": false,
+"show_pressure_trend": false,
+"show_seasonal_data": false
+},
+"presentation": {
+"location_name": "Somewhere",
+"summary_text": "Somewhere - 55°F (13°C) - Rain - Cached data",
+"current_conditions": {
+"title": "Current conditions for Somewhere",
+"description": "Rain",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Clear for the hour."
+},
+{
+"label": "Temperature",
+"value": "55.4°F (13°C)"
+},
+{
+"label": "Wind",
+"value": "N/A"
+},
+{
+"label": "Pressure",
+"value": "29.8 inHg (1009.0 hPa)"
+}
+],
+"fallback_text": "Current conditions for Somewhere: Rain\nPrecipitation outlook: Clear for the hour.\nTemperature: 55.4°F (13°C)\nWind: N/A\nPressure: 29.8 inHg (1009.0 hPa)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Somewhere",
+"periods": [
+{
+"name": "Tonight",
+"temperature": "50°F (10°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "59°F (15°C) / 46.4°F (8°C)",
+"conditions": null,
+"wind": "Light",
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday Night",
+"temperature": "46.4°F (8°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Unknown",
+"temperature": null,
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "60.8°F (16°C) / 48.2°F (9°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday Night",
+"temperature": "48.2°F (9°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday",
+"temperature": "57.2°F (14°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday Night",
+"temperature": "44.6°F (7°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Wednesday",
+"temperature": "53.6°F (12°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:00 PM",
+"temperature": "55.4°F (13°C)",
+"conditions": "Mostly Clear",
+"wind": null,
+"humidity": "0%",
+"dewpoint": "N/A",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 PM",
+"temperature": "55.0°F (12.8°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.9°F (9.4°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 PM",
+"temperature": "54.5°F (12.5°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.5°F (9.1°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "11:00 PM",
+"temperature": "54.0°F (12.2°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.0°F (8.9°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "12:00 AM",
+"temperature": "53.6°F (12°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "47.6°F (8.7°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": "Hourly outlook: Clearing later.",
+"generated_at": null,
+"fallback_text": "Daily forecast for Somewhere:\nTonight: 50°F (10°C)\nSunday: 59°F (15°C) / 46.4°F (8°C)\n  Wind: Light\nSunday Night: 46.4°F (8°C)\nUnknown: N/A\nMonday: 60.8°F (16°C) / 48.2°F (9°C)\nMonday Night: 48.2°F (9°C)\nTuesday: 57.2°F (14°C)\nTuesday Night: 44.6°F (7°C)\nWednesday: 53.6°F (12°C)\n\nHourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM - 55.4°F (13°C) - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM - 55.0°F (12.8°C) - Humidity 80% - Dewpoint 48.9°F (9.4°C)\n  10:00 PM - 54.5°F (12.5°C) - Humidity 80% - Dewpoint 48.5°F (9.1°C)\n  11:00 PM - 54.0°F (12.2°C) - Humidity 80% - Dewpoint 48.0°F (8.9°C)\n  12:00 AM - 53.6°F (12°C) - Humidity 80% - Dewpoint 47.6°F (8.7°C)",
+"daily_section_text": "Daily forecast for Somewhere:\nTonight: 50°F (10°C)\nSunday: 59°F (15°C) / 46.4°F (8°C)\n  Wind: Light\nSunday Night: 46.4°F (8°C)\nUnknown: N/A\nMonday: 60.8°F (16°C) / 48.2°F (9°C)\nMonday Night: 48.2°F (9°C)\nTuesday: 57.2°F (14°C)\nTuesday Night: 44.6°F (7°C)\nWednesday: 53.6°F (12°C)",
+"hourly_section_text": "Hourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM - 55.4°F (13°C) - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM - 55.0°F (12.8°C) - Humidity 80% - Dewpoint 48.9°F (9.4°C)\n  10:00 PM - 54.5°F (12.5°C) - Humidity 80% - Dewpoint 48.5°F (9.1°C)\n  11:00 PM - 54.0°F (12.2°C) - Humidity 80% - Dewpoint 48.0°F (8.9°C)\n  12:00 AM - 53.6°F (12°C) - Humidity 80% - Dewpoint 47.6°F (8.7°C)",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [
+"Showing cached weather data (cached data)."
+],
+"source_attribution": {
+"contributing_sources": [
+"Customsource",
+"Open-Meteo"
+],
+"failed_sources": [],
+"incomplete_sections": [
+"hourly"
+],
+"summary_text": "Data from: Customsource, Open-Meteo. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour.",
+"aria_label": "Weather data provided by Customsource, Open-Meteo. Missing sections: hourly. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "13C Rain",
+"preview": "13C Rain",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Somewhere: 13C  at 0 mph N/A",
+"preview": "Somewhere: 13C  at 0 mph N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "59F/15C/50F/10C N/A N/A% UV N/A N/A 29.80 inHg (1009.00 hPa)",
+"preview": "59F/15C/50F/10C N/A N/A% UV N/A N/A 29.80 inHg (1009.00 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 13C  N/A {unknown}",
+"preview": "N/A 13C  N/A {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "13C",
+"preview": "13C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"preview": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"severe_weather_override": true,
+"category_order": [
+"uv_index",
+"visibility_clouds",
+"humidity_pressure",
+"wind",
+"precipitation",
+"temperature"
+]
+},
+"presentation": {
+"location_name": "Somewhere",
+"summary_text": "Somewhere - 55°F (13°C) - Rain - Cached data",
+"current_conditions": {
+"title": "Current conditions for Somewhere",
+"description": "Rain",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Clear for the hour."
+},
+{
+"label": "Pressure",
+"value": "29.8 inHg (1009.0 hPa)"
+},
+{
+"label": "Wind",
+"value": "N/A"
+},
+{
+"label": "Temperature",
+"value": "55.4°F (13°C)"
+},
+{
+"label": "Dewpoint",
+"value": "51.8°F (11°C)"
+}
+],
+"fallback_text": "Current conditions for Somewhere: Rain\nPrecipitation outlook: Clear for the hour.\nPressure: 29.8 inHg (1009.0 hPa)\nWind: N/A\nTemperature: 55.4°F (13°C)\nDewpoint: 51.8°F (11°C)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Somewhere",
+"periods": [
+{
+"name": "Tonight",
+"temperature": "50°F (10°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "59°F (15°C) / 46.4°F (8°C)",
+"conditions": null,
+"wind": "Light",
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday Night",
+"temperature": "46.4°F (8°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Unknown",
+"temperature": null,
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "60.8°F (16°C) / 48.2°F (9°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday Night",
+"temperature": "48.2°F (9°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday",
+"temperature": "57.2°F (14°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday Night",
+"temperature": "44.6°F (7°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Wednesday",
+"temperature": "53.6°F (12°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:00 PM",
+"temperature": "55.4°F (13°C)",
+"conditions": "Mostly Clear",
+"wind": null,
+"humidity": "0%",
+"dewpoint": "N/A",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 PM",
+"temperature": "55.0°F (12.8°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.9°F (9.4°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 PM",
+"temperature": "54.5°F (12.5°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.5°F (9.1°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "11:00 PM",
+"temperature": "54.0°F (12.2°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.0°F (8.9°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "12:00 AM",
+"temperature": "53.6°F (12°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "47.6°F (8.7°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": "Hourly outlook: Clearing later.",
+"generated_at": null,
+"fallback_text": "Daily forecast for Somewhere:\nTonight: 50°F (10°C)\nSunday: 59°F (15°C) / 46.4°F (8°C)\n  Wind: Light\nSunday Night: 46.4°F (8°C)\nUnknown: N/A\nMonday: 60.8°F (16°C) / 48.2°F (9°C)\nMonday Night: 48.2°F (9°C)\nTuesday: 57.2°F (14°C)\nTuesday Night: 44.6°F (7°C)\nWednesday: 53.6°F (12°C)\n\nHourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM - 55.4°F (13°C) - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM - 55.0°F (12.8°C) - Humidity 80% - Dewpoint 48.9°F (9.4°C)\n  10:00 PM - 54.5°F (12.5°C) - Humidity 80% - Dewpoint 48.5°F (9.1°C)\n  11:00 PM - 54.0°F (12.2°C) - Humidity 80% - Dewpoint 48.0°F (8.9°C)\n  12:00 AM - 53.6°F (12°C) - Humidity 80% - Dewpoint 47.6°F (8.7°C)",
+"daily_section_text": "Daily forecast for Somewhere:\nTonight: 50°F (10°C)\nSunday: 59°F (15°C) / 46.4°F (8°C)\n  Wind: Light\nSunday Night: 46.4°F (8°C)\nUnknown: N/A\nMonday: 60.8°F (16°C) / 48.2°F (9°C)\nMonday Night: 48.2°F (9°C)\nTuesday: 57.2°F (14°C)\nTuesday Night: 44.6°F (7°C)\nWednesday: 53.6°F (12°C)",
+"hourly_section_text": "Hourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM - 55.4°F (13°C) - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM - 55.0°F (12.8°C) - Humidity 80% - Dewpoint 48.9°F (9.4°C)\n  10:00 PM - 54.5°F (12.5°C) - Humidity 80% - Dewpoint 48.5°F (9.1°C)\n  11:00 PM - 54.0°F (12.2°C) - Humidity 80% - Dewpoint 48.0°F (8.9°C)\n  12:00 AM - 53.6°F (12°C) - Humidity 80% - Dewpoint 47.6°F (8.7°C)",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [
+"Showing cached weather data (cached data)."
+],
+"source_attribution": {
+"contributing_sources": [
+"Customsource",
+"Open-Meteo"
+],
+"failed_sources": [],
+"incomplete_sections": [
+"hourly"
+],
+"summary_text": "Data from: Customsource, Open-Meteo. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour.",
+"aria_label": "Weather data provided by Customsource, Open-Meteo. Missing sections: hourly. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "13C Rain",
+"preview": "13C Rain",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Somewhere: 13C  at 0 mph N/A",
+"preview": "Somewhere: 13C  at 0 mph N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "59F/15C/50F/10C N/A N/A% UV N/A N/A 29.80 inHg (1009.00 hPa)",
+"preview": "59F/15C/50F/10C N/A N/A% UV N/A N/A 29.80 inHg (1009.00 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 13C  N/A {unknown}",
+"preview": "N/A 13C  N/A {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "13C",
+"preview": "13C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"preview": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"severe_weather_override": true,
+"show_impact_summaries": true,
+"temperature_unit": "celsius"
+},
+"presentation": {
+"location_name": "Somewhere",
+"summary_text": "Somewhere - 13°C - Rain - Cached data",
+"current_conditions": {
+"title": "Current conditions for Somewhere",
+"description": "Rain",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Clear for the hour."
+},
+{
+"label": "Temperature",
+"value": "13°C"
+},
+{
+"label": "Dewpoint",
+"value": "11°C"
+},
+{
+"label": "Wind",
+"value": "N/A"
+},
+{
+"label": "Pressure",
+"value": "1009.0 hPa"
+},
+{
+"label": "Impact: Driving",
+"value": "Caution: wet roads - allow extra stopping distance"
+}
+],
+"fallback_text": "Current conditions for Somewhere: Rain\nPrecipitation outlook: Clear for the hour.\nTemperature: 13°C\nDewpoint: 11°C\nWind: N/A\nPressure: 1009.0 hPa\nImpact: Driving: Caution: wet roads - allow extra stopping distance",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": "Caution: wet roads - allow extra stopping distance",
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Somewhere",
+"periods": [
+{
+"name": "Tonight",
+"temperature": "10°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "15°C / 8°C",
+"conditions": null,
+"wind": "Light",
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday Night",
+"temperature": "8°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Unknown",
+"temperature": null,
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "16°C / 9°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday Night",
+"temperature": "9°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday",
+"temperature": "14°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday Night",
+"temperature": "7°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Wednesday",
+"temperature": "12°C",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:00 PM",
+"temperature": "13°C",
+"conditions": "Mostly Clear",
+"wind": null,
+"humidity": "0%",
+"dewpoint": "N/A",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 PM",
+"temperature": "12.8°C",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "9.4°C",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 PM",
+"temperature": "12.5°C",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "9.1°C",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "11:00 PM",
+"temperature": "12.2°C",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "8.9°C",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "12:00 AM",
+"temperature": "12°C",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "8.7°C",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": "Hourly outlook: Clearing later.",
+"generated_at": null,
+"fallback_text": "Daily forecast for Somewhere:\nTonight: 10°C\nSunday: 15°C / 8°C\n  Wind: Light\nSunday Night: 8°C\nUnknown: N/A\nMonday: 16°C / 9°C\nMonday Night: 9°C\nTuesday: 14°C\nTuesday Night: 7°C\nWednesday: 12°C\n\nHourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM - 13°C - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM - 12.8°C - Humidity 80% - Dewpoint 9.4°C\n  10:00 PM - 12.5°C - Humidity 80% - Dewpoint 9.1°C\n  11:00 PM - 12.2°C - Humidity 80% - Dewpoint 8.9°C\n  12:00 AM - 12°C - Humidity 80% - Dewpoint 8.7°C",
+"daily_section_text": "Daily forecast for Somewhere:\nTonight: 10°C\nSunday: 15°C / 8°C\n  Wind: Light\nSunday Night: 8°C\nUnknown: N/A\nMonday: 16°C / 9°C\nMonday Night: 9°C\nTuesday: 14°C\nTuesday Night: 7°C\nWednesday: 12°C",
+"hourly_section_text": "Hourly forecast:\nHourly outlook: Clearing later.\nNext 6 Hours:\n  8:00 PM - 13°C - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM - 12.8°C - Humidity 80% - Dewpoint 9.4°C\n  10:00 PM - 12.5°C - Humidity 80% - Dewpoint 9.1°C\n  11:00 PM - 12.2°C - Humidity 80% - Dewpoint 8.9°C\n  12:00 AM - 12°C - Humidity 80% - Dewpoint 8.7°C",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": {
+"outdoor": "Mild - light jacket may be needed",
+"driving": "Normal driving conditions",
+"allergy": null
+}
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [
+"Showing cached weather data (cached data)."
+],
+"source_attribution": {
+"contributing_sources": [
+"Customsource",
+"Open-Meteo"
+],
+"failed_sources": [],
+"incomplete_sections": [
+"hourly"
+],
+"summary_text": "Data from: Customsource, Open-Meteo. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour.",
+"aria_label": "Weather data provided by Customsource, Open-Meteo. Missing sections: hourly. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "13C Rain",
+"preview": "13C Rain",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Somewhere: 13C  at 0 mph N/A",
+"preview": "Somewhere: 13C  at 0 mph N/A",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 12.9 km/h 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "15C/10C N/A N/A% UV N/A N/A 1009.00 hPa",
+"preview": "15C/10C N/A N/A% UV N/A N/A 1009.00 hPa",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 13C  N/A {unknown}",
+"preview": "N/A 13C  N/A {unknown}",
+"sample_preview": "72F 22C NW 12.9 km/h {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "13C",
+"preview": "13C",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"preview": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"sample_preview": "Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW..."
+}
+}
+},
+{
+"settings": {
+"forecast_duration_days": 3,
+"hourly_forecast_hours": 12,
+"round_values": true
+},
+"presentation": {
+"location_name": "Somewhere",
+"summary_text": "Somewhere - 55°F (13°C) - Rain - Cached data",
+"current_conditions": {
+"title": "Current conditions for Somewhere",
+"description": "Rain",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Clear for the hour."
+},
+{
+"label": "Temperature",
+"value": "55°F (13°C)"
+},
+{
+"label": "Dewpoint",
+"value": "52°F (11°C)"
+},
+{
+"label": "Wind",
+"value": "N/A"
+},
+{
+"label": "Pressure",
+"value": "30 inHg (1009 hPa)"
+}
+],
+"fallback_text": "Current conditions for Somewhere: Rain\nPrecipitation outlook: Clear for the hour.\nTemperature: 55°F (13°C)\nDewpoint: 52°F (11°C)\nWind: N/A\nPressure: 30 inHg (1009 hPa)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Somewhere",
+"periods": [
+{
+"name": "Tonight",
+"temperature": "50°F (10°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "59°F (15°C) / 46°F (8°C)",
+"conditions": null,
+"wind": "Light",
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday Night",
+"temperature": "46°F (8°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Unknown",
+"temperature": null,
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "61°F (16°C) / 48°F (9°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday Night",
+"temperature": "48°F (9°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:00 PM",
+"temperature": "55°F (13°C)",
+"conditions": "Mostly Clear",
+"wind": null,
+"humidity": "0%",
+"dewpoint": "N/A",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 PM",
+"temperature": "55°F (13°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "49°F (9°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 PM",
+"temperature": "54°F (12°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48°F (9°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "11:00 PM",
+"temperature": "54°F (12°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48°F (9°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "12:00 AM",
+"temperature": "54°F (12°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48°F (9°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "1:00 AM",
+"temperature": "53°F (12°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "47°F (8°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": "Hourly outlook: Clearing later.",
+"generated_at": null,
+"fallback_text": "Daily forecast for Somewhere:\nTonight: 50°F (10°C)\nSunday: 59°F (15°C) / 46°F (8°C)\n  Wind: Light\nSunday Night: 46°F (8°C)\nUnknown: N/A\nMonday: 61°F (16°C) / 48°F (9°C)\nMonday Night: 48°F (9°C)\n\nHourly forecast:\nHourly outlook: Clearing later.\nNext 12 Hours:\n  8:00 PM - 55°F (13°C) - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM - 55°F (13°C) - Humidity 80% - Dewpoint 49°F (9°C)\n  10:00 PM - 54°F (12°C) - Humidity 80% - Dewpoint 48°F (9°C)\n  11:00 PM - 54°F (12°C) - Humidity 80% - Dewpoint 48°F (9°C)\n  12:00 AM - 54°F (12°C) - Humidity 80% - Dewpoint 48°F (9°C)\n  1:00 AM - 53°F (12°C) - Humidity 80% - Dewpoint 47°F (8°C)",
+"daily_section_text": "Daily forecast for Somewhere:\nTonight: 50°F (10°C)\nSunday: 59°F (15°C) / 46°F (8°C)\n  Wind: Light\nSunday Night: 46°F (8°C)\nUnknown: N/A\nMonday: 61°F (16°C) / 48°F (9°C)\nMonday Night: 48°F (9°C)",
+"hourly_section_text": "Hourly forecast:\nHourly outlook: Clearing later.\nNext 12 Hours:\n  8:00 PM - 55°F (13°C) - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM - 55°F (13°C) - Humidity 80% - Dewpoint 49°F (9°C)\n  10:00 PM - 54°F (12°C) - Humidity 80% - Dewpoint 48°F (9°C)\n  11:00 PM - 54°F (12°C) - Humidity 80% - Dewpoint 48°F (9°C)\n  12:00 AM - 54°F (12°C) - Humidity 80% - Dewpoint 48°F (9°C)\n  1:00 AM - 53°F (12°C) - Humidity 80% - Dewpoint 47°F (8°C)",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [
+"Showing cached weather data (cached data)."
+],
+"source_attribution": {
+"contributing_sources": [
+"Customsource",
+"Open-Meteo"
+],
+"failed_sources": [],
+"incomplete_sections": [
+"hourly"
+],
+"summary_text": "Data from: Customsource, Open-Meteo. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour.",
+"aria_label": "Weather data provided by Customsource, Open-Meteo. Missing sections: hourly. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "13C Rain",
+"preview": "13C Rain",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Somewhere: 13C  at 0 mph N/A",
+"preview": "Somewhere: 13C  at 0 mph N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8 mph (13 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "59F/15C/50F/10C N/A N/A% UV N/A N/A 30 inHg (1009 hPa)",
+"preview": "59F/15C/50F/10C N/A N/A% UV N/A N/A 30 inHg (1009 hPa)",
+"sample_preview": "78F/26C/61F/16C 0 in (0 mm) 20% UV 5 10 mi (16 km) 30 inHg (1019 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 13C  N/A {unknown}",
+"preview": "N/A 13C  N/A {unknown}",
+"sample_preview": "72F 22C NW 8 mph (13 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "13C",
+"preview": "13C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"preview": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"sample_preview": "Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Part..."
+}
+}
+},
+{
+"settings": {
+"forecast_duration_days": 16,
+"hourly_forecast_hours": 48,
+"date_format": "eu",
+"time_display_mode": "both"
+},
+"presentation": {
+"location_name": "Somewhere",
+"summary_text": "Somewhere - 55°F (13°C) - Rain - Cached data",
+"current_conditions": {
+"title": "Current conditions for Somewhere",
+"description": "Rain",
+"metrics": [
+{
+"label": "Precipitation outlook",
+"value": "Clear for the hour."
+},
+{
+"label": "Temperature",
+"value": "55.4°F (13°C)"
+},
+{
+"label": "Dewpoint",
+"value": "51.8°F (11°C)"
+},
+{
+"label": "Wind",
+"value": "N/A"
+},
+{
+"label": "Pressure",
+"value": "29.8 inHg (1009.0 hPa)"
+}
+],
+"fallback_text": "Current conditions for Somewhere: Rain\nPrecipitation outlook: Clear for the hour.\nTemperature: 55.4°F (13°C)\nDewpoint: 51.8°F (11°C)\nWind: N/A\nPressure: 29.8 inHg (1009.0 hPa)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": {
+"title": "Forecast for Somewhere",
+"periods": [
+{
+"name": "Tonight",
+"temperature": "50°F (10°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday",
+"temperature": "59°F (15°C) / 46.4°F (8°C)",
+"conditions": null,
+"wind": "Light",
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Sunday Night",
+"temperature": "46.4°F (8°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Unknown",
+"temperature": null,
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday",
+"temperature": "60.8°F (16°C) / 48.2°F (9°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Monday Night",
+"temperature": "48.2°F (9°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday",
+"temperature": "57.2°F (14°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Tuesday Night",
+"temperature": "44.6°F (7°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"name": "Wednesday",
+"temperature": "53.6°F (12°C)",
+"conditions": null,
+"wind": null,
+"details": null,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_periods": [
+{
+"time": "8:00 PM (12:00 AM UTC)",
+"temperature": "55.4°F (13°C)",
+"conditions": "Mostly Clear",
+"wind": null,
+"humidity": "0%",
+"dewpoint": "N/A",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "9:00 PM (1:00 AM UTC)",
+"temperature": "55.0°F (12.8°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.9°F (9.4°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "10:00 PM (2:00 AM UTC)",
+"temperature": "54.5°F (12.5°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.5°F (9.1°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "11:00 PM (3:00 AM UTC)",
+"temperature": "54.0°F (12.2°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "48.0°F (8.9°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "12:00 AM (4:00 AM UTC)",
+"temperature": "53.6°F (12°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "47.6°F (8.7°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+},
+{
+"time": "1:00 AM (5:00 AM UTC)",
+"temperature": "53.1°F (11.8°C)",
+"conditions": null,
+"wind": null,
+"humidity": "80%",
+"dewpoint": "47.1°F (8.4°C)",
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust": null,
+"precipitation_amount": null
+}
+],
+"hourly_summary": "Hourly outlook: Clearing later.",
+"generated_at": null,
+"fallback_text": "Daily forecast for Somewhere:\nTonight: 50°F (10°C)\nSunday: 59°F (15°C) / 46.4°F (8°C)\n  Wind: Light\nSunday Night: 46.4°F (8°C)\nUnknown: N/A\nMonday: 60.8°F (16°C) / 48.2°F (9°C)\nMonday Night: 48.2°F (9°C)\nTuesday: 57.2°F (14°C)\nTuesday Night: 44.6°F (7°C)\nWednesday: 53.6°F (12°C)\n\nHourly forecast:\nHourly outlook: Clearing later.\nNext 48 Hours:\n  8:00 PM (12:00 AM UTC) - 55.4°F (13°C) - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM (1:00 AM UTC) - 55.0°F (12.8°C) - Humidity 80% - Dewpoint 48.9°F (9.4°C)\n  10:00 PM (2:00 AM UTC) - 54.5°F (12.5°C) - Humidity 80% - Dewpoint 48.5°F (9.1°C)\n  11:00 PM (3:00 AM UTC) - 54.0°F (12.2°C) - Humidity 80% - Dewpoint 48.0°F (8.9°C)\n  12:00 AM (4:00 AM UTC) - 53.6°F (12°C) - Humidity 80% - Dewpoint 47.6°F (8.7°C)\n  1:00 AM (5:00 AM UTC) - 53.1°F (11.8°C) - Humidity 80% - Dewpoint 47.1°F (8.4°C)",
+"daily_section_text": "Daily forecast for Somewhere:\nTonight: 50°F (10°C)\nSunday: 59°F (15°C) / 46.4°F (8°C)\n  Wind: Light\nSunday Night: 46.4°F (8°C)\nUnknown: N/A\nMonday: 60.8°F (16°C) / 48.2°F (9°C)\nMonday Night: 48.2°F (9°C)\nTuesday: 57.2°F (14°C)\nTuesday Night: 44.6°F (7°C)\nWednesday: 53.6°F (12°C)",
+"hourly_section_text": "Hourly forecast:\nHourly outlook: Clearing later.\nNext 48 Hours:\n  8:00 PM (12:00 AM UTC) - 55.4°F (13°C) - Mostly Clear - Humidity 0% - Dewpoint N/A\n  9:00 PM (1:00 AM UTC) - 55.0°F (12.8°C) - Humidity 80% - Dewpoint 48.9°F (9.4°C)\n  10:00 PM (2:00 AM UTC) - 54.5°F (12.5°C) - Humidity 80% - Dewpoint 48.5°F (9.1°C)\n  11:00 PM (3:00 AM UTC) - 54.0°F (12.2°C) - Humidity 80% - Dewpoint 48.0°F (8.9°C)\n  12:00 AM (4:00 AM UTC) - 53.6°F (12°C) - Humidity 80% - Dewpoint 47.6°F (8.7°C)\n  1:00 AM (5:00 AM UTC) - 53.1°F (11.8°C) - Humidity 80% - Dewpoint 47.1°F (8.4°C)",
+"mobility_briefing": null,
+"marine_section_text": "",
+"marine_summary": null,
+"marine_highlights": [],
+"confidence_label": null,
+"summary": null,
+"impact_summary": null
+},
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [
+"Showing cached weather data (cached data)."
+],
+"source_attribution": {
+"contributing_sources": [
+"Customsource",
+"Open-Meteo"
+],
+"failed_sources": [],
+"incomplete_sections": [
+"hourly"
+],
+"summary_text": "Data from: Customsource, Open-Meteo. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour.",
+"aria_label": "Weather data provided by Customsource, Open-Meteo. Missing sections: hourly. Data note: current conditions from Open-Meteo report Rain; hourly forecast from Customsource says Mostly Clear; minute-by-minute precipitation outlook from Pirate Weather says Clear for the hour."
+}
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "13C Rain",
+"preview": "13C Rain",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Somewhere: 13C  at 0 mph N/A",
+"preview": "Somewhere: 13C  at 0 mph N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "59F/15C/50F/10C N/A N/A% UV N/A N/A 29.80 inHg (1009.00 hPa)",
+"preview": "59F/15C/50F/10C N/A N/A% UV N/A N/A 29.80 inHg (1009.00 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 13C  N/A {unknown}",
+"preview": "N/A 13C  N/A {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "13C",
+"preview": "13C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"preview": "Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere Rain  at 0 mph Somewhere",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+}
+]
+}

@@ -1,0 +1,2875 @@
+[
+ {
+  "name": "reads",
+  "host": {
+   "geocode": {
+    "Paris": [
+     48.8566,
+     2.3522,
+     "Paris, France"
+    ],
+    "London, UK": [
+     51.5,
+     -0.12,
+     "London, United Kingdom"
+    ]
+   },
+   "suggest": {
+    "Springfield": [
+     "Springfield, Illinois",
+     "Springfield, Missouri"
+    ]
+   },
+   "current": {
+    "@context": [
+     "https://geojson.org/geojson-ld/geojson-context.jsonld",
+     {
+      "@version": "1.1",
+      "wx": "https://api.weather.gov/ontology#",
+      "s": "https://schema.org/",
+      "geo": "http://www.opengis.net/ont/geosparql#",
+      "unit": "http://codes.wmo.int/common/unit/",
+      "@vocab": "https://api.weather.gov/ontology#",
+      "geometry": {
+       "@id": "s:GeoCoordinates",
+       "@type": "geo:wktLiteral"
+      },
+      "city": "s:addressLocality",
+      "state": "s:addressRegion",
+      "distance": {
+       "@id": "s:Distance",
+       "@type": "s:QuantitativeValue"
+      },
+      "bearing": {
+       "@type": "s:QuantitativeValue"
+      },
+      "value": {
+       "@id": "s:value"
+      },
+      "unitCode": {
+       "@id": "s:unitCode",
+       "@type": "@id"
+      },
+      "forecastOffice": {
+       "@type": "@id"
+      },
+      "forecastGridData": {
+       "@type": "@id"
+      },
+      "publicZone": {
+       "@type": "@id"
+      },
+      "county": {
+       "@type": "@id"
+      }
+     }
+    ],
+    "id": "https://api.weather.gov/stations/KNYC/observations/2026-01-20T17:51:00+00:00",
+    "type": "Feature",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -73.98,
+      40.77
+     ]
+    },
+    "properties": {
+     "@id": "https://api.weather.gov/stations/KNYC/observations/2026-01-20T17:51:00+00:00",
+     "@type": "wx:ObservationStation",
+     "elevation": {
+      "unitCode": "wmoUnit:m",
+      "value": 27
+     },
+     "station": "https://api.weather.gov/stations/KNYC",
+     "stationId": "KNYC",
+     "stationName": "New York City, Central Park",
+     "timestamp": "2026-01-20T17:51:00+00:00",
+     "rawMessage": "KNYC 201751Z AUTO 28008G22KT 240V320 10SM CLR M07/M21 A3031 RMK AO2 SLP257 T10721206 11067 21089 58000",
+     "textDescription": "Clear",
+     "icon": "https://api.weather.gov/icons/land/day/skc?size=medium",
+     "presentWeather": [],
+     "temperature": {
+      "unitCode": "wmoUnit:degC",
+      "value": -7.2,
+      "qualityControl": "V"
+     },
+     "dewpoint": {
+      "unitCode": "wmoUnit:degC",
+      "value": null,
+      "qualityControl": "Z"
+     },
+     "windDirection": {
+      "unitCode": "wmoUnit:degree_(angle)",
+      "value": 280,
+      "qualityControl": "V"
+     },
+     "windSpeed": {
+      "unitCode": "wmoUnit:km_h-1",
+      "value": 14.76,
+      "qualityControl": "V"
+     },
+     "windGust": {
+      "unitCode": "wmoUnit:km_h-1",
+      "value": 40.68,
+      "qualityControl": "S"
+     },
+     "barometricPressure": {
+      "unitCode": "wmoUnit:Pa",
+      "value": 102640,
+      "qualityControl": "V"
+     },
+     "seaLevelPressure": {
+      "unitCode": "wmoUnit:Pa",
+      "value": 102570,
+      "qualityControl": "V"
+     },
+     "visibility": {
+      "unitCode": "wmoUnit:m",
+      "value": 16090,
+      "qualityControl": "C"
+     },
+     "maxTemperatureLast24Hours": {
+      "unitCode": "wmoUnit:degC",
+      "value": null
+     },
+     "minTemperatureLast24Hours": {
+      "unitCode": "wmoUnit:degC",
+      "value": null
+     },
+     "precipitationLastHour": {
+      "unitCode": "wmoUnit:mm",
+      "value": null,
+      "qualityControl": "Z"
+     },
+     "precipitationLast3Hours": {
+      "unitCode": "wmoUnit:mm",
+      "value": null,
+      "qualityControl": "Z"
+     },
+     "precipitationLast6Hours": {
+      "unitCode": "wmoUnit:mm",
+      "value": null,
+      "qualityControl": "Z"
+     },
+     "relativeHumidity": {
+      "unitCode": "wmoUnit:percent",
+      "value": null,
+      "qualityControl": "V"
+     },
+     "windChill": {
+      "unitCode": "wmoUnit:degC",
+      "value": -13.215182875945834,
+      "qualityControl": "V"
+     },
+     "heatIndex": {
+      "unitCode": "wmoUnit:degC",
+      "value": null,
+      "qualityControl": "V"
+     },
+     "cloudLayers": [
+      {
+       "base": {
+        "unitCode": "wmoUnit:m",
+        "value": null
+       },
+       "amount": "CLR"
+      }
+     ]
+    }
+   },
+   "forecast": {
+    "latitude": 40.710335,
+    "longitude": -73.99307,
+    "generationtime_ms": 0.145,
+    "utc_offset_seconds": -18000,
+    "timezone": "America/New_York",
+    "timezone_abbreviation": "EST",
+    "elevation": 10.0,
+    "daily_units": {
+     "time": "iso8601",
+     "weather_code": "wmo code",
+     "temperature_2m_max": "°F",
+     "temperature_2m_min": "°F",
+     "apparent_temperature_max": "°F",
+     "apparent_temperature_min": "°F",
+     "sunrise": "iso8601",
+     "sunset": "iso8601",
+     "precipitation_sum": "inch",
+     "precipitation_probability_max": "%",
+     "wind_speed_10m_max": "mp/h",
+     "wind_gusts_10m_max": "mp/h",
+     "wind_direction_10m_dominant": "°",
+     "uv_index_max": "",
+     "snowfall_sum": "inch"
+    },
+    "daily": {
+     "time": [
+      "2025-01-15",
+      "2025-01-16",
+      "2025-01-17",
+      "2025-01-18",
+      "2025-01-19",
+      "2025-01-20",
+      "2025-01-21"
+     ],
+     "weather_code": [
+      2,
+      3,
+      61,
+      1,
+      0,
+      2,
+      3
+     ],
+     "temperature_2m_max": [
+      48.5,
+      52.1,
+      45.2,
+      50.8,
+      55.3,
+      51.2,
+      49.8
+     ],
+     "temperature_2m_min": [
+      35.2,
+      38.5,
+      32.1,
+      36.8,
+      40.2,
+      37.5,
+      35.8
+     ],
+     "apparent_temperature_max": [
+      45.2,
+      49.5,
+      42.1,
+      48.2,
+      52.8,
+      48.5,
+      46.2
+     ],
+     "apparent_temperature_min": [
+      30.5,
+      34.2,
+      27.8,
+      32.5,
+      36.8,
+      33.2,
+      31.5
+     ],
+     "sunrise": [
+      "2025-01-15T07:15",
+      "2025-01-16T07:15",
+      "2025-01-17T07:14",
+      "2025-01-18T07:14",
+      "2025-01-19T07:13",
+      "2025-01-20T07:13",
+      "2025-01-21T07:12"
+     ],
+     "sunset": [
+      "2025-01-15T16:55",
+      "2025-01-16T16:56",
+      "2025-01-17T16:57",
+      "2025-01-18T16:58",
+      "2025-01-19T16:59",
+      "2025-01-20T17:00",
+      "2025-01-21T17:02"
+     ],
+     "precipitation_sum": [
+      0.0,
+      0.05,
+      0.35,
+      0.0,
+      0.0,
+      0.02,
+      0.08
+     ],
+     "precipitation_probability_max": [
+      10,
+      25,
+      75,
+      5,
+      0,
+      15,
+      30
+     ],
+     "wind_speed_10m_max": [
+      12.5,
+      15.8,
+      22.3,
+      10.2,
+      8.5,
+      11.2,
+      14.5
+     ],
+     "wind_gusts_10m_max": [
+      22.5,
+      28.3,
+      38.5,
+      18.2,
+      15.5,
+      20.2,
+      25.8
+     ],
+     "wind_direction_10m_dominant": [
+      270,
+      225,
+      180,
+      315,
+      290,
+      250,
+      210
+     ],
+     "uv_index_max": [
+      3.2,
+      2.8,
+      1.5,
+      3.5,
+      4.0,
+      3.2,
+      2.5
+     ],
+     "snowfall_sum": [
+      0.0,
+      0.0,
+      0.5,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   "hourly": {
+    "properties": {
+     "periods": [
+      {
+       "startTime": "2026-09-25T13:00:00-04:00",
+       "endTime": "2026-09-25T14:00:00-04:00",
+       "temperature": 70
+      },
+      {
+       "startTime": "2026-09-25T15:00:00-04:00",
+       "temperature": 72,
+       "temperatureUnit": "F"
+      }
+     ]
+    }
+   },
+   "alerts": {
+    "features": [
+     {
+      "properties": {
+       "event": "Coastal Flood Advisory",
+       "severity": "Minor"
+      }
+     }
+    ]
+   },
+   "discussion": "AFD text yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "wpc": "Short range discussion.",
+   "spc": "",
+   "open_meteo": {
+    "timezone": "Europe/Paris",
+    "hourly": {
+     "time": [
+      "2026-09-25T20:00"
+     ],
+     "uv_index": [
+      0.5
+     ]
+    },
+    "hourly_units": {
+     "uv_index": ""
+    }
+   },
+   "location_names": [
+    "Home"
+   ],
+   "add_result": true,
+   "saved": [
+    {
+     "name": "Home",
+     "latitude": 40.1,
+     "longitude": -74.2,
+     "timezone": null,
+     "country_code": null,
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    {
+     "name": "Paris, France",
+     "latitude": 48.8566,
+     "longitude": 2.3522,
+     "timezone": null,
+     "country_code": "FR",
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    }
+   ],
+   "current_name": "Home"
+  },
+  "default": {
+   "lat": 39.97,
+   "lon": -74.8,
+   "name": "Lumberton, NJ"
+  },
+  "displayed_alerts": null,
+  "calls": [
+   {
+    "tool": "get_current_weather",
+    "args": {
+     "location": " lumberton, nj "
+    },
+    "output": "Current weather for Lumberton, NJ:\nSource: NWS\nTimezone: not supplied; use timestamps' explicit offsets\nObservation time: 2026-01-20T17:51:00+00:00\nTemperature: -7.2°C\nFeels Like: -13.215182875945834°C\nConditions: Clear\nWind: 14.76km/h\nWind direction: 280°\nPressure: 102640Pa\nVisibility: 16090m",
+    "host_calls": [
+     [
+      "current",
+      39.97,
+      -74.8
+     ]
+    ]
+   },
+   {
+    "tool": "get_current_weather",
+    "args": {
+     "location": "Nowhere"
+    },
+    "output": "Error: Could not resolve location: Nowhere",
+    "host_calls": [
+     [
+      "geocode",
+      "Nowhere"
+     ]
+    ]
+   },
+   {
+    "tool": "get_current_weather",
+    "args": {},
+    "output": "Error fetching weather data: 'location'",
+    "host_calls": []
+   },
+   {
+    "tool": "get_forecast",
+    "args": {
+     "location": "Paris"
+    },
+    "output": "Forecast for Paris, France:\nSource: Open-Meteo\nTimezone: America/New_York\n2025-01-15 | weather_code: 2wmo code | temperature_2m_max: 48.5°F | temperature_2m_min: 35.2°F | apparent_temperature_max: 45.2°F | apparent_temperature_min: 30.5°F | sunrise: 2025-01-15T07:15iso8601 | sunset: 2025-01-15T16:55iso8601 | precipitation_sum: 0.0inch | precipitation_probability_max: 10% | wind_speed_10m_max: 12.5mp/h | wind_gusts_10m_max: 22.5mp/h | wind_direction_10m_dominant: 270° | uv_index_max: 3.2 | snowfall_sum: 0.0inch\n2025-01-16 | weather_code: 3wmo code | temperature_2m_max: 52.1°F | temperature_2m_min: 38.5°F | apparent_temperature_max: 49.5°F | apparent_temperature_min: 34.2°F | sunrise: 2025-01-16T07:15iso8601 | sunset: 2025-01-16T16:56iso8601 | precipitation_sum: 0.05inch | precipitation_probability_max: 25% | wind_speed_10m_max: 15.8mp/h | wind_gusts_10m_max: 28.3mp/h | wind_direction_10m_dominant: 225° | uv_index_max: 2.8 | snowfall_sum: 0.0inch\n2025-01-17 | weather_code: 61wmo code | temperature_2m_max: 45.2°F | temperature_2m_min: 32.1°F | apparent_temperature_max: 42.1°F | apparent_temperature_min: 27.8°F | sunrise: 2025-01-17T07:14iso8601 | sunset: 2025-01-17T16:57iso8601 | precipitation_sum: 0.35inch | precipitation_probability_max: 75% | wind_speed_10m_max: 22.3mp/h | wind_gusts_10m_max: 38.5mp/h | wind_direction_10m_dominant: 180° | uv_index_max: 1.5 | snowfall_sum: 0.5inch\n2025-01-18 | weather_code: 1wmo code | temperature_2m_max: 50.8°F | temperature_2m_min: 36.8°F | apparent_temperature_max: 48.2°F | apparent_temperature_min: 32.5°F | sunrise: 2025-01-18T07:14iso8601 | sunset: 2025-01-18T16:58iso8601 | precipitation_sum: 0.0inch | precipitation_probability_max: 5% | wind_speed_10m_max: 10.2mp/h | wind_gusts_10m_max: 18.2mp/h | wind_direction_10m_dominant: 315° | uv_index_max: 3.5 | snowfall_sum: 0.0inch\n2025-01-19 | weather_code: 0wmo code | temperature_2m_max: 55.3°F | temperature_2m_min: 40.2°F | apparent_temperature_max: 52.8°F | apparent_temperature_min: 36.8°F | sunrise: 2025-01-19T07:13iso8601 | sunset: 2025-01-19T16:59iso8601 | precipitation_sum: 0.0inch | precipitation_probability_max: 0% | wind_speed_10m_max: 8.5mp/h | wind_gusts_10m_max: 15.5mp/h | wind_direction_10m_dominant: 290° | uv_index_max: 4.0 | snowfall_sum: 0.0inch\n2025-01-20 | weather_code: 2wmo code | temperature_2m_max: 51.2°F | temperature_2m_min: 37.5°F | apparent_temperature_max: 48.5°F | apparent_temperature_min: 33.2°F | sunrise: 2025-01-20T07:13iso8601 | sunset: 2025-01-20T17:00iso8601 | precipitation_sum: 0.02inch | precipitation_probability_max: 15% | wind_speed_10m_max: 11.2mp/h | wind_gusts_10m_max: 20.2mp/h | wind_direction_10m_dominant: 250° | uv_index_max: 3.2 | snowfall_sum: 0.0inch\n2025-01-21 | weather_code: 3wmo code | temperature_2m_max: 49.8°F | temperature_2m_min: 35.8°F | apparent_temperature_max: 46.2°F | apparent_temperature_min: 31.5°F | sunrise: 2025-01-21T07:12iso8601 | sunset: 2025-01-21T17:02iso8601 | precipitation_sum: 0.08inch | precipitation_probability_max: 30% | wind_speed_10m_max: 14.5mp/h | wind_gusts_10m_max: 25.8mp/h | wind_direction_10m_dominant: 210° | uv_index_max: 2.5 | snowfall_sum: 0.0inch",
+    "host_calls": [
+     [
+      "geocode",
+      "Paris"
+     ],
+     [
+      "forecast",
+      48.8566,
+      2.3522,
+      7
+     ]
+    ]
+   },
+   {
+    "tool": "get_forecast",
+    "args": {
+     "location": "Paris",
+     "forecast_days": 2
+    },
+    "output": "Forecast for Paris, France:\nSource: Open-Meteo\nTimezone: America/New_York\n2025-01-15 | weather_code: 2wmo code | temperature_2m_max: 48.5°F | temperature_2m_min: 35.2°F | apparent_temperature_max: 45.2°F | apparent_temperature_min: 30.5°F | sunrise: 2025-01-15T07:15iso8601 | sunset: 2025-01-15T16:55iso8601 | precipitation_sum: 0.0inch | precipitation_probability_max: 10% | wind_speed_10m_max: 12.5mp/h | wind_gusts_10m_max: 22.5mp/h | wind_direction_10m_dominant: 270° | uv_index_max: 3.2 | snowfall_sum: 0.0inch\n2025-01-16 | weather_code: 3wmo code | temperature_2m_max: 52.1°F | temperature_2m_min: 38.5°F | apparent_temperature_max: 49.5°F | apparent_temperature_min: 34.2°F | sunrise: 2025-01-16T07:15iso8601 | sunset: 2025-01-16T16:56iso8601 | precipitation_sum: 0.05inch | precipitation_probability_max: 25% | wind_speed_10m_max: 15.8mp/h | wind_gusts_10m_max: 28.3mp/h | wind_direction_10m_dominant: 225° | uv_index_max: 2.8 | snowfall_sum: 0.0inch",
+    "host_calls": [
+     [
+      "geocode",
+      "Paris"
+     ],
+     [
+      "forecast",
+      48.8566,
+      2.3522,
+      2
+     ]
+    ]
+   },
+   {
+    "tool": "get_forecast",
+    "args": {
+     "location": "Paris",
+     "forecast_days": 0
+    },
+    "output": "Error: forecast_days must be a whole number from 1 to 16.",
+    "host_calls": [
+     [
+      "geocode",
+      "Paris"
+     ]
+    ]
+   },
+   {
+    "tool": "get_forecast",
+    "args": {
+     "location": "Paris",
+     "forecast_days": 7.0
+    },
+    "output": "Error: forecast_days must be a whole number from 1 to 16.",
+    "host_calls": [
+     [
+      "geocode",
+      "Paris"
+     ]
+    ]
+   },
+   {
+    "tool": "get_forecast",
+    "args": {
+     "location": "Paris",
+     "forecast_days": true
+    },
+    "output": "Error: forecast_days must be a whole number from 1 to 16.",
+    "host_calls": [
+     [
+      "geocode",
+      "Paris"
+     ]
+    ]
+   },
+   {
+    "tool": "get_forecast",
+    "args": {
+     "location": "Paris",
+     "forecast_days": null
+    },
+    "output": "Forecast for Paris, France:\nSource: Open-Meteo\nTimezone: America/New_York\n2025-01-15 | weather_code: 2wmo code | temperature_2m_max: 48.5°F | temperature_2m_min: 35.2°F | apparent_temperature_max: 45.2°F | apparent_temperature_min: 30.5°F | sunrise: 2025-01-15T07:15iso8601 | sunset: 2025-01-15T16:55iso8601 | precipitation_sum: 0.0inch | precipitation_probability_max: 10% | wind_speed_10m_max: 12.5mp/h | wind_gusts_10m_max: 22.5mp/h | wind_direction_10m_dominant: 270° | uv_index_max: 3.2 | snowfall_sum: 0.0inch\n2025-01-16 | weather_code: 3wmo code | temperature_2m_max: 52.1°F | temperature_2m_min: 38.5°F | apparent_temperature_max: 49.5°F | apparent_temperature_min: 34.2°F | sunrise: 2025-01-16T07:15iso8601 | sunset: 2025-01-16T16:56iso8601 | precipitation_sum: 0.05inch | precipitation_probability_max: 25% | wind_speed_10m_max: 15.8mp/h | wind_gusts_10m_max: 28.3mp/h | wind_direction_10m_dominant: 225° | uv_index_max: 2.8 | snowfall_sum: 0.0inch\n2025-01-17 | weather_code: 61wmo code | temperature_2m_max: 45.2°F | temperature_2m_min: 32.1°F | apparent_temperature_max: 42.1°F | apparent_temperature_min: 27.8°F | sunrise: 2025-01-17T07:14iso8601 | sunset: 2025-01-17T16:57iso8601 | precipitation_sum: 0.35inch | precipitation_probability_max: 75% | wind_speed_10m_max: 22.3mp/h | wind_gusts_10m_max: 38.5mp/h | wind_direction_10m_dominant: 180° | uv_index_max: 1.5 | snowfall_sum: 0.5inch\n2025-01-18 | weather_code: 1wmo code | temperature_2m_max: 50.8°F | temperature_2m_min: 36.8°F | apparent_temperature_max: 48.2°F | apparent_temperature_min: 32.5°F | sunrise: 2025-01-18T07:14iso8601 | sunset: 2025-01-18T16:58iso8601 | precipitation_sum: 0.0inch | precipitation_probability_max: 5% | wind_speed_10m_max: 10.2mp/h | wind_gusts_10m_max: 18.2mp/h | wind_direction_10m_dominant: 315° | uv_index_max: 3.5 | snowfall_sum: 0.0inch\n2025-01-19 | weather_code: 0wmo code | temperature_2m_max: 55.3°F | temperature_2m_min: 40.2°F | apparent_temperature_max: 52.8°F | apparent_temperature_min: 36.8°F | sunrise: 2025-01-19T07:13iso8601 | sunset: 2025-01-19T16:59iso8601 | precipitation_sum: 0.0inch | precipitation_probability_max: 0% | wind_speed_10m_max: 8.5mp/h | wind_gusts_10m_max: 15.5mp/h | wind_direction_10m_dominant: 290° | uv_index_max: 4.0 | snowfall_sum: 0.0inch\n2025-01-20 | weather_code: 2wmo code | temperature_2m_max: 51.2°F | temperature_2m_min: 37.5°F | apparent_temperature_max: 48.5°F | apparent_temperature_min: 33.2°F | sunrise: 2025-01-20T07:13iso8601 | sunset: 2025-01-20T17:00iso8601 | precipitation_sum: 0.02inch | precipitation_probability_max: 15% | wind_speed_10m_max: 11.2mp/h | wind_gusts_10m_max: 20.2mp/h | wind_direction_10m_dominant: 250° | uv_index_max: 3.2 | snowfall_sum: 0.0inch\n2025-01-21 | weather_code: 3wmo code | temperature_2m_max: 49.8°F | temperature_2m_min: 35.8°F | apparent_temperature_max: 46.2°F | apparent_temperature_min: 31.5°F | sunrise: 2025-01-21T07:12iso8601 | sunset: 2025-01-21T17:02iso8601 | precipitation_sum: 0.08inch | precipitation_probability_max: 30% | wind_speed_10m_max: 14.5mp/h | wind_gusts_10m_max: 25.8mp/h | wind_direction_10m_dominant: 210° | uv_index_max: 2.5 | snowfall_sum: 0.0inch",
+    "host_calls": [
+     [
+      "geocode",
+      "Paris"
+     ],
+     [
+      "forecast",
+      48.8566,
+      2.3522,
+      7
+     ]
+    ]
+   },
+   {
+    "tool": "get_hourly_forecast",
+    "args": {
+     "location": "Lumberton, NJ"
+    },
+    "output": "Hourly forecast for Lumberton, NJ:\nSource: NWS\nTimezone: not supplied; use timestamps' explicit offsets\n2026-09-25T15:00:00-04:00 - 72°F - Valid from 2026-09-25T15:00:00-04:00",
+    "host_calls": [
+     [
+      "hourly",
+      39.97,
+      -74.8
+     ]
+    ]
+   },
+   {
+    "tool": "get_alerts",
+    "args": {
+     "location": "Paris"
+    },
+    "output": "Weather alerts for Paris, France:\nSource: NWS\n- Coastal Flood Advisory (Severity: Minor)\n  Sender: unknown\n  Effective: unknown\n  Onset: unknown\n  Expires: unknown\n  Ends: unknown",
+    "host_calls": [
+     [
+      "geocode",
+      "Paris"
+     ],
+     [
+      "alerts",
+      48.8566,
+      2.3522
+     ]
+    ]
+   },
+   {
+    "tool": "search_location",
+    "args": {
+     "query": "Springfield"
+    },
+    "output": "Locations matching 'Springfield':\n1. Springfield, Illinois\n2. Springfield, Missouri",
+    "host_calls": [
+     [
+      "suggest",
+      "Springfield",
+      5
+     ]
+    ]
+   },
+   {
+    "tool": "search_location",
+    "args": {
+     "query": "Atlantis"
+    },
+    "output": "No locations found matching 'Atlantis'.",
+    "host_calls": [
+     [
+      "suggest",
+      "Atlantis",
+      5
+     ]
+    ]
+   },
+   {
+    "tool": "add_location",
+    "args": {
+     "name": "Home",
+     "latitude": 1,
+     "longitude": 2
+    },
+    "output": "'Home' is already in your saved locations.",
+    "host_calls": []
+   },
+   {
+    "tool": "add_location",
+    "args": {
+     "name": "Paris, France",
+     "latitude": 48.85,
+     "longitude": 2.35
+    },
+    "output": "Added 'Paris, France' to your saved locations.",
+    "host_calls": [
+     [
+      "add_location",
+      "Paris, France",
+      48.85,
+      2.35
+     ]
+    ]
+   },
+   {
+    "tool": "add_location",
+    "args": {
+     "name": "Nope",
+     "latitude": "north",
+     "longitude": 2
+    },
+    "output": "Failed to add 'Nope'. It may already exist under a similar name.",
+    "host_calls": []
+   },
+   {
+    "tool": "add_location",
+    "args": {
+     "name": "Mars",
+     "latitude": 95,
+     "longitude": 0
+    },
+    "output": "Failed to add 'Mars'. It may already exist under a similar name.",
+    "host_calls": [
+     [
+      "add_location",
+      "Mars",
+      95.0,
+      0.0
+     ]
+    ]
+   },
+   {
+    "tool": "add_location",
+    "args": {
+     "name": "Str",
+     "latitude": " 12.5 ",
+     "longitude": "-3"
+    },
+    "output": "Added 'Str' to your saved locations.",
+    "host_calls": [
+     [
+      "add_location",
+      "Str",
+      12.5,
+      -3.0
+     ]
+    ]
+   },
+   {
+    "tool": "add_location",
+    "args": {
+     "name": "Missing",
+     "latitude": 1
+    },
+    "output": "Error fetching weather data: 'longitude'",
+    "host_calls": []
+   },
+   {
+    "tool": "list_locations",
+    "args": {},
+    "output": "Your saved locations:\n- Home (40.10, -74.20) (current)\n- Paris, France (48.86, 2.35)",
+    "host_calls": []
+   },
+   {
+    "tool": "query_open_meteo",
+    "args": {
+     "location": "Paris",
+     "hourly": [
+      "uv_index"
+     ],
+     "daily": [
+      "sunrise",
+      "sunset"
+     ],
+     "forecast_days": 3,
+     "timezone": "Europe/Paris"
+    },
+    "output": "Open-Meteo data for Paris, France:\nSource: Open-Meteo\nTimezone: Europe/Paris\n\nHourly (1 periods):\n2026-09-25T20:00 | uv_index: 0.5",
+    "host_calls": [
+     [
+      "geocode",
+      "Paris"
+     ],
+     [
+      "open_meteo",
+      [
+       [
+        "latitude",
+        "48.8566"
+       ],
+       [
+        "longitude",
+        "2.3522"
+       ],
+       [
+        "timezone",
+        "Europe/Paris"
+       ],
+       [
+        "hourly",
+        "uv_index"
+       ],
+       [
+        "daily",
+        "sunrise,sunset"
+       ],
+       [
+        "forecast_days",
+        "3"
+       ]
+      ]
+     ]
+    ]
+   },
+   {
+    "tool": "query_open_meteo",
+    "args": {
+     "location": "Paris"
+    },
+    "output": "Error: specify at least one of current, hourly, or daily variables.",
+    "host_calls": [
+     [
+      "geocode",
+      "Paris"
+     ]
+    ]
+   },
+   {
+    "tool": "query_open_meteo",
+    "args": {
+     "location": "Paris",
+     "current": "rain"
+    },
+    "output": "Open-Meteo data for Paris, France:\nSource: Open-Meteo\nTimezone: Europe/Paris\n\nHourly (1 periods):\n2026-09-25T20:00 | uv_index: 0.5",
+    "host_calls": [
+     [
+      "geocode",
+      "Paris"
+     ],
+     [
+      "open_meteo",
+      [
+       [
+        "latitude",
+        "48.8566"
+       ],
+       [
+        "longitude",
+        "2.3522"
+       ],
+       [
+        "timezone",
+        "auto"
+       ],
+       [
+        "current",
+        "r,a,i,n"
+       ]
+      ]
+     ]
+    ]
+   },
+   {
+    "tool": "query_open_meteo",
+    "args": {
+     "location": "Paris",
+     "current": [
+      1
+     ]
+    },
+    "output": "Error fetching weather data: sequence item 0: expected str instance, int found",
+    "host_calls": [
+     [
+      "geocode",
+      "Paris"
+     ]
+    ]
+   },
+   {
+    "tool": "get_area_forecast_discussion",
+    "args": {
+     "location": "Lumberton, NJ"
+    },
+    "output": "Area Forecast Discussion for Lumberton, NJ:\n\nAFD text yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\n\n[Truncated — full discussion is longer]",
+    "host_calls": [
+     [
+      "discussion",
+      39.97,
+      -74.8
+     ]
+    ]
+   },
+   {
+    "tool": "get_wpc_discussion",
+    "args": {},
+    "output": "WPC Short Range Forecast Discussion:\n\nShort range discussion.",
+    "host_calls": []
+   },
+   {
+    "tool": "get_spc_outlook",
+    "args": {},
+    "output": "SPC outlook unavailable.",
+    "host_calls": []
+   },
+   {
+    "tool": "no_such_tool",
+    "args": {},
+    "output": {
+     "raised": "Unknown tool: no_such_tool"
+    },
+    "host_calls": []
+   }
+  ]
+ },
+ {
+  "name": "failures",
+  "host": {
+   "geocode": {
+    "Paris": [
+     48.8566,
+     2.3522,
+     "Paris, France"
+    ],
+    "London, UK": [
+     51.5,
+     -0.12,
+     "London, United Kingdom"
+    ]
+   },
+   "suggest": {
+    "Springfield": [
+     "Springfield, Illinois",
+     "Springfield, Missouri"
+    ]
+   },
+   "current": {
+    "error": "NWS and Open-Meteo failed"
+   },
+   "forecast": {
+    "error": "boom"
+   },
+   "hourly": {
+    "properties": {
+     "periods": [
+      {
+       "startTime": "2026-09-25T13:00:00-04:00",
+       "endTime": "2026-09-25T14:00:00-04:00",
+       "temperature": 70
+      },
+      {
+       "startTime": "2026-09-25T15:00:00-04:00",
+       "temperature": 72,
+       "temperatureUnit": "F"
+      }
+     ]
+    }
+   },
+   "alerts": {
+    "error": "down"
+   },
+   "discussion": null,
+   "wpc": {
+    "error": "unreachable"
+   },
+   "spc": {
+    "error": "unreachable"
+   },
+   "open_meteo": {
+    "error": "HTTP 400"
+   },
+   "location_names": [
+    "Home"
+   ],
+   "add_result": false,
+   "saved": [],
+   "current_name": null
+  },
+  "default": null,
+  "displayed_alerts": null,
+  "calls": [
+   {
+    "tool": "get_current_weather",
+    "args": {
+     "location": "Paris"
+    },
+    "output": "Error fetching weather data: NWS and Open-Meteo failed",
+    "host_calls": [
+     [
+      "geocode",
+      "Paris"
+     ],
+     [
+      "current",
+      48.8566,
+      2.3522
+     ]
+    ]
+   },
+   {
+    "tool": "get_forecast",
+    "args": {
+     "location": "Paris"
+    },
+    "output": "Error fetching weather data: boom",
+    "host_calls": [
+     [
+      "geocode",
+      "Paris"
+     ],
+     [
+      "forecast",
+      48.8566,
+      2.3522,
+      7
+     ]
+    ]
+   },
+   {
+    "tool": "get_alerts",
+    "args": {
+     "location": "Paris"
+    },
+    "output": "Error fetching weather data: Weather alerts could not be checked. Alert status is unknown.",
+    "host_calls": [
+     [
+      "geocode",
+      "Paris"
+     ],
+     [
+      "alerts",
+      48.8566,
+      2.3522
+     ]
+    ]
+   },
+   {
+    "tool": "get_area_forecast_discussion",
+    "args": {
+     "location": "Paris"
+    },
+    "output": "No Area Forecast Discussion available for Paris, France.",
+    "host_calls": [
+     [
+      "geocode",
+      "Paris"
+     ],
+     [
+      "discussion",
+      48.8566,
+      2.3522
+     ]
+    ]
+   },
+   {
+    "tool": "get_wpc_discussion",
+    "args": {},
+    "output": "Error fetching WPC discussion: unreachable",
+    "host_calls": []
+   },
+   {
+    "tool": "get_spc_outlook",
+    "args": {},
+    "output": "Error fetching SPC outlook: unreachable",
+    "host_calls": []
+   },
+   {
+    "tool": "query_open_meteo",
+    "args": {
+     "location": "Paris",
+     "daily": [
+      "uv_index_max"
+     ]
+    },
+    "output": "Error querying Open-Meteo: HTTP 400",
+    "host_calls": [
+     [
+      "geocode",
+      "Paris"
+     ],
+     [
+      "open_meteo",
+      [
+       [
+        "latitude",
+        "48.8566"
+       ],
+       [
+        "longitude",
+        "2.3522"
+       ],
+       [
+        "timezone",
+        "auto"
+       ],
+       [
+        "daily",
+        "uv_index_max"
+       ]
+      ]
+     ]
+    ]
+   },
+   {
+    "tool": "add_location",
+    "args": {
+     "name": "Paris",
+     "latitude": 48.8,
+     "longitude": 2.3
+    },
+    "output": "Failed to add 'Paris'. It may already exist under a similar name.",
+    "host_calls": [
+     [
+      "add_location",
+      "Paris",
+      48.8,
+      2.3
+     ]
+    ]
+   },
+   {
+    "tool": "list_locations",
+    "args": {},
+    "output": "No saved locations.",
+    "host_calls": []
+   }
+  ]
+ },
+ {
+  "name": "displayed_alerts_live_none",
+  "host": {
+   "geocode": {
+    "Paris": [
+     48.8566,
+     2.3522,
+     "Paris, France"
+    ],
+    "London, UK": [
+     51.5,
+     -0.12,
+     "London, United Kingdom"
+    ]
+   },
+   "suggest": {
+    "Springfield": [
+     "Springfield, Illinois",
+     "Springfield, Missouri"
+    ]
+   },
+   "current": {
+    "@context": [
+     "https://geojson.org/geojson-ld/geojson-context.jsonld",
+     {
+      "@version": "1.1",
+      "wx": "https://api.weather.gov/ontology#",
+      "s": "https://schema.org/",
+      "geo": "http://www.opengis.net/ont/geosparql#",
+      "unit": "http://codes.wmo.int/common/unit/",
+      "@vocab": "https://api.weather.gov/ontology#",
+      "geometry": {
+       "@id": "s:GeoCoordinates",
+       "@type": "geo:wktLiteral"
+      },
+      "city": "s:addressLocality",
+      "state": "s:addressRegion",
+      "distance": {
+       "@id": "s:Distance",
+       "@type": "s:QuantitativeValue"
+      },
+      "bearing": {
+       "@type": "s:QuantitativeValue"
+      },
+      "value": {
+       "@id": "s:value"
+      },
+      "unitCode": {
+       "@id": "s:unitCode",
+       "@type": "@id"
+      },
+      "forecastOffice": {
+       "@type": "@id"
+      },
+      "forecastGridData": {
+       "@type": "@id"
+      },
+      "publicZone": {
+       "@type": "@id"
+      },
+      "county": {
+       "@type": "@id"
+      }
+     }
+    ],
+    "id": "https://api.weather.gov/stations/KNYC/observations/2026-01-20T17:51:00+00:00",
+    "type": "Feature",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -73.98,
+      40.77
+     ]
+    },
+    "properties": {
+     "@id": "https://api.weather.gov/stations/KNYC/observations/2026-01-20T17:51:00+00:00",
+     "@type": "wx:ObservationStation",
+     "elevation": {
+      "unitCode": "wmoUnit:m",
+      "value": 27
+     },
+     "station": "https://api.weather.gov/stations/KNYC",
+     "stationId": "KNYC",
+     "stationName": "New York City, Central Park",
+     "timestamp": "2026-01-20T17:51:00+00:00",
+     "rawMessage": "KNYC 201751Z AUTO 28008G22KT 240V320 10SM CLR M07/M21 A3031 RMK AO2 SLP257 T10721206 11067 21089 58000",
+     "textDescription": "Clear",
+     "icon": "https://api.weather.gov/icons/land/day/skc?size=medium",
+     "presentWeather": [],
+     "temperature": {
+      "unitCode": "wmoUnit:degC",
+      "value": -7.2,
+      "qualityControl": "V"
+     },
+     "dewpoint": {
+      "unitCode": "wmoUnit:degC",
+      "value": null,
+      "qualityControl": "Z"
+     },
+     "windDirection": {
+      "unitCode": "wmoUnit:degree_(angle)",
+      "value": 280,
+      "qualityControl": "V"
+     },
+     "windSpeed": {
+      "unitCode": "wmoUnit:km_h-1",
+      "value": 14.76,
+      "qualityControl": "V"
+     },
+     "windGust": {
+      "unitCode": "wmoUnit:km_h-1",
+      "value": 40.68,
+      "qualityControl": "S"
+     },
+     "barometricPressure": {
+      "unitCode": "wmoUnit:Pa",
+      "value": 102640,
+      "qualityControl": "V"
+     },
+     "seaLevelPressure": {
+      "unitCode": "wmoUnit:Pa",
+      "value": 102570,
+      "qualityControl": "V"
+     },
+     "visibility": {
+      "unitCode": "wmoUnit:m",
+      "value": 16090,
+      "qualityControl": "C"
+     },
+     "maxTemperatureLast24Hours": {
+      "unitCode": "wmoUnit:degC",
+      "value": null
+     },
+     "minTemperatureLast24Hours": {
+      "unitCode": "wmoUnit:degC",
+      "value": null
+     },
+     "precipitationLastHour": {
+      "unitCode": "wmoUnit:mm",
+      "value": null,
+      "qualityControl": "Z"
+     },
+     "precipitationLast3Hours": {
+      "unitCode": "wmoUnit:mm",
+      "value": null,
+      "qualityControl": "Z"
+     },
+     "precipitationLast6Hours": {
+      "unitCode": "wmoUnit:mm",
+      "value": null,
+      "qualityControl": "Z"
+     },
+     "relativeHumidity": {
+      "unitCode": "wmoUnit:percent",
+      "value": null,
+      "qualityControl": "V"
+     },
+     "windChill": {
+      "unitCode": "wmoUnit:degC",
+      "value": -13.215182875945834,
+      "qualityControl": "V"
+     },
+     "heatIndex": {
+      "unitCode": "wmoUnit:degC",
+      "value": null,
+      "qualityControl": "V"
+     },
+     "cloudLayers": [
+      {
+       "base": {
+        "unitCode": "wmoUnit:m",
+        "value": null
+       },
+       "amount": "CLR"
+      }
+     ]
+    }
+   },
+   "forecast": {
+    "latitude": 40.710335,
+    "longitude": -73.99307,
+    "generationtime_ms": 0.145,
+    "utc_offset_seconds": -18000,
+    "timezone": "America/New_York",
+    "timezone_abbreviation": "EST",
+    "elevation": 10.0,
+    "daily_units": {
+     "time": "iso8601",
+     "weather_code": "wmo code",
+     "temperature_2m_max": "°F",
+     "temperature_2m_min": "°F",
+     "apparent_temperature_max": "°F",
+     "apparent_temperature_min": "°F",
+     "sunrise": "iso8601",
+     "sunset": "iso8601",
+     "precipitation_sum": "inch",
+     "precipitation_probability_max": "%",
+     "wind_speed_10m_max": "mp/h",
+     "wind_gusts_10m_max": "mp/h",
+     "wind_direction_10m_dominant": "°",
+     "uv_index_max": "",
+     "snowfall_sum": "inch"
+    },
+    "daily": {
+     "time": [
+      "2025-01-15",
+      "2025-01-16",
+      "2025-01-17",
+      "2025-01-18",
+      "2025-01-19",
+      "2025-01-20",
+      "2025-01-21"
+     ],
+     "weather_code": [
+      2,
+      3,
+      61,
+      1,
+      0,
+      2,
+      3
+     ],
+     "temperature_2m_max": [
+      48.5,
+      52.1,
+      45.2,
+      50.8,
+      55.3,
+      51.2,
+      49.8
+     ],
+     "temperature_2m_min": [
+      35.2,
+      38.5,
+      32.1,
+      36.8,
+      40.2,
+      37.5,
+      35.8
+     ],
+     "apparent_temperature_max": [
+      45.2,
+      49.5,
+      42.1,
+      48.2,
+      52.8,
+      48.5,
+      46.2
+     ],
+     "apparent_temperature_min": [
+      30.5,
+      34.2,
+      27.8,
+      32.5,
+      36.8,
+      33.2,
+      31.5
+     ],
+     "sunrise": [
+      "2025-01-15T07:15",
+      "2025-01-16T07:15",
+      "2025-01-17T07:14",
+      "2025-01-18T07:14",
+      "2025-01-19T07:13",
+      "2025-01-20T07:13",
+      "2025-01-21T07:12"
+     ],
+     "sunset": [
+      "2025-01-15T16:55",
+      "2025-01-16T16:56",
+      "2025-01-17T16:57",
+      "2025-01-18T16:58",
+      "2025-01-19T16:59",
+      "2025-01-20T17:00",
+      "2025-01-21T17:02"
+     ],
+     "precipitation_sum": [
+      0.0,
+      0.05,
+      0.35,
+      0.0,
+      0.0,
+      0.02,
+      0.08
+     ],
+     "precipitation_probability_max": [
+      10,
+      25,
+      75,
+      5,
+      0,
+      15,
+      30
+     ],
+     "wind_speed_10m_max": [
+      12.5,
+      15.8,
+      22.3,
+      10.2,
+      8.5,
+      11.2,
+      14.5
+     ],
+     "wind_gusts_10m_max": [
+      22.5,
+      28.3,
+      38.5,
+      18.2,
+      15.5,
+      20.2,
+      25.8
+     ],
+     "wind_direction_10m_dominant": [
+      270,
+      225,
+      180,
+      315,
+      290,
+      250,
+      210
+     ],
+     "uv_index_max": [
+      3.2,
+      2.8,
+      1.5,
+      3.5,
+      4.0,
+      3.2,
+      2.5
+     ],
+     "snowfall_sum": [
+      0.0,
+      0.0,
+      0.5,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   "hourly": {
+    "properties": {
+     "periods": [
+      {
+       "startTime": "2026-09-25T13:00:00-04:00",
+       "endTime": "2026-09-25T14:00:00-04:00",
+       "temperature": 70
+      },
+      {
+       "startTime": "2026-09-25T15:00:00-04:00",
+       "temperature": 72,
+       "temperatureUnit": "F"
+      }
+     ]
+    }
+   },
+   "alerts": {
+    "alerts": []
+   },
+   "discussion": "AFD text yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "wpc": "Short range discussion.",
+   "spc": "",
+   "open_meteo": {
+    "timezone": "Europe/Paris",
+    "hourly": {
+     "time": [
+      "2026-09-25T20:00"
+     ],
+     "uv_index": [
+      0.5
+     ]
+    },
+    "hourly_units": {
+     "uv_index": ""
+    }
+   },
+   "location_names": [
+    "Home"
+   ],
+   "add_result": true,
+   "saved": [
+    {
+     "name": "Home",
+     "latitude": 40.1,
+     "longitude": -74.2,
+     "timezone": null,
+     "country_code": null,
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    {
+     "name": "Paris, France",
+     "latitude": 48.8566,
+     "longitude": 2.3522,
+     "timezone": null,
+     "country_code": "FR",
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    }
+   ],
+   "current_name": "Home"
+  },
+  "default": {
+   "lat": 39.97,
+   "lon": -74.8,
+   "name": "Lumberton, NJ"
+  },
+  "displayed_alerts": [
+   {
+    "title": "Coastal Flood Warning title",
+    "description": "Details",
+    "event": "Coastal Flood Warning",
+    "severity": "Severe",
+    "headline": "Warning shown in the app",
+    "expires": "2099-01-01T00:00:00+00:00"
+   },
+   {
+    "title": "Old Advisory title",
+    "description": "Details",
+    "event": "Old Advisory",
+    "expires": "2000-01-01T00:00:00+00:00"
+   }
+  ],
+  "calls": [
+   {
+    "tool": "get_alerts",
+    "args": {
+     "location": "Lumberton, NJ"
+    },
+    "output": "Alerts currently displayed in the app for Lumberton, NJ:\nWeather alerts for Lumberton, NJ:\nSource: weather service\n- Coastal Flood Warning (Severity: Severe)\n  Sender: unknown\n  Effective: unknown\n  Onset: unknown\n  Expires: unknown\n  Ends: unknown\n  Warning shown in the app\n  Details\nLive alert lookup found none. The app still displays these alerts; verify their current status before relying on either result.",
+    "host_calls": [
+     [
+      "alerts",
+      39.97,
+      -74.8
+     ]
+    ]
+   },
+   {
+    "tool": "get_alerts",
+    "args": {
+     "location": "Paris"
+    },
+    "output": "Weather alerts for Paris, France:\nSource: weather service\nNo active alerts.",
+    "host_calls": [
+     [
+      "geocode",
+      "Paris"
+     ],
+     [
+      "alerts",
+      48.8566,
+      2.3522
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "name": "displayed_alerts_missing_from_live",
+  "host": {
+   "geocode": {
+    "Paris": [
+     48.8566,
+     2.3522,
+     "Paris, France"
+    ],
+    "London, UK": [
+     51.5,
+     -0.12,
+     "London, United Kingdom"
+    ]
+   },
+   "suggest": {
+    "Springfield": [
+     "Springfield, Illinois",
+     "Springfield, Missouri"
+    ]
+   },
+   "current": {
+    "@context": [
+     "https://geojson.org/geojson-ld/geojson-context.jsonld",
+     {
+      "@version": "1.1",
+      "wx": "https://api.weather.gov/ontology#",
+      "s": "https://schema.org/",
+      "geo": "http://www.opengis.net/ont/geosparql#",
+      "unit": "http://codes.wmo.int/common/unit/",
+      "@vocab": "https://api.weather.gov/ontology#",
+      "geometry": {
+       "@id": "s:GeoCoordinates",
+       "@type": "geo:wktLiteral"
+      },
+      "city": "s:addressLocality",
+      "state": "s:addressRegion",
+      "distance": {
+       "@id": "s:Distance",
+       "@type": "s:QuantitativeValue"
+      },
+      "bearing": {
+       "@type": "s:QuantitativeValue"
+      },
+      "value": {
+       "@id": "s:value"
+      },
+      "unitCode": {
+       "@id": "s:unitCode",
+       "@type": "@id"
+      },
+      "forecastOffice": {
+       "@type": "@id"
+      },
+      "forecastGridData": {
+       "@type": "@id"
+      },
+      "publicZone": {
+       "@type": "@id"
+      },
+      "county": {
+       "@type": "@id"
+      }
+     }
+    ],
+    "id": "https://api.weather.gov/stations/KNYC/observations/2026-01-20T17:51:00+00:00",
+    "type": "Feature",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -73.98,
+      40.77
+     ]
+    },
+    "properties": {
+     "@id": "https://api.weather.gov/stations/KNYC/observations/2026-01-20T17:51:00+00:00",
+     "@type": "wx:ObservationStation",
+     "elevation": {
+      "unitCode": "wmoUnit:m",
+      "value": 27
+     },
+     "station": "https://api.weather.gov/stations/KNYC",
+     "stationId": "KNYC",
+     "stationName": "New York City, Central Park",
+     "timestamp": "2026-01-20T17:51:00+00:00",
+     "rawMessage": "KNYC 201751Z AUTO 28008G22KT 240V320 10SM CLR M07/M21 A3031 RMK AO2 SLP257 T10721206 11067 21089 58000",
+     "textDescription": "Clear",
+     "icon": "https://api.weather.gov/icons/land/day/skc?size=medium",
+     "presentWeather": [],
+     "temperature": {
+      "unitCode": "wmoUnit:degC",
+      "value": -7.2,
+      "qualityControl": "V"
+     },
+     "dewpoint": {
+      "unitCode": "wmoUnit:degC",
+      "value": null,
+      "qualityControl": "Z"
+     },
+     "windDirection": {
+      "unitCode": "wmoUnit:degree_(angle)",
+      "value": 280,
+      "qualityControl": "V"
+     },
+     "windSpeed": {
+      "unitCode": "wmoUnit:km_h-1",
+      "value": 14.76,
+      "qualityControl": "V"
+     },
+     "windGust": {
+      "unitCode": "wmoUnit:km_h-1",
+      "value": 40.68,
+      "qualityControl": "S"
+     },
+     "barometricPressure": {
+      "unitCode": "wmoUnit:Pa",
+      "value": 102640,
+      "qualityControl": "V"
+     },
+     "seaLevelPressure": {
+      "unitCode": "wmoUnit:Pa",
+      "value": 102570,
+      "qualityControl": "V"
+     },
+     "visibility": {
+      "unitCode": "wmoUnit:m",
+      "value": 16090,
+      "qualityControl": "C"
+     },
+     "maxTemperatureLast24Hours": {
+      "unitCode": "wmoUnit:degC",
+      "value": null
+     },
+     "minTemperatureLast24Hours": {
+      "unitCode": "wmoUnit:degC",
+      "value": null
+     },
+     "precipitationLastHour": {
+      "unitCode": "wmoUnit:mm",
+      "value": null,
+      "qualityControl": "Z"
+     },
+     "precipitationLast3Hours": {
+      "unitCode": "wmoUnit:mm",
+      "value": null,
+      "qualityControl": "Z"
+     },
+     "precipitationLast6Hours": {
+      "unitCode": "wmoUnit:mm",
+      "value": null,
+      "qualityControl": "Z"
+     },
+     "relativeHumidity": {
+      "unitCode": "wmoUnit:percent",
+      "value": null,
+      "qualityControl": "V"
+     },
+     "windChill": {
+      "unitCode": "wmoUnit:degC",
+      "value": -13.215182875945834,
+      "qualityControl": "V"
+     },
+     "heatIndex": {
+      "unitCode": "wmoUnit:degC",
+      "value": null,
+      "qualityControl": "V"
+     },
+     "cloudLayers": [
+      {
+       "base": {
+        "unitCode": "wmoUnit:m",
+        "value": null
+       },
+       "amount": "CLR"
+      }
+     ]
+    }
+   },
+   "forecast": {
+    "latitude": 40.710335,
+    "longitude": -73.99307,
+    "generationtime_ms": 0.145,
+    "utc_offset_seconds": -18000,
+    "timezone": "America/New_York",
+    "timezone_abbreviation": "EST",
+    "elevation": 10.0,
+    "daily_units": {
+     "time": "iso8601",
+     "weather_code": "wmo code",
+     "temperature_2m_max": "°F",
+     "temperature_2m_min": "°F",
+     "apparent_temperature_max": "°F",
+     "apparent_temperature_min": "°F",
+     "sunrise": "iso8601",
+     "sunset": "iso8601",
+     "precipitation_sum": "inch",
+     "precipitation_probability_max": "%",
+     "wind_speed_10m_max": "mp/h",
+     "wind_gusts_10m_max": "mp/h",
+     "wind_direction_10m_dominant": "°",
+     "uv_index_max": "",
+     "snowfall_sum": "inch"
+    },
+    "daily": {
+     "time": [
+      "2025-01-15",
+      "2025-01-16",
+      "2025-01-17",
+      "2025-01-18",
+      "2025-01-19",
+      "2025-01-20",
+      "2025-01-21"
+     ],
+     "weather_code": [
+      2,
+      3,
+      61,
+      1,
+      0,
+      2,
+      3
+     ],
+     "temperature_2m_max": [
+      48.5,
+      52.1,
+      45.2,
+      50.8,
+      55.3,
+      51.2,
+      49.8
+     ],
+     "temperature_2m_min": [
+      35.2,
+      38.5,
+      32.1,
+      36.8,
+      40.2,
+      37.5,
+      35.8
+     ],
+     "apparent_temperature_max": [
+      45.2,
+      49.5,
+      42.1,
+      48.2,
+      52.8,
+      48.5,
+      46.2
+     ],
+     "apparent_temperature_min": [
+      30.5,
+      34.2,
+      27.8,
+      32.5,
+      36.8,
+      33.2,
+      31.5
+     ],
+     "sunrise": [
+      "2025-01-15T07:15",
+      "2025-01-16T07:15",
+      "2025-01-17T07:14",
+      "2025-01-18T07:14",
+      "2025-01-19T07:13",
+      "2025-01-20T07:13",
+      "2025-01-21T07:12"
+     ],
+     "sunset": [
+      "2025-01-15T16:55",
+      "2025-01-16T16:56",
+      "2025-01-17T16:57",
+      "2025-01-18T16:58",
+      "2025-01-19T16:59",
+      "2025-01-20T17:00",
+      "2025-01-21T17:02"
+     ],
+     "precipitation_sum": [
+      0.0,
+      0.05,
+      0.35,
+      0.0,
+      0.0,
+      0.02,
+      0.08
+     ],
+     "precipitation_probability_max": [
+      10,
+      25,
+      75,
+      5,
+      0,
+      15,
+      30
+     ],
+     "wind_speed_10m_max": [
+      12.5,
+      15.8,
+      22.3,
+      10.2,
+      8.5,
+      11.2,
+      14.5
+     ],
+     "wind_gusts_10m_max": [
+      22.5,
+      28.3,
+      38.5,
+      18.2,
+      15.5,
+      20.2,
+      25.8
+     ],
+     "wind_direction_10m_dominant": [
+      270,
+      225,
+      180,
+      315,
+      290,
+      250,
+      210
+     ],
+     "uv_index_max": [
+      3.2,
+      2.8,
+      1.5,
+      3.5,
+      4.0,
+      3.2,
+      2.5
+     ],
+     "snowfall_sum": [
+      0.0,
+      0.0,
+      0.5,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   "hourly": {
+    "properties": {
+     "periods": [
+      {
+       "startTime": "2026-09-25T13:00:00-04:00",
+       "endTime": "2026-09-25T14:00:00-04:00",
+       "temperature": 70
+      },
+      {
+       "startTime": "2026-09-25T15:00:00-04:00",
+       "temperature": 72,
+       "temperatureUnit": "F"
+      }
+     ]
+    }
+   },
+   "alerts": {
+    "features": [
+     {
+      "properties": {
+       "event": "Coastal Flood Advisory",
+       "severity": "Minor"
+      }
+     }
+    ]
+   },
+   "discussion": "AFD text yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "wpc": "Short range discussion.",
+   "spc": "",
+   "open_meteo": {
+    "timezone": "Europe/Paris",
+    "hourly": {
+     "time": [
+      "2026-09-25T20:00"
+     ],
+     "uv_index": [
+      0.5
+     ]
+    },
+    "hourly_units": {
+     "uv_index": ""
+    }
+   },
+   "location_names": [
+    "Home"
+   ],
+   "add_result": true,
+   "saved": [
+    {
+     "name": "Home",
+     "latitude": 40.1,
+     "longitude": -74.2,
+     "timezone": null,
+     "country_code": null,
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    {
+     "name": "Paris, France",
+     "latitude": 48.8566,
+     "longitude": 2.3522,
+     "timezone": null,
+     "country_code": "FR",
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    }
+   ],
+   "current_name": "Home"
+  },
+  "default": {
+   "lat": 39.97,
+   "lon": -74.8,
+   "name": "Lumberton, NJ"
+  },
+  "displayed_alerts": [
+   {
+    "title": "Coastal Flood Warning title",
+    "description": "Details",
+    "event": "Coastal Flood Warning",
+    "severity": "Severe",
+    "headline": "Warning shown in the app",
+    "expires": "2099-01-01T00:00:00+00:00"
+   },
+   {
+    "title": "Coastal Flood Advisory title",
+    "description": "Details",
+    "event": "Coastal Flood Advisory"
+   }
+  ],
+  "calls": [
+   {
+    "tool": "get_alerts",
+    "args": {
+     "location": "Lumberton, NJ"
+    },
+    "output": "Weather alerts for Lumberton, NJ:\nSource: NWS\n- Coastal Flood Advisory (Severity: Minor)\n  Sender: unknown\n  Effective: unknown\n  Onset: unknown\n  Expires: unknown\n  Ends: unknown\n\nAlerts currently displayed in the app for Lumberton, NJ:\nWeather alerts for Lumberton, NJ:\nSource: weather service\n- Coastal Flood Warning (Severity: Severe)\n  Sender: unknown\n  Effective: unknown\n  Onset: unknown\n  Expires: unknown\n  Ends: unknown\n  Warning shown in the app\n  Details\nThese app-displayed alerts were not returned by the live point lookup. Mention the discrepancy and do not claim they are currently verified.",
+    "host_calls": [
+     [
+      "alerts",
+      39.97,
+      -74.8
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "name": "displayed_alerts_live_failure",
+  "host": {
+   "geocode": {
+    "Paris": [
+     48.8566,
+     2.3522,
+     "Paris, France"
+    ],
+    "London, UK": [
+     51.5,
+     -0.12,
+     "London, United Kingdom"
+    ]
+   },
+   "suggest": {
+    "Springfield": [
+     "Springfield, Illinois",
+     "Springfield, Missouri"
+    ]
+   },
+   "current": {
+    "@context": [
+     "https://geojson.org/geojson-ld/geojson-context.jsonld",
+     {
+      "@version": "1.1",
+      "wx": "https://api.weather.gov/ontology#",
+      "s": "https://schema.org/",
+      "geo": "http://www.opengis.net/ont/geosparql#",
+      "unit": "http://codes.wmo.int/common/unit/",
+      "@vocab": "https://api.weather.gov/ontology#",
+      "geometry": {
+       "@id": "s:GeoCoordinates",
+       "@type": "geo:wktLiteral"
+      },
+      "city": "s:addressLocality",
+      "state": "s:addressRegion",
+      "distance": {
+       "@id": "s:Distance",
+       "@type": "s:QuantitativeValue"
+      },
+      "bearing": {
+       "@type": "s:QuantitativeValue"
+      },
+      "value": {
+       "@id": "s:value"
+      },
+      "unitCode": {
+       "@id": "s:unitCode",
+       "@type": "@id"
+      },
+      "forecastOffice": {
+       "@type": "@id"
+      },
+      "forecastGridData": {
+       "@type": "@id"
+      },
+      "publicZone": {
+       "@type": "@id"
+      },
+      "county": {
+       "@type": "@id"
+      }
+     }
+    ],
+    "id": "https://api.weather.gov/stations/KNYC/observations/2026-01-20T17:51:00+00:00",
+    "type": "Feature",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -73.98,
+      40.77
+     ]
+    },
+    "properties": {
+     "@id": "https://api.weather.gov/stations/KNYC/observations/2026-01-20T17:51:00+00:00",
+     "@type": "wx:ObservationStation",
+     "elevation": {
+      "unitCode": "wmoUnit:m",
+      "value": 27
+     },
+     "station": "https://api.weather.gov/stations/KNYC",
+     "stationId": "KNYC",
+     "stationName": "New York City, Central Park",
+     "timestamp": "2026-01-20T17:51:00+00:00",
+     "rawMessage": "KNYC 201751Z AUTO 28008G22KT 240V320 10SM CLR M07/M21 A3031 RMK AO2 SLP257 T10721206 11067 21089 58000",
+     "textDescription": "Clear",
+     "icon": "https://api.weather.gov/icons/land/day/skc?size=medium",
+     "presentWeather": [],
+     "temperature": {
+      "unitCode": "wmoUnit:degC",
+      "value": -7.2,
+      "qualityControl": "V"
+     },
+     "dewpoint": {
+      "unitCode": "wmoUnit:degC",
+      "value": null,
+      "qualityControl": "Z"
+     },
+     "windDirection": {
+      "unitCode": "wmoUnit:degree_(angle)",
+      "value": 280,
+      "qualityControl": "V"
+     },
+     "windSpeed": {
+      "unitCode": "wmoUnit:km_h-1",
+      "value": 14.76,
+      "qualityControl": "V"
+     },
+     "windGust": {
+      "unitCode": "wmoUnit:km_h-1",
+      "value": 40.68,
+      "qualityControl": "S"
+     },
+     "barometricPressure": {
+      "unitCode": "wmoUnit:Pa",
+      "value": 102640,
+      "qualityControl": "V"
+     },
+     "seaLevelPressure": {
+      "unitCode": "wmoUnit:Pa",
+      "value": 102570,
+      "qualityControl": "V"
+     },
+     "visibility": {
+      "unitCode": "wmoUnit:m",
+      "value": 16090,
+      "qualityControl": "C"
+     },
+     "maxTemperatureLast24Hours": {
+      "unitCode": "wmoUnit:degC",
+      "value": null
+     },
+     "minTemperatureLast24Hours": {
+      "unitCode": "wmoUnit:degC",
+      "value": null
+     },
+     "precipitationLastHour": {
+      "unitCode": "wmoUnit:mm",
+      "value": null,
+      "qualityControl": "Z"
+     },
+     "precipitationLast3Hours": {
+      "unitCode": "wmoUnit:mm",
+      "value": null,
+      "qualityControl": "Z"
+     },
+     "precipitationLast6Hours": {
+      "unitCode": "wmoUnit:mm",
+      "value": null,
+      "qualityControl": "Z"
+     },
+     "relativeHumidity": {
+      "unitCode": "wmoUnit:percent",
+      "value": null,
+      "qualityControl": "V"
+     },
+     "windChill": {
+      "unitCode": "wmoUnit:degC",
+      "value": -13.215182875945834,
+      "qualityControl": "V"
+     },
+     "heatIndex": {
+      "unitCode": "wmoUnit:degC",
+      "value": null,
+      "qualityControl": "V"
+     },
+     "cloudLayers": [
+      {
+       "base": {
+        "unitCode": "wmoUnit:m",
+        "value": null
+       },
+       "amount": "CLR"
+      }
+     ]
+    }
+   },
+   "forecast": {
+    "latitude": 40.710335,
+    "longitude": -73.99307,
+    "generationtime_ms": 0.145,
+    "utc_offset_seconds": -18000,
+    "timezone": "America/New_York",
+    "timezone_abbreviation": "EST",
+    "elevation": 10.0,
+    "daily_units": {
+     "time": "iso8601",
+     "weather_code": "wmo code",
+     "temperature_2m_max": "°F",
+     "temperature_2m_min": "°F",
+     "apparent_temperature_max": "°F",
+     "apparent_temperature_min": "°F",
+     "sunrise": "iso8601",
+     "sunset": "iso8601",
+     "precipitation_sum": "inch",
+     "precipitation_probability_max": "%",
+     "wind_speed_10m_max": "mp/h",
+     "wind_gusts_10m_max": "mp/h",
+     "wind_direction_10m_dominant": "°",
+     "uv_index_max": "",
+     "snowfall_sum": "inch"
+    },
+    "daily": {
+     "time": [
+      "2025-01-15",
+      "2025-01-16",
+      "2025-01-17",
+      "2025-01-18",
+      "2025-01-19",
+      "2025-01-20",
+      "2025-01-21"
+     ],
+     "weather_code": [
+      2,
+      3,
+      61,
+      1,
+      0,
+      2,
+      3
+     ],
+     "temperature_2m_max": [
+      48.5,
+      52.1,
+      45.2,
+      50.8,
+      55.3,
+      51.2,
+      49.8
+     ],
+     "temperature_2m_min": [
+      35.2,
+      38.5,
+      32.1,
+      36.8,
+      40.2,
+      37.5,
+      35.8
+     ],
+     "apparent_temperature_max": [
+      45.2,
+      49.5,
+      42.1,
+      48.2,
+      52.8,
+      48.5,
+      46.2
+     ],
+     "apparent_temperature_min": [
+      30.5,
+      34.2,
+      27.8,
+      32.5,
+      36.8,
+      33.2,
+      31.5
+     ],
+     "sunrise": [
+      "2025-01-15T07:15",
+      "2025-01-16T07:15",
+      "2025-01-17T07:14",
+      "2025-01-18T07:14",
+      "2025-01-19T07:13",
+      "2025-01-20T07:13",
+      "2025-01-21T07:12"
+     ],
+     "sunset": [
+      "2025-01-15T16:55",
+      "2025-01-16T16:56",
+      "2025-01-17T16:57",
+      "2025-01-18T16:58",
+      "2025-01-19T16:59",
+      "2025-01-20T17:00",
+      "2025-01-21T17:02"
+     ],
+     "precipitation_sum": [
+      0.0,
+      0.05,
+      0.35,
+      0.0,
+      0.0,
+      0.02,
+      0.08
+     ],
+     "precipitation_probability_max": [
+      10,
+      25,
+      75,
+      5,
+      0,
+      15,
+      30
+     ],
+     "wind_speed_10m_max": [
+      12.5,
+      15.8,
+      22.3,
+      10.2,
+      8.5,
+      11.2,
+      14.5
+     ],
+     "wind_gusts_10m_max": [
+      22.5,
+      28.3,
+      38.5,
+      18.2,
+      15.5,
+      20.2,
+      25.8
+     ],
+     "wind_direction_10m_dominant": [
+      270,
+      225,
+      180,
+      315,
+      290,
+      250,
+      210
+     ],
+     "uv_index_max": [
+      3.2,
+      2.8,
+      1.5,
+      3.5,
+      4.0,
+      3.2,
+      2.5
+     ],
+     "snowfall_sum": [
+      0.0,
+      0.0,
+      0.5,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   "hourly": {
+    "properties": {
+     "periods": [
+      {
+       "startTime": "2026-09-25T13:00:00-04:00",
+       "endTime": "2026-09-25T14:00:00-04:00",
+       "temperature": 70
+      },
+      {
+       "startTime": "2026-09-25T15:00:00-04:00",
+       "temperature": 72,
+       "temperatureUnit": "F"
+      }
+     ]
+    }
+   },
+   "alerts": {
+    "error": "down"
+   },
+   "discussion": "AFD text yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "wpc": "Short range discussion.",
+   "spc": "",
+   "open_meteo": {
+    "timezone": "Europe/Paris",
+    "hourly": {
+     "time": [
+      "2026-09-25T20:00"
+     ],
+     "uv_index": [
+      0.5
+     ]
+    },
+    "hourly_units": {
+     "uv_index": ""
+    }
+   },
+   "location_names": [
+    "Home"
+   ],
+   "add_result": true,
+   "saved": [
+    {
+     "name": "Home",
+     "latitude": 40.1,
+     "longitude": -74.2,
+     "timezone": null,
+     "country_code": null,
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    {
+     "name": "Paris, France",
+     "latitude": 48.8566,
+     "longitude": 2.3522,
+     "timezone": null,
+     "country_code": "FR",
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    }
+   ],
+   "current_name": "Home"
+  },
+  "default": {
+   "lat": 39.97,
+   "lon": -74.8,
+   "name": "Lumberton, NJ"
+  },
+  "displayed_alerts": [
+   {
+    "title": "Coastal Flood Advisory",
+    "description": "Advisory still shown",
+    "event": null,
+    "severity": "Moderate",
+    "headline": null
+   }
+  ],
+  "calls": [
+   {
+    "tool": "get_alerts",
+    "args": {
+     "location": "Lumberton, NJ"
+    },
+    "output": "Alerts currently displayed in the app for Lumberton, NJ:\nWeather alerts for Lumberton, NJ:\nSource: weather service\n- Coastal Flood Advisory (Severity: Moderate)\n  Sender: unknown\n  Effective: unknown\n  Onset: unknown\n  Expires: unknown\n  Ends: unknown\n  Advisory still shown\nLive alert lookup failed; current alert status is unknown.",
+    "host_calls": [
+     [
+      "alerts",
+      39.97,
+      -74.8
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "name": "nws_alerts",
+  "host": {
+   "geocode": {
+    "Paris": [
+     48.8566,
+     2.3522,
+     "Paris, France"
+    ],
+    "London, UK": [
+     51.5,
+     -0.12,
+     "London, United Kingdom"
+    ]
+   },
+   "suggest": {
+    "Springfield": [
+     "Springfield, Illinois",
+     "Springfield, Missouri"
+    ]
+   },
+   "current": {
+    "@context": [
+     "https://geojson.org/geojson-ld/geojson-context.jsonld",
+     {
+      "@version": "1.1",
+      "wx": "https://api.weather.gov/ontology#",
+      "s": "https://schema.org/",
+      "geo": "http://www.opengis.net/ont/geosparql#",
+      "unit": "http://codes.wmo.int/common/unit/",
+      "@vocab": "https://api.weather.gov/ontology#",
+      "geometry": {
+       "@id": "s:GeoCoordinates",
+       "@type": "geo:wktLiteral"
+      },
+      "city": "s:addressLocality",
+      "state": "s:addressRegion",
+      "distance": {
+       "@id": "s:Distance",
+       "@type": "s:QuantitativeValue"
+      },
+      "bearing": {
+       "@type": "s:QuantitativeValue"
+      },
+      "value": {
+       "@id": "s:value"
+      },
+      "unitCode": {
+       "@id": "s:unitCode",
+       "@type": "@id"
+      },
+      "forecastOffice": {
+       "@type": "@id"
+      },
+      "forecastGridData": {
+       "@type": "@id"
+      },
+      "publicZone": {
+       "@type": "@id"
+      },
+      "county": {
+       "@type": "@id"
+      }
+     }
+    ],
+    "id": "https://api.weather.gov/stations/KNYC/observations/2026-01-20T17:51:00+00:00",
+    "type": "Feature",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -73.98,
+      40.77
+     ]
+    },
+    "properties": {
+     "@id": "https://api.weather.gov/stations/KNYC/observations/2026-01-20T17:51:00+00:00",
+     "@type": "wx:ObservationStation",
+     "elevation": {
+      "unitCode": "wmoUnit:m",
+      "value": 27
+     },
+     "station": "https://api.weather.gov/stations/KNYC",
+     "stationId": "KNYC",
+     "stationName": "New York City, Central Park",
+     "timestamp": "2026-01-20T17:51:00+00:00",
+     "rawMessage": "KNYC 201751Z AUTO 28008G22KT 240V320 10SM CLR M07/M21 A3031 RMK AO2 SLP257 T10721206 11067 21089 58000",
+     "textDescription": "Clear",
+     "icon": "https://api.weather.gov/icons/land/day/skc?size=medium",
+     "presentWeather": [],
+     "temperature": {
+      "unitCode": "wmoUnit:degC",
+      "value": -7.2,
+      "qualityControl": "V"
+     },
+     "dewpoint": {
+      "unitCode": "wmoUnit:degC",
+      "value": null,
+      "qualityControl": "Z"
+     },
+     "windDirection": {
+      "unitCode": "wmoUnit:degree_(angle)",
+      "value": 280,
+      "qualityControl": "V"
+     },
+     "windSpeed": {
+      "unitCode": "wmoUnit:km_h-1",
+      "value": 14.76,
+      "qualityControl": "V"
+     },
+     "windGust": {
+      "unitCode": "wmoUnit:km_h-1",
+      "value": 40.68,
+      "qualityControl": "S"
+     },
+     "barometricPressure": {
+      "unitCode": "wmoUnit:Pa",
+      "value": 102640,
+      "qualityControl": "V"
+     },
+     "seaLevelPressure": {
+      "unitCode": "wmoUnit:Pa",
+      "value": 102570,
+      "qualityControl": "V"
+     },
+     "visibility": {
+      "unitCode": "wmoUnit:m",
+      "value": 16090,
+      "qualityControl": "C"
+     },
+     "maxTemperatureLast24Hours": {
+      "unitCode": "wmoUnit:degC",
+      "value": null
+     },
+     "minTemperatureLast24Hours": {
+      "unitCode": "wmoUnit:degC",
+      "value": null
+     },
+     "precipitationLastHour": {
+      "unitCode": "wmoUnit:mm",
+      "value": null,
+      "qualityControl": "Z"
+     },
+     "precipitationLast3Hours": {
+      "unitCode": "wmoUnit:mm",
+      "value": null,
+      "qualityControl": "Z"
+     },
+     "precipitationLast6Hours": {
+      "unitCode": "wmoUnit:mm",
+      "value": null,
+      "qualityControl": "Z"
+     },
+     "relativeHumidity": {
+      "unitCode": "wmoUnit:percent",
+      "value": null,
+      "qualityControl": "V"
+     },
+     "windChill": {
+      "unitCode": "wmoUnit:degC",
+      "value": -13.215182875945834,
+      "qualityControl": "V"
+     },
+     "heatIndex": {
+      "unitCode": "wmoUnit:degC",
+      "value": null,
+      "qualityControl": "V"
+     },
+     "cloudLayers": [
+      {
+       "base": {
+        "unitCode": "wmoUnit:m",
+        "value": null
+       },
+       "amount": "CLR"
+      }
+     ]
+    }
+   },
+   "forecast": {
+    "latitude": 40.710335,
+    "longitude": -73.99307,
+    "generationtime_ms": 0.145,
+    "utc_offset_seconds": -18000,
+    "timezone": "America/New_York",
+    "timezone_abbreviation": "EST",
+    "elevation": 10.0,
+    "daily_units": {
+     "time": "iso8601",
+     "weather_code": "wmo code",
+     "temperature_2m_max": "°F",
+     "temperature_2m_min": "°F",
+     "apparent_temperature_max": "°F",
+     "apparent_temperature_min": "°F",
+     "sunrise": "iso8601",
+     "sunset": "iso8601",
+     "precipitation_sum": "inch",
+     "precipitation_probability_max": "%",
+     "wind_speed_10m_max": "mp/h",
+     "wind_gusts_10m_max": "mp/h",
+     "wind_direction_10m_dominant": "°",
+     "uv_index_max": "",
+     "snowfall_sum": "inch"
+    },
+    "daily": {
+     "time": [
+      "2025-01-15",
+      "2025-01-16",
+      "2025-01-17",
+      "2025-01-18",
+      "2025-01-19",
+      "2025-01-20",
+      "2025-01-21"
+     ],
+     "weather_code": [
+      2,
+      3,
+      61,
+      1,
+      0,
+      2,
+      3
+     ],
+     "temperature_2m_max": [
+      48.5,
+      52.1,
+      45.2,
+      50.8,
+      55.3,
+      51.2,
+      49.8
+     ],
+     "temperature_2m_min": [
+      35.2,
+      38.5,
+      32.1,
+      36.8,
+      40.2,
+      37.5,
+      35.8
+     ],
+     "apparent_temperature_max": [
+      45.2,
+      49.5,
+      42.1,
+      48.2,
+      52.8,
+      48.5,
+      46.2
+     ],
+     "apparent_temperature_min": [
+      30.5,
+      34.2,
+      27.8,
+      32.5,
+      36.8,
+      33.2,
+      31.5
+     ],
+     "sunrise": [
+      "2025-01-15T07:15",
+      "2025-01-16T07:15",
+      "2025-01-17T07:14",
+      "2025-01-18T07:14",
+      "2025-01-19T07:13",
+      "2025-01-20T07:13",
+      "2025-01-21T07:12"
+     ],
+     "sunset": [
+      "2025-01-15T16:55",
+      "2025-01-16T16:56",
+      "2025-01-17T16:57",
+      "2025-01-18T16:58",
+      "2025-01-19T16:59",
+      "2025-01-20T17:00",
+      "2025-01-21T17:02"
+     ],
+     "precipitation_sum": [
+      0.0,
+      0.05,
+      0.35,
+      0.0,
+      0.0,
+      0.02,
+      0.08
+     ],
+     "precipitation_probability_max": [
+      10,
+      25,
+      75,
+      5,
+      0,
+      15,
+      30
+     ],
+     "wind_speed_10m_max": [
+      12.5,
+      15.8,
+      22.3,
+      10.2,
+      8.5,
+      11.2,
+      14.5
+     ],
+     "wind_gusts_10m_max": [
+      22.5,
+      28.3,
+      38.5,
+      18.2,
+      15.5,
+      20.2,
+      25.8
+     ],
+     "wind_direction_10m_dominant": [
+      270,
+      225,
+      180,
+      315,
+      290,
+      250,
+      210
+     ],
+     "uv_index_max": [
+      3.2,
+      2.8,
+      1.5,
+      3.5,
+      4.0,
+      3.2,
+      2.5
+     ],
+     "snowfall_sum": [
+      0.0,
+      0.0,
+      0.5,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   "hourly": {
+    "properties": {
+     "periods": [
+      {
+       "startTime": "2026-09-25T13:00:00-04:00",
+       "endTime": "2026-09-25T14:00:00-04:00",
+       "temperature": 70
+      },
+      {
+       "startTime": "2026-09-25T15:00:00-04:00",
+       "temperature": 72,
+       "temperatureUnit": "F"
+      }
+     ]
+    }
+   },
+   "alerts": {
+    "@context": {
+     "@version": "1.1"
+    },
+    "type": "FeatureCollection",
+    "features": [],
+    "title": "Current watches, warnings, and advisories for 40.7128 N, 74.006 W",
+    "updated": "2026-01-19T05:02:08+00:00"
+   },
+   "discussion": "AFD text yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "wpc": "Short range discussion.",
+   "spc": "",
+   "open_meteo": {
+    "timezone": "Europe/Paris",
+    "hourly": {
+     "time": [
+      "2026-09-25T20:00"
+     ],
+     "uv_index": [
+      0.5
+     ]
+    },
+    "hourly_units": {
+     "uv_index": ""
+    }
+   },
+   "location_names": [
+    "Home"
+   ],
+   "add_result": true,
+   "saved": [
+    {
+     "name": "Home",
+     "latitude": 40.1,
+     "longitude": -74.2,
+     "timezone": null,
+     "country_code": null,
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    {
+     "name": "Paris, France",
+     "latitude": 48.8566,
+     "longitude": 2.3522,
+     "timezone": null,
+     "country_code": "FR",
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    }
+   ],
+   "current_name": "Home"
+  },
+  "default": {
+   "lat": 39.97,
+   "lon": -74.8,
+   "name": "Lumberton, NJ"
+  },
+  "displayed_alerts": [],
+  "calls": [
+   {
+    "tool": "get_alerts",
+    "args": {
+     "location": "Lumberton, NJ"
+    },
+    "output": "Weather alerts for Lumberton, NJ:\nSource: NWS\nNo active alerts.",
+    "host_calls": [
+     [
+      "alerts",
+      39.97,
+      -74.8
+     ]
+    ]
+   }
+  ]
+ }
+]

@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 
 import wx
 
+from ...ai_provider import ai_request_error
 from ...ai_settings import explainer_options
 from ...screen_reader import ScreenReaderAnnouncer
 from .explanation_generation import (
@@ -157,10 +158,12 @@ class ExplanationDialog(wx.Dialog):
         self.timestamp_label.SetLabel("Regenerating...")
 
         def _do_regenerate():
+            provider = "openrouter"
             try:
                 import asyncio
 
                 settings = self.app.config_manager.get_settings()
+                provider = getattr(settings, "ai_provider", provider)
                 from ...ai_explainer import AIExplainer
 
                 explainer = AIExplainer(
@@ -199,7 +202,7 @@ class ExplanationDialog(wx.Dialog):
                 wx.CallAfter(self._on_regenerate_complete, result)
 
             except Exception as e:
-                wx.CallAfter(self._on_regenerate_error, str(e))
+                wx.CallAfter(self._on_regenerate_error, str(ai_request_error(e, provider)))
 
         threading.Thread(target=_do_regenerate, daemon=True).start()
 
@@ -383,6 +386,7 @@ def show_explanation_dialog(
 
     def generate_explanation():
         """Generate explanation in background thread."""
+        provider = "openrouter"
         try:
             import asyncio
 
@@ -390,6 +394,7 @@ def show_explanation_dialog(
 
             # Get AI settings
             settings = app.config_manager.get_settings()
+            provider = getattr(settings, "ai_provider", provider)
 
             # Create explainer with custom prompts from settings
             explainer = AIExplainer(
@@ -433,8 +438,8 @@ def show_explanation_dialog(
 
         except Exception as e:
             if not state["cancelled"]:
-                wx.CallAfter(_show_error, f"Unable to generate explanation.\n\nError: {e}")
-            logger.error(f"Unexpected error generating AI explanation: {e}", exc_info=True)
+                wx.CallAfter(_show_error, str(ai_request_error(e, provider)))
+            logger.error("Unexpected AI explanation failure: %s", type(e).__name__)
 
     def _show_result(result):
         """Show the explanation result."""

@@ -1,0 +1,772 @@
+{
+  "settings": [
+    {
+      "date_format": "iso",
+      "time_format_12hour": true
+    },
+    {
+      "date_format": "iso",
+      "time_format_12hour": false
+    },
+    {
+      "date_format": "us_short",
+      "time_format_12hour": true
+    },
+    {
+      "date_format": "us_long",
+      "time_format_12hour": true
+    },
+    {
+      "date_format": "eu",
+      "time_format_12hour": false
+    },
+    {
+      "date_format": "bogus",
+      "time_format_12hour": true
+    }
+  ],
+  "alerts": [
+    {
+      "alert": {
+        "title": "Frost Advisory issued April 18 at 2:10PM EDT",
+        "description": "* WHAT...Temperatures as low as 30 will result in frost\nformation.\n\n* WHERE...Portions of southeast Michigan.\n\n* WHEN...From 2 AM to 10 AM EDT Saturday.",
+        "severity": "Minor",
+        "urgency": "Expected",
+        "certainty": "Likely",
+        "event": "Frost Advisory",
+        "headline": "Frost Advisory issued April 18 at 2:10PM EDT until April 19 at 10:00AM EDT",
+        "instruction": "Take steps now to protect tender plants from the cold.",
+        "onset": null,
+        "expires": "2026-04-19T10:00:00-04:00",
+        "sent": "2026-04-18T14:10:00-04:00",
+        "effective": null,
+        "areas": [
+          "Wayne",
+          "Oakland"
+        ],
+        "references": [],
+        "id": "urn:oid:frost-1",
+        "source": null,
+        "message_type": null,
+        "affected_zones": [],
+        "same_codes": [],
+        "same_event_codes": []
+      },
+      "title": "Alert: Frost Advisory",
+      "separate_controls": [
+        {
+          "kind": "label",
+          "label": "Subject:",
+          "bold": true
+        },
+        {
+          "kind": "text",
+          "name": "Subject with alert headline",
+          "value": "Frost Advisory issued April 18 at 2:10PM EDT until April 19 at 10:00AM EDT"
+        },
+        {
+          "kind": "label",
+          "label": "Alert Info:",
+          "bold": true
+        },
+        {
+          "kind": "text",
+          "name": "Alert information with severity, urgency, and certainty",
+          "value": "Severity: Minor, Urgency: Expected, Certainty: Likely"
+        },
+        {
+          "kind": "label",
+          "label": "Details:",
+          "bold": true
+        },
+        {
+          "kind": "text",
+          "name": "Alert details",
+          "value": "* WHAT...Temperatures as low as 30 will result in frost\nformation.\n\n* WHERE...Portions of southeast Michigan.\n\n* WHEN...From 2 AM to 10 AM EDT Saturday."
+        },
+        {
+          "kind": "label",
+          "label": "Instructions:",
+          "bold": true
+        },
+        {
+          "kind": "text",
+          "name": "Instructions",
+          "value": "Take steps now to protect tender plants from the cold."
+        },
+        {
+          "kind": "button",
+          "id": 5032,
+          "label": "Cop&y to clipboard",
+          "name": "Copy alert text to clipboard"
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "&Close",
+          "name": "button"
+        }
+      ],
+      "separate_focus": "Subject with alert headline",
+      "combined_controls": [
+        {
+          "kind": "label",
+          "label": "Alert:",
+          "bold": true
+        },
+        {
+          "kind": "text",
+          "name": "Full alert text",
+          "value": "Frost Advisory issued April 18 at 2:10PM EDT until April 19 at 10:00AM EDT\n\n* WHAT...Temperatures as low as 30 will result in frost\nformation.\n\n* WHERE...Portions of southeast Michigan.\n\n* WHEN...From 2 AM to 10 AM EDT Saturday.\n\nTake steps now to protect tender plants from the cold.\n\nIssued: 2026-04-18 2:10 PM\nExpires: 2026-04-19 10:00 AM"
+        },
+        {
+          "kind": "button",
+          "id": 5032,
+          "label": "Cop&y to clipboard",
+          "name": "Copy alert text to clipboard"
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "&Close",
+          "name": "button"
+        }
+      ],
+      "combined_focus": "Full alert text",
+      "subject": "Frost Advisory issued April 18 at 2:10PM EDT until April 19 at 10:00AM EDT",
+      "info": "Severity: Minor, Urgency: Expected, Certainty: Likely",
+      "combined": [
+        "Frost Advisory issued April 18 at 2:10PM EDT until April 19 at 10:00AM EDT\n\n* WHAT...Temperatures as low as 30 will result in frost\nformation.\n\n* WHERE...Portions of southeast Michigan.\n\n* WHEN...From 2 AM to 10 AM EDT Saturday.\n\nTake steps now to protect tender plants from the cold.\n\nIssued: 2026-04-18 2:10 PM\nExpires: 2026-04-19 10:00 AM",
+        "Frost Advisory issued April 18 at 2:10PM EDT until April 19 at 10:00AM EDT\n\n* WHAT...Temperatures as low as 30 will result in frost\nformation.\n\n* WHERE...Portions of southeast Michigan.\n\n* WHEN...From 2 AM to 10 AM EDT Saturday.\n\nTake steps now to protect tender plants from the cold.\n\nIssued: 2026-04-18 14:10\nExpires: 2026-04-19 10:00",
+        "Frost Advisory issued April 18 at 2:10PM EDT until April 19 at 10:00AM EDT\n\n* WHAT...Temperatures as low as 30 will result in frost\nformation.\n\n* WHERE...Portions of southeast Michigan.\n\n* WHEN...From 2 AM to 10 AM EDT Saturday.\n\nTake steps now to protect tender plants from the cold.\n\nIssued: 04/18/2026 2:10 PM\nExpires: 04/19/2026 10:00 AM",
+        "Frost Advisory issued April 18 at 2:10PM EDT until April 19 at 10:00AM EDT\n\n* WHAT...Temperatures as low as 30 will result in frost\nformation.\n\n* WHERE...Portions of southeast Michigan.\n\n* WHEN...From 2 AM to 10 AM EDT Saturday.\n\nTake steps now to protect tender plants from the cold.\n\nIssued: April 18, 2026 2:10 PM\nExpires: April 19, 2026 10:00 AM",
+        "Frost Advisory issued April 18 at 2:10PM EDT until April 19 at 10:00AM EDT\n\n* WHAT...Temperatures as low as 30 will result in frost\nformation.\n\n* WHERE...Portions of southeast Michigan.\n\n* WHEN...From 2 AM to 10 AM EDT Saturday.\n\nTake steps now to protect tender plants from the cold.\n\nIssued: 18/04/2026 14:10\nExpires: 19/04/2026 10:00",
+        "Frost Advisory issued April 18 at 2:10PM EDT until April 19 at 10:00AM EDT\n\n* WHAT...Temperatures as low as 30 will result in frost\nformation.\n\n* WHERE...Portions of southeast Michigan.\n\n* WHEN...From 2 AM to 10 AM EDT Saturday.\n\nTake steps now to protect tender plants from the cold.\n\nIssued: 2026-04-18 2:10 PM\nExpires: 2026-04-19 10:00 AM"
+      ],
+      "copy": [
+        "Frost Advisory issued April 18 at 2:10PM EDT until April 19 at 10:00AM EDT\n\n* WHAT...Temperatures as low as 30 will result in frost\nformation.\n\n* WHERE...Portions of southeast Michigan.\n\n* WHEN...From 2 AM to 10 AM EDT Saturday.\n\nTake steps now to protect tender plants from the cold.\n\nIssued: 2026-04-18 2:10 PM\nExpires: 2026-04-19 10:00 AM",
+        "Frost Advisory issued April 18 at 2:10PM EDT until April 19 at 10:00AM EDT\n\n* WHAT...Temperatures as low as 30 will result in frost\nformation.\n\n* WHERE...Portions of southeast Michigan.\n\n* WHEN...From 2 AM to 10 AM EDT Saturday.\n\nTake steps now to protect tender plants from the cold.\n\nIssued: 2026-04-18 14:10\nExpires: 2026-04-19 10:00",
+        "Frost Advisory issued April 18 at 2:10PM EDT until April 19 at 10:00AM EDT\n\n* WHAT...Temperatures as low as 30 will result in frost\nformation.\n\n* WHERE...Portions of southeast Michigan.\n\n* WHEN...From 2 AM to 10 AM EDT Saturday.\n\nTake steps now to protect tender plants from the cold.\n\nIssued: 04/18/2026 2:10 PM\nExpires: 04/19/2026 10:00 AM",
+        "Frost Advisory issued April 18 at 2:10PM EDT until April 19 at 10:00AM EDT\n\n* WHAT...Temperatures as low as 30 will result in frost\nformation.\n\n* WHERE...Portions of southeast Michigan.\n\n* WHEN...From 2 AM to 10 AM EDT Saturday.\n\nTake steps now to protect tender plants from the cold.\n\nIssued: April 18, 2026 2:10 PM\nExpires: April 19, 2026 10:00 AM",
+        "Frost Advisory issued April 18 at 2:10PM EDT until April 19 at 10:00AM EDT\n\n* WHAT...Temperatures as low as 30 will result in frost\nformation.\n\n* WHERE...Portions of southeast Michigan.\n\n* WHEN...From 2 AM to 10 AM EDT Saturday.\n\nTake steps now to protect tender plants from the cold.\n\nIssued: 18/04/2026 14:10\nExpires: 19/04/2026 10:00",
+        "Frost Advisory issued April 18 at 2:10PM EDT until April 19 at 10:00AM EDT\n\n* WHAT...Temperatures as low as 30 will result in frost\nformation.\n\n* WHERE...Portions of southeast Michigan.\n\n* WHEN...From 2 AM to 10 AM EDT Saturday.\n\nTake steps now to protect tender plants from the cold.\n\nIssued: 2026-04-18 2:10 PM\nExpires: 2026-04-19 10:00 AM"
+      ]
+    },
+    {
+      "alert": {
+        "title": "Wind Advisory",
+        "description": "West winds 25 to 35 mph with gusts up to 50 mph.",
+        "severity": "Moderate",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Wind Advisory",
+        "headline": null,
+        "instruction": null,
+        "onset": null,
+        "expires": null,
+        "sent": "2026-04-08T09:05:00-04:00",
+        "effective": null,
+        "areas": [],
+        "references": [],
+        "id": null,
+        "source": null,
+        "message_type": null,
+        "affected_zones": [],
+        "same_codes": [],
+        "same_event_codes": []
+      },
+      "title": "Alert: Wind Advisory",
+      "separate_controls": [
+        {
+          "kind": "label",
+          "label": "Subject:",
+          "bold": true
+        },
+        {
+          "kind": "text",
+          "name": "Subject with alert headline",
+          "value": "Wind Advisory"
+        },
+        {
+          "kind": "label",
+          "label": "Alert Info:",
+          "bold": true
+        },
+        {
+          "kind": "text",
+          "name": "Alert information with severity, urgency, and certainty",
+          "value": "Severity: Moderate, Urgency: Immediate, Certainty: Observed"
+        },
+        {
+          "kind": "label",
+          "label": "Details:",
+          "bold": true
+        },
+        {
+          "kind": "text",
+          "name": "Alert details",
+          "value": "West winds 25 to 35 mph with gusts up to 50 mph."
+        },
+        {
+          "kind": "button",
+          "id": 5032,
+          "label": "Cop&y to clipboard",
+          "name": "Copy alert text to clipboard"
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "&Close",
+          "name": "button"
+        }
+      ],
+      "separate_focus": "Subject with alert headline",
+      "combined_controls": [
+        {
+          "kind": "label",
+          "label": "Alert:",
+          "bold": true
+        },
+        {
+          "kind": "text",
+          "name": "Full alert text",
+          "value": "Wind Advisory\n\nWest winds 25 to 35 mph with gusts up to 50 mph.\n\nIssued: 2026-04-08 9:05 AM"
+        },
+        {
+          "kind": "button",
+          "id": 5032,
+          "label": "Cop&y to clipboard",
+          "name": "Copy alert text to clipboard"
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "&Close",
+          "name": "button"
+        }
+      ],
+      "combined_focus": "Full alert text",
+      "subject": "Wind Advisory",
+      "info": "Severity: Moderate, Urgency: Immediate, Certainty: Observed",
+      "combined": [
+        "Wind Advisory\n\nWest winds 25 to 35 mph with gusts up to 50 mph.\n\nIssued: 2026-04-08 9:05 AM",
+        "Wind Advisory\n\nWest winds 25 to 35 mph with gusts up to 50 mph.\n\nIssued: 2026-04-08 09:05",
+        "Wind Advisory\n\nWest winds 25 to 35 mph with gusts up to 50 mph.\n\nIssued: 04/08/2026 9:05 AM",
+        "Wind Advisory\n\nWest winds 25 to 35 mph with gusts up to 50 mph.\n\nIssued: April 08, 2026 9:05 AM",
+        "Wind Advisory\n\nWest winds 25 to 35 mph with gusts up to 50 mph.\n\nIssued: 08/04/2026 09:05",
+        "Wind Advisory\n\nWest winds 25 to 35 mph with gusts up to 50 mph.\n\nIssued: 2026-04-08 9:05 AM"
+      ],
+      "copy": [
+        "Wind Advisory\n\nWest winds 25 to 35 mph with gusts up to 50 mph.\n\nIssued: 2026-04-08 9:05 AM",
+        "Wind Advisory\n\nWest winds 25 to 35 mph with gusts up to 50 mph.\n\nIssued: 2026-04-08 09:05",
+        "Wind Advisory\n\nWest winds 25 to 35 mph with gusts up to 50 mph.\n\nIssued: 04/08/2026 9:05 AM",
+        "Wind Advisory\n\nWest winds 25 to 35 mph with gusts up to 50 mph.\n\nIssued: April 08, 2026 9:05 AM",
+        "Wind Advisory\n\nWest winds 25 to 35 mph with gusts up to 50 mph.\n\nIssued: 08/04/2026 09:05",
+        "Wind Advisory\n\nWest winds 25 to 35 mph with gusts up to 50 mph.\n\nIssued: 2026-04-08 9:05 AM"
+      ]
+    },
+    {
+      "alert": {
+        "title": "Untitled",
+        "description": "",
+        "severity": "Unknown",
+        "urgency": "Unknown",
+        "certainty": "Unknown",
+        "event": null,
+        "headline": null,
+        "instruction": null,
+        "onset": null,
+        "expires": null,
+        "sent": null,
+        "effective": null,
+        "areas": [],
+        "references": [],
+        "id": null,
+        "source": null,
+        "message_type": null,
+        "affected_zones": [],
+        "same_codes": [],
+        "same_event_codes": []
+      },
+      "title": "Alert: None",
+      "separate_controls": [
+        {
+          "kind": "label",
+          "label": "Subject:",
+          "bold": true
+        },
+        {
+          "kind": "text",
+          "name": "Subject with alert headline",
+          "value": "Weather Alert"
+        },
+        {
+          "kind": "label",
+          "label": "Alert Info:",
+          "bold": true
+        },
+        {
+          "kind": "text",
+          "name": "Alert information with severity, urgency, and certainty",
+          "value": "Severity: Unknown, Urgency: Unknown, Certainty: Unknown"
+        },
+        {
+          "kind": "button",
+          "id": 5032,
+          "label": "Cop&y to clipboard",
+          "name": "Copy alert text to clipboard"
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "&Close",
+          "name": "button"
+        }
+      ],
+      "separate_focus": "Subject with alert headline",
+      "combined_controls": [
+        {
+          "kind": "label",
+          "label": "Alert:",
+          "bold": true
+        },
+        {
+          "kind": "text",
+          "name": "Full alert text",
+          "value": "Weather Alert"
+        },
+        {
+          "kind": "button",
+          "id": 5032,
+          "label": "Cop&y to clipboard",
+          "name": "Copy alert text to clipboard"
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "&Close",
+          "name": "button"
+        }
+      ],
+      "combined_focus": "Full alert text",
+      "subject": "Weather Alert",
+      "info": "Severity: Unknown, Urgency: Unknown, Certainty: Unknown",
+      "combined": [
+        "Weather Alert",
+        "Weather Alert",
+        "Weather Alert",
+        "Weather Alert",
+        "Weather Alert",
+        "Weather Alert"
+      ],
+      "copy": [
+        "Weather Alert",
+        "Weather Alert",
+        "Weather Alert",
+        "Weather Alert",
+        "Weather Alert",
+        "Weather Alert"
+      ]
+    },
+    {
+      "alert": {
+        "title": "t",
+        "description": "",
+        "severity": "",
+        "urgency": "",
+        "certainty": "",
+        "event": "Special Weather Statement",
+        "headline": "",
+        "instruction": "",
+        "onset": null,
+        "expires": "2026-12-31T00:05:00+00:00",
+        "sent": null,
+        "effective": null,
+        "areas": [],
+        "references": [],
+        "id": null,
+        "source": null,
+        "message_type": null,
+        "affected_zones": [],
+        "same_codes": [],
+        "same_event_codes": []
+      },
+      "title": "Alert: Special Weather Statement",
+      "separate_controls": [
+        {
+          "kind": "label",
+          "label": "Subject:",
+          "bold": true
+        },
+        {
+          "kind": "text",
+          "name": "Subject with alert headline",
+          "value": "Special Weather Statement"
+        },
+        {
+          "kind": "button",
+          "id": 5032,
+          "label": "Cop&y to clipboard",
+          "name": "Copy alert text to clipboard"
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "&Close",
+          "name": "button"
+        }
+      ],
+      "separate_focus": "Subject with alert headline",
+      "combined_controls": [
+        {
+          "kind": "label",
+          "label": "Alert:",
+          "bold": true
+        },
+        {
+          "kind": "text",
+          "name": "Full alert text",
+          "value": "Special Weather Statement\n\nExpires: 2026-12-31 12:05 AM"
+        },
+        {
+          "kind": "button",
+          "id": 5032,
+          "label": "Cop&y to clipboard",
+          "name": "Copy alert text to clipboard"
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "&Close",
+          "name": "button"
+        }
+      ],
+      "combined_focus": "Full alert text",
+      "subject": "Special Weather Statement",
+      "info": "",
+      "combined": [
+        "Special Weather Statement\n\nExpires: 2026-12-31 12:05 AM",
+        "Special Weather Statement\n\nExpires: 2026-12-31 00:05",
+        "Special Weather Statement\n\nExpires: 12/31/2026 12:05 AM",
+        "Special Weather Statement\n\nExpires: December 31, 2026 12:05 AM",
+        "Special Weather Statement\n\nExpires: 31/12/2026 00:05",
+        "Special Weather Statement\n\nExpires: 2026-12-31 12:05 AM"
+      ],
+      "copy": [
+        "Special Weather Statement\n\nExpires: 2026-12-31 12:05 AM",
+        "Special Weather Statement\n\nExpires: 2026-12-31 00:05",
+        "Special Weather Statement\n\nExpires: 12/31/2026 12:05 AM",
+        "Special Weather Statement\n\nExpires: December 31, 2026 12:05 AM",
+        "Special Weather Statement\n\nExpires: 31/12/2026 00:05",
+        "Special Weather Statement\n\nExpires: 2026-12-31 12:05 AM"
+      ]
+    },
+    {
+      "alert": {
+        "title": "Heat Advisory",
+        "description": "",
+        "severity": "Severe",
+        "urgency": "",
+        "certainty": "Possible",
+        "event": "",
+        "headline": "Heat Advisory until 8 PM",
+        "instruction": "Drink plenty of fluids.\nStay in an air-conditioned room.",
+        "onset": null,
+        "expires": "2026-07-05T00:00:00+05:30",
+        "sent": "2026-07-04T12:30:00+00:00",
+        "effective": null,
+        "areas": [],
+        "references": [],
+        "id": null,
+        "source": null,
+        "message_type": null,
+        "affected_zones": [],
+        "same_codes": [],
+        "same_event_codes": []
+      },
+      "title": "Alert: ",
+      "separate_controls": [
+        {
+          "kind": "label",
+          "label": "Subject:",
+          "bold": true
+        },
+        {
+          "kind": "text",
+          "name": "Subject with alert headline",
+          "value": "Heat Advisory until 8 PM"
+        },
+        {
+          "kind": "label",
+          "label": "Alert Info:",
+          "bold": true
+        },
+        {
+          "kind": "text",
+          "name": "Alert information with severity, urgency, and certainty",
+          "value": "Severity: Severe, Certainty: Possible"
+        },
+        {
+          "kind": "label",
+          "label": "Instructions:",
+          "bold": true
+        },
+        {
+          "kind": "text",
+          "name": "Instructions",
+          "value": "Drink plenty of fluids.\nStay in an air-conditioned room."
+        },
+        {
+          "kind": "button",
+          "id": 5032,
+          "label": "Cop&y to clipboard",
+          "name": "Copy alert text to clipboard"
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "&Close",
+          "name": "button"
+        }
+      ],
+      "separate_focus": "Subject with alert headline",
+      "combined_controls": [
+        {
+          "kind": "label",
+          "label": "Alert:",
+          "bold": true
+        },
+        {
+          "kind": "text",
+          "name": "Full alert text",
+          "value": "Heat Advisory until 8 PM\n\nDrink plenty of fluids.\nStay in an air-conditioned room.\n\nIssued: 2026-07-04 12:30 PM\nExpires: 2026-07-05 12:00 AM"
+        },
+        {
+          "kind": "button",
+          "id": 5032,
+          "label": "Cop&y to clipboard",
+          "name": "Copy alert text to clipboard"
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "&Close",
+          "name": "button"
+        }
+      ],
+      "combined_focus": "Full alert text",
+      "subject": "Heat Advisory until 8 PM",
+      "info": "Severity: Severe, Certainty: Possible",
+      "combined": [
+        "Heat Advisory until 8 PM\n\nDrink plenty of fluids.\nStay in an air-conditioned room.\n\nIssued: 2026-07-04 12:30 PM\nExpires: 2026-07-05 12:00 AM",
+        "Heat Advisory until 8 PM\n\nDrink plenty of fluids.\nStay in an air-conditioned room.\n\nIssued: 2026-07-04 12:30\nExpires: 2026-07-05 00:00",
+        "Heat Advisory until 8 PM\n\nDrink plenty of fluids.\nStay in an air-conditioned room.\n\nIssued: 07/04/2026 12:30 PM\nExpires: 07/05/2026 12:00 AM",
+        "Heat Advisory until 8 PM\n\nDrink plenty of fluids.\nStay in an air-conditioned room.\n\nIssued: July 04, 2026 12:30 PM\nExpires: July 05, 2026 12:00 AM",
+        "Heat Advisory until 8 PM\n\nDrink plenty of fluids.\nStay in an air-conditioned room.\n\nIssued: 04/07/2026 12:30\nExpires: 05/07/2026 00:00",
+        "Heat Advisory until 8 PM\n\nDrink plenty of fluids.\nStay in an air-conditioned room.\n\nIssued: 2026-07-04 12:30 PM\nExpires: 2026-07-05 12:00 AM"
+      ],
+      "copy": [
+        "Heat Advisory until 8 PM\n\nDrink plenty of fluids.\nStay in an air-conditioned room.\n\nIssued: 2026-07-04 12:30 PM\nExpires: 2026-07-05 12:00 AM",
+        "Heat Advisory until 8 PM\n\nDrink plenty of fluids.\nStay in an air-conditioned room.\n\nIssued: 2026-07-04 12:30\nExpires: 2026-07-05 00:00",
+        "Heat Advisory until 8 PM\n\nDrink plenty of fluids.\nStay in an air-conditioned room.\n\nIssued: 07/04/2026 12:30 PM\nExpires: 07/05/2026 12:00 AM",
+        "Heat Advisory until 8 PM\n\nDrink plenty of fluids.\nStay in an air-conditioned room.\n\nIssued: July 04, 2026 12:30 PM\nExpires: July 05, 2026 12:00 AM",
+        "Heat Advisory until 8 PM\n\nDrink plenty of fluids.\nStay in an air-conditioned room.\n\nIssued: 04/07/2026 12:30\nExpires: 05/07/2026 00:00",
+        "Heat Advisory until 8 PM\n\nDrink plenty of fluids.\nStay in an air-conditioned room.\n\nIssued: 2026-07-04 12:30 PM\nExpires: 2026-07-05 12:00 AM"
+      ]
+    },
+    {
+      "alert": {
+        "title": "Avertissement",
+        "description": "Pluie verglaçante — prudence sur les routes.",
+        "severity": "Moderate",
+        "urgency": "Unknown",
+        "certainty": "Unknown",
+        "event": "Avertissement de pluie verglaçante",
+        "headline": "Pluie verglaçante prévue cette nuit",
+        "instruction": null,
+        "onset": null,
+        "expires": null,
+        "sent": null,
+        "effective": null,
+        "areas": [],
+        "references": [],
+        "id": null,
+        "source": null,
+        "message_type": null,
+        "affected_zones": [],
+        "same_codes": [],
+        "same_event_codes": []
+      },
+      "title": "Alert: Avertissement de pluie verglaçante",
+      "separate_controls": [
+        {
+          "kind": "label",
+          "label": "Subject:",
+          "bold": true
+        },
+        {
+          "kind": "text",
+          "name": "Subject with alert headline",
+          "value": "Pluie verglaçante prévue cette nuit"
+        },
+        {
+          "kind": "label",
+          "label": "Alert Info:",
+          "bold": true
+        },
+        {
+          "kind": "text",
+          "name": "Alert information with severity, urgency, and certainty",
+          "value": "Severity: Moderate, Urgency: Unknown, Certainty: Unknown"
+        },
+        {
+          "kind": "label",
+          "label": "Details:",
+          "bold": true
+        },
+        {
+          "kind": "text",
+          "name": "Alert details",
+          "value": "Pluie verglaçante — prudence sur les routes."
+        },
+        {
+          "kind": "button",
+          "id": 5032,
+          "label": "Cop&y to clipboard",
+          "name": "Copy alert text to clipboard"
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "&Close",
+          "name": "button"
+        }
+      ],
+      "separate_focus": "Subject with alert headline",
+      "combined_controls": [
+        {
+          "kind": "label",
+          "label": "Alert:",
+          "bold": true
+        },
+        {
+          "kind": "text",
+          "name": "Full alert text",
+          "value": "Pluie verglaçante prévue cette nuit\n\nPluie verglaçante — prudence sur les routes."
+        },
+        {
+          "kind": "button",
+          "id": 5032,
+          "label": "Cop&y to clipboard",
+          "name": "Copy alert text to clipboard"
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "&Close",
+          "name": "button"
+        }
+      ],
+      "combined_focus": "Full alert text",
+      "subject": "Pluie verglaçante prévue cette nuit",
+      "info": "Severity: Moderate, Urgency: Unknown, Certainty: Unknown",
+      "combined": [
+        "Pluie verglaçante prévue cette nuit\n\nPluie verglaçante — prudence sur les routes.",
+        "Pluie verglaçante prévue cette nuit\n\nPluie verglaçante — prudence sur les routes.",
+        "Pluie verglaçante prévue cette nuit\n\nPluie verglaçante — prudence sur les routes.",
+        "Pluie verglaçante prévue cette nuit\n\nPluie verglaçante — prudence sur les routes.",
+        "Pluie verglaçante prévue cette nuit\n\nPluie verglaçante — prudence sur les routes.",
+        "Pluie verglaçante prévue cette nuit\n\nPluie verglaçante — prudence sur les routes."
+      ],
+      "copy": [
+        "Pluie verglaçante prévue cette nuit\n\nPluie verglaçante — prudence sur les routes.",
+        "Pluie verglaçante prévue cette nuit\n\nPluie verglaçante — prudence sur les routes.",
+        "Pluie verglaçante prévue cette nuit\n\nPluie verglaçante — prudence sur les routes.",
+        "Pluie verglaçante prévue cette nuit\n\nPluie verglaçante — prudence sur les routes.",
+        "Pluie verglaçante prévue cette nuit\n\nPluie verglaçante — prudence sur les routes.",
+        "Pluie verglaçante prévue cette nuit\n\nPluie verglaçante — prudence sur les routes."
+      ]
+    }
+  ],
+  "summaries": [
+    {
+      "alerts": [
+        0,
+        1
+      ],
+      "title": "New Weather Alerts",
+      "controls": [
+        {
+          "kind": "label",
+          "label": "Multiple new alerts arrived in this update. Review the summaries below.",
+          "bold": false
+        },
+        {
+          "kind": "text",
+          "name": "New alert summaries",
+          "value": "1. Frost Advisory issued April 18 at 2:10PM EDT until April 19 at 10:00AM EDT\nSeverity: Minor\nUrgency: Expected\nCertainty: Likely\nDetails: * WHAT...Temperatures as low as 30 will result in frost\nformation.\n\n* WHERE...Portions of southeast Michigan.\n\n* WHEN...From 2 AM to 10 AM EDT Saturday.\n\n2. Wind Advisory\nSeverity: Moderate\nUrgency: Immediate\nCertainty: Observed\nDetails: West winds 25 to 35 mph with gusts up to 50 mph."
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "Close",
+          "name": "button"
+        }
+      ],
+      "text": "1. Frost Advisory issued April 18 at 2:10PM EDT until April 19 at 10:00AM EDT\nSeverity: Minor\nUrgency: Expected\nCertainty: Likely\nDetails: * WHAT...Temperatures as low as 30 will result in frost\nformation.\n\n* WHERE...Portions of southeast Michigan.\n\n* WHEN...From 2 AM to 10 AM EDT Saturday.\n\n2. Wind Advisory\nSeverity: Moderate\nUrgency: Immediate\nCertainty: Observed\nDetails: West winds 25 to 35 mph with gusts up to 50 mph."
+    },
+    {
+      "alerts": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "title": "New Weather Alerts",
+      "controls": [
+        {
+          "kind": "label",
+          "label": "Multiple new alerts arrived in this update. Review the summaries below.",
+          "bold": false
+        },
+        {
+          "kind": "text",
+          "name": "New alert summaries",
+          "value": "1. Weather Alert\nSeverity: Unknown\nUrgency: Unknown\nCertainty: Unknown\n\n2. Special Weather Statement\nSeverity: \n\n3. Heat Advisory until 8 PM\nSeverity: Severe\nCertainty: Possible\n\n4. Pluie verglaçante prévue cette nuit\nSeverity: Moderate\nUrgency: Unknown\nCertainty: Unknown\nDetails: Pluie verglaçante — prudence sur les routes."
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "Close",
+          "name": "button"
+        }
+      ],
+      "text": "1. Weather Alert\nSeverity: Unknown\nUrgency: Unknown\nCertainty: Unknown\n\n2. Special Weather Statement\nSeverity: \n\n3. Heat Advisory until 8 PM\nSeverity: Severe\nCertainty: Possible\n\n4. Pluie verglaçante prévue cette nuit\nSeverity: Moderate\nUrgency: Unknown\nCertainty: Unknown\nDetails: Pluie verglaçante — prudence sur les routes."
+    },
+    {
+      "alerts": [
+        1
+      ],
+      "title": "New Weather Alerts",
+      "controls": [
+        {
+          "kind": "label",
+          "label": "Multiple new alerts arrived in this update. Review the summaries below.",
+          "bold": false
+        },
+        {
+          "kind": "text",
+          "name": "New alert summaries",
+          "value": "1. Wind Advisory\nSeverity: Moderate\nUrgency: Immediate\nCertainty: Observed\nDetails: West winds 25 to 35 mph with gusts up to 50 mph."
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "Close",
+          "name": "button"
+        }
+      ],
+      "text": "1. Wind Advisory\nSeverity: Moderate\nUrgency: Immediate\nCertainty: Observed\nDetails: West winds 25 to 35 mph with gusts up to 50 mph."
+    }
+  ]
+}
