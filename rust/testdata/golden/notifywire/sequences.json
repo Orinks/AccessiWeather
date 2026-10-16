@@ -1,0 +1,2508 @@
+[
+ {
+  "name": "session",
+  "settings": {
+   "notify_discussion_update": true,
+   "notify_severe_risk_change": true,
+   "notify_minutely_precipitation_start": true,
+   "notify_minutely_precipitation_stop": true,
+   "notify_precipitation_likelihood": true,
+   "notify_hwo_update": true,
+   "notify_sps_issued": true,
+   "notify_daily_climate_report_update": true,
+   "sound_enabled": true,
+   "sound_pack": "golden-missing-pack",
+   "immediate_alert_details_popups": true,
+   "muted_sound_events": []
+  },
+  "location": {
+   "name": "Lumberton",
+   "latitude": 39.96,
+   "longitude": -74.8,
+   "country_code": "US",
+   "cwa_office": "PHI",
+   "forecast_zone_id": "https://api.weather.gov/zones/forecast/NJZ017",
+   "county_zone_id": "NJC005",
+   "fire_zone_id": "NJZ017/"
+  },
+  "steps": [
+   {
+    "kind": "displayed",
+    "now": "2026-09-25T16:00:00+00:00",
+    "location": {
+     "name": "Lumberton",
+     "latitude": 39.96,
+     "longitude": -74.8,
+     "country_code": "US",
+     "cwa_office": "PHI",
+     "forecast_zone_id": "https://api.weather.gov/zones/forecast/NJZ017",
+     "county_zone_id": "NJC005",
+     "fire_zone_id": "NJZ017/"
+    },
+    "play_refresh_sound": true,
+    "weather": {
+     "location": {
+      "name": "Lumberton",
+      "latitude": 39.96,
+      "longitude": -74.8,
+      "country_code": "US",
+      "cwa_office": "PHI",
+      "forecast_zone_id": "https://api.weather.gov/zones/forecast/NJZ017",
+      "county_zone_id": "NJC005",
+      "fire_zone_id": "NJZ017/"
+     },
+     "alerts": {
+      "alerts": [
+       {
+        "id": "flood-1",
+        "title": "Flood Watch",
+        "description": "Flood Watch description.",
+        "severity": "Moderate",
+        "urgency": "Expected",
+        "certainty": "Observed",
+        "event": "Flood Watch",
+        "headline": "Flood Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+         "Test County"
+        ],
+        "message_type": "Alert",
+        "sent": "2026-09-25T15:58:00+00:00"
+       }
+      ]
+     },
+     "discussion": "\n000\nFXUS61 KPHI 290645\nAFDPHI\n\nArea Forecast Discussion\nNational Weather Service Mount Holly NJ\n245 AM EDT Wed Sep 25 2026\n\n.KEY MESSAGES...\n1) Rain late.\n\n&&\n\n.NEAR TERM...\nClouds increase.\n$$\n",
+     "discussion_issuance_time": "2026-09-25T06:45:00+00:00",
+     "current": {
+      "severe_weather_risk": 25
+     },
+     "minutely_precipitation": {
+      "points": [
+       {
+        "time": "2026-09-25T16:00:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:01:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:02:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:03:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:04:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:05:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:06:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:07:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:08:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:09:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:10:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:11:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:12:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:13:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:14:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:15:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:16:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:17:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:18:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:19:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:20:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:21:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:22:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:23:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:24:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:25:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:26:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:27:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:28:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:29:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       }
+      ]
+     }
+    },
+    "hwo": {
+     "product_type": "HWO",
+     "product_id": "HWO-2026-09-25T09:00:00+00:00",
+     "cwa_office": "PHI",
+     "issuance_time": "2026-09-25T09:00:00+00:00",
+     "product_text": "HAZARDOUS WEATHER OUTLOOK\n.DAY ONE...\nNo hazardous weather is expected.\n$$",
+     "headline": null
+    },
+    "sps": [
+     {
+      "product_type": "SPS",
+      "product_id": "SPS-OTHER",
+      "cwa_office": "PHI",
+      "issuance_time": "2026-09-25T15:00:00+00:00",
+      "product_text": "\nPAZ070>071-252000-\nBucks PA-\n...Strong thunderstorm near Doylestown...\n",
+      "headline": "Strong thunderstorm near Doylestown"
+     }
+    ],
+    "cli_stations": [
+     "ILG"
+    ],
+    "cli_cache": {
+     "ILG": {
+      "product_type": "CLI",
+      "product_id": "CLI-2026-09-25T10:00:00+00:00",
+      "cwa_office": "ILG",
+      "issuance_time": "2026-09-25T10:00:00+00:00",
+      "product_text": "CLIMATE REPORT\nTEMPERATURE (F)\n  MAXIMUM   71\n  MINIMUM   55\nPRECIPITATION (IN)\n  TODAY 0.00\n",
+      "headline": null
+     }
+    }
+   },
+   {
+    "kind": "poll",
+    "now": "2026-09-25T16:01:00+00:00",
+    "weather": {
+     "location": {
+      "name": "Lumberton",
+      "latitude": 39.96,
+      "longitude": -74.8,
+      "country_code": "US",
+      "cwa_office": "PHI",
+      "forecast_zone_id": "https://api.weather.gov/zones/forecast/NJZ017",
+      "county_zone_id": "NJC005",
+      "fire_zone_id": "NJZ017/"
+     },
+     "alerts": {
+      "alerts": [
+       {
+        "id": "flood-1",
+        "title": "Flood Watch",
+        "description": "Flood Watch description.",
+        "severity": "Moderate",
+        "urgency": "Expected",
+        "certainty": "Observed",
+        "event": "Flood Watch",
+        "headline": "Flood Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+         "Test County"
+        ],
+        "message_type": "Alert",
+        "sent": "2026-09-25T15:58:00+00:00"
+       },
+       {
+        "id": "tornado-1",
+        "title": "Tornado Warning",
+        "description": "Tornado Warning description.",
+        "severity": "Extreme",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Tornado Warning",
+        "headline": "Tornado Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+         "A",
+         "B",
+         "C",
+         "D"
+        ],
+        "message_type": "Alert"
+       }
+      ]
+     },
+     "alert_lifecycle_diff": {
+      "new_alerts": [
+       {
+        "kind": "new",
+        "alert": {
+         "id": "tornado-1",
+         "title": "Tornado Warning",
+         "description": "Tornado Warning description.",
+         "severity": "Extreme",
+         "urgency": "Immediate",
+         "certainty": "Observed",
+         "event": "Tornado Warning",
+         "headline": "Tornado Warning in effect",
+         "expires": "2026-10-30T18:00:00-04:00",
+         "areas": [
+          "A",
+          "B",
+          "C",
+          "D"
+         ],
+         "message_type": "Alert"
+        },
+        "alert_id": "tornado-1",
+        "title": "Tornado Warning"
+       }
+      ]
+     }
+    }
+   },
+   {
+    "kind": "poll",
+    "now": "2026-09-25T16:06:00+00:00",
+    "weather": {
+     "location": {
+      "name": "Lumberton",
+      "latitude": 39.96,
+      "longitude": -74.8,
+      "country_code": "US",
+      "cwa_office": "PHI",
+      "forecast_zone_id": "https://api.weather.gov/zones/forecast/NJZ017",
+      "county_zone_id": "NJC005",
+      "fire_zone_id": "NJZ017/"
+     },
+     "alerts": {
+      "alerts": [
+       {
+        "id": "flood-1",
+        "title": "Flood Watch",
+        "description": "Flood Watch description.",
+        "severity": "Moderate",
+        "urgency": "Expected",
+        "certainty": "Observed",
+        "event": "Flood Watch",
+        "headline": "Flood Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+         "Test County"
+        ],
+        "message_type": "Alert",
+        "sent": "2026-09-25T15:58:00+00:00"
+       },
+       {
+        "id": "tornado-1",
+        "title": "Tornado Warning",
+        "description": "Tornado Warning description.",
+        "severity": "Extreme",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Tornado Warning",
+        "headline": "Tornado Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+         "A",
+         "B",
+         "C",
+         "D"
+        ],
+        "message_type": "Alert"
+       }
+      ]
+     },
+     "alert_lifecycle_diff": {}
+    }
+   },
+   {
+    "kind": "poll",
+    "now": "2026-09-25T16:12:00+00:00",
+    "weather": {
+     "location": {
+      "name": "Lumberton",
+      "latitude": 39.96,
+      "longitude": -74.8,
+      "country_code": "US",
+      "cwa_office": "PHI",
+      "forecast_zone_id": "https://api.weather.gov/zones/forecast/NJZ017",
+      "county_zone_id": "NJC005",
+      "fire_zone_id": "NJZ017/"
+     },
+     "alerts": {
+      "alerts": [
+       {
+        "id": "flood-1",
+        "title": "Flood Watch",
+        "description": "Flood Watch description, now through Saturday.",
+        "severity": "Moderate",
+        "urgency": "Expected",
+        "certainty": "Observed",
+        "event": "Flood Watch",
+        "headline": "Flood Watch in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+         "Test County"
+        ],
+        "message_type": "Alert",
+        "sent": "2026-09-25T15:58:00+00:00"
+       },
+       {
+        "id": "tornado-1",
+        "title": "Tornado Warning",
+        "description": "Tornado Warning description.",
+        "severity": "Extreme",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Tornado Warning",
+        "headline": "Tornado Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+         "A",
+         "B",
+         "C",
+         "D"
+        ],
+        "message_type": "Alert"
+       },
+       {
+        "id": "storm-1",
+        "title": "Severe Thunderstorm Warning",
+        "description": "Severe Thunderstorm Warning description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Warning",
+        "headline": "Severe Thunderstorm Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+         "Test County"
+        ],
+        "message_type": "Update"
+       }
+      ]
+     },
+     "alert_lifecycle_diff": {
+      "new_alerts": [
+       {
+        "kind": "new",
+        "alert": {
+         "id": "storm-1",
+         "title": "Severe Thunderstorm Warning",
+         "description": "Severe Thunderstorm Warning description.",
+         "severity": "Severe",
+         "urgency": "Immediate",
+         "certainty": "Observed",
+         "event": "Severe Thunderstorm Warning",
+         "headline": "Severe Thunderstorm Warning in effect",
+         "expires": "2026-10-30T18:00:00-04:00",
+         "areas": [
+          "Test County"
+         ],
+         "message_type": "Update"
+        },
+        "alert_id": "storm-1",
+        "title": "Severe Thunderstorm Warning"
+       }
+      ],
+      "updated_alerts": [
+       {
+        "kind": "updated",
+        "alert": {
+         "id": "flood-1",
+         "title": "Flood Watch",
+         "description": "Flood Watch description, now through Saturday.",
+         "severity": "Moderate",
+         "urgency": "Expected",
+         "certainty": "Observed",
+         "event": "Flood Watch",
+         "headline": "Flood Watch in effect",
+         "expires": "2026-10-30T18:00:00-04:00",
+         "areas": [
+          "Test County"
+         ],
+         "message_type": "Alert",
+         "sent": "2026-09-25T15:58:00+00:00"
+        },
+        "alert_id": "flood-1",
+        "title": "Flood Watch"
+       }
+      ]
+     }
+    }
+   },
+   {
+    "kind": "displayed",
+    "now": "2026-09-25T16:20:00+00:00",
+    "location": {
+     "name": "Lumberton",
+     "latitude": 39.96,
+     "longitude": -74.8,
+     "country_code": "US",
+     "cwa_office": "PHI",
+     "forecast_zone_id": "https://api.weather.gov/zones/forecast/NJZ017",
+     "county_zone_id": "NJC005",
+     "fire_zone_id": "NJZ017/"
+    },
+    "play_refresh_sound": true,
+    "weather": {
+     "location": {
+      "name": "Lumberton",
+      "latitude": 39.96,
+      "longitude": -74.8,
+      "country_code": "US",
+      "cwa_office": "PHI",
+      "forecast_zone_id": "https://api.weather.gov/zones/forecast/NJZ017",
+      "county_zone_id": "NJC005",
+      "fire_zone_id": "NJZ017/"
+     },
+     "alerts": {
+      "alerts": [
+       {
+        "id": "flood-1",
+        "title": "Flood Watch",
+        "description": "Flood Watch description, now through Saturday.",
+        "severity": "Severe",
+        "urgency": "Expected",
+        "certainty": "Observed",
+        "event": "Flood Watch",
+        "headline": "Flood Watch upgraded",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+         "Test County"
+        ],
+        "message_type": "Alert",
+        "sent": "2026-09-25T15:58:00+00:00"
+       },
+       {
+        "id": "tornado-1",
+        "title": "Tornado Warning",
+        "description": "Tornado Warning description.",
+        "severity": "Extreme",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Tornado Warning",
+        "headline": "Tornado Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+         "A",
+         "B",
+         "C",
+         "D"
+        ],
+        "message_type": "Alert"
+       },
+       {
+        "id": "storm-1",
+        "title": "Severe Thunderstorm Warning",
+        "description": "Severe Thunderstorm Warning description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Warning",
+        "headline": "Severe Thunderstorm Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+         "Test County"
+        ],
+        "message_type": "Update"
+       }
+      ]
+     },
+     "discussion": "\n000\nFXUS61 KPHI 291732\nAFDPHI\n\nArea Forecast Discussion\nNational Weather Service Mount Holly NJ\n132 PM EDT Wed Sep 25 2026\n\n.WHAT HAS CHANGED...\nRain arrives earlier; totals raised.\n\n&&\n.KEY MESSAGES...\n1) Rain late.\n\n&&\n",
+     "discussion_issuance_time": "2026-09-25T17:32:00+00:00",
+     "current": {
+      "severe_weather_risk": 65
+     },
+     "minutely_precipitation": {
+      "points": [
+       {
+        "time": "2026-09-25T16:20:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.1
+       },
+       {
+        "time": "2026-09-25T16:21:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.1
+       },
+       {
+        "time": "2026-09-25T16:22:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.1
+       },
+       {
+        "time": "2026-09-25T16:23:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.1
+       },
+       {
+        "time": "2026-09-25T16:24:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.1
+       },
+       {
+        "time": "2026-09-25T16:25:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:26:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:27:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:28:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:29:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:30:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:31:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:32:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:33:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:34:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:35:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:36:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:37:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:38:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:39:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:40:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:41:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:42:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:43:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:44:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:45:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:46:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:47:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:48:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:49:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       }
+      ]
+     }
+    },
+    "hwo": {
+     "product_type": "HWO",
+     "product_id": "HWO-2026-09-25T19:00:00+00:00",
+     "cwa_office": "PHI",
+     "issuance_time": "2026-09-25T19:00:00+00:00",
+     "product_text": "HAZARDOUS WEATHER OUTLOOK\n.DAY ONE...\nNo hazardous weather is expected.\nThunderstorms with damaging winds are possible this evening.\n$$",
+     "headline": null
+    },
+    "sps": [
+     {
+      "product_type": "SPS",
+      "product_id": "SPS-OTHER",
+      "cwa_office": "PHI",
+      "issuance_time": "2026-09-25T15:00:00+00:00",
+      "product_text": "\nPAZ070>071-252000-\nBucks PA-\n...Strong thunderstorm near Doylestown...\n",
+      "headline": "Strong thunderstorm near Doylestown"
+     },
+     {
+      "product_type": "SPS",
+      "product_id": "SPS-LOCAL",
+      "cwa_office": "PHI",
+      "issuance_time": "2026-09-25T15:00:00+00:00",
+      "product_text": "\nNJZ017-018-252000-\nBurlington NJ-\n...Fire weather concerns this afternoon...\n",
+      "headline": "Elevated fire weather concerns this afternoon"
+     }
+    ],
+    "cli_stations": [
+     "PHL",
+     "ILG"
+    ],
+    "cli_cache": {
+     "PHL": null,
+     "ILG": {
+      "product_type": "CLI",
+      "product_id": "CLI-2026-09-25T20:00:00+00:00",
+      "cwa_office": "ILG",
+      "issuance_time": "2026-09-25T20:00:00+00:00",
+      "product_text": "CLIMATE REPORT\nTEMPERATURE (F)\n  MAXIMUM   74\n  MINIMUM   55\nPRECIPITATION (IN)\n  TODAY 0.12\n",
+      "headline": null
+     }
+    }
+   },
+   {
+    "kind": "poll",
+    "now": "2026-09-25T16:26:00+00:00",
+    "weather": {
+     "location": {
+      "name": "Lumberton",
+      "latitude": 39.96,
+      "longitude": -74.8,
+      "country_code": "US",
+      "cwa_office": "PHI",
+      "forecast_zone_id": "https://api.weather.gov/zones/forecast/NJZ017",
+      "county_zone_id": "NJC005",
+      "fire_zone_id": "NJZ017/"
+     },
+     "alerts": {
+      "alerts": [
+       {
+        "id": "flood-1",
+        "title": "Flood Watch",
+        "description": "Flood Watch description, now through Saturday.",
+        "severity": "Severe",
+        "urgency": "Expected",
+        "certainty": "Observed",
+        "event": "Flood Watch",
+        "headline": "Flood Watch upgraded",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+         "Test County"
+        ],
+        "message_type": "Alert",
+        "sent": "2026-09-25T15:58:00+00:00"
+       },
+       {
+        "id": "storm-1",
+        "title": "Severe Thunderstorm Warning",
+        "description": "Severe Thunderstorm Warning description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Warning",
+        "headline": "Severe Thunderstorm Warning in effect",
+        "expires": "2026-10-31T18:00:00-04:00",
+        "areas": [
+         "Test County"
+        ],
+        "message_type": "Update"
+       }
+      ]
+     },
+     "alert_lifecycle_diff": {
+      "cancelled_alerts": [
+       {
+        "kind": "cancelled",
+        "alert": null,
+        "alert_id": "tornado-1",
+        "title": "Tornado Warning"
+       }
+      ],
+      "extended_alerts": [
+       {
+        "kind": "extended",
+        "alert": {
+         "id": "storm-1",
+         "title": "Severe Thunderstorm Warning",
+         "description": "Severe Thunderstorm Warning description.",
+         "severity": "Severe",
+         "urgency": "Immediate",
+         "certainty": "Observed",
+         "event": "Severe Thunderstorm Warning",
+         "headline": "Severe Thunderstorm Warning in effect",
+         "expires": "2026-10-31T18:00:00-04:00",
+         "areas": [
+          "Test County"
+         ],
+         "message_type": "Update"
+        },
+        "alert_id": "storm-1",
+        "title": "Severe Thunderstorm Warning"
+       }
+      ]
+     }
+    }
+   },
+   {
+    "kind": "settings",
+    "now": "2026-09-25T16:32:00+00:00",
+    "settings": {
+     "notify_discussion_update": true,
+     "notify_severe_risk_change": true,
+     "notify_minutely_precipitation_start": true,
+     "notify_minutely_precipitation_stop": true,
+     "notify_precipitation_likelihood": true,
+     "notify_hwo_update": true,
+     "notify_sps_issued": true,
+     "notify_daily_climate_report_update": true,
+     "sound_enabled": false,
+     "sound_pack": "golden-missing-pack",
+     "immediate_alert_details_popups": false,
+     "muted_sound_events": [],
+     "alert_notify_moderate": false
+    }
+   },
+   {
+    "kind": "poll",
+    "now": "2026-09-25T16:40:00+00:00",
+    "weather": {
+     "location": {
+      "name": "Lumberton",
+      "latitude": 39.96,
+      "longitude": -74.8,
+      "country_code": "US",
+      "cwa_office": "PHI",
+      "forecast_zone_id": "https://api.weather.gov/zones/forecast/NJZ017",
+      "county_zone_id": "NJC005",
+      "fire_zone_id": "NJZ017/"
+     },
+     "alerts": {
+      "alerts": [
+       {
+        "id": "flood-1",
+        "title": "Flood Watch",
+        "description": "Flood Watch description, now through Saturday.",
+        "severity": "Severe",
+        "urgency": "Expected",
+        "certainty": "Observed",
+        "event": "Flood Watch",
+        "headline": "Flood Watch upgraded",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+         "Test County"
+        ],
+        "message_type": "Alert",
+        "sent": "2026-09-25T15:58:00+00:00"
+       },
+       {
+        "id": "storm-1",
+        "title": "Severe Thunderstorm Warning",
+        "description": "Severe Thunderstorm Warning description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Warning",
+        "headline": "Severe Thunderstorm Warning in effect",
+        "expires": "2026-10-31T18:00:00-04:00",
+        "areas": [
+         "Test County"
+        ],
+        "message_type": "Update"
+       },
+       {
+        "id": "wind-1",
+        "title": "Wind Advisory",
+        "description": "Wind Advisory description.",
+        "severity": "Moderate",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Wind Advisory",
+        "headline": "Wind Advisory in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+         "Test County"
+        ],
+        "message_type": "Alert"
+       },
+       {
+        "id": "fire-1",
+        "title": "Red Flag Warning",
+        "description": "Red Flag Warning description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Red Flag Warning",
+        "headline": "Red Flag Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+         "Test County"
+        ],
+        "message_type": "Alert"
+       }
+      ]
+     },
+     "alert_lifecycle_diff": {
+      "new_alerts": [
+       {
+        "kind": "new",
+        "alert": {
+         "id": "wind-1",
+         "title": "Wind Advisory",
+         "description": "Wind Advisory description.",
+         "severity": "Moderate",
+         "urgency": "Immediate",
+         "certainty": "Observed",
+         "event": "Wind Advisory",
+         "headline": "Wind Advisory in effect",
+         "expires": "2026-10-30T18:00:00-04:00",
+         "areas": [
+          "Test County"
+         ],
+         "message_type": "Alert"
+        },
+        "alert_id": "wind-1",
+        "title": "Wind Advisory"
+       },
+       {
+        "kind": "new",
+        "alert": {
+         "id": "fire-1",
+         "title": "Red Flag Warning",
+         "description": "Red Flag Warning description.",
+         "severity": "Severe",
+         "urgency": "Immediate",
+         "certainty": "Observed",
+         "event": "Red Flag Warning",
+         "headline": "Red Flag Warning in effect",
+         "expires": "2026-10-30T18:00:00-04:00",
+         "areas": [
+          "Test County"
+         ],
+         "message_type": "Alert"
+        },
+        "alert_id": "fire-1",
+        "title": "Red Flag Warning"
+       }
+      ]
+     }
+    }
+   },
+   {
+    "kind": "displayed",
+    "now": "2026-09-25T16:45:00+00:00",
+    "location": {
+     "name": "Lumberton",
+     "latitude": 39.96,
+     "longitude": -74.8,
+     "country_code": "US",
+     "cwa_office": "PHI",
+     "forecast_zone_id": "https://api.weather.gov/zones/forecast/NJZ017",
+     "county_zone_id": "NJC005",
+     "fire_zone_id": "NJZ017/"
+    },
+    "play_refresh_sound": false,
+    "weather": {
+     "location": {
+      "name": "Lumberton",
+      "latitude": 39.96,
+      "longitude": -74.8,
+      "country_code": "US",
+      "cwa_office": "PHI",
+      "forecast_zone_id": "https://api.weather.gov/zones/forecast/NJZ017",
+      "county_zone_id": "NJC005",
+      "fire_zone_id": "NJZ017/"
+     },
+     "alerts": {
+      "alerts": [
+       {
+        "id": "flood-1",
+        "title": "Flood Watch",
+        "description": "Flood Watch description, now through Saturday.",
+        "severity": "Severe",
+        "urgency": "Expected",
+        "certainty": "Observed",
+        "event": "Flood Watch",
+        "headline": "Flood Watch upgraded",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+         "Test County"
+        ],
+        "message_type": "Alert",
+        "sent": "2026-09-25T15:58:00+00:00"
+       },
+       {
+        "id": "storm-1",
+        "title": "Severe Thunderstorm Warning",
+        "description": "Severe Thunderstorm Warning description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Severe Thunderstorm Warning",
+        "headline": "Severe Thunderstorm Warning in effect",
+        "expires": "2026-10-31T18:00:00-04:00",
+        "areas": [
+         "Test County"
+        ],
+        "message_type": "Update"
+       },
+       {
+        "id": "wind-1",
+        "title": "Wind Advisory",
+        "description": "Wind Advisory description.",
+        "severity": "Moderate",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Wind Advisory",
+        "headline": "Wind Advisory in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+         "Test County"
+        ],
+        "message_type": "Alert"
+       },
+       {
+        "id": "fire-1",
+        "title": "Red Flag Warning",
+        "description": "Red Flag Warning description.",
+        "severity": "Severe",
+        "urgency": "Immediate",
+        "certainty": "Observed",
+        "event": "Red Flag Warning",
+        "headline": "Red Flag Warning in effect",
+        "expires": "2026-10-30T18:00:00-04:00",
+        "areas": [
+         "Test County"
+        ],
+        "message_type": "Alert"
+       }
+      ]
+     },
+     "current": {
+      "severe_weather_risk": 65
+     },
+     "minutely_precipitation": {
+      "points": [
+       {
+        "time": "2026-09-25T16:45:00+00:00",
+        "precipitation_intensity": 0.6,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:46:00+00:00",
+        "precipitation_intensity": 0.6,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:47:00+00:00",
+        "precipitation_intensity": 0.6,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:48:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T16:49:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T16:50:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T16:51:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T16:52:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T16:53:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T16:54:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T16:55:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T16:56:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T16:57:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T16:58:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T16:59:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T17:00:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T17:01:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T17:02:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T17:03:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T17:04:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T17:05:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T17:06:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T17:07:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T17:08:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T17:09:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T17:10:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T17:11:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T17:12:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T17:13:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       },
+       {
+        "time": "2026-09-25T17:14:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.05
+       }
+      ]
+     }
+    }
+   },
+   {
+    "kind": "error",
+    "now": "2026-09-25T16:46:00+00:00"
+   },
+   {
+    "kind": "settings",
+    "now": "2026-09-25T16:47:00+00:00",
+    "settings": {
+     "notify_discussion_update": true,
+     "notify_severe_risk_change": true,
+     "notify_minutely_precipitation_start": true,
+     "notify_minutely_precipitation_stop": true,
+     "notify_precipitation_likelihood": true,
+     "notify_hwo_update": true,
+     "notify_sps_issued": true,
+     "notify_daily_climate_report_update": true,
+     "sound_enabled": true,
+     "sound_pack": "golden-missing-pack",
+     "immediate_alert_details_popups": true,
+     "muted_sound_events": [
+      "discussion_update"
+     ]
+    }
+   },
+   {
+    "kind": "error",
+    "now": "2026-09-25T16:48:00+00:00"
+   },
+   {
+    "kind": "climate_dialog",
+    "now": "2026-09-25T16:50:00+00:00",
+    "product": {
+     "product_type": "CLI",
+     "product_id": "CLI-2026-09-25T21:30:00+00:00",
+     "cwa_office": "ILG",
+     "issuance_time": "2026-09-25T21:30:00+00:00",
+     "product_text": "CLIMATE REPORT\nTEMPERATURE (F)\n  MAXIMUM   76\n  MINIMUM   57\nPRECIPITATION (IN)\n  TODAY 0.40\n",
+     "headline": null
+    }
+   },
+   {
+    "kind": "displayed",
+    "now": "2026-09-25T16:55:00+00:00",
+    "location": null,
+    "play_refresh_sound": true,
+    "weather": {
+     "location": {
+      "name": "Lumberton",
+      "latitude": 39.96,
+      "longitude": -74.8,
+      "country_code": "US",
+      "cwa_office": "PHI",
+      "forecast_zone_id": "https://api.weather.gov/zones/forecast/NJZ017",
+      "county_zone_id": "NJC005",
+      "fire_zone_id": "NJZ017/"
+     },
+     "alerts": {
+      "alerts": []
+     }
+    }
+   }
+  ],
+  "results": [
+   {
+    "local_now": "2026-09-25T12:00:00-04:00",
+    "toasts": [
+     {
+      "title": "MODERATE ALERT: Flood Watch",
+      "message": "Expected action may be required.\n\nFlood Watch in effect\n\nFlood Watch description.\n\nAreas: Test County\n\nExpires: Oct 30 6:00 PM",
+      "timeout": 15,
+      "sound_event": null,
+      "sound_candidates": [
+       "moderate",
+       "alert",
+       "notify"
+      ],
+      "play_sound": true,
+      "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=flood-1"
+     }
+    ],
+    "sounds": [
+     {
+      "candidates": [
+       "moderate",
+       "alert",
+       "notify"
+      ],
+      "pack": "golden-missing-pack"
+     },
+     {
+      "event": "data_updated",
+      "pack": "golden-missing-pack"
+     }
+    ],
+    "popups": [
+     {
+      "details": "flood-1"
+     }
+    ],
+    "radio": [
+     [
+      "flood-1"
+     ]
+    ],
+    "event_center": []
+   },
+   {
+    "local_now": "2026-09-25T12:01:00-04:00",
+    "toasts": [],
+    "sounds": [],
+    "popups": [],
+    "radio": [],
+    "event_center": []
+   },
+   {
+    "local_now": "2026-09-25T12:06:00-04:00",
+    "toasts": [
+     {
+      "title": "EXTREME ALERT: Tornado Warning",
+      "message": "Immediate action may be required.\n\nTornado Warning in effect\n\nTornado Warning description.\n\nAreas: A, B and 2 more\n\nExpires: Oct 30 6:00 PM",
+      "timeout": 15,
+      "sound_event": null,
+      "sound_candidates": [
+       "extreme",
+       "alert",
+       "notify"
+      ],
+      "play_sound": true,
+      "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=tornado-1"
+     }
+    ],
+    "sounds": [
+     {
+      "candidates": [
+       "extreme",
+       "alert",
+       "notify"
+      ],
+      "pack": "golden-missing-pack"
+     }
+    ],
+    "popups": [
+     {
+      "details": "tornado-1"
+     }
+    ],
+    "radio": [
+     [
+      "tornado-1"
+     ]
+    ],
+    "event_center": []
+   },
+   {
+    "local_now": "2026-09-25T12:12:00-04:00",
+    "toasts": [
+     {
+      "title": "SEVERE ALERT: Severe Thunderstorm Warning",
+      "message": "Immediate action may be required.\n\nSevere Thunderstorm Warning in effect\n\nSevere Thunderstorm Warning description.\n\nAreas: Test County\n\nExpires: Oct 30 6:00 PM",
+      "timeout": 15,
+      "sound_event": null,
+      "sound_candidates": [
+       "severe",
+       "alert",
+       "notify"
+      ],
+      "play_sound": true,
+      "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=storm-1"
+     },
+     {
+      "title": "UPDATED MODERATE: Flood Watch",
+      "message": "Expected action may be required.\n\nFlood Watch in effect\n\nFlood Watch description, now through Saturday.\n\nAreas: Test County\n\nExpires: Oct 30 6:00 PM",
+      "timeout": 15,
+      "sound_event": null,
+      "sound_candidates": null,
+      "play_sound": false,
+      "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=flood-1"
+     },
+     {
+      "title": "UPDATED MODERATE: Flood Watch",
+      "message": "Expected action may be required.\n\nFlood Watch in effect\n\nFlood Watch description, now through Saturday.\n\nAreas: Test County\n\nExpires: Oct 30 6:00 PM",
+      "timeout": 15,
+      "sound_event": null,
+      "sound_candidates": [
+       "alert_updated",
+       "moderate",
+       "alert",
+       "notify"
+      ],
+      "play_sound": true,
+      "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=flood-1"
+     }
+    ],
+    "sounds": [
+     {
+      "candidates": [
+       "severe",
+       "alert",
+       "notify"
+      ],
+      "pack": "golden-missing-pack"
+     },
+     {
+      "candidates": [
+       "alert_updated",
+       "moderate",
+       "alert",
+       "notify"
+      ],
+      "pack": "golden-missing-pack"
+     }
+    ],
+    "popups": [
+     {
+      "summary": [
+       "storm-1",
+       "flood-1"
+      ]
+     }
+    ],
+    "radio": [],
+    "event_center": []
+   },
+   {
+    "local_now": "2026-09-25T12:20:00-04:00",
+    "toasts": [
+     {
+      "title": "ESCALATED SEVERE: Flood Watch",
+      "message": "Expected action may be required.\n\nFlood Watch upgraded\n\nFlood Watch description, now through Saturday.\n\nAreas: Test County\n\nExpires: Oct 30 6:00 PM",
+      "timeout": 15,
+      "sound_event": null,
+      "sound_candidates": [
+       "severe",
+       "alert",
+       "notify"
+      ],
+      "play_sound": true,
+      "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=flood-1"
+     },
+     {
+      "title": "Hazardous Weather Outlook Updated",
+      "message": "Thunderstorms with damaging winds are possible this evening.",
+      "timeout": 10,
+      "sound_event": "notify",
+      "sound_candidates": null,
+      "play_sound": true,
+      "activation_arguments": "accessiweather-toast:kind=generic_fallback"
+     },
+     {
+      "title": "Special Weather Statement",
+      "message": "Elevated fire weather concerns this afternoon - PHI",
+      "timeout": 10,
+      "sound_event": "notify",
+      "sound_candidates": null,
+      "play_sound": true,
+      "activation_arguments": "accessiweather-toast:kind=generic_fallback"
+     },
+     {
+      "title": "Daily Climate Report Updated",
+      "message": "The Daily Climate Report for Lumberton (ILG) was updated by the National Weather Service. Change summary: MAXIMUM 74",
+      "timeout": 10,
+      "sound_event": "discussion_update",
+      "sound_candidates": null,
+      "play_sound": true,
+      "activation_arguments": "accessiweather-toast:kind=generic_fallback"
+     },
+     {
+      "title": "Forecast Discussion Updated",
+      "message": "The Area Forecast Discussion for Lumberton was updated by the National Weather Service at 1:32 PM EDT. Rain arrives earlier; totals raised.",
+      "timeout": 10,
+      "sound_event": "discussion_update",
+      "sound_candidates": null,
+      "play_sound": true,
+      "activation_arguments": "accessiweather-toast:kind=discussion"
+     },
+     {
+      "title": "Severe Weather Risk Increased to High",
+      "message": "Severe weather risk for Lumberton has increased from low to high (risk index: 65).",
+      "timeout": 10,
+      "sound_event": "severe_risk",
+      "sound_candidates": null,
+      "play_sound": true,
+      "activation_arguments": "accessiweather-toast:kind=generic_fallback"
+     },
+     {
+      "title": "Rain starting in 5 minutes",
+      "message": "Rain starting in 5 minutes for Lumberton.",
+      "timeout": 10,
+      "sound_event": "notify",
+      "sound_candidates": null,
+      "play_sound": true,
+      "activation_arguments": "accessiweather-toast:kind=generic_fallback"
+     },
+     {
+      "title": "Rain likely in the next hour (90% chance)",
+      "message": "Rain likely in the next hour (90% chance) for Lumberton.",
+      "timeout": 10,
+      "sound_event": "notify",
+      "sound_candidates": null,
+      "play_sound": true,
+      "activation_arguments": "accessiweather-toast:kind=generic_fallback"
+     }
+    ],
+    "sounds": [
+     {
+      "candidates": [
+       "severe",
+       "alert",
+       "notify"
+      ],
+      "pack": "golden-missing-pack"
+     },
+     {
+      "event": "notify",
+      "pack": "golden-missing-pack"
+     },
+     {
+      "event": "notify",
+      "pack": "golden-missing-pack"
+     },
+     {
+      "event": "discussion_update",
+      "pack": "golden-missing-pack"
+     },
+     {
+      "event": "discussion_update",
+      "pack": "golden-missing-pack"
+     },
+     {
+      "event": "severe_risk",
+      "pack": "golden-missing-pack"
+     },
+     {
+      "event": "notify",
+      "pack": "golden-missing-pack"
+     },
+     {
+      "event": "notify",
+      "pack": "golden-missing-pack"
+     },
+     {
+      "event": "data_updated",
+      "pack": "golden-missing-pack"
+     }
+    ],
+    "popups": [
+     {
+      "details": "flood-1"
+     }
+    ],
+    "radio": [],
+    "event_center": [
+     {
+      "category": "Hazardous Weather Outlook Updated",
+      "text": "Thunderstorms with damaging winds are possible this evening."
+     },
+     {
+      "category": "Special Weather Statement",
+      "text": "Elevated fire weather concerns this afternoon - PHI"
+     },
+     {
+      "category": "Daily Climate Report Updated",
+      "text": "The Daily Climate Report for Lumberton (ILG) was updated by the National Weather Service. Change summary: MAXIMUM 74"
+     },
+     {
+      "category": "Forecast Discussion Updated",
+      "text": "The Area Forecast Discussion for Lumberton was updated by the National Weather Service at 1:32 PM EDT. Rain arrives earlier; totals raised."
+     },
+     {
+      "category": "Severe Weather Risk Increased to High",
+      "text": "Severe weather risk for Lumberton has increased from low to high (risk index: 65)."
+     },
+     {
+      "category": "Rain starting in 5 minutes",
+      "text": "Rain starting in 5 minutes for Lumberton."
+     },
+     {
+      "category": "Rain likely in the next hour (90% chance)",
+      "text": "Rain likely in the next hour (90% chance) for Lumberton."
+     }
+    ]
+   },
+   {
+    "local_now": "2026-09-25T12:26:00-04:00",
+    "toasts": [
+     {
+      "title": "SEVERE ALERT: Severe Thunderstorm Warning",
+      "message": "Immediate action may be required.\n\nSevere Thunderstorm Warning in effect\n\nSevere Thunderstorm Warning description.\n\nAreas: Test County\n\nExpires: Oct 31 6:00 PM",
+      "timeout": 15,
+      "sound_event": null,
+      "sound_candidates": null,
+      "play_sound": false,
+      "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=storm-1"
+     },
+     {
+      "title": "CANCELLED: Tornado Warning",
+      "message": "The alert 'Tornado Warning' has been cancelled or expired.",
+      "timeout": 10,
+      "sound_event": null,
+      "sound_candidates": null,
+      "play_sound": false,
+      "activation_arguments": null
+     }
+    ],
+    "sounds": [],
+    "popups": [],
+    "radio": [],
+    "event_center": []
+   },
+   {
+    "local_now": "2026-09-25T12:32:00-04:00",
+    "toasts": [],
+    "sounds": [],
+    "popups": [],
+    "radio": [],
+    "event_center": []
+   },
+   {
+    "local_now": "2026-09-25T12:40:00-04:00",
+    "toasts": [
+     {
+      "title": "SEVERE ALERT: Red Flag Warning",
+      "message": "Immediate action may be required.\n\nRed Flag Warning in effect\n\nRed Flag Warning description.\n\nAreas: Test County\n\nExpires: Oct 30 6:00 PM",
+      "timeout": 15,
+      "sound_event": null,
+      "sound_candidates": [
+       "severe",
+       "alert",
+       "notify"
+      ],
+      "play_sound": true,
+      "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=fire-1"
+     }
+    ],
+    "sounds": [],
+    "popups": [],
+    "radio": [
+     [
+      "fire-1"
+     ]
+    ],
+    "event_center": []
+   },
+   {
+    "local_now": "2026-09-25T12:45:00-04:00",
+    "toasts": [
+     {
+      "title": "Rain stopping in 3 minutes",
+      "message": "Rain stopping in 3 minutes for Lumberton.",
+      "timeout": 10,
+      "sound_event": "notify",
+      "sound_candidates": null,
+      "play_sound": false,
+      "activation_arguments": "accessiweather-toast:kind=generic_fallback"
+     }
+    ],
+    "sounds": [],
+    "popups": [],
+    "radio": [],
+    "event_center": [
+     {
+      "category": "Rain stopping in 3 minutes",
+      "text": "Rain stopping in 3 minutes for Lumberton."
+     }
+    ]
+   },
+   {
+    "local_now": "2026-09-25T12:46:00-04:00",
+    "toasts": [],
+    "sounds": [],
+    "popups": [],
+    "radio": [],
+    "event_center": []
+   },
+   {
+    "local_now": "2026-09-25T12:47:00-04:00",
+    "toasts": [],
+    "sounds": [],
+    "popups": [],
+    "radio": [],
+    "event_center": []
+   },
+   {
+    "local_now": "2026-09-25T12:48:00-04:00",
+    "toasts": [],
+    "sounds": [
+     {
+      "event": "fetch_error",
+      "pack": "golden-missing-pack"
+     }
+    ],
+    "popups": [],
+    "radio": [],
+    "event_center": []
+   },
+   {
+    "local_now": "2026-09-25T12:50:00-04:00",
+    "toasts": [
+     {
+      "title": "Daily Climate Report Updated",
+      "message": "The Daily Climate Report for Lumberton (ILG) was updated by the National Weather Service. Change summary: MAXIMUM 76; MINIMUM 57",
+      "timeout": 10,
+      "sound_event": "discussion_update",
+      "sound_candidates": null,
+      "play_sound": true,
+      "activation_arguments": null
+     }
+    ],
+    "sounds": [],
+    "popups": [],
+    "radio": [],
+    "event_center": []
+   },
+   {
+    "local_now": "2026-09-25T12:55:00-04:00",
+    "toasts": [],
+    "sounds": [
+     {
+      "event": "data_updated",
+      "pack": "golden-missing-pack"
+     }
+    ],
+    "popups": [],
+    "radio": [],
+    "event_center": []
+   }
+  ]
+ },
+ {
+  "name": "restart",
+  "settings": {
+   "notify_discussion_update": true,
+   "notify_severe_risk_change": true,
+   "notify_minutely_precipitation_start": true,
+   "notify_minutely_precipitation_stop": true,
+   "notify_precipitation_likelihood": true,
+   "notify_hwo_update": true,
+   "notify_sps_issued": true,
+   "notify_daily_climate_report_update": true,
+   "sound_enabled": true,
+   "sound_pack": "golden-missing-pack"
+  },
+  "location": {
+   "name": "Lumberton",
+   "latitude": 39.96,
+   "longitude": -74.8,
+   "country_code": "US",
+   "cwa_office": "PHI",
+   "forecast_zone_id": "https://api.weather.gov/zones/forecast/NJZ017",
+   "county_zone_id": "NJC005",
+   "fire_zone_id": "NJZ017/"
+  },
+  "steps": [
+   {
+    "kind": "displayed",
+    "location": {
+     "name": "Lumberton",
+     "latitude": 39.96,
+     "longitude": -74.8,
+     "country_code": "US",
+     "cwa_office": "PHI",
+     "forecast_zone_id": "https://api.weather.gov/zones/forecast/NJZ017",
+     "county_zone_id": "NJC005",
+     "fire_zone_id": "NJZ017/"
+    },
+    "play_refresh_sound": true,
+    "hwo": {
+     "product_type": "HWO",
+     "product_id": "HWO-2026-09-25T09:00:00+00:00",
+     "cwa_office": "PHI",
+     "issuance_time": "2026-09-25T09:00:00+00:00",
+     "product_text": "HAZARDOUS WEATHER OUTLOOK\n.DAY ONE...\nNo hazardous weather is expected.\n$$",
+     "headline": null
+    },
+    "sps": [
+     {
+      "product_type": "SPS",
+      "product_id": "SPS-OTHER",
+      "cwa_office": "PHI",
+      "issuance_time": "2026-09-25T15:00:00+00:00",
+      "product_text": "\nPAZ070>071-252000-\nBucks PA-\n...Strong thunderstorm near Doylestown...\n",
+      "headline": "Strong thunderstorm near Doylestown"
+     }
+    ],
+    "cli_stations": [
+     "ILG"
+    ],
+    "cli_cache": {
+     "ILG": {
+      "product_type": "CLI",
+      "product_id": "CLI-2026-09-25T10:00:00+00:00",
+      "cwa_office": "ILG",
+      "issuance_time": "2026-09-25T10:00:00+00:00",
+      "product_text": "CLIMATE REPORT\nTEMPERATURE (F)\n  MAXIMUM   71\n  MINIMUM   55\nPRECIPITATION (IN)\n  TODAY 0.00\n",
+      "headline": null
+     }
+    },
+    "now": "2026-09-25T16:00:00+00:00",
+    "weather": {
+     "location": {
+      "name": "Lumberton",
+      "latitude": 39.96,
+      "longitude": -74.8,
+      "country_code": "US",
+      "cwa_office": "PHI",
+      "forecast_zone_id": "https://api.weather.gov/zones/forecast/NJZ017",
+      "county_zone_id": "NJC005",
+      "fire_zone_id": "NJZ017/"
+     },
+     "discussion": "\n000\nFXUS61 KPHI 290645\nAFDPHI\n\nArea Forecast Discussion\nNational Weather Service Mount Holly NJ\n245 AM EDT Wed Sep 25 2026\n\n.KEY MESSAGES...\n1) Rain late.\n\n&&\n\n.NEAR TERM...\nClouds increase.\n$$\n",
+     "discussion_issuance_time": "2026-09-25T06:45:00+00:00",
+     "current": {
+      "severe_weather_risk": 25
+     },
+     "minutely_precipitation": {
+      "points": [
+       {
+        "time": "2026-09-25T16:00:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:01:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:02:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:03:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:04:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:05:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:06:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:07:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:08:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:09:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:10:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:11:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:12:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:13:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:14:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:15:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:16:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:17:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:18:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:19:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:20:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:21:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:22:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:23:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:24:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:25:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:26:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:27:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:28:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       },
+       {
+        "time": "2026-09-25T16:29:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.0
+       }
+      ]
+     }
+    }
+   },
+   {
+    "kind": "restart",
+    "now": "2026-09-25T16:10:00+00:00"
+   },
+   {
+    "kind": "displayed",
+    "location": {
+     "name": "Lumberton",
+     "latitude": 39.96,
+     "longitude": -74.8,
+     "country_code": "US",
+     "cwa_office": "PHI",
+     "forecast_zone_id": "https://api.weather.gov/zones/forecast/NJZ017",
+     "county_zone_id": "NJC005",
+     "fire_zone_id": "NJZ017/"
+    },
+    "play_refresh_sound": true,
+    "hwo": {
+     "product_type": "HWO",
+     "product_id": "HWO-2026-09-25T19:00:00+00:00",
+     "cwa_office": "PHI",
+     "issuance_time": "2026-09-25T19:00:00+00:00",
+     "product_text": "HAZARDOUS WEATHER OUTLOOK\n.DAY ONE...\nNo hazardous weather is expected.\nThunderstorms with damaging winds are possible this evening.\n$$",
+     "headline": null
+    },
+    "sps": [
+     {
+      "product_type": "SPS",
+      "product_id": "SPS-LOCAL",
+      "cwa_office": "PHI",
+      "issuance_time": "2026-09-25T15:00:00+00:00",
+      "product_text": "\nNJZ017-018-252000-\nBurlington NJ-\n...Fire weather concerns this afternoon...\n",
+      "headline": "Elevated fire weather concerns this afternoon"
+     }
+    ],
+    "cli_stations": [
+     "ILG"
+    ],
+    "cli_cache": {
+     "ILG": {
+      "product_type": "CLI",
+      "product_id": "CLI-2026-09-25T20:00:00+00:00",
+      "cwa_office": "ILG",
+      "issuance_time": "2026-09-25T20:00:00+00:00",
+      "product_text": "CLIMATE REPORT\nTEMPERATURE (F)\n  MAXIMUM   74\n  MINIMUM   55\nPRECIPITATION (IN)\n  TODAY 0.12\n",
+      "headline": null
+     }
+    },
+    "now": "2026-09-25T16:11:00+00:00",
+    "weather": {
+     "location": {
+      "name": "Lumberton",
+      "latitude": 39.96,
+      "longitude": -74.8,
+      "country_code": "US",
+      "cwa_office": "PHI",
+      "forecast_zone_id": "https://api.weather.gov/zones/forecast/NJZ017",
+      "county_zone_id": "NJC005",
+      "fire_zone_id": "NJZ017/"
+     },
+     "discussion": "\n000\nFXUS61 KPHI 291732\nAFDPHI\n\nArea Forecast Discussion\nNational Weather Service Mount Holly NJ\n132 PM EDT Wed Sep 25 2026\n\n.WHAT HAS CHANGED...\nRain arrives earlier; totals raised.\n\n&&\n.KEY MESSAGES...\n1) Rain late.\n\n&&\n",
+     "discussion_issuance_time": "2026-09-25T17:32:00+00:00",
+     "current": {
+      "severe_weather_risk": 65
+     },
+     "minutely_precipitation": {
+      "points": [
+       {
+        "time": "2026-09-25T16:11:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.1
+       },
+       {
+        "time": "2026-09-25T16:12:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.1
+       },
+       {
+        "time": "2026-09-25T16:13:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.1
+       },
+       {
+        "time": "2026-09-25T16:14:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.1
+       },
+       {
+        "time": "2026-09-25T16:15:00+00:00",
+        "precipitation_intensity": 0.0,
+        "precipitation_probability": 0.1
+       },
+       {
+        "time": "2026-09-25T16:16:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:17:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:18:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:19:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:20:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:21:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:22:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:23:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:24:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:25:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:26:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:27:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:28:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:29:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:30:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:31:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:32:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:33:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:34:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:35:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:36:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:37:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:38:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:39:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       },
+       {
+        "time": "2026-09-25T16:40:00+00:00",
+        "precipitation_intensity": 0.8,
+        "precipitation_probability": 0.9,
+        "precipitation_type": "rain"
+       }
+      ]
+     }
+    }
+   },
+   {
+    "kind": "displayed",
+    "location": {
+     "name": "Lumberton",
+     "latitude": 39.96,
+     "longitude": -74.8,
+     "country_code": "US",
+     "cwa_office": "PHI",
+     "forecast_zone_id": "https://api.weather.gov/zones/forecast/NJZ017",
+     "county_zone_id": "NJC005",
+     "fire_zone_id": "NJZ017/"
+    },
+    "play_refresh_sound": true,
+    "hwo": {
+     "product_type": "HWO",
+     "product_id": "HWO-2026-09-25T19:00:00+00:00",
+     "cwa_office": "PHI",
+     "issuance_time": "2026-09-25T19:00:00+00:00",
+     "product_text": "HAZARDOUS WEATHER OUTLOOK\n.DAY ONE...\nNo hazardous weather is expected.\nThunderstorms with damaging winds are possible this evening.\n$$",
+     "headline": null
+    },
+    "sps": [
+     {
+      "product_type": "SPS",
+      "product_id": "SPS-LOCAL",
+      "cwa_office": "PHI",
+      "issuance_time": "2026-09-25T15:00:00+00:00",
+      "product_text": "\nNJZ017-018-252000-\nBurlington NJ-\n...Fire weather concerns this afternoon...\n",
+      "headline": "Elevated fire weather concerns this afternoon"
+     }
+    ],
+    "cli_stations": [
+     "ILG"
+    ],
+    "cli_cache": {
+     "ILG": {
+      "product_type": "CLI",
+      "product_id": "CLI-2026-09-25T21:30:00+00:00",
+      "cwa_office": "ILG",
+      "issuance_time": "2026-09-25T21:30:00+00:00",
+      "product_text": "CLIMATE REPORT\nTEMPERATURE (F)\n  MAXIMUM   76\n  MINIMUM   57\nPRECIPITATION (IN)\n  TODAY 0.40\n",
+      "headline": null
+     }
+    },
+    "now": "2026-09-25T16:21:00+00:00",
+    "weather": {
+     "location": {
+      "name": "Lumberton",
+      "latitude": 39.96,
+      "longitude": -74.8,
+      "country_code": "US",
+      "cwa_office": "PHI",
+      "forecast_zone_id": "https://api.weather.gov/zones/forecast/NJZ017",
+      "county_zone_id": "NJC005",
+      "fire_zone_id": "NJZ017/"
+     },
+     "discussion": "\n000\nFXUS61 KPHI 292100\nAFDPHI\n\nArea Forecast Discussion\nNational Weather Service Mount Holly NJ\n500 PM EDT Wed Sep 25 2026\n\n.WHAT HAS CHANGED...\nNo significant changes.\n\n&&\n.KEY MESSAGES...\n1) Rain late.\n\n&&\n",
+     "discussion_issuance_time": "2026-09-25T21:00:00+00:00",
+     "current": {
+      "severe_weather_risk": 10
+     }
+    }
+   }
+  ],
+  "results": [
+   {
+    "local_now": "2026-09-25T12:00:00-04:00",
+    "toasts": [],
+    "sounds": [],
+    "popups": [],
+    "radio": [],
+    "event_center": []
+   },
+   {
+    "local_now": "2026-09-25T12:10:00-04:00",
+    "toasts": [],
+    "sounds": [],
+    "popups": [],
+    "radio": [],
+    "event_center": []
+   },
+   {
+    "local_now": "2026-09-25T12:11:00-04:00",
+    "toasts": [
+     {
+      "title": "Severe Weather Risk Increased to High",
+      "message": "Severe weather risk for Lumberton has increased from low to high (risk index: 65).",
+      "timeout": 10,
+      "sound_event": "severe_risk",
+      "sound_candidates": null,
+      "play_sound": true,
+      "activation_arguments": "accessiweather-toast:kind=generic_fallback"
+     },
+     {
+      "title": "Rain starting in 5 minutes",
+      "message": "Rain starting in 5 minutes for Lumberton.",
+      "timeout": 10,
+      "sound_event": "notify",
+      "sound_candidates": null,
+      "play_sound": true,
+      "activation_arguments": "accessiweather-toast:kind=generic_fallback"
+     },
+     {
+      "title": "Rain likely in the next hour (90% chance)",
+      "message": "Rain likely in the next hour (90% chance) for Lumberton.",
+      "timeout": 10,
+      "sound_event": "notify",
+      "sound_candidates": null,
+      "play_sound": true,
+      "activation_arguments": "accessiweather-toast:kind=generic_fallback"
+     }
+    ],
+    "sounds": [
+     {
+      "event": "severe_risk",
+      "pack": "golden-missing-pack"
+     },
+     {
+      "event": "notify",
+      "pack": "golden-missing-pack"
+     },
+     {
+      "event": "notify",
+      "pack": "golden-missing-pack"
+     }
+    ],
+    "popups": [],
+    "radio": [],
+    "event_center": [
+     {
+      "category": "Severe Weather Risk Increased to High",
+      "text": "Severe weather risk for Lumberton has increased from low to high (risk index: 65)."
+     },
+     {
+      "category": "Rain starting in 5 minutes",
+      "text": "Rain starting in 5 minutes for Lumberton."
+     },
+     {
+      "category": "Rain likely in the next hour (90% chance)",
+      "text": "Rain likely in the next hour (90% chance) for Lumberton."
+     }
+    ]
+   },
+   {
+    "local_now": "2026-09-25T12:21:00-04:00",
+    "toasts": [
+     {
+      "title": "Daily Climate Report Updated",
+      "message": "The Daily Climate Report for Lumberton (ILG) was updated by the National Weather Service. Change summary: MAXIMUM 76; MINIMUM 57",
+      "timeout": 10,
+      "sound_event": "discussion_update",
+      "sound_candidates": null,
+      "play_sound": true,
+      "activation_arguments": "accessiweather-toast:kind=generic_fallback"
+     },
+     {
+      "title": "Severe Weather Risk Decreased to Minimal",
+      "message": "Severe weather risk for Lumberton has decreased from high to minimal (risk index: 10).",
+      "timeout": 10,
+      "sound_event": "severe_risk",
+      "sound_candidates": null,
+      "play_sound": true,
+      "activation_arguments": "accessiweather-toast:kind=generic_fallback"
+     }
+    ],
+    "sounds": [
+     {
+      "event": "discussion_update",
+      "pack": "golden-missing-pack"
+     },
+     {
+      "event": "severe_risk",
+      "pack": "golden-missing-pack"
+     }
+    ],
+    "popups": [],
+    "radio": [],
+    "event_center": [
+     {
+      "category": "Daily Climate Report Updated",
+      "text": "The Daily Climate Report for Lumberton (ILG) was updated by the National Weather Service. Change summary: MAXIMUM 76; MINIMUM 57"
+     },
+     {
+      "category": "Severe Weather Risk Decreased to Minimal",
+      "text": "Severe weather risk for Lumberton has decreased from high to minimal (risk index: 10)."
+     }
+    ]
+   }
+  ]
+ }
+]

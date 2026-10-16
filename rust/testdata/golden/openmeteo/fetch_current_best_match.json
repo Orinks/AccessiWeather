@@ -1,0 +1,122 @@
+{
+ "now": "2025-01-15T12:30:00-05:00",
+ "exchanges": [
+  {
+   "url": "https://api.open-meteo.com/v1/forecast?latitude=40.7128&longitude=-74.006&current=temperature_2m%2Crelative_humidity_2m%2Capparent_temperature%2Cweather_code%2Cwind_speed_10m%2Cwind_direction_10m%2Cpressure_msl%2Cprecipitation%2Crain%2Cshowers%2Csnowfall%2Csnow_depth%2Cvisibility%2Cuv_index&daily=sunrise%2Csunset%2Cuv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=1",
+   "headers": {},
+   "status": 200,
+   "body": {
+    "latitude": 40.710335,
+    "longitude": -73.99307,
+    "generationtime_ms": 0.123,
+    "utc_offset_seconds": -18000,
+    "timezone": "America/New_York",
+    "timezone_abbreviation": "EST",
+    "elevation": 10.0,
+    "current_units": {
+     "time": "iso8601",
+     "interval": "seconds",
+     "temperature_2m": "°F",
+     "relative_humidity_2m": "%",
+     "apparent_temperature": "°F",
+     "is_day": "",
+     "precipitation": "inch",
+     "weather_code": "wmo code",
+     "cloud_cover": "%",
+     "pressure_msl": "hPa",
+     "surface_pressure": "hPa",
+     "wind_speed_10m": "mp/h",
+     "wind_direction_10m": "°",
+     "wind_gusts_10m": "mp/h",
+     "uv_index": "",
+     "snowfall": "inch",
+     "snow_depth": "inch",
+     "visibility": "ft"
+    },
+    "current": {
+     "time": "2025-01-15T12:00",
+     "interval": 900,
+     "temperature_2m": 45.5,
+     "relative_humidity_2m": 65,
+     "apparent_temperature": 42.3,
+     "is_day": 1,
+     "precipitation": 0.0,
+     "weather_code": 2,
+     "cloud_cover": 50,
+     "pressure_msl": 1020.5,
+     "surface_pressure": 1019.2,
+     "wind_speed_10m": 8.5,
+     "wind_direction_10m": 270,
+     "wind_gusts_10m": 15.2,
+     "uv_index": 2.5,
+     "snowfall": 0.0,
+     "snow_depth": 0.0,
+     "visibility": 32808
+    },
+    "daily_units": {
+     "time": "iso8601",
+     "sunrise": "iso8601",
+     "sunset": "iso8601",
+     "uv_index_max": ""
+    },
+    "daily": {
+     "time": [
+      "2025-01-15"
+     ],
+     "sunrise": [
+      "2025-01-15T07:15"
+     ],
+     "sunset": [
+      "2025-01-15T16:55"
+     ],
+     "uv_index_max": [
+      3.2
+     ]
+    }
+   }
+  }
+ ],
+ "output": {
+  "temperature": 45.5,
+  "temperature_f": 45.5,
+  "temperature_c": 7.5,
+  "condition": "Partly cloudy",
+  "humidity": 65,
+  "wind_speed": 8.5,
+  "dewpoint_f": 34.428234234114925,
+  "dewpoint_c": 1.3490190189527358,
+  "wind_speed_mph": 8.5,
+  "wind_speed_kph": 13.67939,
+  "wind_direction": "W",
+  "pressure": 30.1353477243637,
+  "pressure_in": 30.1353477243637,
+  "pressure_mb": 1020.5,
+  "feels_like_f": 42.3,
+  "feels_like_c": 5.7222222222222205,
+  "visibility_miles": 6.213636363636364,
+  "visibility_km": 9.999878400000002,
+  "uv_index": 2.5,
+  "cloud_cover": null,
+  "wind_gust_mph": null,
+  "wind_gust_kph": null,
+  "precipitation_in": 0.0,
+  "precipitation_mm": 0.0,
+  "sunrise_time": "2025-01-15T07:15:00-05:00",
+  "sunset_time": "2025-01-15T16:55:00-05:00",
+  "moon_phase": null,
+  "moonrise_time": null,
+  "moonset_time": null,
+  "snow_depth_in": 0.0,
+  "snow_depth_cm": 0.0,
+  "snowfall_rate_in": 0.0,
+  "wind_chill_f": 42.3,
+  "wind_chill_c": 5.7222222222222205,
+  "freezing_level_ft": null,
+  "freezing_level_m": null,
+  "heat_index_f": null,
+  "heat_index_c": null,
+  "frost_risk": null,
+  "precipitation_type": null,
+  "severe_weather_risk": null
+ }
+}

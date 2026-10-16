@@ -90,3 +90,50 @@ def test_venice_key_uses_secure_storage_and_is_redacted_from_logs():
         assert SettingsOperations(manager).update_settings(venice_api_key="test-venice-secret")
     save.assert_called_once_with("venice_api_key", "test-venice-secret")
     assert "test-venice-secret" not in str(manager._get_logger.return_value.mock_calls)
+
+
+@pytest.mark.parametrize("key_name", ["openrouter_api_key", "venice_api_key"])
+@pytest.mark.parametrize("new_value", ["test-replacement-secret", ""])
+def test_failed_credential_write_reports_failure_and_preserves_previous_key(key_name, new_value):
+    manager = MagicMock()
+    manager.app._portable_mode = False
+    config = manager.get_config.return_value = AppConfig.default()
+    setattr(config.settings, key_name, "test-previous-secret")
+    manager.save_config.return_value = True
+    with patch(
+        "accessiweather.config.settings.SecureStorage.set_password", return_value=False
+    ) as save:
+        result = SettingsOperations(manager).update_settings(
+            **{key_name: new_value, "update_interval_minutes": 45}
+        )
+
+    assert result is False
+    assert getattr(config.settings, key_name) == "test-previous-secret"
+    assert config.settings.update_interval_minutes == 45
+    manager.save_config.assert_called_once()
+    save.assert_called_once_with(key_name, new_value)
+    logs = str(manager._get_logger.return_value.mock_calls)
+    assert "test-replacement-secret" not in logs
+    assert "test-previous-secret" not in logs
+
+
+@pytest.mark.parametrize("key_name", ["openrouter_api_key", "venice_api_key"])
+def test_portable_credential_save_uses_config_without_keyring(key_name):
+    manager = MagicMock()
+    manager.app._portable_mode = True
+    config = manager.get_config.return_value = AppConfig.default()
+    manager.save_config.return_value = True
+    with patch("accessiweather.config.settings.SecureStorage.set_password") as save:
+        assert SettingsOperations(manager).update_settings(**{key_name: "test-portable-secret"})
+    save.assert_not_called()
+    assert getattr(config.settings, key_name) == "test-portable-secret"
+    manager.save_config.assert_called_once()
+
+
+def test_config_save_failure_is_reported_after_successful_credential_write():
+    manager = MagicMock()
+    manager.app._portable_mode = False
+    manager.get_config.return_value = AppConfig.default()
+    manager.save_config.return_value = False
+    with patch("accessiweather.config.settings.SecureStorage.set_password", return_value=True):
+        assert not SettingsOperations(manager).update_settings(venice_api_key="test-secret")

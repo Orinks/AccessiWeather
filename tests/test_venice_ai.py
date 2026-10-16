@@ -8,12 +8,20 @@ import pytest
 
 from accessiweather.ai_explainer import AIExplainer
 from accessiweather.ai_explainer_models import (
+    AIExplainerError,
     InsufficientCreditsError,
     InvalidAPIKeyError,
     NetworkError,
+    ProviderPermissionError,
     RateLimitError,
 )
-from accessiweather.ai_provider import DEFAULT_VENICE_MODEL, validate_venice_api_key, venice_error
+from accessiweather.ai_provider import (
+    DEFAULT_VENICE_MODEL,
+    ai_request_error,
+    openrouter_error,
+    validate_venice_api_key,
+    venice_error,
+)
 
 
 @pytest.mark.asyncio
@@ -26,13 +34,18 @@ async def test_venice_preserves_prompts_and_never_calls_openrouter(text_product)
         custom_instructions="Use Celsius only",
     )
     client = MagicMock()
-    client.chat.completions.create.return_value = SimpleNamespace(
-        choices=[
-            SimpleNamespace(message=SimpleNamespace(content="A useful weather explanation here."))
-        ],
-        model=DEFAULT_VENICE_MODEL,
-        usage=None,
-    )
+    client.chat.completions.create.return_value = [
+        SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    delta=SimpleNamespace(content="A useful weather explanation here."),
+                    finish_reason="stop",
+                )
+            ],
+            model=DEFAULT_VENICE_MODEL,
+            usage=None,
+        )
+    ]
     with (
         patch("accessiweather.ai_explainer.create_venice_client", return_value=client),
         patch.object(explainer, "_call_openrouter") as openrouter,
@@ -56,6 +69,7 @@ async def test_venice_preserves_prompts_and_never_calls_openrouter(text_product)
     "status,error_type",
     [
         (401, InvalidAPIKeyError),
+        (403, ProviderPermissionError),
         (402, InsufficientCreditsError),
         (429, RateLimitError),
         (503, NetworkError),
@@ -110,6 +124,43 @@ def test_venice_connection_error_is_redacted():
     assert "sensitive" not in str(error)
 
 
+@pytest.mark.parametrize(
+    "status,error_type,expected",
+    [
+        (401, InvalidAPIKeyError, "authenticate"),
+        (402, InsufficientCreditsError, "credits"),
+        (403, ProviderPermissionError, "permission"),
+        (404, AIExplainerError, "model"),
+        (429, RateLimitError, "rate limit"),
+        (503, NetworkError, "temporarily unavailable"),
+    ],
+)
+def test_openrouter_assistant_status_errors_are_specific_and_redacted(status, error_type, expected):
+    error = httpx.HTTPStatusError(
+        "secret-key upstream response",
+        request=httpx.Request("POST", "https://example.test"),
+        response=httpx.Response(status),
+    )
+    mapped = openrouter_error(error)
+    assert isinstance(mapped, error_type)
+    assert expected in str(mapped).lower()
+    assert "secret-key" not in str(mapped)
+
+
+@pytest.mark.parametrize(
+    "error,expected",
+    [
+        (TimeoutError("secret-key"), "timed out"),
+        (httpx.ConnectError("secret-key"), "internet connection"),
+        (RuntimeError("secret-key"), "could not complete"),
+    ],
+)
+def test_unexpected_openrouter_failures_never_expose_exception_text(error, expected):
+    message = str(ai_request_error(error))
+    assert expected in message.lower()
+    assert "secret-key" not in message
+
+
 def test_provider_cache_isolation():
     first = AIExplainer(provider="venice", api_key="test", model="same")
     second = AIExplainer(provider="openrouter", api_key="test", model="same")
@@ -146,6 +197,8 @@ def test_weather_assistant_venice_uses_saved_prompt_and_provider():
     with (
         patch(f"{module}._build_weather_context", return_value="Sunny"),
         patch(f"{module}.create_venice_client", return_value=client) as create,
+        # Patching threading.Thread is process-wide, so the deadline timer is stubbed too.
+        patch("accessiweather.ui.dialogs.weather_assistant_request.RequestDeadline"),
         patch(f"{module}.threading.Thread") as thread,
         patch(f"{module}.wx.CallAfter"),
     ):
@@ -170,6 +223,50 @@ def test_weather_assistant_rejects_unknown_provider():
     dialog._get_tool_executor.assert_not_called()
 
 
+def test_weather_assistant_redacts_failure_then_recovers():
+    from accessiweather.ui.dialogs.weather_assistant_dialog import WeatherAssistantDialog
+
+    settings = SimpleNamespace(
+        ai_provider="openrouter",
+        openrouter_api_key="secret-key",
+        ai_model_preference="openrouter/free",
+        custom_system_prompt=None,
+        custom_instructions=None,
+    )
+    dialog = MagicMock()
+    dialog.app.config_manager.get_settings.return_value = settings
+    dialog._conversation = [{"role": "user", "content": "Hello"}]
+    dialog._get_tool_executor.return_value = None
+    client = MagicMock()
+    client.chat.completions.create.side_effect = [
+        httpx.HTTPStatusError(
+            "secret-key response body",
+            request=httpx.Request("POST", "https://example.test"),
+            response=httpx.Response(402),
+        ),
+        SimpleNamespace(
+            model="openrouter/free",
+            choices=[SimpleNamespace(message=SimpleNamespace(content="Ready.", tool_calls=None))],
+        ),
+    ]
+    module = "accessiweather.ui.dialogs.weather_assistant_dialog"
+    with (
+        patch(f"{module}._build_weather_context", return_value="Sunny"),
+        patch("openai.OpenAI", return_value=client),
+        patch("accessiweather.ui.dialogs.weather_assistant_request.RequestDeadline"),
+        patch(f"{module}.threading.Thread") as thread,
+        patch(f"{module}.wx.CallAfter", side_effect=lambda callback, *args: callback(*args)),
+    ):
+        thread.side_effect = lambda target, **kwargs: SimpleNamespace(start=target)
+        WeatherAssistantDialog._generate_response(dialog)
+        error = dialog._on_response_error.call_args.args[0]
+        assert "credits" in error
+        assert "secret-key" not in error
+        WeatherAssistantDialog._generate_response(dialog)
+    dialog._on_response_received.assert_called_once()
+    assert dialog._on_response_received.call_args.args[0] == "Ready."
+
+
 def test_regeneration_error_focuses_and_announces_error():
     from accessiweather.ui.dialogs.explanation_dialog import ExplanationDialog
 
@@ -192,3 +289,72 @@ def test_summary_error_focuses_and_announces_error():
     panel._announce_explain_status.assert_called_once_with(
         "Summary failed. Venice account needs credits"
     )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "balances, no_balance",
+    [
+        ({"USD": 0, "DIEM": 0, "BUNDLED_CREDITS": 0}, True),
+        ({"USD": 0, "DIEM": 0, "BUNDLED_CREDITS": 2}, False),
+        ({"USD": 0, "DIEM": 0}, False),
+        ({"USD": 0, "DIEM": 1}, False),
+        ({"USD": 2, "DIEM": 0}, False),
+        ({"USD": 0, "DIEM": 0, "OTHER": 3}, False),
+        ({"USD": 0}, False),
+        ({"USD": None, "DIEM": 0}, False),
+        ({"USD": False, "DIEM": 0}, False),
+        ({}, False),
+        (None, False),
+    ],
+)
+async def test_venice_validation_reports_only_known_balance_shortfall(balances, no_balance):
+    client = AsyncMock()
+    response = MagicMock()
+    response.json.return_value = {"data": {"accessPermitted": True, "balances": balances}}
+    client.get.return_value = response
+    with patch("accessiweather.ai_provider.httpx.AsyncClient") as factory:
+        factory.return_value.__aenter__.return_value = client
+        valid, message = await validate_venice_api_key("test-key")
+    assert valid is True
+    assert ("no positive balance is listed" in message) is no_balance
+    client.post.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_venice_denied_access_takes_precedence_over_zero_balance():
+    client = AsyncMock()
+    response = MagicMock()
+    response.json.return_value = {
+        "data": {"accessPermitted": False, "balances": {"USD": 0, "DIEM": 0}}
+    }
+    client.get.return_value = response
+    with patch("accessiweather.ai_provider.httpx.AsyncClient") as factory:
+        factory.return_value.__aenter__.return_value = client
+        valid, message = await validate_venice_api_key("test-key")
+    assert valid is False
+    assert "not permitted" in message
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "status, phrase", [(401, "rejected this API key"), (403, "denied permission")]
+)
+async def test_venice_key_validation_distinguishes_rejection_from_permission(
+    status, phrase, caplog
+):
+    client = AsyncMock()
+    response = httpx.Response(
+        status,
+        text="private-response-secret",
+        request=httpx.Request("GET", "https://example.invalid"),
+    )
+    client.get.return_value = response
+    with patch("accessiweather.ai_provider.httpx.AsyncClient") as factory:
+        factory.return_value.__aenter__.return_value = client
+        valid, message = await validate_venice_api_key("test-secret-key")
+    assert valid is False
+    assert phrase in message
+    assert "private-response-secret" not in message + caplog.text
+    assert "test-secret-key" not in message + caplog.text
+    client.post.assert_not_called()

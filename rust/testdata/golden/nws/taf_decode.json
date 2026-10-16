@@ -1,0 +1,186 @@
+{
+ "now": "2026-01-20T18:21:00+00:00",
+ "call": "taf",
+ "result": {
+  "decoded": [
+   [
+    "",
+    "No TAF available."
+   ],
+   [
+    "TAF KXYZ NIL=",
+    "No TAF available for station KXYZ."
+   ],
+   [
+    "TAF",
+    "TAF issued, but no additional information was provided."
+   ],
+   [
+    "TAF AMD KORD 201730Z 2018/2124 VRB03KT 1 1/2SM -FZRA BR OVC005 BECMG 2020/2022 27012G22KT 3SM -SN BKN010 TEMPO 2022/2102 1/2SM +SN VV002 FM210300 30015KT P6SM SCT025 PROB40 TEMPO 2106/2110 2SM SHSN RMK NXT FCST BY 21Z",
+    "Forecast for station KORD.\nIssued at 17:30 UTC on the 20th.\nValid from 18:00 UTC on the 20th until 24:00 UTC on the 21st.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: light freezing rain (-FZRA); mist (BR). Clouds: Overcast at 500 feet (OVC005).\nBecoming from 20:00 UTC on the 20th until 22:00 UTC on the 20th: Winds from 270 degrees at 12 knots with gusts to 22 knots (27012G22KT). Visibility 3 statute miles (3 SM) (3SM). Weather: light snow (-SN). Clouds: Broken clouds at 1,000 feet (BKN010).\nTemporary between from 22:00 UTC on the 20th until 02:00 UTC on the 21st: Visibility 1/2 statute miles (0.5 SM) (1/2SM). Weather: heavy snow (+SN). Clouds: Vertical visibility 200 feet (VV002).\nFrom 03:00 UTC on the 21st: Winds from 300 degrees at 15 knots (30015KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 2,500 feet (SCT025).\nProbability 40% of temporary conditions from 06:00 UTC on the 21st until 10:00 UTC on the 21st: Visibility 2 statute miles (2 SM) (2SM). Weather: showers of snow (SHSN).\nRemarks: NXT FCST BY 21Z."
+   ],
+   [
+    "TAF KXYZ 201730Z 2018/2118 00000KT 0800 FG VCSH UP FZUP RAUP TSUP SHUP -UP CAVOK NSW SKC CLR NSC OVC/// BKN020TCU FEW100CB 12345 9999 M1/4SM 1/0SM WEIRD",
+    "Forecast for station KXYZ.\nIssued at 17:30 UTC on the 20th.\nValid from 18:00 UTC on the 20th until 18:00 UTC on the 21st.\nBase forecast: Calm winds (00000KT). Visibility 0.8 kilometres (0800 meters). Weather: fog (FG); In the vicinity, showers of (VCSH); unidentified precipitation (UP); freezing freezing precipitation (FZUP); mixed precipitation (RAUP); thunderstorms with thunderstorm precipitation (TSUP); showers of showery precipitation (SHUP); light unidentified precipitation (-UP); No significant weather (NSW); Visibility 9999 M1/4 statute miles (9999 M1/4SM). Clouds: Ceiling and visibility OK (CAVOK); Sky clear (SKC); Sky clear (CLR); No significant clouds (NSC); Overcast (OVC///); Broken clouds at 2,000 feet with towering cumulus (BKN020TCU); A few clouds at 10,000 feet with cumulonimbus (FEW100CB). Additional codes: 12345 1/0SM WEIRD."
+   ],
+   [
+    "TAF KXYZ 201730Z 2018/2118 TEMPO BECMG PROB30 FM201900",
+    "Forecast for station KXYZ.\nIssued at 17:30 UTC on the 20th.\nValid from 18:00 UTC on the 20th until 18:00 UTC on the 21st.\nBase forecast: No additional details provided."
+   ],
+   [
+    "KXYZ 201730Z 2018/2118 == 18010MPS 20005KMH 36010KT",
+    "Forecast for station KXYZ.\nIssued at 17:30 UTC on the 20th.\nValid from 18:00 UTC on the 20th until 18:00 UTC on the 21st.\nBase forecast: Winds from 180 degrees at 10 meters per second (18010MPS). Additional codes:  20005KMH 36010KT."
+   ],
+   [
+    "TAF == 201730Z",
+    "Terminal Aerodrome Forecast.\nIssued at 17:30 UTC on the 20th.\nBase forecast: No additional details provided."
+   ],
+   [
+    "   \n  ",
+    "No TAF available."
+   ],
+   [
+    "= = =",
+    "No TAF available."
+   ],
+   [
+    "TAF KJFK",
+    "TAF issued for station KJFK."
+   ],
+   [
+    "TAF KJFK NIL",
+    "No TAF available for station KJFK."
+   ],
+   [
+    "TAF COR KJFK 071730Z 0718/0824 21015KT P6SM SCT250 FM072200 31010KT P6SM FEW250",
+    "Forecast for station KJFK.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 210 degrees at 15 knots (21015KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 25,000 feet (SCT250).\nFrom 22:00 UTC on the 7th: Winds from 310 degrees at 10 knots (31010KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: A few clouds at 25,000 feet (FEW250)."
+   ],
+   [
+    "TAF KJFK 071730Z 0718/0824 21015KT P6SM SCT250 TEMPO 0720/0724 3SM -RA",
+    "Forecast for station KJFK.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 210 degrees at 15 knots (21015KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 25,000 feet (SCT250).\nTemporary between from 20:00 UTC on the 7th until 24:00 UTC on the 7th: Visibility 3 statute miles (3 SM) (3SM). Weather: light rain (-RA)."
+   ],
+   [
+    "TAF KJFK 071730Z 0718/0824 21015KT P6SM SCT250 BECMG 0720/0722 BKN040",
+    "Forecast for station KJFK.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 210 degrees at 15 knots (21015KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 25,000 feet (SCT250).\nBecoming from 20:00 UTC on the 7th until 22:00 UTC on the 7th: Clouds: Broken clouds at 4,000 feet (BKN040)."
+   ],
+   [
+    "TAF KJFK 071730Z 0718/0824 21015KT P6SM SCT250 PROB30 0720/0724 1SM +TSRA",
+    "Forecast for station KJFK.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 210 degrees at 15 knots (21015KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 25,000 feet (SCT250).\nProbability 30% from 20:00 UTC on the 7th until 24:00 UTC on the 7th: Visibility 1 statute miles (1 SM) (1SM). Weather: heavy thunderstorms with rain (+TSRA)."
+   ],
+   [
+    "TAF KJFK 071730Z 0718/0824 21015KT P6SM SCT250 PROB40 TEMPO 0720/0724 1SM +TSRA",
+    "Forecast for station KJFK.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 210 degrees at 15 knots (21015KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 25,000 feet (SCT250).\nProbability 40% of temporary conditions from 20:00 UTC on the 7th until 24:00 UTC on the 7th: Visibility 1 statute miles (1 SM) (1SM). Weather: heavy thunderstorms with rain (+TSRA)."
+   ],
+   [
+    "TAF KJFK 071730Z 0718/0824 21015KT P6SM SCT250 RMK NXT FCST BY 08Z",
+    "Forecast for station KJFK.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 210 degrees at 15 knots (21015KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 25,000 feet (SCT250).\nRemarks: NXT FCST BY 08Z."
+   ],
+   [
+    "TAF EGLL 071730Z 0718/0824 27010KT CAVOK 5000 BLSN MIFG SCT030TCU BKN///",
+    "Forecast for station EGLL.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 270 degrees at 10 knots (27010KT). Visibility 5.0 kilometres (5000 meters). Weather: blowing snow (BLSN); shallow fog (MIFG). Clouds: Ceiling and visibility OK (CAVOK); Scattered clouds at 3,000 feet with towering cumulus (SCT030TCU); Broken clouds (BKN///)."
+   ],
+   [
+    "TAF KJFK 071730Z 0718/0824 21015KT P6SM NSW SCT250=",
+    "Forecast for station KJFK.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 210 degrees at 15 knots (21015KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Weather: No significant weather (NSW). Clouds: Scattered clouds at 25,000 feet (SCT250)."
+   ],
+   [
+    "TAF KJFK 071730Z 0718/0824\n        21015KT P6SM SCT250 270100KT 27020KMH NOSUCH",
+    "Forecast for station KJFK.\nIssued at 17:30 UTC on the 7th.\nValid from 18:00 UTC on the 7th until 24:00 UTC on the 8th.\nBase forecast: Winds from 210 degrees at 15 knots (21015KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 25,000 feet (SCT250). Additional codes: 270100KT 27020KMH NOSUCH."
+   ]
+  ],
+  "no_data": [
+   [
+    "",
+    true
+   ],
+   [
+    "TAF KXYZ NIL=",
+    true
+   ],
+   [
+    "TAF",
+    false
+   ],
+   [
+    "TAF AMD KORD 201730Z 2018/2124 VRB03KT 1 1/2SM -FZRA BR OVC005 BECMG 2020/2022 27012G22KT 3SM -SN BKN010 TEMPO 2022/2102 1/2SM +SN VV002 FM210300 30015KT P6SM SCT025 PROB40 TEMPO 2106/2110 2SM SHSN RMK NXT FCST BY 21Z",
+    false
+   ],
+   [
+    "TAF KXYZ 201730Z 2018/2118 00000KT 0800 FG VCSH UP FZUP RAUP TSUP SHUP -UP CAVOK NSW SKC CLR NSC OVC/// BKN020TCU FEW100CB 12345 9999 M1/4SM 1/0SM WEIRD",
+    false
+   ],
+   [
+    "TAF KXYZ 201730Z 2018/2118 TEMPO BECMG PROB30 FM201900",
+    false
+   ],
+   [
+    "KXYZ 201730Z 2018/2118 == 18010MPS 20005KMH 36010KT",
+    false
+   ],
+   [
+    "TAF == 201730Z",
+    false
+   ],
+   [
+    "   \n  ",
+    false
+   ],
+   [
+    "= = =",
+    false
+   ],
+   [
+    "TAF KJFK",
+    false
+   ],
+   [
+    "TAF KJFK NIL",
+    true
+   ],
+   [
+    "TAF COR KJFK 071730Z 0718/0824 21015KT P6SM SCT250 FM072200 31010KT P6SM FEW250",
+    false
+   ],
+   [
+    "TAF KJFK 071730Z 0718/0824 21015KT P6SM SCT250 TEMPO 0720/0724 3SM -RA",
+    false
+   ],
+   [
+    "TAF KJFK 071730Z 0718/0824 21015KT P6SM SCT250 BECMG 0720/0722 BKN040",
+    false
+   ],
+   [
+    "TAF KJFK 071730Z 0718/0824 21015KT P6SM SCT250 PROB30 0720/0724 1SM +TSRA",
+    false
+   ],
+   [
+    "TAF KJFK 071730Z 0718/0824 21015KT P6SM SCT250 PROB40 TEMPO 0720/0724 1SM +TSRA",
+    false
+   ],
+   [
+    "TAF KJFK 071730Z 0718/0824 21015KT P6SM SCT250 RMK NXT FCST BY 08Z",
+    false
+   ],
+   [
+    "TAF EGLL 071730Z 0718/0824 27010KT CAVOK 5000 BLSN MIFG SCT030TCU BKN///",
+    false
+   ],
+   [
+    "TAF KJFK 071730Z 0718/0824 21015KT P6SM NSW SCT250=",
+    false
+   ],
+   [
+    "TAF KJFK 071730Z 0718/0824\n        21015KT P6SM SCT250 270100KT 27020KMH NOSUCH",
+    false
+   ],
+   [
+    "TAF KXYZ 201730Z 2018/2118 NO DATA",
+    true
+   ],
+   [
+    "KXYZ NO TAF",
+    true
+   ]
+  ]
+ }
+}

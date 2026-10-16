@@ -1,0 +1,260 @@
+[
+ {
+  "name": "five_years",
+  "current_temp_f": 75.0,
+  "current_date": "2026-07-15",
+  "today": "2026-07-15",
+  "responses": {
+   "2025-07-08/2025-07-22": {
+    "daily": {
+     "temperature_2m_mean": [
+      70.0,
+      71.0,
+      null
+     ]
+    }
+   },
+   "2024-07-08/2024-07-22": {
+    "daily": {
+     "temperature_2m_mean": [
+      72.0
+     ]
+    }
+   },
+   "2023-07-08/2023-07-22": {
+    "daily": {
+     "temperature_2m_mean": [
+      68.5,
+      69.5
+     ]
+    }
+   },
+   "2022-07-08/2022-07-22": {
+    "daily": {
+     "temperature_2m_mean": [
+      71.0
+     ]
+    }
+   },
+   "2021-07-08/2021-07-22": {
+    "daily": {
+     "temperature_2m_mean": [
+      70.0
+     ]
+    }
+   }
+  },
+  "requests": [
+   "2025-07-08/2025-07-22",
+   "2024-07-08/2024-07-22",
+   "2023-07-08/2023-07-22",
+   "2022-07-08/2022-07-22",
+   "2021-07-08/2021-07-22"
+  ],
+  "result": {
+   "temp_anomaly": 4.5,
+   "temp_anomaly_description": "Currently 4.5°F warmer than the 5-year average for this date.",
+   "precip_anomaly_description": null,
+   "severity": "notable"
+  }
+ },
+ {
+  "name": "insufficient",
+  "current_temp_f": 75.0,
+  "current_date": "2026-07-15",
+  "today": "2026-07-15",
+  "responses": {
+   "2025-07-08/2025-07-22": {
+    "daily": {
+     "temperature_2m_mean": [
+      70.0
+     ]
+    }
+   },
+   "2024-07-08/2024-07-22": {
+    "daily": {
+     "temperature_2m_mean": [
+      72.0
+     ]
+    }
+   },
+   "2023-07-08/2023-07-22": null,
+   "2022-07-08/2022-07-22": null,
+   "2021-07-08/2021-07-22": null
+  },
+  "requests": [
+   "2025-07-08/2025-07-22",
+   "2024-07-08/2024-07-22",
+   "2023-07-08/2023-07-22",
+   "2022-07-08/2022-07-22",
+   "2021-07-08/2021-07-22"
+  ],
+  "result": null
+ },
+ {
+  "name": "empty_lists_skipped",
+  "current_temp_f": 60.0,
+  "current_date": "2026-07-15",
+  "today": "2026-07-15",
+  "responses": {
+   "2025-07-08/2025-07-22": {
+    "daily": {
+     "temperature_2m_mean": []
+    }
+   },
+   "2024-07-08/2024-07-22": {
+    "daily": {
+     "temperature_2m_mean": [
+      null
+     ]
+    }
+   },
+   "2023-07-08/2023-07-22": {
+    "daily": {
+     "temperature_2m_mean": [
+      59.0
+     ]
+    }
+   },
+   "2022-07-08/2022-07-22": {
+    "daily": {
+     "temperature_2m_mean": [
+      60.2
+     ]
+    }
+   },
+   "2021-07-08/2021-07-22": {
+    "daily": {
+     "temperature_2m_mean": [
+      60.1
+     ]
+    }
+   }
+  },
+  "requests": [
+   "2025-07-08/2025-07-22",
+   "2024-07-08/2024-07-22",
+   "2023-07-08/2023-07-22",
+   "2022-07-08/2022-07-22",
+   "2021-07-08/2021-07-22"
+  ],
+  "result": {
+   "temp_anomaly": 0.23333333333332718,
+   "temp_anomaly_description": "Near the 3-year average for this date.",
+   "precip_anomaly_description": null,
+   "severity": "normal"
+  }
+ },
+ {
+  "name": "leap_day",
+  "current_temp_f": 40.0,
+  "current_date": "2028-02-29",
+  "today": "2028-02-29",
+  "responses": {
+   "2027-02-21/2027-03-07": {
+    "daily": {
+     "temperature_2m_mean": [
+      45.0
+     ]
+    }
+   },
+   "2026-02-21/2026-03-07": {
+    "daily": {
+     "temperature_2m_mean": [
+      44.0
+     ]
+    }
+   },
+   "2025-02-21/2025-03-07": {
+    "daily": {
+     "temperature_2m_mean": [
+      46.0
+     ]
+    }
+   },
+   "2024-02-22/2024-03-07": {
+    "daily": {
+     "temperature_2m_mean": [
+      43.0
+     ]
+    }
+   },
+   "2023-02-21/2023-03-07": {
+    "daily": {
+     "temperature_2m_mean": [
+      47.0
+     ]
+    }
+   }
+  },
+  "requests": [
+   "2027-02-21/2027-03-07",
+   "2026-02-21/2026-03-07",
+   "2025-02-21/2025-03-07",
+   "2024-02-22/2024-03-07",
+   "2023-02-21/2023-03-07"
+  ],
+  "result": {
+   "temp_anomaly": -5.0,
+   "temp_anomaly_description": "Currently 5.0°F cooler than the 5-year average for this date.",
+   "precip_anomaly_description": null,
+   "severity": "significant"
+  }
+ },
+ {
+  "name": "recent_window_clamped",
+  "current_temp_f": 50.0,
+  "current_date": "2026-07-15",
+  "today": "2025-07-20",
+  "responses": {
+   "2025-07-08/2025-07-15": {
+    "daily": {
+     "temperature_2m_mean": [
+      49.0
+     ]
+    }
+   },
+   "2024-07-08/2024-07-22": {
+    "daily": {
+     "temperature_2m_mean": [
+      48.0
+     ]
+    }
+   },
+   "2023-07-08/2023-07-22": {
+    "daily": {
+     "temperature_2m_mean": [
+      47.0
+     ]
+    }
+   },
+   "2022-07-08/2022-07-22": {
+    "daily": {
+     "temperature_2m_mean": [
+      51.0
+     ]
+    }
+   },
+   "2021-07-08/2021-07-22": {
+    "daily": {
+     "temperature_2m_mean": [
+      52.0
+     ]
+    }
+   }
+  },
+  "requests": [
+   "2025-07-08/2025-07-15",
+   "2024-07-08/2024-07-22",
+   "2023-07-08/2023-07-22",
+   "2022-07-08/2022-07-22",
+   "2021-07-08/2021-07-22"
+  ],
+  "result": {
+   "temp_anomaly": 0.6000000000000014,
+   "temp_anomaly_description": "Currently 0.6°F warmer than the 5-year average for this date.",
+   "precip_anomaly_description": null,
+   "severity": "normal"
+  }
+ }
+]

@@ -1,0 +1,2033 @@
+{
+  "scenarios": [
+    {
+      "name": "escape_on_welcome",
+      "portable": false,
+      "script": [
+        "cancel"
+      ],
+      "events": [
+        [
+          "dialog",
+          "Getting started",
+          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          [
+            "Add location",
+            "Import existing",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "update_settings",
+          {
+            "onboarding_wizard_shown": true
+          }
+        ],
+        [
+          "deferred_update_check"
+        ]
+      ]
+    },
+    {
+      "name": "add_location_skip_keys",
+      "portable": false,
+      "script": [
+        "yes",
+        "no",
+        "no"
+      ],
+      "events": [
+        [
+          "dialog",
+          "Getting started",
+          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          [
+            "Add location",
+            "Import existing",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "add_location"
+        ],
+        [
+          "dialog",
+          "OpenRouter API key (optional)",
+          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          [
+            "Set up now",
+            "Skip this key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Pirate Weather provider key (optional)",
+          "Step 3 of 3: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          [
+            "Set up now",
+            "Skip this key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Onboarding readiness",
+          "Setup summary:\n- Location configured: Yes\n- OpenRouter key set: No\n- Pirate Weather provider key set: No",
+          [],
+          "information"
+        ],
+        [
+          "update_settings",
+          {
+            "onboarding_wizard_shown": true
+          }
+        ],
+        [
+          "deferred_update_check"
+        ]
+      ]
+    },
+    {
+      "name": "no_keyring_enter_openrouter_and_test",
+      "portable": false,
+      "keyring_available": false,
+      "script": [
+        "yes",
+        "yes",
+        "no",
+        "yes",
+        {
+          "text": "  sk-or-1  "
+        },
+        "yes",
+        "yes",
+        "yes",
+        {
+          "text": "   "
+        }
+      ],
+      "events": [
+        [
+          "dialog",
+          "Getting started",
+          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          [
+            "Add location",
+            "Import existing",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "add_location"
+        ],
+        [
+          "dialog",
+          "Secure storage unavailable",
+          "Your system keyring is not available.\n\nAPI keys you enter cannot be stored securely on this machine. On Linux, installing a keyring backend (e.g. gnome-keyring or KWallet) is recommended.\n\nYou can still enter keys now; if portable mode is enabled with an encrypted bundle they will be saved there — otherwise they will be lost on exit.",
+          [],
+          "warning"
+        ],
+        [
+          "dialog",
+          "OpenRouter API key (optional)",
+          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          [
+            "Set up now",
+            "Skip this key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "OpenRouter API key (optional)",
+          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get OpenRouter API key, or Configure myself to close the wizard.",
+          [
+            "Enter key",
+            "Get OpenRouter API key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "open_url",
+          "https://openrouter.ai/keys"
+        ],
+        [
+          "dialog",
+          "OpenRouter API key (optional)",
+          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get OpenRouter API key, or Configure myself to close the wizard.",
+          [
+            "Enter key",
+            "Get OpenRouter API key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "text",
+          "OpenRouter API key (optional)",
+          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip."
+        ],
+        [
+          "update_settings",
+          {
+            "openrouter_api_key": "sk-or-1"
+          }
+        ],
+        [
+          "dialog",
+          "Key saved",
+          "OpenRouter API key saved. Test key now in Settings > AI?",
+          [
+            "Test key now",
+            "Later"
+          ],
+          "information"
+        ],
+        [
+          "open_settings",
+          "AI"
+        ],
+        [
+          "dialog",
+          "Pirate Weather provider key (optional)",
+          "Step 3 of 3: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          [
+            "Set up now",
+            "Skip this key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Pirate Weather provider key (optional)",
+          "Step 3 of 3: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get Pirate Weather provider key, or Configure myself to close the wizard.",
+          [
+            "Enter key",
+            "Get Pirate Weather provider key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "text",
+          "Pirate Weather provider key (optional)",
+          "Step 3 of 3: Enter your Pirate Weather provider key now, or leave blank to skip."
+        ],
+        [
+          "dialog",
+          "Onboarding readiness",
+          "Setup summary:\n- Location configured: Yes\n- OpenRouter key set: Yes\n- Pirate Weather provider key set: No",
+          [],
+          "information"
+        ],
+        [
+          "update_settings",
+          {
+            "onboarding_wizard_shown": true
+          }
+        ],
+        [
+          "deferred_update_check"
+        ]
+      ]
+    },
+    {
+      "name": "import_settings_with_location_finishes",
+      "portable": false,
+      "results": {
+        "import_settings": true
+      },
+      "settings_adds_location": true,
+      "script": [
+        "no",
+        "yes",
+        {
+          "file": "C:/backup.json"
+        },
+        "no"
+      ],
+      "events": [
+        [
+          "dialog",
+          "Getting started",
+          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          [
+            "Add location",
+            "Import existing",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Import settings",
+          "Import a settings backup now? This can restore preferences and saved locations.\n\nChoose Configure myself, or press Escape, to close this wizard.",
+          [
+            "Import settings",
+            "Skip settings",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "file",
+          "Import AccessiWeather settings",
+          "JSON files (*.json)|*.json"
+        ],
+        [
+          "import_settings",
+          "C:/backup.json"
+        ],
+        [
+          "dialog",
+          "Settings imported",
+          "Settings imported successfully. Any saved locations from the backup are ready to use.",
+          [],
+          "information"
+        ],
+        [
+          "dialog",
+          "Import API keys",
+          "Import an encrypted API key bundle now?\n\nChoose Configure myself, or press Escape, to close this wizard.",
+          [
+            "Import API keys",
+            "Skip API keys",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Onboarding readiness",
+          "Setup summary:\n- Location configured: Yes\n- OpenRouter key set: No\n- Pirate Weather provider key set: No",
+          [],
+          "information"
+        ],
+        [
+          "update_settings",
+          {
+            "onboarding_wizard_shown": true
+          }
+        ],
+        [
+          "deferred_update_check"
+        ]
+      ]
+    },
+    {
+      "name": "import_settings_without_location_continues",
+      "portable": false,
+      "results": {
+        "import_settings": true
+      },
+      "script": [
+        "no",
+        "yes",
+        {
+          "file": "C:/backup.json"
+        },
+        "no",
+        "no",
+        "no"
+      ],
+      "events": [
+        [
+          "dialog",
+          "Getting started",
+          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          [
+            "Add location",
+            "Import existing",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Import settings",
+          "Import a settings backup now? This can restore preferences and saved locations.\n\nChoose Configure myself, or press Escape, to close this wizard.",
+          [
+            "Import settings",
+            "Skip settings",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "file",
+          "Import AccessiWeather settings",
+          "JSON files (*.json)|*.json"
+        ],
+        [
+          "import_settings",
+          "C:/backup.json"
+        ],
+        [
+          "dialog",
+          "Settings imported",
+          "Settings imported successfully. Any saved locations from the backup are ready to use.",
+          [],
+          "information"
+        ],
+        [
+          "dialog",
+          "Import API keys",
+          "Import an encrypted API key bundle now?\n\nChoose Configure myself, or press Escape, to close this wizard.",
+          [
+            "Import API keys",
+            "Skip API keys",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "OpenRouter API key (optional)",
+          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          [
+            "Set up now",
+            "Skip this key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Pirate Weather provider key (optional)",
+          "Step 3 of 3: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          [
+            "Set up now",
+            "Skip this key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Onboarding readiness",
+          "Setup summary:\n- Location configured: No\n- OpenRouter key set: No\n- Pirate Weather provider key set: No",
+          [],
+          "information"
+        ],
+        [
+          "update_settings",
+          {
+            "onboarding_wizard_shown": true
+          }
+        ],
+        [
+          "deferred_update_check"
+        ]
+      ]
+    },
+    {
+      "name": "failed_key_import_then_configure_myself",
+      "portable": false,
+      "results": {
+        "import_api_keys": false
+      },
+      "script": [
+        "no",
+        "no",
+        "yes",
+        {
+          "file": "C:/k.keys"
+        },
+        {
+          "text": "pw"
+        },
+        "cancel"
+      ],
+      "events": [
+        [
+          "dialog",
+          "Getting started",
+          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          [
+            "Add location",
+            "Import existing",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Import settings",
+          "Import a settings backup now? This can restore preferences and saved locations.\n\nChoose Configure myself, or press Escape, to close this wizard.",
+          [
+            "Import settings",
+            "Skip settings",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Import API keys",
+          "Import an encrypted API key bundle now?\n\nChoose Configure myself, or press Escape, to close this wizard.",
+          [
+            "Import API keys",
+            "Skip API keys",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "file",
+          "Import API keys (encrypted)",
+          "Encrypted bundle (*.keys)|*.keys|Legacy bundle (*.awkeys)|*.awkeys"
+        ],
+        [
+          "text",
+          "Import API keys (encrypted)",
+          "Enter the passphrase used when exporting this encrypted API key bundle."
+        ],
+        [
+          "import_api_keys",
+          "C:/k.keys",
+          "pw"
+        ],
+        [
+          "dialog",
+          "API key import failed",
+          "Failed to import encrypted API keys. Check the passphrase and bundle file.",
+          [],
+          "error"
+        ],
+        [
+          "dialog",
+          "OpenRouter API key (optional)",
+          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          [
+            "Set up now",
+            "Skip this key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "update_settings",
+          {
+            "onboarding_wizard_shown": true
+          }
+        ],
+        [
+          "deferred_update_check"
+        ]
+      ]
+    },
+    {
+      "name": "failed_settings_import",
+      "portable": false,
+      "results": {
+        "import_settings": false
+      },
+      "script": [
+        "no",
+        "yes",
+        {
+          "file": "C:/bad.json"
+        },
+        "cancel"
+      ],
+      "events": [
+        [
+          "dialog",
+          "Getting started",
+          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          [
+            "Add location",
+            "Import existing",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Import settings",
+          "Import a settings backup now? This can restore preferences and saved locations.\n\nChoose Configure myself, or press Escape, to close this wizard.",
+          [
+            "Import settings",
+            "Skip settings",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "file",
+          "Import AccessiWeather settings",
+          "JSON files (*.json)|*.json"
+        ],
+        [
+          "import_settings",
+          "C:/bad.json"
+        ],
+        [
+          "dialog",
+          "Settings import failed",
+          "Failed to import settings. The file may be invalid or corrupted.",
+          [],
+          "error"
+        ],
+        [
+          "dialog",
+          "Import API keys",
+          "Import an encrypted API key bundle now?\n\nChoose Configure myself, or press Escape, to close this wizard.",
+          [
+            "Import API keys",
+            "Skip API keys",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "update_settings",
+          {
+            "onboarding_wizard_shown": true
+          }
+        ],
+        [
+          "deferred_update_check"
+        ]
+      ]
+    },
+    {
+      "name": "blank_bundle_passphrase_continues",
+      "portable": false,
+      "script": [
+        "no",
+        "no",
+        "yes",
+        {
+          "file": "C:/k.keys"
+        },
+        {
+          "text": "  "
+        },
+        "no",
+        "no"
+      ],
+      "events": [
+        [
+          "dialog",
+          "Getting started",
+          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          [
+            "Add location",
+            "Import existing",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Import settings",
+          "Import a settings backup now? This can restore preferences and saved locations.\n\nChoose Configure myself, or press Escape, to close this wizard.",
+          [
+            "Import settings",
+            "Skip settings",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Import API keys",
+          "Import an encrypted API key bundle now?\n\nChoose Configure myself, or press Escape, to close this wizard.",
+          [
+            "Import API keys",
+            "Skip API keys",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "file",
+          "Import API keys (encrypted)",
+          "Encrypted bundle (*.keys)|*.keys|Legacy bundle (*.awkeys)|*.awkeys"
+        ],
+        [
+          "text",
+          "Import API keys (encrypted)",
+          "Enter the passphrase used when exporting this encrypted API key bundle."
+        ],
+        [
+          "dialog",
+          "OpenRouter API key (optional)",
+          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          [
+            "Set up now",
+            "Skip this key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Pirate Weather provider key (optional)",
+          "Step 3 of 3: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          [
+            "Set up now",
+            "Skip this key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Onboarding readiness",
+          "Setup summary:\n- Location configured: No\n- OpenRouter key set: No\n- Pirate Weather provider key set: No",
+          [],
+          "information"
+        ],
+        [
+          "update_settings",
+          {
+            "onboarding_wizard_shown": true
+          }
+        ],
+        [
+          "deferred_update_check"
+        ]
+      ]
+    },
+    {
+      "name": "portable_keys_bundle_written",
+      "portable": true,
+      "results": {
+        "export": true
+      },
+      "script": [
+        "yes",
+        "yes",
+        "yes",
+        {
+          "text": "sk-or"
+        },
+        "yes",
+        "yes",
+        {
+          "text": "pw-key"
+        },
+        {
+          "text": " secret "
+        }
+      ],
+      "events": [
+        [
+          "dialog",
+          "Getting started",
+          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          [
+            "Add location",
+            "Import existing",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "add_location"
+        ],
+        [
+          "dialog",
+          "OpenRouter API key (optional)",
+          "Step 2 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          [
+            "Set up now",
+            "Skip this key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "OpenRouter API key (optional)",
+          "Step 2 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get OpenRouter API key, or Configure myself to close the wizard.",
+          [
+            "Enter key",
+            "Get OpenRouter API key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "text",
+          "OpenRouter API key (optional)",
+          "Step 2 of 4: Enter your OpenRouter API key now, or leave blank to skip."
+        ],
+        [
+          "dialog",
+          "Pirate Weather provider key (optional)",
+          "Step 3 of 4: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          [
+            "Set up now",
+            "Skip this key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Pirate Weather provider key (optional)",
+          "Step 3 of 4: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get Pirate Weather provider key, or Configure myself to close the wizard.",
+          [
+            "Enter key",
+            "Get Pirate Weather provider key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "text",
+          "Pirate Weather provider key (optional)",
+          "Step 3 of 4: Enter your Pirate Weather provider key now, or leave blank to skip."
+        ],
+        [
+          "text",
+          "Step 4 of 4: Secure your API keys",
+          "Enter a passphrase to encrypt your API keys into a portable bundle.\nThis bundle travels with the app so your keys work on any machine.\n\nLeave blank to skip (keys will not be saved)."
+        ],
+        [
+          "export",
+          "<config>/api-keys.keys",
+          "secret"
+        ],
+        [
+          "set_password",
+          "portable_bundle_passphrase",
+          "secret"
+        ],
+        [
+          "dialog",
+          "Keys saved",
+          "API keys saved to encrypted bundle. They are now active.",
+          [],
+          "information"
+        ],
+        [
+          "dialog",
+          "Onboarding readiness",
+          "Setup summary:\n- Location configured: Yes\n- OpenRouter key set: Yes\n- Pirate Weather provider key set: Yes\n- Portable key bundle created: Yes",
+          [],
+          "information"
+        ],
+        [
+          "update_settings",
+          {
+            "onboarding_wizard_shown": true
+          }
+        ],
+        [
+          "deferred_update_check"
+        ]
+      ]
+    },
+    {
+      "name": "portable_bundle_write_fails",
+      "portable": true,
+      "results": {
+        "export": false
+      },
+      "script": [
+        "yes",
+        "yes",
+        "yes",
+        {
+          "text": "sk-or"
+        },
+        "no",
+        {
+          "text": "secret"
+        }
+      ],
+      "events": [
+        [
+          "dialog",
+          "Getting started",
+          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          [
+            "Add location",
+            "Import existing",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "add_location"
+        ],
+        [
+          "dialog",
+          "OpenRouter API key (optional)",
+          "Step 2 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          [
+            "Set up now",
+            "Skip this key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "OpenRouter API key (optional)",
+          "Step 2 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get OpenRouter API key, or Configure myself to close the wizard.",
+          [
+            "Enter key",
+            "Get OpenRouter API key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "text",
+          "OpenRouter API key (optional)",
+          "Step 2 of 4: Enter your OpenRouter API key now, or leave blank to skip."
+        ],
+        [
+          "dialog",
+          "Pirate Weather provider key (optional)",
+          "Step 3 of 4: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          [
+            "Set up now",
+            "Skip this key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "text",
+          "Step 4 of 4: Secure your API keys",
+          "Enter a passphrase to encrypt your API keys into a portable bundle.\nThis bundle travels with the app so your keys work on any machine.\n\nLeave blank to skip (keys will not be saved)."
+        ],
+        [
+          "export",
+          "<config>/api-keys.keys",
+          "secret"
+        ],
+        [
+          "dialog",
+          "Bundle write failed",
+          "Failed to save the key bundle. Keys will not persist after this session.",
+          [],
+          "warning"
+        ],
+        [
+          "dialog",
+          "Onboarding readiness",
+          "Setup summary:\n- Location configured: Yes\n- OpenRouter key set: Yes\n- Pirate Weather provider key set: No\n- Portable key bundle created: No",
+          [],
+          "information"
+        ],
+        [
+          "update_settings",
+          {
+            "onboarding_wizard_shown": true
+          }
+        ],
+        [
+          "deferred_update_check"
+        ]
+      ]
+    },
+    {
+      "name": "portable_blank_passphrase",
+      "portable": true,
+      "script": [
+        "yes",
+        "no",
+        "yes",
+        "yes",
+        {
+          "text": "pw-key"
+        },
+        {
+          "text": ""
+        }
+      ],
+      "events": [
+        [
+          "dialog",
+          "Getting started",
+          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          [
+            "Add location",
+            "Import existing",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "add_location"
+        ],
+        [
+          "dialog",
+          "OpenRouter API key (optional)",
+          "Step 2 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          [
+            "Set up now",
+            "Skip this key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Pirate Weather provider key (optional)",
+          "Step 3 of 4: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          [
+            "Set up now",
+            "Skip this key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Pirate Weather provider key (optional)",
+          "Step 3 of 4: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get Pirate Weather provider key, or Configure myself to close the wizard.",
+          [
+            "Enter key",
+            "Get Pirate Weather provider key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "text",
+          "Pirate Weather provider key (optional)",
+          "Step 3 of 4: Enter your Pirate Weather provider key now, or leave blank to skip."
+        ],
+        [
+          "text",
+          "Step 4 of 4: Secure your API keys",
+          "Enter a passphrase to encrypt your API keys into a portable bundle.\nThis bundle travels with the app so your keys work on any machine.\n\nLeave blank to skip (keys will not be saved)."
+        ],
+        [
+          "dialog",
+          "Keys not saved",
+          "No passphrase entered — API keys will not be saved.",
+          [],
+          "warning"
+        ],
+        [
+          "dialog",
+          "Onboarding readiness",
+          "Setup summary:\n- Location configured: Yes\n- OpenRouter key set: No\n- Pirate Weather provider key set: No\n- Portable key bundle created: No",
+          [],
+          "information"
+        ],
+        [
+          "update_settings",
+          {
+            "onboarding_wizard_shown": true
+          }
+        ],
+        [
+          "deferred_update_check"
+        ]
+      ]
+    },
+    {
+      "name": "portable_cancel_passphrase",
+      "portable": true,
+      "script": [
+        "yes",
+        "no",
+        "yes",
+        "yes",
+        {
+          "text": "pw-key"
+        },
+        "cancel"
+      ],
+      "events": [
+        [
+          "dialog",
+          "Getting started",
+          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          [
+            "Add location",
+            "Import existing",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "add_location"
+        ],
+        [
+          "dialog",
+          "OpenRouter API key (optional)",
+          "Step 2 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          [
+            "Set up now",
+            "Skip this key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Pirate Weather provider key (optional)",
+          "Step 3 of 4: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          [
+            "Set up now",
+            "Skip this key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Pirate Weather provider key (optional)",
+          "Step 3 of 4: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get Pirate Weather provider key, or Configure myself to close the wizard.",
+          [
+            "Enter key",
+            "Get Pirate Weather provider key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "text",
+          "Pirate Weather provider key (optional)",
+          "Step 3 of 4: Enter your Pirate Weather provider key now, or leave blank to skip."
+        ],
+        [
+          "text",
+          "Step 4 of 4: Secure your API keys",
+          "Enter a passphrase to encrypt your API keys into a portable bundle.\nThis bundle travels with the app so your keys work on any machine.\n\nLeave blank to skip (keys will not be saved)."
+        ],
+        [
+          "update_settings",
+          {
+            "onboarding_wizard_shown": true
+          }
+        ],
+        [
+          "deferred_update_check"
+        ]
+      ]
+    },
+    {
+      "name": "keys_already_saved",
+      "portable": false,
+      "keyring": {
+        "openrouter_api_key": "a",
+        "pirate_weather_api_key": "b"
+      },
+      "script": [
+        "yes"
+      ],
+      "events": [
+        [
+          "dialog",
+          "Getting started",
+          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          [
+            "Add location",
+            "Import existing",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "add_location"
+        ],
+        [
+          "dialog",
+          "Onboarding readiness",
+          "Setup summary:\n- Location configured: Yes\n- OpenRouter key set: Yes\n- Pirate Weather provider key set: Yes",
+          [],
+          "information"
+        ],
+        [
+          "update_settings",
+          {
+            "onboarding_wizard_shown": true
+          }
+        ],
+        [
+          "deferred_update_check"
+        ]
+      ]
+    },
+    {
+      "name": "portable_key_import_success",
+      "portable": true,
+      "results": {
+        "import_api_keys": true
+      },
+      "bundle_keys": {
+        "openrouter_api_key": "or-key"
+      },
+      "script": [
+        "no",
+        "no",
+        "yes",
+        {
+          "file": "D:/keys.awkeys"
+        },
+        {
+          "text": " pw "
+        },
+        "no"
+      ],
+      "events": [
+        [
+          "dialog",
+          "Getting started",
+          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          [
+            "Add location",
+            "Import existing",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Import settings",
+          "Import a settings backup now? This can restore preferences and saved locations.\n\nChoose Configure myself, or press Escape, to close this wizard.",
+          [
+            "Import settings",
+            "Skip settings",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Import API keys",
+          "Import an encrypted API key bundle now?\n\nChoose Configure myself, or press Escape, to close this wizard.",
+          [
+            "Import API keys",
+            "Skip API keys",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "file",
+          "Import API keys (encrypted)",
+          "Encrypted bundle (*.keys)|*.keys|Legacy bundle (*.awkeys)|*.awkeys"
+        ],
+        [
+          "text",
+          "Import API keys (encrypted)",
+          "Enter the passphrase used when exporting this encrypted API key bundle."
+        ],
+        [
+          "import_api_keys",
+          "D:/keys.awkeys",
+          "pw"
+        ],
+        [
+          "set_password",
+          "portable_bundle_passphrase",
+          "pw"
+        ],
+        [
+          "export",
+          "<config>/api-keys.keys",
+          "pw"
+        ],
+        [
+          "dialog",
+          "API keys imported",
+          "API keys imported successfully. They are now active.",
+          [],
+          "information"
+        ],
+        [
+          "dialog",
+          "Pirate Weather provider key (optional)",
+          "Step 3 of 4: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          [
+            "Set up now",
+            "Skip this key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Onboarding readiness",
+          "Setup summary:\n- Location configured: No\n- OpenRouter key set: Yes\n- Pirate Weather provider key set: No\n- Portable key bundle created: Yes",
+          [],
+          "information"
+        ],
+        [
+          "update_settings",
+          {
+            "onboarding_wizard_shown": true
+          }
+        ],
+        [
+          "deferred_update_check"
+        ]
+      ]
+    },
+    {
+      "name": "installed_key_import_success_with_location",
+      "portable": false,
+      "results": {
+        "import_api_keys": true,
+        "import_settings": true
+      },
+      "settings_adds_location": true,
+      "bundle_keys": {
+        "pirate_weather_api_key": "pw"
+      },
+      "script": [
+        "no",
+        "yes",
+        {
+          "file": "C:/s.json"
+        },
+        "yes",
+        {
+          "file": "C:/k.keys"
+        },
+        {
+          "text": "pass"
+        }
+      ],
+      "events": [
+        [
+          "dialog",
+          "Getting started",
+          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          [
+            "Add location",
+            "Import existing",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Import settings",
+          "Import a settings backup now? This can restore preferences and saved locations.\n\nChoose Configure myself, or press Escape, to close this wizard.",
+          [
+            "Import settings",
+            "Skip settings",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "file",
+          "Import AccessiWeather settings",
+          "JSON files (*.json)|*.json"
+        ],
+        [
+          "import_settings",
+          "C:/s.json"
+        ],
+        [
+          "dialog",
+          "Settings imported",
+          "Settings imported successfully. Any saved locations from the backup are ready to use.",
+          [],
+          "information"
+        ],
+        [
+          "dialog",
+          "Import API keys",
+          "Import an encrypted API key bundle now?\n\nChoose Configure myself, or press Escape, to close this wizard.",
+          [
+            "Import API keys",
+            "Skip API keys",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "file",
+          "Import API keys (encrypted)",
+          "Encrypted bundle (*.keys)|*.keys|Legacy bundle (*.awkeys)|*.awkeys"
+        ],
+        [
+          "text",
+          "Import API keys (encrypted)",
+          "Enter the passphrase used when exporting this encrypted API key bundle."
+        ],
+        [
+          "import_api_keys",
+          "C:/k.keys",
+          "pass"
+        ],
+        [
+          "dialog",
+          "API keys imported",
+          "API keys imported successfully. They are now active.",
+          [],
+          "information"
+        ],
+        [
+          "dialog",
+          "Onboarding readiness",
+          "Setup summary:\n- Location configured: Yes\n- OpenRouter key set: No\n- Pirate Weather provider key set: Yes",
+          [],
+          "information"
+        ],
+        [
+          "update_settings",
+          {
+            "onboarding_wizard_shown": true
+          }
+        ],
+        [
+          "deferred_update_check"
+        ]
+      ]
+    },
+    {
+      "name": "import_settings_then_configure_myself",
+      "portable": false,
+      "script": [
+        "no",
+        "cancel"
+      ],
+      "events": [
+        [
+          "dialog",
+          "Getting started",
+          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          [
+            "Add location",
+            "Import existing",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Import settings",
+          "Import a settings backup now? This can restore preferences and saved locations.\n\nChoose Configure myself, or press Escape, to close this wizard.",
+          [
+            "Import settings",
+            "Skip settings",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "update_settings",
+          {
+            "onboarding_wizard_shown": true
+          }
+        ],
+        [
+          "deferred_update_check"
+        ]
+      ]
+    },
+    {
+      "name": "settings_file_cancelled",
+      "portable": false,
+      "script": [
+        "no",
+        "yes",
+        "cancel"
+      ],
+      "events": [
+        [
+          "dialog",
+          "Getting started",
+          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          [
+            "Add location",
+            "Import existing",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Import settings",
+          "Import a settings backup now? This can restore preferences and saved locations.\n\nChoose Configure myself, or press Escape, to close this wizard.",
+          [
+            "Import settings",
+            "Skip settings",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "file",
+          "Import AccessiWeather settings",
+          "JSON files (*.json)|*.json"
+        ],
+        [
+          "update_settings",
+          {
+            "onboarding_wizard_shown": true
+          }
+        ],
+        [
+          "deferred_update_check"
+        ]
+      ]
+    },
+    {
+      "name": "keys_file_cancelled",
+      "portable": false,
+      "script": [
+        "no",
+        "no",
+        "yes",
+        "cancel"
+      ],
+      "events": [
+        [
+          "dialog",
+          "Getting started",
+          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          [
+            "Add location",
+            "Import existing",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Import settings",
+          "Import a settings backup now? This can restore preferences and saved locations.\n\nChoose Configure myself, or press Escape, to close this wizard.",
+          [
+            "Import settings",
+            "Skip settings",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Import API keys",
+          "Import an encrypted API key bundle now?\n\nChoose Configure myself, or press Escape, to close this wizard.",
+          [
+            "Import API keys",
+            "Skip API keys",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "file",
+          "Import API keys (encrypted)",
+          "Encrypted bundle (*.keys)|*.keys|Legacy bundle (*.awkeys)|*.awkeys"
+        ],
+        [
+          "update_settings",
+          {
+            "onboarding_wizard_shown": true
+          }
+        ],
+        [
+          "deferred_update_check"
+        ]
+      ]
+    },
+    {
+      "name": "key_choice_configure_myself",
+      "portable": false,
+      "script": [
+        "yes",
+        "yes",
+        "cancel"
+      ],
+      "events": [
+        [
+          "dialog",
+          "Getting started",
+          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          [
+            "Add location",
+            "Import existing",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "add_location"
+        ],
+        [
+          "dialog",
+          "OpenRouter API key (optional)",
+          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          [
+            "Set up now",
+            "Skip this key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "OpenRouter API key (optional)",
+          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get OpenRouter API key, or Configure myself to close the wizard.",
+          [
+            "Enter key",
+            "Get OpenRouter API key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "update_settings",
+          {
+            "onboarding_wizard_shown": true
+          }
+        ],
+        [
+          "deferred_update_check"
+        ]
+      ]
+    },
+    {
+      "name": "key_entry_cancelled",
+      "portable": false,
+      "script": [
+        "yes",
+        "yes",
+        "yes",
+        "cancel"
+      ],
+      "events": [
+        [
+          "dialog",
+          "Getting started",
+          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          [
+            "Add location",
+            "Import existing",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "add_location"
+        ],
+        [
+          "dialog",
+          "OpenRouter API key (optional)",
+          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          [
+            "Set up now",
+            "Skip this key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "OpenRouter API key (optional)",
+          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get OpenRouter API key, or Configure myself to close the wizard.",
+          [
+            "Enter key",
+            "Get OpenRouter API key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "text",
+          "OpenRouter API key (optional)",
+          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip."
+        ],
+        [
+          "update_settings",
+          {
+            "onboarding_wizard_shown": true
+          }
+        ],
+        [
+          "deferred_update_check"
+        ]
+      ]
+    },
+    {
+      "name": "skip_openrouter_setup_cancel_pirate",
+      "portable": false,
+      "script": [
+        "yes",
+        "no",
+        "cancel"
+      ],
+      "events": [
+        [
+          "dialog",
+          "Getting started",
+          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          [
+            "Add location",
+            "Import existing",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "add_location"
+        ],
+        [
+          "dialog",
+          "OpenRouter API key (optional)",
+          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          [
+            "Set up now",
+            "Skip this key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Pirate Weather provider key (optional)",
+          "Step 3 of 3: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          [
+            "Set up now",
+            "Skip this key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "update_settings",
+          {
+            "onboarding_wizard_shown": true
+          }
+        ],
+        [
+          "deferred_update_check"
+        ]
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "force_wizard": false,
+      "onboarding_wizard_shown": false,
+      "has_locations": false,
+      "show": true
+    },
+    {
+      "force_wizard": false,
+      "onboarding_wizard_shown": false,
+      "has_locations": true,
+      "show": false
+    },
+    {
+      "force_wizard": false,
+      "onboarding_wizard_shown": true,
+      "has_locations": false,
+      "show": false
+    },
+    {
+      "force_wizard": false,
+      "onboarding_wizard_shown": true,
+      "has_locations": true,
+      "show": false
+    },
+    {
+      "force_wizard": true,
+      "onboarding_wizard_shown": false,
+      "has_locations": false,
+      "show": true
+    },
+    {
+      "force_wizard": true,
+      "onboarding_wizard_shown": false,
+      "has_locations": true,
+      "show": true
+    },
+    {
+      "force_wizard": true,
+      "onboarding_wizard_shown": true,
+      "has_locations": false,
+      "show": true
+    },
+    {
+      "force_wizard": true,
+      "onboarding_wizard_shown": true,
+      "has_locations": true,
+      "show": true
+    }
+  ],
+  "portable_hint": [
+    {
+      "portable": false,
+      "hint_shown": false,
+      "onboarding_will_show": false,
+      "bundle_exists": false,
+      "keys_imported_this_session": false,
+      "dialog": null
+    },
+    {
+      "portable": false,
+      "hint_shown": false,
+      "onboarding_will_show": false,
+      "bundle_exists": false,
+      "keys_imported_this_session": true,
+      "dialog": null
+    },
+    {
+      "portable": false,
+      "hint_shown": false,
+      "onboarding_will_show": false,
+      "bundle_exists": true,
+      "keys_imported_this_session": false,
+      "dialog": null
+    },
+    {
+      "portable": false,
+      "hint_shown": false,
+      "onboarding_will_show": false,
+      "bundle_exists": true,
+      "keys_imported_this_session": true,
+      "dialog": null
+    },
+    {
+      "portable": false,
+      "hint_shown": false,
+      "onboarding_will_show": true,
+      "bundle_exists": false,
+      "keys_imported_this_session": false,
+      "dialog": null
+    },
+    {
+      "portable": false,
+      "hint_shown": false,
+      "onboarding_will_show": true,
+      "bundle_exists": false,
+      "keys_imported_this_session": true,
+      "dialog": null
+    },
+    {
+      "portable": false,
+      "hint_shown": false,
+      "onboarding_will_show": true,
+      "bundle_exists": true,
+      "keys_imported_this_session": false,
+      "dialog": null
+    },
+    {
+      "portable": false,
+      "hint_shown": false,
+      "onboarding_will_show": true,
+      "bundle_exists": true,
+      "keys_imported_this_session": true,
+      "dialog": null
+    },
+    {
+      "portable": false,
+      "hint_shown": true,
+      "onboarding_will_show": false,
+      "bundle_exists": false,
+      "keys_imported_this_session": false,
+      "dialog": null
+    },
+    {
+      "portable": false,
+      "hint_shown": true,
+      "onboarding_will_show": false,
+      "bundle_exists": false,
+      "keys_imported_this_session": true,
+      "dialog": null
+    },
+    {
+      "portable": false,
+      "hint_shown": true,
+      "onboarding_will_show": false,
+      "bundle_exists": true,
+      "keys_imported_this_session": false,
+      "dialog": null
+    },
+    {
+      "portable": false,
+      "hint_shown": true,
+      "onboarding_will_show": false,
+      "bundle_exists": true,
+      "keys_imported_this_session": true,
+      "dialog": null
+    },
+    {
+      "portable": false,
+      "hint_shown": true,
+      "onboarding_will_show": true,
+      "bundle_exists": false,
+      "keys_imported_this_session": false,
+      "dialog": null
+    },
+    {
+      "portable": false,
+      "hint_shown": true,
+      "onboarding_will_show": true,
+      "bundle_exists": false,
+      "keys_imported_this_session": true,
+      "dialog": null
+    },
+    {
+      "portable": false,
+      "hint_shown": true,
+      "onboarding_will_show": true,
+      "bundle_exists": true,
+      "keys_imported_this_session": false,
+      "dialog": null
+    },
+    {
+      "portable": false,
+      "hint_shown": true,
+      "onboarding_will_show": true,
+      "bundle_exists": true,
+      "keys_imported_this_session": true,
+      "dialog": null
+    },
+    {
+      "portable": true,
+      "hint_shown": false,
+      "onboarding_will_show": false,
+      "bundle_exists": false,
+      "keys_imported_this_session": false,
+      "dialog": [
+        "Portable setup hint",
+        "This portable copy has no API keys yet.\n\nPirate Weather provider keys can be entered in Settings > Data Sources. OpenRouter AI keys can be entered in Settings > AI.\n\nYou can also create an encrypted key bundle to carry your keys with the portable install.",
+        [
+          "Open Settings",
+          "Later",
+          "Cancel"
+        ],
+        "information"
+      ]
+    },
+    {
+      "portable": true,
+      "hint_shown": false,
+      "onboarding_will_show": false,
+      "bundle_exists": false,
+      "keys_imported_this_session": true,
+      "dialog": null
+    },
+    {
+      "portable": true,
+      "hint_shown": false,
+      "onboarding_will_show": false,
+      "bundle_exists": true,
+      "keys_imported_this_session": false,
+      "dialog": null
+    },
+    {
+      "portable": true,
+      "hint_shown": false,
+      "onboarding_will_show": false,
+      "bundle_exists": true,
+      "keys_imported_this_session": true,
+      "dialog": null
+    },
+    {
+      "portable": true,
+      "hint_shown": false,
+      "onboarding_will_show": true,
+      "bundle_exists": false,
+      "keys_imported_this_session": false,
+      "dialog": null
+    },
+    {
+      "portable": true,
+      "hint_shown": false,
+      "onboarding_will_show": true,
+      "bundle_exists": false,
+      "keys_imported_this_session": true,
+      "dialog": null
+    },
+    {
+      "portable": true,
+      "hint_shown": false,
+      "onboarding_will_show": true,
+      "bundle_exists": true,
+      "keys_imported_this_session": false,
+      "dialog": null
+    },
+    {
+      "portable": true,
+      "hint_shown": false,
+      "onboarding_will_show": true,
+      "bundle_exists": true,
+      "keys_imported_this_session": true,
+      "dialog": null
+    },
+    {
+      "portable": true,
+      "hint_shown": true,
+      "onboarding_will_show": false,
+      "bundle_exists": false,
+      "keys_imported_this_session": false,
+      "dialog": null
+    },
+    {
+      "portable": true,
+      "hint_shown": true,
+      "onboarding_will_show": false,
+      "bundle_exists": false,
+      "keys_imported_this_session": true,
+      "dialog": null
+    },
+    {
+      "portable": true,
+      "hint_shown": true,
+      "onboarding_will_show": false,
+      "bundle_exists": true,
+      "keys_imported_this_session": false,
+      "dialog": null
+    },
+    {
+      "portable": true,
+      "hint_shown": true,
+      "onboarding_will_show": false,
+      "bundle_exists": true,
+      "keys_imported_this_session": true,
+      "dialog": null
+    },
+    {
+      "portable": true,
+      "hint_shown": true,
+      "onboarding_will_show": true,
+      "bundle_exists": false,
+      "keys_imported_this_session": false,
+      "dialog": null
+    },
+    {
+      "portable": true,
+      "hint_shown": true,
+      "onboarding_will_show": true,
+      "bundle_exists": false,
+      "keys_imported_this_session": true,
+      "dialog": null
+    },
+    {
+      "portable": true,
+      "hint_shown": true,
+      "onboarding_will_show": true,
+      "bundle_exists": true,
+      "keys_imported_this_session": false,
+      "dialog": null
+    },
+    {
+      "portable": true,
+      "hint_shown": true,
+      "onboarding_will_show": true,
+      "bundle_exists": true,
+      "keys_imported_this_session": true,
+      "dialog": null
+    }
+  ]
+}

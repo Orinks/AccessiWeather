@@ -1,0 +1,35 @@
+name: Integration Tests
+
+# Live checks against the real NWS, Open-Meteo and IEM services
+# (rust/crates/aw-providers/tests/live.rs), catching API changes the recorded
+# fixtures can't. Scheduled and manual only, never on pull requests.
+
+on:
+  schedule:
+    # Daily at 6 AM UTC (before most development hours)
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  live:
+    name: Weather Provider Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: rust
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+          shared-key: integration-${{ runner.os }}
+          save-if: ${{ github.event_name == 'schedule' }}
+          cache-on-failure: false
+      - name: Live API tests
+        timeout-minutes: 15
+        run: cargo test -p aw-providers --test live -- --ignored

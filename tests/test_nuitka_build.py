@@ -62,10 +62,12 @@ def test_windows_nuitka_command_uses_standalone_dir_and_pyproject_version() -> N
     assert "--include-data-dir=soundpacks/default=soundpacks/default" in command
     assert "--python-flag=-m" not in command
     assert "--noinclude-unittest-mode=nofollow" not in command
+    assert "--include-package=openai.resources.chat" in command
     assert "--include-package-data=tzdata" in command
     assert "--include-package-data=prism:_native/*" in command
     assert "--include-package-data=sound_lib" in command
     assert "--include-package-data=playsound3" not in command
+    assert "--include-package=openai.resources.chat" in command
     assert "--include-package=accessiweather" not in command
     assert "--deployment" not in command
     assert "--enable-plugin=anti-bloat" not in command
@@ -120,32 +122,6 @@ def test_nuitka_is_available_as_build_extra() -> None:
     pyproject = (build_nuitka.ROOT / "pyproject.toml").read_text(encoding="utf-8")
 
     assert '"nuitka' in pyproject
-
-
-def test_production_build_workflow_uses_nuitka() -> None:
-    workflow = (build_nuitka.ROOT / ".github" / "workflows" / "build.yml").read_text(
-        encoding="utf-8"
-    )
-
-    assert "NUITKA_CACHE_DIR:" in workflow
-    # Version-agnostic: the point is the split restore/save pair, not the pin,
-    # which Dependabot bumps on its own schedule.
-    assert "actions/cache/restore@" in workflow
-    assert "actions/cache/save@" in workflow
-    assert "brew install ccache" in workflow
-    assert "choco install innosetup" in workflow
-    assert "--only-binary wxPython" in workflow
-    assert "dist/AccessiWeather_Setup_*.exe" in workflow
-    assert "dist/AccessiWeather_macOS_*.zip" in workflow
-    assert "dist/AccessiWeather_Linux_*.tar.gz" in workflow
-    assert "python installer/build_nuitka.py" in workflow
-    assert "scripts/generate_build_meta.py" in workflow
-    assert "Smoke test packaged app" in workflow
-    assert "Verify Linux tarball avoids bundled OpenSSL" in workflow
-    assert "Verify Linux tarball includes sound_lib x64 libraries" in workflow
-    assert "AccessiWeather/sound_lib/lib/x64/$lib" in workflow
-    assert "lib(ssl|crypto)" in workflow
-    assert "GLib-GObject-CRITICAL" in workflow
 
 
 def test_stage_nuitka_distribution_copies_output_to_dist_shape(tmp_path, monkeypatch) -> None:

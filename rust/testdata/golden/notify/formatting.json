@@ -1,0 +1,1553 @@
+[
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "new_alert",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": null,
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description.\n\nAreas: Test County\n\nExpires: Sep 26 6:05 AM"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "escalation",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {},
+    "title": "ESCALATED SEVERE: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description.\n\nAreas: Test County\n\nExpires: Sep 26 6:05 AM"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "content_changed",
+    "include_areas": false,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "utc",
+      "show_timezone_suffix": true
+    },
+    "title": "UPDATED SEVERE: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description.\n\nExpires: Sep 26 11:05 AM UTC"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "reminder",
+    "include_areas": true,
+    "include_expiration": false,
+    "settings": {
+      "time_display_mode": "utc",
+      "time_format_12hour": false
+    },
+    "title": "ACTIVE SEVERE: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description.\n\nAreas: Test County"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "extended",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "both",
+      "show_timezone_suffix": false
+    },
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description.\n\nAreas: Test County\n\nExpires: Sep 26 6:05 AM (Sep 26 11:05 AM UTC)"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "fresh_alert",
+    "include_areas": false,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "both",
+      "show_timezone_suffix": true,
+      "time_format_12hour": false
+    },
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description.\n\nExpires: Sep 26 06:05 UTC-05:00 (Sep 26 11:05 UTC)"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "new_alert",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "local",
+      "show_timezone_suffix": true
+    },
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description.\n\nAreas: Test County\n\nExpires: Sep 26 6:05 AM UTC-05:00"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "",
+      "urgency": "Future",
+      "certainty": "Observed",
+      "event": null,
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "escalation",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": null,
+    "title": "ESCALATED UNKNOWN: Weather Alert",
+    "message": "Winter Storm Warning in effect\n\nWinter Storm Warning description.\n\nAreas: Test County\n\nExpires: Sep 26 6:05 AM"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "",
+      "urgency": "Future",
+      "certainty": "Observed",
+      "event": null,
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "content_changed",
+    "include_areas": false,
+    "include_expiration": true,
+    "settings": {},
+    "title": "UPDATED UNKNOWN: Weather Alert",
+    "message": "Winter Storm Warning in effect\n\nWinter Storm Warning description.\n\nExpires: Sep 26 6:05 AM"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "",
+      "urgency": "Future",
+      "certainty": "Observed",
+      "event": null,
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "reminder",
+    "include_areas": true,
+    "include_expiration": false,
+    "settings": {
+      "time_display_mode": "utc",
+      "show_timezone_suffix": true
+    },
+    "title": "ACTIVE UNKNOWN: Weather Alert",
+    "message": "Winter Storm Warning in effect\n\nWinter Storm Warning description.\n\nAreas: Test County"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "",
+      "urgency": "Future",
+      "certainty": "Observed",
+      "event": null,
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "extended",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "utc",
+      "time_format_12hour": false
+    },
+    "title": "UNKNOWN ALERT: Weather Alert",
+    "message": "Winter Storm Warning in effect\n\nWinter Storm Warning description.\n\nAreas: Test County\n\nExpires: Sep 26 11:05"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "",
+      "urgency": "Future",
+      "certainty": "Observed",
+      "event": null,
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "fresh_alert",
+    "include_areas": false,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "both",
+      "show_timezone_suffix": false
+    },
+    "title": "UNKNOWN ALERT: Weather Alert",
+    "message": "Winter Storm Warning in effect\n\nWinter Storm Warning description.\n\nExpires: Sep 26 6:05 AM (Sep 26 11:05 AM UTC)"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "",
+      "urgency": "Future",
+      "certainty": "Observed",
+      "event": null,
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "new_alert",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "both",
+      "show_timezone_suffix": true,
+      "time_format_12hour": false
+    },
+    "title": "UNKNOWN ALERT: Weather Alert",
+    "message": "Winter Storm Warning in effect\n\nWinter Storm Warning description.\n\nAreas: Test County\n\nExpires: Sep 26 06:05 UTC-05:00 (Sep 26 11:05 UTC)"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "",
+      "urgency": "Future",
+      "certainty": "Observed",
+      "event": null,
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "escalation",
+    "include_areas": true,
+    "include_expiration": false,
+    "settings": {
+      "time_display_mode": "local",
+      "show_timezone_suffix": true
+    },
+    "title": "ESCALATED UNKNOWN: Weather Alert",
+    "message": "Winter Storm Warning in effect\n\nWinter Storm Warning description.\n\nAreas: Test County"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "EXPECTED",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": null,
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "content_changed",
+    "include_areas": false,
+    "include_expiration": true,
+    "settings": null,
+    "title": "UPDATED SEVERE: Winter Storm Warning",
+    "message": "Expected action may be required.\n\nA severe weather alert has been issued.\n\nWinter Storm Warning description.\n\nExpires: Sep 26 6:05 AM"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "EXPECTED",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": null,
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "reminder",
+    "include_areas": true,
+    "include_expiration": false,
+    "settings": {},
+    "title": "ACTIVE SEVERE: Winter Storm Warning",
+    "message": "Expected action may be required.\n\nA severe weather alert has been issued.\n\nWinter Storm Warning description.\n\nAreas: Test County"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "EXPECTED",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": null,
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "extended",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "utc",
+      "show_timezone_suffix": true
+    },
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Expected action may be required.\n\nA severe weather alert has been issued.\n\nWinter Storm Warning description.\n\nAreas: Test County\n\nExpires: Sep 26 11:05 AM UTC"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "EXPECTED",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": null,
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "fresh_alert",
+    "include_areas": false,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "utc",
+      "time_format_12hour": false
+    },
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Expected action may be required.\n\nA severe weather alert has been issued.\n\nWinter Storm Warning description.\n\nExpires: Sep 26 11:05"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "EXPECTED",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": null,
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "new_alert",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "both",
+      "show_timezone_suffix": false
+    },
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Expected action may be required.\n\nA severe weather alert has been issued.\n\nWinter Storm Warning description.\n\nAreas: Test County\n\nExpires: Sep 26 6:05 AM (Sep 26 11:05 AM UTC)"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "EXPECTED",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": null,
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "escalation",
+    "include_areas": true,
+    "include_expiration": false,
+    "settings": {
+      "time_display_mode": "both",
+      "show_timezone_suffix": true,
+      "time_format_12hour": false
+    },
+    "title": "ESCALATED SEVERE: Winter Storm Warning",
+    "message": "Expected action may be required.\n\nA severe weather alert has been issued.\n\nWinter Storm Warning description.\n\nAreas: Test County"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "EXPECTED",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": null,
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "content_changed",
+    "include_areas": false,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "local",
+      "show_timezone_suffix": true
+    },
+    "title": "UPDATED SEVERE: Winter Storm Warning",
+    "message": "Expected action may be required.\n\nA severe weather alert has been issued.\n\nWinter Storm Warning description.\n\nExpires: Sep 26 6:05 AM UTC-05:00"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Title only",
+      "description": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxétail",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": null,
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "reminder",
+    "include_areas": true,
+    "include_expiration": false,
+    "settings": null,
+    "title": "ACTIVE SEVERE: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nTitle only\n\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxé...\n\nAreas: Test County"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Title only",
+      "description": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxétail",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": null,
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "extended",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {},
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nTitle only\n\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxé...\n\nAreas: Test County\n\nExpires: Sep 26 6:05 AM"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Title only",
+      "description": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxétail",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": null,
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "fresh_alert",
+    "include_areas": false,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "utc",
+      "show_timezone_suffix": true
+    },
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nTitle only\n\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxé...\n\nExpires: Sep 26 11:05 AM UTC"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Title only",
+      "description": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxétail",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": null,
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "new_alert",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "utc",
+      "time_format_12hour": false
+    },
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nTitle only\n\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxé...\n\nAreas: Test County\n\nExpires: Sep 26 11:05"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Title only",
+      "description": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxétail",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": null,
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "escalation",
+    "include_areas": true,
+    "include_expiration": false,
+    "settings": {
+      "time_display_mode": "both",
+      "show_timezone_suffix": false
+    },
+    "title": "ESCALATED SEVERE: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nTitle only\n\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxé...\n\nAreas: Test County"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Title only",
+      "description": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxétail",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": null,
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "content_changed",
+    "include_areas": false,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "both",
+      "show_timezone_suffix": true,
+      "time_format_12hour": false
+    },
+    "title": "UPDATED SEVERE: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nTitle only\n\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxé...\n\nExpires: Sep 26 06:05 UTC-05:00 (Sep 26 11:05 UTC)"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Title only",
+      "description": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxétail",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": null,
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "reminder",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "local",
+      "show_timezone_suffix": true
+    },
+    "title": "ACTIVE SEVERE: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nTitle only\n\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxé...\n\nAreas: Test County\n\nExpires: Sep 26 6:05 AM UTC-05:00"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "A"
+      ]
+    },
+    "reason": "extended",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": null,
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\n\nAreas: A\n\nExpires: Sep 26 6:05 AM"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "A"
+      ]
+    },
+    "reason": "fresh_alert",
+    "include_areas": false,
+    "include_expiration": true,
+    "settings": {},
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\n\nExpires: Sep 26 6:05 AM"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "A"
+      ]
+    },
+    "reason": "new_alert",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "utc",
+      "show_timezone_suffix": true
+    },
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\n\nAreas: A\n\nExpires: Sep 26 11:05 AM UTC"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "A"
+      ]
+    },
+    "reason": "escalation",
+    "include_areas": true,
+    "include_expiration": false,
+    "settings": {
+      "time_display_mode": "utc",
+      "time_format_12hour": false
+    },
+    "title": "ESCALATED SEVERE: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\n\nAreas: A"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "A"
+      ]
+    },
+    "reason": "content_changed",
+    "include_areas": false,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "both",
+      "show_timezone_suffix": false
+    },
+    "title": "UPDATED SEVERE: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\n\nExpires: Sep 26 6:05 AM (Sep 26 11:05 AM UTC)"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "A"
+      ]
+    },
+    "reason": "reminder",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "both",
+      "show_timezone_suffix": true,
+      "time_format_12hour": false
+    },
+    "title": "ACTIVE SEVERE: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\n\nAreas: A\n\nExpires: Sep 26 06:05 UTC-05:00 (Sep 26 11:05 UTC)"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": [
+        "A"
+      ]
+    },
+    "reason": "extended",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "local",
+      "show_timezone_suffix": true
+    },
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\n\nAreas: A\n\nExpires: Sep 26 6:05 AM UTC-05:00"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": []
+    },
+    "reason": "fresh_alert",
+    "include_areas": false,
+    "include_expiration": true,
+    "settings": null,
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nExpires: Sep 26 6:05 AM"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": []
+    },
+    "reason": "new_alert",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {},
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nExpires: Sep 26 6:05 AM"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": []
+    },
+    "reason": "escalation",
+    "include_areas": true,
+    "include_expiration": false,
+    "settings": {
+      "time_display_mode": "utc",
+      "show_timezone_suffix": true
+    },
+    "title": "ESCALATED SEVERE: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": []
+    },
+    "reason": "content_changed",
+    "include_areas": false,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "utc",
+      "time_format_12hour": false
+    },
+    "title": "UPDATED SEVERE: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nExpires: Sep 26 11:05"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": []
+    },
+    "reason": "reminder",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "both",
+      "show_timezone_suffix": false
+    },
+    "title": "ACTIVE SEVERE: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nExpires: Sep 26 6:05 AM (Sep 26 11:05 AM UTC)"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": []
+    },
+    "reason": "extended",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "both",
+      "show_timezone_suffix": true,
+      "time_format_12hour": false
+    },
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nExpires: Sep 26 06:05 UTC-05:00 (Sep 26 11:05 UTC)"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-26T06:05:00-05:00",
+      "areas": []
+    },
+    "reason": "fresh_alert",
+    "include_areas": false,
+    "include_expiration": false,
+    "settings": {
+      "time_display_mode": "local",
+      "show_timezone_suffix": true
+    },
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-25T23:30:00+00:00",
+      "areas": [
+        "A",
+        "B"
+      ]
+    },
+    "reason": "new_alert",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": null,
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description.\n\nAreas: A, B\n\nExpires: Sep 25 11:30 PM"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-25T23:30:00+00:00",
+      "areas": [
+        "A",
+        "B"
+      ]
+    },
+    "reason": "escalation",
+    "include_areas": true,
+    "include_expiration": false,
+    "settings": {},
+    "title": "ESCALATED SEVERE: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description.\n\nAreas: A, B"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-25T23:30:00+00:00",
+      "areas": [
+        "A",
+        "B"
+      ]
+    },
+    "reason": "content_changed",
+    "include_areas": false,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "utc",
+      "show_timezone_suffix": true
+    },
+    "title": "UPDATED SEVERE: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description.\n\nExpires: Sep 25 11:30 PM UTC"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-25T23:30:00+00:00",
+      "areas": [
+        "A",
+        "B"
+      ]
+    },
+    "reason": "reminder",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "utc",
+      "time_format_12hour": false
+    },
+    "title": "ACTIVE SEVERE: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description.\n\nAreas: A, B\n\nExpires: Sep 25 23:30"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-25T23:30:00+00:00",
+      "areas": [
+        "A",
+        "B"
+      ]
+    },
+    "reason": "extended",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "both",
+      "show_timezone_suffix": false
+    },
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description.\n\nAreas: A, B\n\nExpires: Sep 25 11:30 PM (Sep 25 11:30 PM UTC)"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-25T23:30:00+00:00",
+      "areas": [
+        "A",
+        "B"
+      ]
+    },
+    "reason": "fresh_alert",
+    "include_areas": false,
+    "include_expiration": false,
+    "settings": {
+      "time_display_mode": "both",
+      "show_timezone_suffix": true,
+      "time_format_12hour": false
+    },
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description."
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-25T23:30:00+00:00",
+      "areas": [
+        "A",
+        "B"
+      ]
+    },
+    "reason": "new_alert",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "local",
+      "show_timezone_suffix": true
+    },
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description.\n\nAreas: A, B\n\nExpires: Sep 25 11:30 PM UTC"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": null,
+      "areas": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E"
+      ]
+    },
+    "reason": "escalation",
+    "include_areas": true,
+    "include_expiration": false,
+    "settings": null,
+    "title": "ESCALATED SEVERE: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description.\n\nAreas: A, B and 3 more"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": null,
+      "areas": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E"
+      ]
+    },
+    "reason": "content_changed",
+    "include_areas": false,
+    "include_expiration": true,
+    "settings": {},
+    "title": "UPDATED SEVERE: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description."
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": null,
+      "areas": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E"
+      ]
+    },
+    "reason": "reminder",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "utc",
+      "show_timezone_suffix": true
+    },
+    "title": "ACTIVE SEVERE: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description.\n\nAreas: A, B and 3 more"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": null,
+      "areas": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E"
+      ]
+    },
+    "reason": "extended",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "utc",
+      "time_format_12hour": false
+    },
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description.\n\nAreas: A, B and 3 more"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": null,
+      "areas": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E"
+      ]
+    },
+    "reason": "fresh_alert",
+    "include_areas": false,
+    "include_expiration": false,
+    "settings": {
+      "time_display_mode": "both",
+      "show_timezone_suffix": false
+    },
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description."
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": null,
+      "areas": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E"
+      ]
+    },
+    "reason": "new_alert",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "both",
+      "show_timezone_suffix": true,
+      "time_format_12hour": false
+    },
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description.\n\nAreas: A, B and 3 more"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": null,
+      "areas": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E"
+      ]
+    },
+    "reason": "escalation",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "local",
+      "show_timezone_suffix": true
+    },
+    "title": "ESCALATED SEVERE: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description.\n\nAreas: A, B and 3 more"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-25T09:00:00+05:30",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "content_changed",
+    "include_areas": false,
+    "include_expiration": true,
+    "settings": null,
+    "title": "UPDATED SEVERE: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description.\n\nExpires: Sep 25 9:00 AM"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-25T09:00:00+05:30",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "reminder",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {},
+    "title": "ACTIVE SEVERE: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description.\n\nAreas: Test County\n\nExpires: Sep 25 9:00 AM"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-25T09:00:00+05:30",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "extended",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "utc",
+      "show_timezone_suffix": true
+    },
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description.\n\nAreas: Test County\n\nExpires: Sep 25 3:30 AM UTC"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-25T09:00:00+05:30",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "fresh_alert",
+    "include_areas": false,
+    "include_expiration": false,
+    "settings": {
+      "time_display_mode": "utc",
+      "time_format_12hour": false
+    },
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description."
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-25T09:00:00+05:30",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "new_alert",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "both",
+      "show_timezone_suffix": false
+    },
+    "title": "SEVERE ALERT: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description.\n\nAreas: Test County\n\nExpires: Sep 25 9:00 AM (Sep 25 3:30 AM UTC)"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-25T09:00:00+05:30",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "escalation",
+    "include_areas": true,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "both",
+      "show_timezone_suffix": true,
+      "time_format_12hour": false
+    },
+    "title": "ESCALATED SEVERE: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description.\n\nAreas: Test County\n\nExpires: Sep 25 09:00 UTC+05:30 (Sep 25 03:30 UTC)"
+  },
+  {
+    "alert": {
+      "id": "f1",
+      "title": "Winter Storm Warning",
+      "description": "Winter Storm Warning description.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Winter Storm Warning",
+      "headline": "Winter Storm Warning in effect",
+      "expires": "2026-09-25T09:00:00+05:30",
+      "areas": [
+        "Test County"
+      ]
+    },
+    "reason": "content_changed",
+    "include_areas": false,
+    "include_expiration": true,
+    "settings": {
+      "time_display_mode": "local",
+      "show_timezone_suffix": true
+    },
+    "title": "UPDATED SEVERE: Winter Storm Warning",
+    "message": "Immediate action may be required.\n\nWinter Storm Warning in effect\n\nWinter Storm Warning description.\n\nExpires: Sep 25 9:00 AM UTC+05:30"
+  }
+]

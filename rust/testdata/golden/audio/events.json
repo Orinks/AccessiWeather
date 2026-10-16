@@ -1,0 +1,385 @@
+{
+  "default_muted": [
+    "data_updated"
+  ],
+  "sections": [
+    [
+      "Core notifications",
+      "General app sounds.",
+      [
+        [
+          "alert",
+          "General alert"
+        ],
+        [
+          "notify",
+          "General notification"
+        ],
+        [
+          "error",
+          "General error"
+        ],
+        [
+          "success",
+          "General success"
+        ],
+        [
+          "data_updated",
+          "Weather refresh completed"
+        ],
+        [
+          "fetch_error",
+          "Weather refresh failed"
+        ],
+        [
+          "discussion_update",
+          "Forecast discussion updated"
+        ],
+        [
+          "severe_risk",
+          "Severe weather risk changed"
+        ],
+        [
+          "alert_updated",
+          "Weather alert updated"
+        ]
+      ]
+    ],
+    [
+      "App lifecycle",
+      "Startup and exit sounds.",
+      [
+        [
+          "startup",
+          "App startup"
+        ],
+        [
+          "exit",
+          "App exit"
+        ]
+      ]
+    ],
+    [
+      "Alert severities",
+      "Weather alert sounds by severity.",
+      [
+        [
+          "extreme",
+          "Extreme severity"
+        ],
+        [
+          "severe",
+          "Severe severity"
+        ],
+        [
+          "moderate",
+          "Moderate severity"
+        ],
+        [
+          "minor",
+          "Minor severity"
+        ],
+        [
+          "unknown",
+          "Unknown/uncategorized severity"
+        ]
+      ]
+    ]
+  ],
+  "legacy_keys": [
+    "advisory",
+    "air_quality",
+    "air_quality_alert",
+    "blizzard_warning",
+    "coastal_flood_advisory",
+    "coastal_flood_warning",
+    "coastal_flood_watch",
+    "cold_weather_advisory",
+    "dense_fog_advisory",
+    "dust",
+    "dust_advisory",
+    "dust_storm_warning",
+    "dust_warning",
+    "excessive_heat_warning",
+    "excessive_heat_watch",
+    "extreme_cold_warning",
+    "extreme_wind_warning",
+    "fire",
+    "fire_warning",
+    "fire_weather_watch",
+    "flash_flood_warning",
+    "flash_flood_watch",
+    "flood",
+    "flood_advisory",
+    "flood_warning",
+    "flood_watch",
+    "fog",
+    "fog_advisory",
+    "freeze_warning",
+    "freeze_watch",
+    "frost_advisory",
+    "gale_warning",
+    "heat",
+    "heat_advisory",
+    "high_wind_warning",
+    "high_wind_watch",
+    "hurricane",
+    "hurricane_force_wind_warning",
+    "hurricane_warning",
+    "hurricane_watch",
+    "ice",
+    "ice_storm_warning",
+    "ice_warning",
+    "red_flag_warning",
+    "river_flood_warning",
+    "river_flood_watch",
+    "small_craft_advisory",
+    "snow",
+    "snow_squall_warning",
+    "snow_warning",
+    "special_marine_warning",
+    "statement",
+    "storm_surge_warning",
+    "storm_surge_watch",
+    "storm_warning",
+    "thunderstorm",
+    "thunderstorm_warning",
+    "thunderstorm_watch",
+    "tornado",
+    "tornado_warning",
+    "tornado_watch",
+    "tropical_storm_warning",
+    "tropical_storm_watch",
+    "warning",
+    "watch",
+    "wind",
+    "wind_advisory",
+    "wind_warning",
+    "winter",
+    "winter_storm_warning",
+    "winter_storm_watch",
+    "winter_weather_advisory"
+  ],
+  "known_keys": [
+    "advisory",
+    "air_quality",
+    "air_quality_alert",
+    "alert",
+    "alert_updated",
+    "blizzard_warning",
+    "coastal_flood_advisory",
+    "coastal_flood_warning",
+    "coastal_flood_watch",
+    "cold_weather_advisory",
+    "data_updated",
+    "dense_fog_advisory",
+    "discussion_update",
+    "dust",
+    "dust_advisory",
+    "dust_storm_warning",
+    "dust_warning",
+    "error",
+    "excessive_heat_warning",
+    "excessive_heat_watch",
+    "exit",
+    "extreme",
+    "extreme_cold_warning",
+    "extreme_wind_warning",
+    "fetch_error",
+    "fire",
+    "fire_warning",
+    "fire_weather_watch",
+    "flash_flood_warning",
+    "flash_flood_watch",
+    "flood",
+    "flood_advisory",
+    "flood_warning",
+    "flood_watch",
+    "fog",
+    "fog_advisory",
+    "freeze_warning",
+    "freeze_watch",
+    "frost_advisory",
+    "gale_warning",
+    "heat",
+    "heat_advisory",
+    "high_wind_warning",
+    "high_wind_watch",
+    "hurricane",
+    "hurricane_force_wind_warning",
+    "hurricane_warning",
+    "hurricane_watch",
+    "ice",
+    "ice_storm_warning",
+    "ice_warning",
+    "minor",
+    "moderate",
+    "notify",
+    "red_flag_warning",
+    "river_flood_warning",
+    "river_flood_watch",
+    "severe",
+    "severe_risk",
+    "small_craft_advisory",
+    "snow",
+    "snow_squall_warning",
+    "snow_warning",
+    "special_marine_warning",
+    "startup",
+    "statement",
+    "storm_surge_warning",
+    "storm_surge_watch",
+    "storm_warning",
+    "success",
+    "thunderstorm",
+    "thunderstorm_warning",
+    "thunderstorm_watch",
+    "tornado",
+    "tornado_warning",
+    "tornado_watch",
+    "tropical_storm_warning",
+    "tropical_storm_watch",
+    "unknown",
+    "warning",
+    "watch",
+    "wind",
+    "wind_advisory",
+    "wind_warning",
+    "winter",
+    "winter_storm_warning",
+    "winter_storm_watch",
+    "winter_weather_advisory"
+  ],
+  "friendly_choices": [
+    [
+      "General alert",
+      "alert"
+    ],
+    [
+      "General notification",
+      "notify"
+    ],
+    [
+      "General error",
+      "error"
+    ],
+    [
+      "General success",
+      "success"
+    ],
+    [
+      "Weather refresh completed",
+      "data_updated"
+    ],
+    [
+      "Weather refresh failed",
+      "fetch_error"
+    ],
+    [
+      "Forecast discussion updated",
+      "discussion_update"
+    ],
+    [
+      "Severe weather risk changed",
+      "severe_risk"
+    ],
+    [
+      "Weather alert updated",
+      "alert_updated"
+    ],
+    [
+      "App startup",
+      "startup"
+    ],
+    [
+      "App exit",
+      "exit"
+    ],
+    [
+      "Extreme severity",
+      "extreme"
+    ],
+    [
+      "Severe severity",
+      "severe"
+    ],
+    [
+      "Moderate severity",
+      "moderate"
+    ],
+    [
+      "Minor severity",
+      "minor"
+    ],
+    [
+      "Unknown/uncategorized severity",
+      "unknown"
+    ]
+  ],
+  "normalize": [
+    [
+      [],
+      []
+    ],
+    [
+      [
+        "data_updated",
+        " data_updated ",
+        "",
+        "startup",
+        "tornado_warning",
+        "bogus"
+      ],
+      [
+        "data_updated",
+        "startup",
+        "tornado_warning",
+        "bogus"
+      ]
+    ],
+    [
+      [
+        "  ",
+        "exit",
+        "EXIT",
+        "exit"
+      ],
+      [
+        "exit",
+        "EXIT"
+      ]
+    ]
+  ],
+  "normalize_known": [
+    [
+      [],
+      []
+    ],
+    [
+      [
+        "data_updated",
+        " data_updated ",
+        "",
+        "startup",
+        "tornado_warning",
+        "bogus"
+      ],
+      [
+        "data_updated",
+        "startup",
+        "tornado_warning"
+      ]
+    ],
+    [
+      [
+        "  ",
+        "exit",
+        "EXIT",
+        "exit"
+      ],
+      [
+        "exit"
+      ]
+    ]
+  ]
+}

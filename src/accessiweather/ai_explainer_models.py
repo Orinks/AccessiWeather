@@ -28,6 +28,10 @@ class InvalidAPIKeyError(AIExplainerError):
     """Raised when API key is invalid or malformed."""
 
 
+class ProviderPermissionError(AIExplainerError):
+    """Raised when a provider denies a generation request or model access."""
+
+
 class InvalidModelError(AIExplainerError):
     """Raised when the specified model ID does not exist."""
 
@@ -42,6 +46,28 @@ class RequestTimeoutError(AIExplainerError):
 
 class EmptyResponseError(AIExplainerError):
     """Raised when all models return empty or insufficient responses."""
+
+
+MODEL_REFUSAL_MESSAGE = (
+    "The selected model declined this request. Choose another model or revise your "
+    "custom prompt in Settings > AI."
+)
+
+
+def is_model_refusal(content: str) -> bool:
+    """Recognize short, explicit refusals without classifying ordinary weather text."""
+    text = " ".join(content.casefold().replace("’", "'").split())
+    return len(text) < 180 and text.startswith(
+        (
+            "i'm sorry, but i can't help with that",
+            "sorry, i can't help with that",
+            "i can't help with this request",
+            "i cannot help with this request",
+            "i can't assist with that",
+            "i cannot assist with that",
+            "i cannot fulfill this request",
+        )
+    )
 
 
 class ExplanationStyle(Enum):

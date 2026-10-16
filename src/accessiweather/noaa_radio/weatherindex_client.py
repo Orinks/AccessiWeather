@@ -2,18 +2,27 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import requests
 
+from accessiweather.noaa_radio.stations import Station
+
 logger = logging.getLogger(__name__)
 
 WEATHERINDEX_API_URL = "https://api.wxindex.org/v1/stations/{call_sign}"
+WEATHERINDEX_DIRECTORY_URL = "https://api.wxindex.org/v1/stations/all"
 DEFAULT_CACHE_TTL = 1800
 DEFAULT_TIMEOUT = 10
+# How long to wait before re-trying the directory download after a failure.
+_DIRECTORY_RETRY_DELAY = 300
+
+OUT_OF_SERVICE_STATUS = "OUT OF SERVICE"
 
 
 @dataclass(frozen=True)
@@ -37,6 +46,37 @@ class WeatherIndexStationMetadata:
     served_counties: tuple[WeatherIndexServedCounty, ...]
 
 
+@dataclass(frozen=True)
+class WeatherIndexDirectoryStation:
+    """A station with live feeds from the WeatherIndex station directory."""
+
+    call_sign: str
+    city: str
+    state: str
+    frequency: float | None
+    latitude: float | None
+    longitude: float | None
+    status: str
+    stream_urls: tuple[str, ...]
+
+    def to_station(self) -> Station | None:
+        """Convert to the player's ``Station`` model, or None when coordinates are missing."""
+        if self.latitude is None or self.longitude is None:
+            return None
+        name = self.city
+        if self.state and not name.upper().endswith(f", {self.state}"):
+            name = f"{name}, {self.state}" if name else self.state
+        return Station(
+            call_sign=self.call_sign,
+            frequency=self.frequency if self.frequency is not None else 0.0,
+            name=name,
+            lat=self.latitude,
+            lon=self.longitude,
+            state=self.state,
+            status=self.status,
+        )
+
+
 class WeatherIndexClient:
     """Resolve live stream URLs for a known NOAA radio call sign."""
 
@@ -46,20 +86,68 @@ class WeatherIndexClient:
         cache_ttl: int = DEFAULT_CACHE_TTL,
         timeout: int = DEFAULT_TIMEOUT,
         session: requests.Session | None = None,
+        *,
+        directory_url: str = WEATHERINDEX_DIRECTORY_URL,
+        directory_cache_path: Path | str | None = None,
     ) -> None:
         """Configure API URL template, cache TTL, timeout, and optional session."""
         self._api_url_template = api_url_template
+        self._directory_url = directory_url
+        self._directory_cache_path = (
+            Path(directory_cache_path) if directory_cache_path is not None else None
+        )
         self._cache_ttl = cache_ttl
         self._timeout = timeout
         self._session = session or requests.Session()
         self._cache: dict[str, tuple[list[str], float]] = {}
         self._metadata_cache: dict[str, tuple[WeatherIndexStationMetadata | None, float]] = {}
+        self._directory: tuple[list[WeatherIndexDirectoryStation], float] | None = None
+
+    def get_all_stations(self) -> list[WeatherIndexDirectoryStation]:
+        """
+        Return every station WeatherIndex currently lists with a live feed.
+
+        The directory is fetched in one request and cached for ``cache_ttl``
+        seconds. When the download fails, the previous in-memory copy is used,
+        then the on-disk copy from an earlier run, then an empty list.
+        """
+        cached = self._get_cached_directory()
+        if cached is not None:
+            return list(cached)
+
+        try:
+            response = self._session.get(self._directory_url, timeout=self._timeout)
+            response.raise_for_status()
+            payload = response.json()
+            stations = self._parse_directory(payload)
+            if not stations:
+                raise ValueError("WeatherIndex station directory is empty")
+        except Exception:
+            logger.warning("Failed to fetch WeatherIndex station directory")
+            fallback = self._directory[0] if self._directory is not None else None
+            if fallback is None:
+                fallback = self._load_directory_from_disk()
+            retry_at = time.monotonic() - self._cache_ttl + _DIRECTORY_RETRY_DELAY
+            self._directory = (fallback or [], retry_at)
+            return list(fallback or [])
+
+        self._directory = (stations, time.monotonic())
+        self._save_directory_to_disk(payload)
+        return list(stations)
+
+    def has_station_directory(self) -> bool:
+        """Return True once a station directory (live or cached) has been loaded."""
+        return self._directory is not None and bool(self._directory[0])
 
     def get_stream_urls(self, call_sign: str) -> list[str]:
         """Return live stream URLs for a call sign, or an empty list on failure."""
         normalized = call_sign.upper().strip()
         if not normalized:
             return []
+
+        directory_urls = self._directory_stream_urls(normalized)
+        if directory_urls is not None:
+            return directory_urls
 
         cached_urls = self._get_cached(normalized)
         if cached_urls is not None:
@@ -102,6 +190,24 @@ class WeatherIndexClient:
         if (time.monotonic() - cache_time) < self._cache_ttl:
             return urls
 
+        return None
+
+    def _get_cached_directory(self) -> list[WeatherIndexDirectoryStation] | None:
+        if self._directory is None:
+            return None
+        stations, cache_time = self._directory
+        if (time.monotonic() - cache_time) < self._cache_ttl:
+            return stations
+        return None
+
+    def _directory_stream_urls(self, call_sign: str) -> list[str] | None:
+        """Return feeds from the loaded directory, or None when it does not list the station."""
+        if not self.has_station_directory():
+            return None
+        stations = self._directory[0] if self._directory is not None else []
+        for station in stations:
+            if station.call_sign == call_sign:
+                return list(station.stream_urls)
         return None
 
     def _get_cached_metadata(self, call_sign: str) -> WeatherIndexStationMetadata | None | object:
@@ -184,6 +290,65 @@ class WeatherIndexClient:
             longitude=self._as_float(station_data.get("longitude")),
             served_counties=tuple(served_counties),
         )
+
+    def _parse_directory(self, payload: object) -> list[WeatherIndexDirectoryStation]:
+        entries = payload
+        if isinstance(entries, dict):
+            entries = entries.get("stations")
+        if not isinstance(entries, list):
+            return []
+
+        stations: list[WeatherIndexDirectoryStation] = []
+        seen: set[str] = set()
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            call_sign = entry.get("callsign") or entry.get("call_sign")
+            if not isinstance(call_sign, str) or not call_sign.strip():
+                continue
+            normalized = call_sign.strip().upper()
+            if normalized in seen:
+                continue
+            urls = self._parse(entry)
+            if not urls:
+                continue
+            seen.add(normalized)
+            city = entry.get("city")
+            state = entry.get("state_slug") or entry.get("state")
+            status = entry.get("status")
+            stations.append(
+                WeatherIndexDirectoryStation(
+                    call_sign=normalized,
+                    city=city.strip() if isinstance(city, str) else "",
+                    state=state.strip().upper() if isinstance(state, str) else "",
+                    frequency=self._as_float(entry.get("frequency")),
+                    latitude=self._as_float(entry.get("latitude")),
+                    longitude=self._as_float(entry.get("longitude")),
+                    status=status.strip().upper() if isinstance(status, str) else "",
+                    stream_urls=tuple(urls),
+                )
+            )
+        return stations
+
+    def _load_directory_from_disk(self) -> list[WeatherIndexDirectoryStation] | None:
+        if self._directory_cache_path is None or not self._directory_cache_path.exists():
+            return None
+        try:
+            payload = json.loads(self._directory_cache_path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            logger.warning("Failed to load cached WeatherIndex station directory: %s", exc)
+            return None
+        stations = self._parse_directory(payload)
+        return stations or None
+
+    def _save_directory_to_disk(self, payload: object) -> None:
+        if self._directory_cache_path is None:
+            return
+        try:
+            self._directory_cache_path.parent.mkdir(parents=True, exist_ok=True)
+            self._directory_cache_path.write_text(json.dumps(payload), encoding="utf-8")
+        except Exception as exc:
+            logger.warning("Failed to save WeatherIndex station directory cache: %s", exc)
 
     @staticmethod
     def _station_payload(payload: dict[str, Any]) -> dict[str, Any]:

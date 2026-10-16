@@ -11,6 +11,34 @@ All notable changes to this project will be documented in this file.
 - The iPhone app now supports Pirate Weather, forecast explanations, forecaster notes, weather history, UV and air quality details, aviation reports, an Event Center, and warning radio auto-tune.
 
 ### Changed
+- AccessiWeather is now rebuilt in Rust as a native app for Windows, macOS and Linux, and updating keeps your saved locations and settings.
+- The OpenRouter model picker drops the retired Llama 3.3 70B option; choose the free router, the paid auto router, or browse models.
+
+### Fixed
+- Sounds now follow your default output device when you switch between headphones and speakers, instead of staying on the old one.
+- AccessiWeather no longer opens a terminal window alongside the app on Windows.
+- Portable updates on Windows no longer open a command window while they install.
+- NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.
+- AI error messages now distinguish invalid keys, depleted credits, denied access, unavailable models, rate limits, connection or timeout failures, and model refusals across the Weather Assistant and explanation views, without displaying raw provider errors.
+- After an AI summary finishes, keyboard focus moves to the result when Explain was focused; failed Weather Assistant questions return to the input for editing, and key errors point to the correct AI settings tab.
+- AI explanations now use your updated custom prompt and instructions immediately, and the Weather Assistant checks alerts for the selected place even when a model supplies an ambiguous location. It also reports when an alert shown in the app is missing from the live point lookup.
+- OpenRouter key validation now checks the key without generating a response, so unavailable models and account limits no longer make a valid key appear invalid. It reports exhausted key spending allowance, connection and service problems separately, without freezing Settings.
+- Venice key validation distinguishes rejected keys from permission problems and reports when all listed balances are depleted.
+- Settings reports a secure-storage failure instead of claiming an API key was saved, and keeps the prior key in memory if the new write fails.
+- If a key changes during validation, Settings asks to validate the new value instead of reporting the earlier key's result.
+- Closing Settings with Escape or Cancel now asks whether to save your changes, so a provider switch isn't silently thrown away.
+- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.
+- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.
+- OpenRouter explanations stop on authentication, permission and credit errors, avoid logging response text, and limit free-model fallback attempts so a failing model does not leave the app waiting through a long chain of retries.
+
+## [0.10.2] - 2026-09-22
+
+### Fixed
+- Explain Weather and the Weather Assistant work again with OpenRouter and Venice after the update that broke every AI model.
+
+## [0.10.1] - 2026-09-20
+
+### Changed
 - The show, hide and read-tray hotkeys now default to Ctrl+Alt+Shift+W, M and I, so they no longer steal Ctrl+Shift shortcuts from your browser or screen reader.
 - Edit Location is now F2, and NOAA Weather Radio opens with Ctrl+N.
 - AccessiWeather tells you when another program already owns a window or tray hotkey, instead of failing silently. Windows only.

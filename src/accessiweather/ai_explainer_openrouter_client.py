@@ -13,15 +13,15 @@ from .ai_explainer_models import (
     InvalidAPIKeyError,
     InvalidModelError,
     NetworkError,
+    ProviderPermissionError,
     RateLimitError,
     RequestTimeoutError,
 )
 from .ai_explainer_openrouter import (
     DEFAULT_FREE_MODEL,
-    DEFAULT_FREE_ROUTER,
     OPENROUTER_BASE_URL,
-    get_available_free_models,
 )
+from .ai_provider import stream_chat_completion
 
 logger = logging.getLogger(__name__)
 
@@ -31,20 +31,10 @@ class AIExplainerOpenRouterMixin:
 
     def _build_model_attempts(self, primary_model: str) -> list[str]:
         """Return the ordered model list used for a generation attempt."""
-        models_to_try = [primary_model]
         if self.provider == "venice":
-            return models_to_try
-
-        if primary_model != DEFAULT_FREE_MODEL:
-            models_to_try.append(DEFAULT_FREE_MODEL)
-
-        if ":free" in primary_model or primary_model in (DEFAULT_FREE_MODEL, DEFAULT_FREE_ROUTER):
-            fallback_models = get_available_free_models(exclude_model=primary_model)
-            for fallback in fallback_models:
-                if fallback not in models_to_try:
-                    models_to_try.append(fallback)
-
-        return models_to_try
+            return [primary_model]
+        # One retry through the free router, which lands on another available free model.
+        return [primary_model, DEFAULT_FREE_MODEL]
 
     def _notify_generation_status(
         self,
@@ -66,13 +56,13 @@ class AIExplainerOpenRouterMixin:
         if attempt_index == 0:
             if model == DEFAULT_FREE_MODEL:
                 return (
-                    "Trying OpenRouter's free router. Free models share capacity and may "
-                    "take a little while; backup free models will be tried if needed."
+                    "Trying OpenRouter's free router. Free models share capacity; if this "
+                    "one does not answer, the router tries another free model."
                 )
             if ":free" in model:
                 return (
                     f"Trying selected free model {model}. Free models share rate limits; "
-                    "backup free models will be tried if this one is busy."
+                    "the free router will be tried if this one is busy."
                 )
             return f"Trying selected model {model}."
 
@@ -218,7 +208,7 @@ class AIExplainerOpenRouterMixin:
 
     def _get_client(self):
         """Get or create OpenAI client configured for OpenRouter."""
-        if self._client is None:
+        if self._client is None or self._client.is_closed():
             # OpenRouter requires an API key for ALL requests, including free models
             # The :free suffix only means no charges, not no authentication
             if not self.api_key:
@@ -233,14 +223,15 @@ class AIExplainerOpenRouterMixin:
                 self._client = OpenAI(
                     base_url=OPENROUTER_BASE_URL,
                     api_key=self.api_key,
-                    timeout=30.0,  # 30 second timeout to prevent hanging
+                    timeout=20.0,
+                    max_retries=0,
                 )
-            except ImportError as e:
+            except ImportError:
                 logger.error("OpenAI package not installed")
                 raise AIExplainerError(
                     "AI explanation feature requires the openai package. "
                     "Please install it with: pip install openai"
-                ) from e
+                ) from None
         return self._client
 
     def _call_openrouter(
@@ -269,17 +260,8 @@ class AIExplainerOpenRouterMixin:
                 f"OpenRouter request: model={model}, system_prompt_len={len(system_prompt)}, user_prompt_len={len(user_prompt)}"
             )
 
-            # Build extra_body with fallback models for free tier
-            # Only use fallbacks for default model, not user-configured models
-            extra_body = {}
-            if model == DEFAULT_FREE_MODEL and ":free" in model:
-                # Use OpenRouter's native models parameter for automatic fallback
-                fallback_models = get_available_free_models(exclude_model=model)
-                if fallback_models:
-                    extra_body["models"] = fallback_models
-                    logger.debug(f"Using fallback models: {fallback_models}")
-
-            response = client.chat.completions.create(
+            result = stream_chat_completion(
+                client,
                 model=model,
                 messages=[
                     {"role": "system", "content": system_prompt},
@@ -290,57 +272,44 @@ class AIExplainerOpenRouterMixin:
                     "HTTP-Referer": "https://accessiweather.orinks.net",
                     "X-Title": "AccessiWeather",
                 },
-                extra_body=extra_body if extra_body else None,
+                # Free reasoning models can think for a minute or use the whole token
+                # budget and return no text; a weather summary needs no reasoning.
+                extra_body={"reasoning": {"effort": "none"}},
             )
 
-            # Log full response for debugging
-            logger.debug(f"OpenRouter raw response: {response}")
-
-            # Extract content - handle potential None values
-            if not response.choices:
+            # Response bodies may contain private user data; never log them.
+            content = result["content"]
+            finish_reason = result.pop("finish_reason")
+            result["model"] = result["model"] or "unknown"
+            if len(content.strip()) < 20:
                 logger.warning(
-                    f"OpenRouter returned empty choices. Full response: model={response.model}, id={getattr(response, 'id', 'N/A')}, usage={response.usage}"
-                )
-                return {
-                    "content": "",
-                    "model": response.model or "unknown",
-                    "total_tokens": 0,
-                    "prompt_tokens": 0,
-                    "completion_tokens": 0,
-                }
-
-            content = response.choices[0].message.content
-            finish_reason = getattr(response.choices[0], "finish_reason", "unknown")
-
-            if content is None:
-                logger.warning(
-                    f"OpenRouter returned None content. finish_reason={finish_reason}, model={response.model}"
-                )
-                content = ""
-            elif len(content.strip()) < 20:
-                logger.warning(
-                    f"OpenRouter returned short content ({len(content)} chars). finish_reason={finish_reason}, content={content[:100]!r}"
+                    f"OpenRouter returned short content ({len(content)} chars). finish_reason={finish_reason}"
                 )
 
             logger.info(
-                f"OpenRouter response: model={response.model}, content_len={len(content)}, finish_reason={finish_reason}"
+                f"OpenRouter response: model={result['model']}, content_len={len(content)}, finish_reason={finish_reason}"
             )
-
-            # Handle potential None usage
-            usage = response.usage
-            return {
-                "content": content,
-                "model": response.model or "unknown",
-                "total_tokens": usage.total_tokens if usage else 0,
-                "prompt_tokens": usage.prompt_tokens if usage else 0,
-                "completion_tokens": usage.completion_tokens if usage else 0,
-            }
+            return result
 
         except Exception as e:
             error_details = self._extract_api_error_details(e)
             status_code = self._api_status_code(error_details)
             error_message = f"{self._api_error_text(error_details)} {e}".lower()
-            original_error = str(e)
+            if isinstance(e, AIExplainerError):
+                raise
+            if status_code == 403:
+                raise ProviderPermissionError(
+                    "OpenRouter denied this generation request. The model, provider, or account "
+                    "permissions may restrict access. This does not establish that your key is invalid."
+                ) from None
+            if status_code == 401:
+                raise InvalidAPIKeyError(
+                    "OpenRouter could not authenticate this generation request. "
+                    "Validate your key in Settings; model or provider access may also need checking."
+                ) from None
+            # Structured statuses take priority over arbitrary upstream error prose.
+            if status_code is not None:
+                error_message = str(status_code)
 
             # Map specific errors to custom exceptions
             # Note: Check API key errors FIRST to avoid false matches on "connection" in suggestion text
@@ -349,28 +318,24 @@ class AIExplainerOpenRouterMixin:
             if "api key required" in error_message or "api key" in error_message:
                 raise InvalidAPIKeyError(
                     "OpenRouter API key is required.\n\n"
-                    "Please add your API key in Settings → AI Explanations.\n"
+                    "Please add your API key in Settings > AI.\n"
                     "Get a free key at: openrouter.ai/keys"
-                ) from e
+                ) from None
 
             # Invalid API key / authentication errors (401)
             if "invalid api key" in error_message or "authentication" in error_message:
                 raise InvalidAPIKeyError(
                     "Your OpenRouter API key is invalid.\n\n"
-                    "Please check Settings → AI Explanations and verify your API key.\n"
+                    "Please check Settings > AI and verify your API key.\n"
                     "Get a free key at: openrouter.ai/keys"
-                ) from e
+                ) from None
 
-            if (
-                status_code in (401, 403)
-                or "401" in error_message
-                or "unauthorized" in error_message
-            ):
+            if status_code == 401 or "401" in error_message or "unauthorized" in error_message:
                 raise InvalidAPIKeyError(
                     "API key authentication failed.\n\n"
                     "Your API key may be expired or incorrectly entered.\n"
-                    "Please check Settings → AI Explanations."
-                ) from e
+                    "Please check Settings > AI."
+                ) from None
 
             # Insufficient credits
             if (
@@ -382,8 +347,8 @@ class AIExplainerOpenRouterMixin:
                     "Your OpenRouter account has no funds.\n\n"
                     "Options:\n"
                     "• Add credits at openrouter.ai/credits\n"
-                    "• Switch to a free model in Settings → AI Explanations"
-                ) from e
+                    "• Switch to a free model in Settings > AI"
+                ) from None
 
             # Rate limiting (429) - check for status code AND common phrases
             if (
@@ -407,7 +372,7 @@ class AIExplainerOpenRouterMixin:
                         if is_free
                         else "Please wait a few minutes and try again."
                     )
-                ) from e
+                ) from None
 
             # Timeout errors - check before generic network errors
             if "timed out" in error_message or "timeout" in error_message:
@@ -415,7 +380,7 @@ class AIExplainerOpenRouterMixin:
                     "Request timed out.\n\n"
                     "The AI service is taking too long to respond.\n"
                     "This usually means the servers are busy. Please try again."
-                ) from e
+                ) from None
 
             # Network/connection errors - use specific phrases to avoid false matches
             if (
@@ -430,7 +395,7 @@ class AIExplainerOpenRouterMixin:
                     "Network connection error.\n\n"
                     "Could not reach the AI service. This is usually temporary.\n"
                     "Please check your internet connection and try again."
-                ) from e
+                ) from None
 
             # Model not found (404)
             if (
@@ -444,19 +409,18 @@ class AIExplainerOpenRouterMixin:
                 raise InvalidModelError(
                     f"The AI model '{model_used}' was not found.\n\n"
                     "It may have been removed or renamed by OpenRouter.\n"
-                    "Please go to Settings → AI Explanations and select a different model."
-                ) from e
+                    "Please go to Settings > AI and select a different model."
+                ) from None
 
             # Generic error - log full details and show user-friendly message
-            logger.error(f"OpenRouter API error: {e}", exc_info=True)
+            logger.error("OpenRouter generation request failed (%s)", type(e).__name__)
             raise AIExplainerError(
                 f"Unable to generate explanation.\n\n"
-                f"Error: {original_error}\n\n"
                 "If this persists, try:\n"
                 "• Checking your internet connection\n"
                 "• Selecting a different AI model in Settings\n"
                 "• Trying again in a few minutes"
-            ) from e
+            ) from None
 
     def _estimate_cost(self, model: str, token_count: int) -> float | None:
         """

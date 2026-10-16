@@ -1,0 +1,1736 @@
+[
+ {
+  "name": "none",
+  "sources": [],
+  "confidence": {
+   "level": "Low",
+   "rationale": "No forecast sources available",
+   "sources_compared": 0,
+   "source_names": []
+  }
+ },
+ {
+  "name": "failed_only",
+  "sources": [
+   {
+    "source": "nws",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": 70.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": null,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": false,
+    "error": null
+   }
+  ],
+  "confidence": {
+   "level": "Low",
+   "rationale": "No forecast sources available",
+   "sources_compared": 0,
+   "source_names": []
+  }
+ },
+ {
+  "name": "empty_forecast",
+  "sources": [
+   {
+    "source": "pirateweather",
+    "current": null,
+    "forecast": {
+     "periods": [],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   }
+  ],
+  "confidence": {
+   "level": "Low",
+   "rationale": "No forecast sources available",
+   "sources_compared": 0,
+   "source_names": []
+  }
+ },
+ {
+  "name": "single",
+  "sources": [
+   {
+    "source": "nws",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": 70.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": null,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   }
+  ],
+  "confidence": {
+   "level": "Medium",
+   "rationale": "Based on NWS — single source, no cross-reference available",
+   "sources_compared": 1,
+   "source_names": [
+    "NWS"
+   ]
+  }
+ },
+ {
+  "name": "single_unknown_name",
+  "sources": [
+   {
+    "source": "visual_crossing",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": 70.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": null,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   }
+  ],
+  "confidence": {
+   "level": "Medium",
+   "rationale": "Based on Visual_Crossing — single source, no cross-reference available",
+   "sources_compared": 1,
+   "source_names": [
+    "Visual_Crossing"
+   ]
+  }
+ },
+ {
+  "name": "two_high",
+  "sources": [
+   {
+    "source": "nws",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": 70.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": 20.0,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   },
+   {
+    "source": "openmeteo",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": 73.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": 30.0,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   }
+  ],
+  "confidence": {
+   "level": "High",
+   "rationale": "NWS and Open-Meteo agree on temperature and precipitation",
+   "sources_compared": 2,
+   "source_names": [
+    "NWS",
+    "Open-Meteo"
+   ]
+  }
+ },
+ {
+  "name": "two_medium_temp",
+  "sources": [
+   {
+    "source": "nws",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": 70.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": 20.0,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   },
+   {
+    "source": "openmeteo",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": 78.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": 60.0,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   }
+  ],
+  "confidence": {
+   "level": "Medium",
+   "rationale": "Moderate agreement between NWS and Open-Meteo",
+   "sources_compared": 2,
+   "source_names": [
+    "NWS",
+    "Open-Meteo"
+   ]
+  }
+ },
+ {
+  "name": "two_medium_precip",
+  "sources": [
+   {
+    "source": "nws",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": 70.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": 20.0,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   },
+   {
+    "source": "openmeteo",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": 85.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": 40.0,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   }
+  ],
+  "confidence": {
+   "level": "Medium",
+   "rationale": "Moderate agreement between NWS and Open-Meteo",
+   "sources_compared": 2,
+   "source_names": [
+    "NWS",
+    "Open-Meteo"
+   ]
+  }
+ },
+ {
+  "name": "two_low",
+  "sources": [
+   {
+    "source": "nws",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": 70.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": 0.0,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   },
+   {
+    "source": "openmeteo",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": 85.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": 50.0,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   }
+  ],
+  "confidence": {
+   "level": "Low",
+   "rationale": "NWS and Open-Meteo show significant disagreement on temperature or precipitation",
+   "sources_compared": 2,
+   "source_names": [
+    "NWS",
+    "Open-Meteo"
+   ]
+  }
+ },
+ {
+  "name": "temp_only_high",
+  "sources": [
+   {
+    "source": "nws",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": 70.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": null,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   },
+   {
+    "source": "openmeteo",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": 75.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": null,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   }
+  ],
+  "confidence": {
+   "level": "High",
+   "rationale": "NWS and Open-Meteo agree on temperature",
+   "sources_compared": 2,
+   "source_names": [
+    "NWS",
+    "Open-Meteo"
+   ]
+  }
+ },
+ {
+  "name": "temp_only_medium",
+  "sources": [
+   {
+    "source": "nws",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": 70.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": null,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   },
+   {
+    "source": "openmeteo",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": 80.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": null,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   }
+  ],
+  "confidence": {
+   "level": "Medium",
+   "rationale": "Moderate temperature agreement between NWS and Open-Meteo",
+   "sources_compared": 2,
+   "source_names": [
+    "NWS",
+    "Open-Meteo"
+   ]
+  }
+ },
+ {
+  "name": "temp_only_low",
+  "sources": [
+   {
+    "source": "nws",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": 70.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": null,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   },
+   {
+    "source": "openmeteo",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": 80.5,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": null,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   }
+  ],
+  "confidence": {
+   "level": "Low",
+   "rationale": "NWS and Open-Meteo show significant temperature disagreement",
+   "sources_compared": 2,
+   "source_names": [
+    "NWS",
+    "Open-Meteo"
+   ]
+  }
+ },
+ {
+  "name": "one_precip_only",
+  "sources": [
+   {
+    "source": "nws",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": 70.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": 20.0,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   },
+   {
+    "source": "openmeteo",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": 90.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": null,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   }
+  ],
+  "confidence": {
+   "level": "Low",
+   "rationale": "NWS and Open-Meteo show significant temperature disagreement",
+   "sources_compared": 2,
+   "source_names": [
+    "NWS",
+    "Open-Meteo"
+   ]
+  }
+ },
+ {
+  "name": "three_sources",
+  "sources": [
+   {
+    "source": "nws",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": 70.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": 10.0,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   },
+   {
+    "source": "openmeteo",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": 71.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": 12.0,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   },
+   {
+    "source": "pirateweather",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": 72.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": 20.0,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   }
+  ],
+  "confidence": {
+   "level": "High",
+   "rationale": "NWS, Open-Meteo, and Pirate Weather agree on temperature and precipitation",
+   "sources_compared": 3,
+   "source_names": [
+    "NWS",
+    "Open-Meteo",
+    "Pirate Weather"
+   ]
+  }
+ },
+ {
+  "name": "night_period_skipped",
+  "sources": [
+   {
+    "source": "nws",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Tonight",
+       "temperature": 50.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": null,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      },
+      {
+       "name": "Wednesday",
+       "temperature": 75.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": 20.0,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   },
+   {
+    "source": "openmeteo",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": 76.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": 25.0,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   }
+  ],
+  "confidence": {
+   "level": "High",
+   "rationale": "NWS and Open-Meteo agree on temperature and precipitation",
+   "sources_compared": 2,
+   "source_names": [
+    "NWS",
+    "Open-Meteo"
+   ]
+  }
+ },
+ {
+  "name": "all_night_periods",
+  "sources": [
+   {
+    "source": "nws",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Tonight",
+       "temperature": 50.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": null,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   },
+   {
+    "source": "openmeteo",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Overnight",
+       "temperature": 70.0,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": null,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   }
+  ],
+  "confidence": {
+   "level": "Low",
+   "rationale": "NWS and Open-Meteo show significant temperature disagreement",
+   "sources_compared": 2,
+   "source_names": [
+    "NWS",
+    "Open-Meteo"
+   ]
+  }
+ },
+ {
+  "name": "no_temperatures",
+  "sources": [
+   {
+    "source": "nws",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": null,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": 10.0,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   },
+   {
+    "source": "openmeteo",
+    "current": null,
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": null,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": 40.0,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "alerts": null,
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "fetch_time": "2026-07-15T12:00:00+00:00",
+    "success": true,
+    "error": null
+   }
+  ],
+  "confidence": {
+   "level": "Medium",
+   "rationale": "Moderate agreement between NWS and Open-Meteo",
+   "sources_compared": 2,
+   "source_names": [
+    "NWS",
+    "Open-Meteo"
+   ]
+  }
+ }
+]

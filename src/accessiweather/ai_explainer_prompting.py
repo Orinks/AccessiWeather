@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import re
 from datetime import datetime
@@ -183,10 +184,7 @@ class AIExplainerPromptMixin:
             time_of_day=weather_data.get("time_of_day"),
         )
 
-        prompt_parts = [
-            "Please explain the following weather conditions:\n",
-            context.to_prompt_text(),
-        ]
+        prompt_parts = ["Weather information to explain:\n", context.to_prompt_text()]
 
         # Add forecast periods if available
         forecast_periods = weather_data.get("forecast_periods", [])
@@ -206,10 +204,11 @@ class AIExplainerPromptMixin:
                     period_text += ")"
                 prompt_parts.append(period_text)
 
-        prompt_parts.append(
-            "\n\nProvide a natural language explanation of the current conditions "
-            "and what to expect over the coming days for someone planning their activities."
-        )
+        if not self.custom_system_prompt:
+            prompt_parts.append(
+                "\n\nProvide a natural language explanation of the current conditions "
+                "and what to expect over the coming days for someone planning their activities."
+            )
 
         # Add custom instructions if configured
         if self.custom_instructions and self.custom_instructions.strip():
@@ -259,21 +258,28 @@ class AIExplainerPromptMixin:
 
         return text.strip()
 
-    def _generate_cache_key(self, weather_data: dict[str, Any], location_name: str) -> str:
-        """Generate a cache key for the explanation."""
-        # Create a key based on significant weather values
-        key_parts = [
-            f"provider:{self.provider}",
-            f"loc:{location_name}",
-            f"temp:{weather_data.get('temperature')}",
-            f"temp_text:{weather_data.get('temperature_text')}",
-            f"cond:{weather_data.get('conditions')}",
-            f"wind:{weather_data.get('wind_text') or weather_data.get('wind_speed')}",
-            f"visibility:{weather_data.get('visibility_text') or weather_data.get('visibility')}",
-            f"pressure:{weather_data.get('pressure_text') or weather_data.get('pressure')}",
-            f"model:{self.get_effective_model()}",
-        ]
-        return "ai_explanation:" + ":".join(key_parts)
+    def _generate_cache_key(
+        self,
+        weather_data: dict[str, Any],
+        location_name: str,
+        style: ExplanationStyle = ExplanationStyle.STANDARD,
+        preserve_markdown: bool = False,
+    ) -> str:
+        """Key the result by every prompt input without logging the user's prompt text."""
+        import json
+
+        inputs = {
+            "provider": self.provider,
+            "model": self.get_effective_model(),
+            "style": style.value,
+            "preserve_markdown": preserve_markdown,
+            "system": self.get_effective_system_prompt(style),
+            "user": self._build_prompt(weather_data, location_name, style),
+        }
+        digest = hashlib.sha256(
+            json.dumps(inputs, sort_keys=True, ensure_ascii=False).encode("utf-8")
+        ).hexdigest()
+        return f"ai_explanation:v2:{digest}"
 
     @property
     def session_token_count(self) -> int:

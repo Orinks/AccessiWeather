@@ -1,0 +1,252 @@
+{
+ "input": {
+  "latitude": 40.710335,
+  "longitude": -73.99308,
+  "generationtime_ms": 0.1989603042602539,
+  "utc_offset_seconds": -18000,
+  "timezone": "America/New_York",
+  "timezone_abbreviation": "GMT-5",
+  "elevation": 32.0,
+  "current_units": {
+   "time": "iso8601",
+   "interval": "seconds",
+   "temperature_2m": "°F",
+   "relative_humidity_2m": "%",
+   "apparent_temperature": "°F",
+   "is_day": "",
+   "precipitation": "inch",
+   "weather_code": "wmo code",
+   "cloud_cover": "%",
+   "pressure_msl": "hPa",
+   "surface_pressure": "hPa",
+   "wind_speed_10m": "mp/h",
+   "wind_direction_10m": "°",
+   "wind_gusts_10m": "mp/h",
+   "uv_index": "",
+   "snowfall": "inch",
+   "snow_depth": "ft",
+   "visibility": "ft"
+  },
+  "current": {
+   "time": "2026-01-20T14:15",
+   "interval": 900,
+   "temperature_2m": 21.7,
+   "relative_humidity_2m": 35,
+   "apparent_temperature": 8.1,
+   "is_day": 1,
+   "precipitation": 0.0,
+   "weather_code": 0,
+   "cloud_cover": 2,
+   "pressure_msl": 1026.9,
+   "surface_pressure": 1022.7,
+   "wind_speed_10m": 16.1,
+   "wind_direction_10m": 266,
+   "wind_gusts_10m": 23.9,
+   "uv_index": 2.4,
+   "snowfall": 0.0,
+   "snow_depth": 0.0,
+   "visibility": 182742.781
+  },
+  "daily_units": {
+   "time": "iso8601",
+   "sunrise": "iso8601",
+   "sunset": "iso8601",
+   "uv_index_max": ""
+  },
+  "daily": {
+   "time": [
+    "2026-01-20"
+   ],
+   "sunrise": [
+    "2026-01-20T07:15"
+   ],
+   "sunset": [
+    "2026-01-20T16:58"
+   ],
+   "uv_index_max": [
+    3.05
+   ]
+  }
+ },
+ "now": "2025-01-15T12:30:00-05:00",
+ "current": {
+  "temperature": 21.7,
+  "temperature_f": 21.7,
+  "temperature_c": -5.722222222222222,
+  "condition": "Clear sky",
+  "humidity": 35,
+  "wind_speed": 16.1,
+  "dewpoint_f": -1.684607981074393,
+  "dewpoint_c": -18.713671100596887,
+  "wind_speed_mph": 16.1,
+  "wind_speed_kph": 25.910374,
+  "wind_direction": "W",
+  "pressure": 30.324339616020662,
+  "pressure_in": 30.324339616020662,
+  "pressure_mb": 1026.9,
+  "feels_like_f": 8.1,
+  "feels_like_c": -13.277777777777779,
+  "visibility_miles": 10.0,
+  "visibility_km": 16.09344,
+  "uv_index": 2.4,
+  "cloud_cover": null,
+  "wind_gust_mph": null,
+  "wind_gust_kph": null,
+  "precipitation_in": 0.0,
+  "precipitation_mm": 0.0,
+  "sunrise_time": "2026-01-20T07:15:00-05:00",
+  "sunset_time": "2026-01-20T16:58:00-05:00",
+  "moon_phase": null,
+  "moonrise_time": null,
+  "moonset_time": null,
+  "snow_depth_in": 0.0,
+  "snow_depth_cm": 0.0,
+  "snowfall_rate_in": 0.0,
+  "wind_chill_f": 8.1,
+  "wind_chill_c": -13.277777777777779,
+  "freezing_level_ft": null,
+  "freezing_level_m": null,
+  "heat_index_f": null,
+  "heat_index_c": null,
+  "frost_risk": null,
+  "precipitation_type": null,
+  "severe_weather_risk": null
+ },
+ "forecast": {
+  "periods": [],
+  "generated_at": "2025-01-15T12:30:00-05:00",
+  "summary": null
+ },
+ "hourly": {
+  "periods": [],
+  "generated_at": "2025-01-15T12:30:00-05:00",
+  "summary": null
+ },
+ "mapped_current": {
+  "properties": {
+   "@id": "open-meteo-current-2025-01-15T17:30:00+00:00",
+   "timestamp": "2026-01-20T19:15:00+00:00",
+   "temperature": {
+    "value": 21.7,
+    "unitCode": "wmoUnit:degF",
+    "qualityControl": "qc:V"
+   },
+   "dewpoint": {
+    "value": -1.684607981074393,
+    "unitCode": "wmoUnit:degF",
+    "qualityControl": "qc:V"
+   },
+   "apparentTemperature": {
+    "value": 8.1,
+    "unitCode": "wmoUnit:degF",
+    "qualityControl": "qc:V"
+   },
+   "windDirection": {
+    "value": 266,
+    "unitCode": "wmoUnit:degree_(angle)",
+    "qualityControl": "qc:V"
+   },
+   "windSpeed": {
+    "value": 16.1,
+    "unitCode": "wmoUnit:m_s-1",
+    "qualityControl": "qc:V"
+   },
+   "windGust": {
+    "value": 23.9,
+    "unitCode": "wmoUnit:m_s-1",
+    "qualityControl": "qc:V"
+   },
+   "barometricPressure": {
+    "value": 102690.00000000001,
+    "unitCode": "wmoUnit:Pa",
+    "qualityControl": "qc:V"
+   },
+   "relativeHumidity": {
+    "value": 35,
+    "unitCode": "wmoUnit:percent",
+    "qualityControl": "qc:V"
+   },
+   "visibility": {
+    "value": null,
+    "unitCode": "wmoUnit:m",
+    "qualityControl": "qc:Z"
+   },
+   "uvIndex": {
+    "value": 3.05,
+    "unitCode": "unit:dimensionless",
+    "qualityControl": "qc:Z"
+   },
+   "cloudLayers": [
+    {
+     "amount": "CLR",
+     "base": {
+      "value": null,
+      "unitCode": "wmoUnit:m"
+     }
+    }
+   ],
+   "textDescription": "Clear sky",
+   "rawMessage": "Open-Meteo data: 0",
+   "presentWeather": [
+    {
+     "intensity": null,
+     "modifier": null,
+     "weather": "Clear sky",
+     "rawString": "0"
+    }
+   ],
+   "sunrise": "2026-01-20T07:15",
+   "sunset": "2026-01-20T16:58"
+  }
+ },
+ "mapped_forecast": {
+  "properties": {
+   "updated": "2025-01-15T17:30:00+00:00",
+   "units": {
+    "temperature": "C",
+    "windSpeed": "mph",
+    "precipitation": "in"
+   },
+   "forecastGenerator": "Open-Meteo API",
+   "generatedAt": "2025-01-15T17:30:00+00:00",
+   "periods": [
+    {
+     "number": 1,
+     "name": "Tuesday",
+     "startTime": "2026-01-20T06:00:00-05:00",
+     "endTime": "2026-01-20T18:00:00-05:00",
+     "isDaytime": true,
+     "temperature": null,
+     "temperatureUnit": "F",
+     "temperatureTrend": null,
+     "windSpeed": "0 mph",
+     "windDirection": "VAR",
+     "icon": "https://open-meteo.com/images/weather/0.png",
+     "shortForecast": "Clear sky",
+     "detailedForecast": "Clear sky."
+    },
+    {
+     "number": 2,
+     "name": "Tuesday Night",
+     "startTime": "2026-01-20T18:00:00-05:00",
+     "endTime": "2026-01-21T06:00:00-05:00",
+     "isDaytime": false,
+     "temperature": null,
+     "temperatureUnit": "F",
+     "temperatureTrend": null,
+     "windSpeed": "0 mph",
+     "windDirection": "VAR",
+     "icon": "https://open-meteo.com/images/weather/0.png",
+     "shortForecast": "Clear sky",
+     "detailedForecast": "Clear sky."
+    }
+   ]
+  }
+ },
+ "mapped_hourly": {
+  "properties": {
+   "periods": []
+  }
+ },
+ "hourly_uv": []
+}

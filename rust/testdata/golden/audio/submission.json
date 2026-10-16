@@ -1,0 +1,504 @@
+{
+  "derive_pack_id": [
+    [
+      "my_pack",
+      {
+        "name": "My Pack",
+        "author": "Jane Doe"
+      },
+      "my-pack-jane-doe"
+    ],
+    [
+      "my_pack",
+      {
+        "name": "  Storm Sounds!  ",
+        "author": "Unknown"
+      },
+      "storm-sounds"
+    ],
+    [
+      "dir name",
+      {
+        "name": "",
+        "author": ""
+      },
+      "dir-name"
+    ],
+    [
+      "x",
+      {
+        "name": "Café ☂",
+        "author": "UNKNOWN"
+      },
+      "caf-"
+    ],
+    [
+      "weird",
+      {
+        "name": "!!!",
+        "author": null
+      },
+      "pack"
+    ],
+    [
+      "a",
+      {
+        "name": "Name_With_Underscores",
+        "author": "B-C"
+      },
+      "namewithunderscores-b-c"
+    ]
+  ],
+  "validate_backend_url": [
+    [
+      "",
+      false,
+      "URL must not be empty"
+    ],
+    [
+      "   ",
+      false,
+      "URL must not be empty"
+    ],
+    [
+      "http://example.com",
+      false,
+      "Only HTTPS URLs are allowed, got scheme: 'http'"
+    ],
+    [
+      "ftp://x",
+      false,
+      "Only HTTPS URLs are allowed, got scheme: 'ftp'"
+    ],
+    [
+      "not a url",
+      false,
+      "Only HTTPS URLs are allowed, got scheme: ''"
+    ],
+    [
+      "https://",
+      false,
+      "URL must have a valid hostname"
+    ],
+    [
+      "https://localhost/x",
+      false,
+      "Localhost URLs are not allowed: 'localhost'"
+    ],
+    [
+      "https://127.0.0.1",
+      false,
+      "Localhost URLs are not allowed: '127.0.0.1'"
+    ],
+    [
+      "https://[::1]:8443/",
+      false,
+      "Localhost URLs are not allowed: '::1'"
+    ],
+    [
+      "https://0.0.0.0",
+      false,
+      "Localhost URLs are not allowed: '0.0.0.0'"
+    ],
+    [
+      "https://10.1.2.3",
+      false,
+      "Hostname '10.1.2.3' resolves to private/internal address 10.1.2.3"
+    ],
+    [
+      "https://172.20.0.1/api",
+      false,
+      "Hostname '172.20.0.1' resolves to private/internal address 172.20.0.1"
+    ],
+    [
+      "https://192.168.1.1",
+      false,
+      "Hostname '192.168.1.1' resolves to private/internal address 192.168.1.1"
+    ],
+    [
+      "https://169.254.1.1",
+      false,
+      "Hostname '169.254.1.1' resolves to private/internal address 169.254.1.1"
+    ],
+    [
+      "https://100.64.0.1",
+      true,
+      "https://100.64.0.1"
+    ],
+    [
+      "https://8.8.8.8/",
+      true,
+      "https://8.8.8.8/"
+    ],
+    [
+      "https://[fe80::1]",
+      false,
+      "Hostname 'fe80::1' resolves to private/internal address fe80::1"
+    ],
+    [
+      "https://[2001:db8::1]",
+      false,
+      "Hostname '2001:db8::1' resolves to private/internal address 2001:db8::1"
+    ],
+    [
+      "https://[2606:4700::1111]",
+      true,
+      "https://[2606:4700::1111]"
+    ],
+    [
+      "https://[::ffff:10.0.0.1]",
+      false,
+      "Hostname '::ffff:10.0.0.1' resolves to private/internal address ::ffff:10.0.0.1"
+    ],
+    [
+      "https://240.0.0.1",
+      false,
+      "Hostname '240.0.0.1' resolves to private/internal address 240.0.0.1"
+    ],
+    [
+      "https://192.0.0.9",
+      true,
+      "https://192.0.0.9"
+    ],
+    [
+      "https://example.invalid/path",
+      true,
+      "https://example.invalid/path"
+    ],
+    [
+      "  https://example.invalid  ",
+      true,
+      "https://example.invalid"
+    ]
+  ],
+  "pack_tree": {
+    "pack.json": "{\"name\": \"My Pack\", \"author\": \"Jane\", \"sounds\": {\"alert\": \"s/a.wav\"}}",
+    "s/a.wav": "a",
+    "notes.txt": "n"
+  },
+  "submissions": [
+    {
+      "case": "ok",
+      "status": 200,
+      "body": {
+        "html_url": "https://github.com/orinks/accessiweather-soundpacks/pull/9"
+      },
+      "result": {
+        "url": "https://github.com/orinks/accessiweather-soundpacks/pull/9"
+      },
+      "progress": [
+        [
+          5.0,
+          "Checking prerequisites..."
+        ],
+        [
+          7.0,
+          "Connecting to backend service..."
+        ],
+        [
+          10.0,
+          "Validating sound pack..."
+        ],
+        [
+          15.0,
+          "Preparing pack submission..."
+        ],
+        [
+          20.0,
+          "Packaging sound pack..."
+        ],
+        [
+          70.0,
+          "Uploading pack to backend..."
+        ],
+        [
+          100.0,
+          "Pull request created: https://github.com/orinks/accessiweather-soundpacks/pull/9"
+        ]
+      ],
+      "requests": [
+        {
+          "url": "https://soundpack-backend.fly.dev/upload-zip",
+          "method": "POST",
+          "field": "zip_file",
+          "filename": "my-pack-jane.zip",
+          "content_type": "application/zip",
+          "zip": {
+            "notes.txt": "n",
+            "pack.json": "{\"name\": \"My Pack\", \"author\": \"Jane\", \"sounds\": {\"alert\": \"s/a.wav\"}}",
+            "s/a.wav": "a"
+          }
+        }
+      ]
+    },
+    {
+      "case": "no_url",
+      "status": 200,
+      "body": {
+        "number": 3
+      },
+      "result": {
+        "url": ""
+      },
+      "progress": [
+        [
+          5.0,
+          "Checking prerequisites..."
+        ],
+        [
+          7.0,
+          "Connecting to backend service..."
+        ],
+        [
+          10.0,
+          "Validating sound pack..."
+        ],
+        [
+          15.0,
+          "Preparing pack submission..."
+        ],
+        [
+          20.0,
+          "Packaging sound pack..."
+        ],
+        [
+          70.0,
+          "Uploading pack to backend..."
+        ],
+        [
+          100.0,
+          "Pull request created: "
+        ]
+      ],
+      "requests": [
+        {
+          "url": "https://soundpack-backend.fly.dev/upload-zip",
+          "method": "POST",
+          "field": "zip_file",
+          "filename": "my-pack-jane.zip",
+          "content_type": "application/zip",
+          "zip": {
+            "notes.txt": "n",
+            "pack.json": "{\"name\": \"My Pack\", \"author\": \"Jane\", \"sounds\": {\"alert\": \"s/a.wav\"}}",
+            "s/a.wav": "a"
+          }
+        }
+      ]
+    },
+    {
+      "case": "http_500",
+      "status": 500,
+      "body": {
+        "detail": "boom"
+      },
+      "result": {
+        "error": "Unexpected error communicating with backend: Backend service error (HTTP 500): boom"
+      },
+      "progress": [
+        [
+          5.0,
+          "Checking prerequisites..."
+        ],
+        [
+          7.0,
+          "Connecting to backend service..."
+        ],
+        [
+          10.0,
+          "Validating sound pack..."
+        ],
+        [
+          15.0,
+          "Preparing pack submission..."
+        ],
+        [
+          20.0,
+          "Packaging sound pack..."
+        ],
+        [
+          70.0,
+          "Uploading pack to backend..."
+        ]
+      ],
+      "requests": [
+        {
+          "url": "https://soundpack-backend.fly.dev/upload-zip",
+          "method": "POST",
+          "field": "zip_file",
+          "filename": "my-pack-jane.zip",
+          "content_type": "application/zip",
+          "zip": {
+            "notes.txt": "n",
+            "pack.json": "{\"name\": \"My Pack\", \"author\": \"Jane\", \"sounds\": {\"alert\": \"s/a.wav\"}}",
+            "s/a.wav": "a"
+          }
+        },
+        {
+          "url": "https://soundpack-backend.fly.dev/upload-zip",
+          "method": "POST",
+          "field": "zip_file",
+          "filename": "my-pack-jane.zip",
+          "content_type": "application/zip",
+          "zip": {
+            "notes.txt": "n",
+            "pack.json": "{\"name\": \"My Pack\", \"author\": \"Jane\", \"sounds\": {\"alert\": \"s/a.wav\"}}",
+            "s/a.wav": "a"
+          }
+        }
+      ]
+    },
+    {
+      "case": "http_422",
+      "status": 422,
+      "body": {
+        "detail": [
+          {
+            "loc": [
+              "body"
+            ],
+            "msg": "bad",
+            "type": "x"
+          }
+        ]
+      },
+      "result": {
+        "error": "Unexpected error communicating with backend: Backend service error (HTTP 422): [{'loc': ['body'], 'msg': 'bad', 'type': 'x'}]"
+      },
+      "progress": [
+        [
+          5.0,
+          "Checking prerequisites..."
+        ],
+        [
+          7.0,
+          "Connecting to backend service..."
+        ],
+        [
+          10.0,
+          "Validating sound pack..."
+        ],
+        [
+          15.0,
+          "Preparing pack submission..."
+        ],
+        [
+          20.0,
+          "Packaging sound pack..."
+        ],
+        [
+          70.0,
+          "Uploading pack to backend..."
+        ]
+      ],
+      "requests": [
+        {
+          "url": "https://soundpack-backend.fly.dev/upload-zip",
+          "method": "POST",
+          "field": "zip_file",
+          "filename": "my-pack-jane.zip",
+          "content_type": "application/zip",
+          "zip": {
+            "notes.txt": "n",
+            "pack.json": "{\"name\": \"My Pack\", \"author\": \"Jane\", \"sounds\": {\"alert\": \"s/a.wav\"}}",
+            "s/a.wav": "a"
+          }
+        },
+        {
+          "url": "https://soundpack-backend.fly.dev/upload-zip",
+          "method": "POST",
+          "field": "zip_file",
+          "filename": "my-pack-jane.zip",
+          "content_type": "application/zip",
+          "zip": {
+            "notes.txt": "n",
+            "pack.json": "{\"name\": \"My Pack\", \"author\": \"Jane\", \"sounds\": {\"alert\": \"s/a.wav\"}}",
+            "s/a.wav": "a"
+          }
+        }
+      ]
+    },
+    {
+      "case": "http_502",
+      "status": 502,
+      "body": "Bad Gateway",
+      "result": {
+        "error": "Unexpected error communicating with backend: Backend service error (HTTP 502): Bad Gateway"
+      },
+      "progress": [
+        [
+          5.0,
+          "Checking prerequisites..."
+        ],
+        [
+          7.0,
+          "Connecting to backend service..."
+        ],
+        [
+          10.0,
+          "Validating sound pack..."
+        ],
+        [
+          15.0,
+          "Preparing pack submission..."
+        ],
+        [
+          20.0,
+          "Packaging sound pack..."
+        ],
+        [
+          70.0,
+          "Uploading pack to backend..."
+        ]
+      ],
+      "requests": [
+        {
+          "url": "https://soundpack-backend.fly.dev/upload-zip",
+          "method": "POST",
+          "field": "zip_file",
+          "filename": "my-pack-jane.zip",
+          "content_type": "application/zip",
+          "zip": {
+            "notes.txt": "n",
+            "pack.json": "{\"name\": \"My Pack\", \"author\": \"Jane\", \"sounds\": {\"alert\": \"s/a.wav\"}}",
+            "s/a.wav": "a"
+          }
+        },
+        {
+          "url": "https://soundpack-backend.fly.dev/upload-zip",
+          "method": "POST",
+          "field": "zip_file",
+          "filename": "my-pack-jane.zip",
+          "content_type": "application/zip",
+          "zip": {
+            "notes.txt": "n",
+            "pack.json": "{\"name\": \"My Pack\", \"author\": \"Jane\", \"sounds\": {\"alert\": \"s/a.wav\"}}",
+            "s/a.wav": "a"
+          }
+        }
+      ]
+    },
+    {
+      "case": "invalid_pack",
+      "status": 200,
+      "body": {},
+      "result": {
+        "error": "Sound pack validation failed for <PACK>: Missing sound files: gone.wav"
+      },
+      "progress": [
+        [
+          5.0,
+          "Checking prerequisites..."
+        ],
+        [
+          7.0,
+          "Connecting to backend service..."
+        ],
+        [
+          10.0,
+          "Validating sound pack..."
+        ]
+      ],
+      "requests": []
+    }
+  ]
+}

@@ -1,0 +1,129 @@
+{
+  "tokens": [
+    {
+      "kind": "discussion",
+      "alert_id": null,
+      "token": "accessiweather-toast:kind=discussion",
+      "handoff": "{\"kind\": \"discussion\", \"alert_id\": null}"
+    },
+    {
+      "kind": "generic_fallback",
+      "alert_id": null,
+      "token": "accessiweather-toast:kind=generic_fallback",
+      "handoff": "{\"kind\": \"generic_fallback\", \"alert_id\": null}"
+    },
+    {
+      "kind": "alert_details",
+      "alert_id": "urn:oid:2.49.0.1.840.0.abc.001.1",
+      "token": "accessiweather-toast:kind=alert_details&alert_id=urn%3Aoid%3A2.49.0.1.840.0.abc.001.1",
+      "handoff": "{\"kind\": \"alert_details\", \"alert_id\": \"urn:oid:2.49.0.1.840.0.abc.001.1\"}"
+    },
+    {
+      "kind": "alert_details",
+      "alert_id": "id with spaces & ampersands/é",
+      "token": "accessiweather-toast:kind=alert_details&alert_id=id+with+spaces+%26+ampersands%2F%C3%A9",
+      "handoff": "{\"kind\": \"alert_details\", \"alert_id\": \"id with spaces & ampersands/\\u00e9\"}"
+    },
+    {
+      "kind": "discussion",
+      "alert_id": "extra",
+      "token": "accessiweather-toast:kind=discussion&alert_id=extra",
+      "handoff": "{\"kind\": \"discussion\", \"alert_id\": \"extra\"}"
+    }
+  ],
+  "argv": [
+    {
+      "argv": [
+        "app.exe"
+      ],
+      "request": null
+    },
+    {
+      "argv": [
+        "app.exe",
+        "--debug",
+        "accessiweather-toast:kind=discussion"
+      ],
+      "request": {
+        "kind": "discussion",
+        "alert_id": null
+      }
+    },
+    {
+      "argv": [
+        "accessiweather-toast:kind=alert_details&alert_id=a%2Fb+c"
+      ],
+      "request": {
+        "kind": "alert_details",
+        "alert_id": "a/b c"
+      }
+    },
+    {
+      "argv": [
+        "accessiweather-toast:kind=alert_details"
+      ],
+      "request": null
+    },
+    {
+      "argv": [
+        "accessiweather-toast:kind=alert_details&alert_id="
+      ],
+      "request": null
+    },
+    {
+      "argv": [
+        "accessiweather-toast:kind=bogus",
+        "accessiweather-toast:kind=discussion"
+      ],
+      "request": null
+    },
+    {
+      "argv": [
+        "accessiweather-toast:alert_id=x&kind=generic_fallback&kind=discussion"
+      ],
+      "request": {
+        "kind": "generic_fallback",
+        "alert_id": "x"
+      }
+    },
+    {
+      "argv": [
+        "accessiweather-toast:kind",
+        "x"
+      ],
+      "request": null
+    },
+    {
+      "argv": [
+        "accessiweather-toast:"
+      ],
+      "request": null
+    }
+  ],
+  "window_titles": [
+    {
+      "title": "AccessiWeather",
+      "match": true
+    },
+    {
+      "title": "AccessiWeather — Philadelphia, PA",
+      "match": true
+    },
+    {
+      "title": "AccessiWeather - GitHub",
+      "match": false
+    },
+    {
+      "title": "Orinks/AccessiWeather — Mozilla Firefox",
+      "match": false
+    },
+    {
+      "title": "AccessiWeather —",
+      "match": false
+    },
+    {
+      "title": "",
+      "match": false
+    }
+  ]
+}

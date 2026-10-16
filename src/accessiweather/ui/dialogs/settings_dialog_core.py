@@ -168,6 +168,7 @@ class SettingsDialogCoreMixin:
         ok_btn = wx.Button(self, wx.ID_OK, "Save Settings")
         ok_btn.Bind(wx.EVT_BUTTON, self._on_ok)
         cancel_btn = wx.Button(self, wx.ID_CANCEL, "Cancel")
+        cancel_btn.Bind(wx.EVT_BUTTON, self._on_cancel)
 
         button_sizer.Add(ok_btn, 0, wx.RIGHT, 10)
         button_sizer.Add(cancel_btn, 0)
@@ -197,15 +198,42 @@ class SettingsDialogCoreMixin:
             self._loaded_startup_enabled = actual_startup_enabled
             for tab in getattr(self, "_tab_objects", []):
                 tab.load(settings)
+            self._loaded_tab_values = self._collect_tab_values()
         except Exception as e:
             logger.error(f"Failed to load settings: {e}")
+
+    def _collect_tab_values(self) -> dict:
+        """Return every tab's current control values as one settings dict."""
+        settings_dict: dict = {}
+        for tab in getattr(self, "_tab_objects", []):
+            settings_dict.update(tab.save())
+        return settings_dict
+
+    def _has_unsaved_changes(self) -> bool:
+        """Report whether any control differs from what was loaded."""
+        loaded = getattr(self, "_loaded_tab_values", None)
+        return loaded is not None and self._collect_tab_values() != loaded
+
+    def _on_cancel(self, event):
+        """Ask before discarding edits; Escape and the close box route here too."""
+        if self._has_unsaved_changes():
+            answer = wx.MessageBox(
+                "You have unsaved changes. Save them before closing Settings?",
+                "Unsaved Changes",
+                wx.YES_NO | wx.CANCEL | wx.ICON_QUESTION,
+                parent=self,
+            )
+            if answer == wx.CANCEL:
+                return
+            if answer == wx.YES:
+                self._on_ok(event)
+                return
+        self.EndModal(wx.ID_CANCEL)
 
     def _save_settings(self) -> bool:
         """Save settings from UI controls."""
         try:
-            settings_dict: dict = {}
-            for tab in getattr(self, "_tab_objects", []):
-                settings_dict.update(tab.save())
+            settings_dict = self._collect_tab_values()
 
             # API key guard: if a key field is blank but the original was non-empty,
             # only drop it if the user explicitly cleared the field.

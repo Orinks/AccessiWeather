@@ -247,6 +247,9 @@ def build_nuitka_command(
         mode,
         "--assume-yes-for-downloads",
         "--noinclude-pytest-mode=nofollow",
+        # openai 3.x resolves client.chat through importlib.import_module, which
+        # Nuitka cannot follow; without this every AI request fails before sending.
+        "--include-package=openai.resources.chat",
         "--include-package-data=desktop_notifier",
         "--include-package-data=prism:_native/*",
         "--include-package-data=sound_lib",

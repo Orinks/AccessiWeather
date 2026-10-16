@@ -1,0 +1,235 @@
+{
+ "now": "2026-01-20T18:30:00+00:00",
+ "call": "forecast_and_discussion",
+ "location": {
+  "name": "New York, NY",
+  "latitude": 40.7128,
+  "longitude": -74.006,
+  "timezone": null,
+  "country_code": null,
+  "marine_mode": false,
+  "forecast_zone_id": null,
+  "cwa_office": null,
+  "county_zone_id": null,
+  "fire_zone_id": null,
+  "radar_station": null
+ },
+ "responses": [
+  {
+   "url": "https://api.weather.gov/points/40.7128,-74.006",
+   "status": 200,
+   "body": "{\"properties\":{\"forecast\":\"https://api.weather.gov/gridpoints/OKX/33,35/forecast\"}}"
+  },
+  {
+   "url": "https://api.weather.gov/gridpoints/OKX/33,35/forecast",
+   "status": 200,
+   "body": "{\"properties\":{\"periods\":[{\"name\":\"Today\",\"isDaytime\":true,\"startTime\":\"2026-01-20T06:00:00-05:00\",\"endTime\":\"2026-01-20T18:00:00-05:00\",\"temperature\":{\"unitCode\":\"wmoUnit:degC\",\"value\":3.3},\"temperatureUnit\":\"F\",\"windSpeed\":{\"unitCode\":\"wmoUnit:km_h-1\",\"minValue\":9.26,\"maxValue\":18.52},\"windDirection\":\"NW\",\"probabilityOfPrecipitation\":{\"unitCode\":\"wmoUnit:percent\",\"value\":null},\"shortForecast\":\"Sunny\",\"detailedForecast\":\"Sunny, with a high near 38.\",\"icon\":\"https://api.weather.gov/icons/land/day/few?size=medium\"},{\"name\":\"Tonight\",\"isDaytime\":false,\"startTime\":\"2026-01-20T18:00:00-05:00\",\"endTime\":\"bogus\",\"temperature\":{\"unitCode\":\"wmoUnit:degC\",\"value\":-6.1},\"windSpeed\":{\"unitCode\":\"wmoUnit:km_h-1\",\"value\":12.5},\"windDirection\":{\"value\":270},\"probabilityOfPrecipitation\":{\"value\":20}},{\"name\":\"Wednesday\",\"isDaytime\":true,\"temperature\":41,\"temperatureUnit\":\"F\",\"windSpeed\":\"5 to 10 mph\"},{\"temperature\":null,\"temperatureUnit\":\"C\",\"windSpeed\":7.5}]}}"
+  },
+  {
+   "url": "https://api.weather.gov/products/types/AFD/locations/OKX",
+   "status": 200,
+   "body": "{\"@graph\":[{\"id\":\"afd-old\",\"issuanceTime\":\"2026-01-20T10:00:00+00:00\"},{\"id\":\"afd-new\",\"issuanceTime\":\"2026-01-20T16:00:00+00:00\"},{\"id\":\"afd-tie\",\"issuanceTime\":\"2026-01-20T16:00:00+00:00\"}]}"
+  },
+  {
+   "url": "https://api.weather.gov/products/afd-new",
+   "status": 200,
+   "body": "{\"productText\":\"AREA FORECAST DISCUSSION\\nnew\"}"
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://api.weather.gov/points/40.7128,-74.006",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/gridpoints/OKX/33,35/forecast",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ],
+    [
+     "Feature-Flags",
+     "forecast_temperature_qv, forecast_wind_speed_qv"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/products/types/AFD/locations/OKX",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/products/afd-new",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  }
+ ],
+ "result": {
+  "forecast": {
+   "periods": [
+    {
+     "name": "Today",
+     "temperature": 37.94,
+     "temperature_low": 21.02,
+     "temperature_unit": "F",
+     "short_forecast": "Sunny",
+     "detailed_forecast": "Sunny, with a high near 38.",
+     "wind_speed": "12 mph (19 km/h)",
+     "wind_speed_mph": 11.50779092,
+     "wind_direction": "NW",
+     "icon": "https://api.weather.gov/icons/land/day/few?size=medium",
+     "start_time": "2026-01-20T06:00:00-05:00",
+     "end_time": "2026-01-20T18:00:00-05:00",
+     "precipitation_probability": null,
+     "snowfall": null,
+     "uv_index": null,
+     "cloud_cover": null,
+     "wind_gust": null,
+     "precipitation_amount": null,
+     "snow_depth": null,
+     "wind_chill_min_f": null,
+     "wind_chill_max_f": null,
+     "freezing_level_ft": null,
+     "ice_risk": null,
+     "heat_index_max_f": null,
+     "heat_index_min_f": null,
+     "uv_index_max": null,
+     "air_quality_forecast": null,
+     "frost_risk": null,
+     "pollen_forecast": null,
+     "precipitation_type": null,
+     "severe_weather_risk": null,
+     "feels_like_high": null,
+     "feels_like_low": null
+    },
+    {
+     "name": "Tonight",
+     "temperature": 21.02,
+     "temperature_low": null,
+     "temperature_unit": "F",
+     "short_forecast": null,
+     "detailed_forecast": null,
+     "wind_speed": "8 mph (12 km/h)",
+     "wind_speed_mph": 7.7671375000000005,
+     "wind_direction": "270",
+     "icon": null,
+     "start_time": "2026-01-20T18:00:00-05:00",
+     "end_time": null,
+     "precipitation_probability": 20.0,
+     "snowfall": null,
+     "uv_index": null,
+     "cloud_cover": null,
+     "wind_gust": null,
+     "precipitation_amount": null,
+     "snow_depth": null,
+     "wind_chill_min_f": null,
+     "wind_chill_max_f": null,
+     "freezing_level_ft": null,
+     "ice_risk": null,
+     "heat_index_max_f": null,
+     "heat_index_min_f": null,
+     "uv_index_max": null,
+     "air_quality_forecast": null,
+     "frost_risk": null,
+     "pollen_forecast": null,
+     "precipitation_type": null,
+     "severe_weather_risk": null,
+     "feels_like_high": null,
+     "feels_like_low": null
+    },
+    {
+     "name": "Wednesday",
+     "temperature": 41.0,
+     "temperature_low": null,
+     "temperature_unit": "F",
+     "short_forecast": null,
+     "detailed_forecast": null,
+     "wind_speed": "5 to 10 mph",
+     "wind_speed_mph": 10.0,
+     "wind_direction": null,
+     "icon": null,
+     "start_time": null,
+     "end_time": null,
+     "precipitation_probability": null,
+     "snowfall": null,
+     "uv_index": null,
+     "cloud_cover": null,
+     "wind_gust": null,
+     "precipitation_amount": null,
+     "snow_depth": null,
+     "wind_chill_min_f": null,
+     "wind_chill_max_f": null,
+     "freezing_level_ft": null,
+     "ice_risk": null,
+     "heat_index_max_f": null,
+     "heat_index_min_f": null,
+     "uv_index_max": null,
+     "air_quality_forecast": null,
+     "frost_risk": null,
+     "pollen_forecast": null,
+     "precipitation_type": null,
+     "severe_weather_risk": null,
+     "feels_like_high": null,
+     "feels_like_low": null
+    },
+    {
+     "name": "",
+     "temperature": null,
+     "temperature_low": null,
+     "temperature_unit": "C",
+     "short_forecast": null,
+     "detailed_forecast": null,
+     "wind_speed": "7.5",
+     "wind_speed_mph": null,
+     "wind_direction": null,
+     "icon": null,
+     "start_time": null,
+     "end_time": null,
+     "precipitation_probability": null,
+     "snowfall": null,
+     "uv_index": null,
+     "cloud_cover": null,
+     "wind_gust": null,
+     "precipitation_amount": null,
+     "snow_depth": null,
+     "wind_chill_min_f": null,
+     "wind_chill_max_f": null,
+     "freezing_level_ft": null,
+     "ice_risk": null,
+     "heat_index_max_f": null,
+     "heat_index_min_f": null,
+     "uv_index_max": null,
+     "air_quality_forecast": null,
+     "frost_risk": null,
+     "pollen_forecast": null,
+     "precipitation_type": null,
+     "severe_weather_risk": null,
+     "feels_like_high": null,
+     "feels_like_low": null
+    }
+   ],
+   "generated_at": "2026-01-20T18:30:00+00:00",
+   "summary": null
+  },
+  "discussion": "AREA FORECAST DISCUSSION\nnew",
+  "discussion_issuance_time": "2026-01-20T16:00:00+00:00"
+ }
+}

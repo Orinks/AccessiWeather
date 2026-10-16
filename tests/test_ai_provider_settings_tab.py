@@ -94,6 +94,19 @@ def test_legacy_settings_keep_openrouter_default_and_name_new_controls():
     assert controls["venice_model"].name == "Venice model ID"
 
 
+def test_retired_llama_preference_loads_as_browsed_model_not_preset():
+    tab, controls = make_tab()
+    tab.load(SimpleNamespace(ai_model_preference="meta-llama/llama-3.3-70b-instruct:free"))
+    assert controls["ai_model"].GetSelection() == 2
+    assert tab.dialog._selected_specific_model == "meta-llama/llama-3.3-70b-instruct:free"
+
+
+def test_paid_router_preference_maps_to_second_picker_entry():
+    tab, controls = make_tab()
+    tab.load(SimpleNamespace(ai_model_preference="auto"))
+    assert controls["ai_model"].GetSelection() == 1
+
+
 def test_missing_venice_key_focuses_credential_field(monkeypatch):
     from accessiweather.ui.dialogs import settings_dialog_handlers as handlers
 

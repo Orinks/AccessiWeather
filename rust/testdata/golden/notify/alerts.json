@@ -1,0 +1,1867 @@
+[
+  {
+    "name": "basic",
+    "settings": {
+      "sound_pack": "golden-missing-pack"
+    },
+    "seed_files": {},
+    "steps": [
+      {
+        "kind": "process",
+        "now": "2026-09-25T16:00:00+00:00",
+        "alerts": [
+          {
+            "id": "a1",
+            "title": "Flood Watch",
+            "description": "Flood Watch description.",
+            "severity": "Moderate",
+            "urgency": "Expected",
+            "certainty": "Observed",
+            "event": "Flood Watch",
+            "headline": "Flood Watch in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ],
+            "message_type": "Alert"
+          },
+          {
+            "id": "a2",
+            "title": "Tornado Warning",
+            "description": "Tornado Warning description.",
+            "severity": "Extreme",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Tornado Warning",
+            "headline": "Tornado Warning in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "A",
+              "B",
+              "C",
+              "D"
+            ],
+            "message_type": "Alert"
+          },
+          {
+            "id": "a3",
+            "title": "Severe Thunderstorm Warning",
+            "description": "Severe Thunderstorm Warning description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Severe Thunderstorm Warning",
+            "headline": "Severe Thunderstorm Warning in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ],
+            "message_type": "Update"
+          },
+          {
+            "id": "a4",
+            "title": "Frost Advisory",
+            "description": "Frost Advisory description.",
+            "severity": "Minor",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Frost Advisory",
+            "headline": "Frost Advisory in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "a5",
+            "title": "Dense Fog Advisory",
+            "description": "Dense Fog Advisory description.",
+            "severity": "Moderate",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Dense Fog Advisory",
+            "headline": "Dense Fog Advisory in effect",
+            "expires": "2026-09-25T11:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          }
+        ]
+      },
+      {
+        "kind": "process",
+        "now": "2026-09-25T16:02:00+00:00",
+        "alerts": [
+          {
+            "id": "a1",
+            "title": "Flood Watch",
+            "description": "Flood Watch description.",
+            "severity": "Moderate",
+            "urgency": "Expected",
+            "certainty": "Observed",
+            "event": "Flood Watch",
+            "headline": "Flood Watch in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ],
+            "message_type": "Alert"
+          },
+          {
+            "id": "a2",
+            "title": "Tornado Warning",
+            "description": "Tornado Warning description.",
+            "severity": "Extreme",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Tornado Warning",
+            "headline": "Tornado Warning in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "A",
+              "B",
+              "C",
+              "D"
+            ],
+            "message_type": "Alert"
+          },
+          {
+            "id": "a3",
+            "title": "Severe Thunderstorm Warning",
+            "description": "Severe Thunderstorm Warning description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Severe Thunderstorm Warning",
+            "headline": "Severe Thunderstorm Warning in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ],
+            "message_type": "Update"
+          },
+          {
+            "id": "a6",
+            "title": "Wind Advisory",
+            "description": "Wind Advisory description.",
+            "severity": "Moderate",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Wind Advisory",
+            "headline": "Wind Advisory in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ],
+            "sent": "2026-09-25T12:01:00-04:00"
+          }
+        ]
+      },
+      {
+        "kind": "process",
+        "now": "2026-09-25T16:10:00+00:00",
+        "alerts": [
+          {
+            "id": "a1",
+            "title": "Flood Watch",
+            "description": "Flood Watch description.",
+            "severity": "Moderate",
+            "urgency": "Expected",
+            "certainty": "Observed",
+            "event": "Flood Watch",
+            "headline": "Flood Watch in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ],
+            "message_type": "Alert"
+          },
+          {
+            "id": "a2",
+            "title": "Tornado Warning",
+            "description": "Tornado Warning description, updated with a much longer text Tornado Warning description, updated with a much longer text Tornado Warning description, updated with a much longer text ",
+            "severity": "Extreme",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Tornado Warning",
+            "headline": "Tornado Warning in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "A",
+              "B",
+              "C",
+              "D"
+            ],
+            "message_type": "Alert"
+          },
+          {
+            "id": "a3",
+            "title": "Severe Thunderstorm Warning",
+            "description": "Severe Thunderstorm Warning description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Severe Thunderstorm Warning",
+            "headline": "Severe Thunderstorm Warning in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ],
+            "message_type": "Update"
+          },
+          {
+            "id": "a6",
+            "title": "Wind Advisory",
+            "description": "Wind Advisory description.",
+            "severity": "Moderate",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Wind Advisory",
+            "headline": "Wind Advisory in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ],
+            "sent": "2026-09-25T12:01:00-04:00"
+          },
+          {
+            "id": null,
+            "title": "Heat Advisory",
+            "description": "Heat Advisory description.",
+            "severity": "Moderate",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Heat Advisory",
+            "headline": "Heat Advisory in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Z",
+              "Y"
+            ],
+            "source": "NWS"
+          }
+        ]
+      },
+      {
+        "kind": "process",
+        "now": "2026-09-25T16:20:00+00:00",
+        "alerts": [
+          {
+            "id": "a1",
+            "title": "Flood Watch",
+            "description": "Flood Watch description.",
+            "severity": "Severe",
+            "urgency": "Expected",
+            "certainty": "Observed",
+            "event": "Flood Watch",
+            "headline": "Flood Watch upgraded",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ],
+            "message_type": "Alert"
+          },
+          {
+            "id": "a2",
+            "title": "Tornado Warning",
+            "description": "Tornado Warning description, updated with a much longer text Tornado Warning description, updated with a much longer text Tornado Warning description, updated with a much longer text ",
+            "severity": "Extreme",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Tornado Warning",
+            "headline": "Tornado Warning in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "A",
+              "B",
+              "C",
+              "D"
+            ],
+            "message_type": "Alert"
+          }
+        ]
+      },
+      {
+        "kind": "process",
+        "now": "2026-09-25T16:30:00+00:00",
+        "alerts": [
+          {
+            "id": "a1",
+            "title": "Flood Watch",
+            "description": "Flood Watch description.",
+            "severity": "Moderate",
+            "urgency": "Expected",
+            "certainty": "Observed",
+            "event": "Flood Watch",
+            "headline": "Flood Watch downgraded",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ],
+            "message_type": "Alert"
+          }
+        ]
+      },
+      {
+        "kind": "process",
+        "now": "2026-09-25T16:40:00+00:00",
+        "alerts": []
+      },
+      {
+        "kind": "process",
+        "now": "2026-10-03T16:00:00+00:00",
+        "alerts": [
+          {
+            "id": "a1",
+            "title": "Flood Watch",
+            "description": "Flood Watch description.",
+            "severity": "Moderate",
+            "urgency": "Expected",
+            "certainty": "Observed",
+            "event": "Flood Watch",
+            "headline": "Flood Watch downgraded",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ],
+            "message_type": "Alert"
+          }
+        ]
+      },
+      {
+        "kind": "process",
+        "now": "2026-10-03T16:10:00+00:00",
+        "alerts": [
+          {
+            "id": "a1",
+            "title": "Flood Watch",
+            "description": "Flood Watch description.",
+            "severity": "Moderate",
+            "urgency": "Expected",
+            "certainty": "Observed",
+            "event": "Flood Watch",
+            "headline": "Flood Watch downgraded",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ],
+            "message_type": "Alert"
+          }
+        ]
+      }
+    ],
+    "results": [
+      {
+        "sent": 3,
+        "toasts": [
+          {
+            "title": "EXTREME ALERT: Tornado Warning",
+            "message": "Immediate action may be required.\n\nTornado Warning in effect\n\nTornado Warning description.\n\nAreas: A, B and 2 more\n\nExpires: Oct 30 6:00 PM",
+            "timeout": 15,
+            "sound_event": null,
+            "sound_candidates": [
+              "extreme",
+              "alert",
+              "notify"
+            ],
+            "play_sound": true,
+            "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=a2"
+          },
+          {
+            "title": "SEVERE ALERT: Severe Thunderstorm Warning",
+            "message": "Immediate action may be required.\n\nSevere Thunderstorm Warning in effect\n\nSevere Thunderstorm Warning description.\n\nAreas: Test County\n\nExpires: Oct 30 6:00 PM",
+            "timeout": 15,
+            "sound_event": null,
+            "sound_candidates": null,
+            "play_sound": false,
+            "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=a3"
+          },
+          {
+            "title": "MODERATE ALERT: Flood Watch",
+            "message": "Expected action may be required.\n\nFlood Watch in effect\n\nFlood Watch description.\n\nAreas: Test County\n\nExpires: Oct 30 6:00 PM",
+            "timeout": 15,
+            "sound_event": null,
+            "sound_candidates": null,
+            "play_sound": false,
+            "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=a1"
+          }
+        ],
+        "popups": [],
+        "radio": [
+          "a2",
+          "a1"
+        ],
+        "tokens": 7.0,
+        "notifications_this_hour": 3,
+        "state": "{\n  \"schema_version\": 1,\n  \"alerts\": {\n    \"schema_version\": 1,\n    \"last_global_notification\": \"2026-09-25T16:00:00+00:00\",\n    \"alert_states\": [\n      {\n        \"alert_id\": \"a1\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"e3d1e6b47f7c61b78eb94b78c61f86af\",\n            3,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"a2\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"d9c7d7f72c39666424dd6646145168c6\",\n            5,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"a3\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"6be35b38ddf7ba6dd97f9838d2963e8f\",\n            4,\n            1790352000.0\n          ]\n        ]\n      }\n    ]\n  },\n  \"notification_events\": {\n    \"schema_version\": 1,\n    \"discussion\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_check_time\": null\n    },\n    \"severe_risk\": {\n      \"last_value\": null,\n      \"last_check_time\": null\n    },\n    \"hwo\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_summary_signature\": null,\n      \"last_check_time\": null\n    },\n    \"sps\": {\n      \"last_product_ids\": [],\n      \"last_check_time\": null\n    }\n  },\n  \"meta\": {\n    \"migrated_from\": [],\n    \"migrated_at\": null\n  }\n}"
+      },
+      {
+        "sent": 0,
+        "toasts": [],
+        "popups": [],
+        "radio": [],
+        "tokens": 6.333333333,
+        "notifications_this_hour": 3,
+        "state": "{\n  \"schema_version\": 1,\n  \"alerts\": {\n    \"schema_version\": 1,\n    \"last_global_notification\": \"2026-09-25T16:00:00+00:00\",\n    \"alert_states\": [\n      {\n        \"alert_id\": \"a1\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"e3d1e6b47f7c61b78eb94b78c61f86af\",\n            3,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"a2\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"d9c7d7f72c39666424dd6646145168c6\",\n            5,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"a3\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"6be35b38ddf7ba6dd97f9838d2963e8f\",\n            4,\n            1790352000.0\n          ]\n        ]\n      }\n    ]\n  },\n  \"notification_events\": {\n    \"schema_version\": 1,\n    \"discussion\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_check_time\": null\n    },\n    \"severe_risk\": {\n      \"last_value\": null,\n      \"last_check_time\": null\n    },\n    \"hwo\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_summary_signature\": null,\n      \"last_check_time\": null\n    },\n    \"sps\": {\n      \"last_product_ids\": [],\n      \"last_check_time\": null\n    }\n  },\n  \"meta\": {\n    \"migrated_from\": [],\n    \"migrated_at\": null\n  }\n}"
+      },
+      {
+        "sent": 3,
+        "toasts": [
+          {
+            "title": "UPDATED EXTREME: Tornado Warning",
+            "message": "Immediate action may be required.\n\nTornado Warning in effect\n\nTornado Warning description, updated with a much longer text Tornado Warning description, updated wi...\n\nAreas: A, B and 2 more\n\nExpires: Oct 30 6:00 PM",
+            "timeout": 15,
+            "sound_event": null,
+            "sound_candidates": [
+              "alert_updated",
+              "extreme",
+              "alert",
+              "notify"
+            ],
+            "play_sound": true,
+            "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=a2"
+          },
+          {
+            "title": "MODERATE ALERT: Wind Advisory",
+            "message": "Immediate action may be required.\n\nWind Advisory in effect\n\nWind Advisory description.\n\nAreas: Test County\n\nExpires: Oct 30 6:00 PM",
+            "timeout": 15,
+            "sound_event": null,
+            "sound_candidates": null,
+            "play_sound": false,
+            "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=a6"
+          },
+          {
+            "title": "MODERATE ALERT: Heat Advisory",
+            "message": "Immediate action may be required.\n\nHeat Advisory in effect\n\nHeat Advisory description.\n\nAreas: Z, Y\n\nExpires: Oct 30 6:00 PM",
+            "timeout": 15,
+            "sound_event": null,
+            "sound_candidates": null,
+            "play_sound": false,
+            "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=heat_advisory-moderate-heat_advisory_in_effect-nws-y%2Cz"
+          }
+        ],
+        "popups": [],
+        "radio": [
+          "a6",
+          "heat_advisory-moderate-heat_advisory_in_effect-nws-y,z"
+        ],
+        "tokens": 4.666666667,
+        "notifications_this_hour": 6,
+        "state": "{\n  \"schema_version\": 1,\n  \"alerts\": {\n    \"schema_version\": 1,\n    \"last_global_notification\": \"2026-09-25T16:10:00+00:00\",\n    \"alert_states\": [\n      {\n        \"alert_id\": \"a1\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"e3d1e6b47f7c61b78eb94b78c61f86af\",\n            3,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"a2\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:10:00+00:00\",\n        \"notification_count\": 2,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"d9c7d7f72c39666424dd6646145168c6\",\n            5,\n            1790352000.0\n          ],\n          [\n            \"8c18aa17af9026dd5bb77ce9083b7d0b\",\n            5,\n            1790352600.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"a3\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"6be35b38ddf7ba6dd97f9838d2963e8f\",\n            4,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"a6\",\n        \"first_seen\": \"2026-09-25T16:10:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:10:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": \"2026-09-25T12:01:00-04:00\",\n        \"hash_history\": [\n          [\n            \"6b8388c2646680e47ac9ad34b3f83279\",\n            3,\n            1790352600.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"heat_advisory-moderate-heat_advisory_in_effect-nws-y,z\",\n        \"first_seen\": \"2026-09-25T16:10:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:10:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"e328c575308d0bfcf5322953c3db7ced\",\n            3,\n            1790352600.0\n          ]\n        ]\n      }\n    ]\n  },\n  \"notification_events\": {\n    \"schema_version\": 1,\n    \"discussion\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_check_time\": null\n    },\n    \"severe_risk\": {\n      \"last_value\": null,\n      \"last_check_time\": null\n    },\n    \"hwo\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_summary_signature\": null,\n      \"last_check_time\": null\n    },\n    \"sps\": {\n      \"last_product_ids\": [],\n      \"last_check_time\": null\n    }\n  },\n  \"meta\": {\n    \"migrated_from\": [],\n    \"migrated_at\": null\n  }\n}"
+      },
+      {
+        "sent": 1,
+        "toasts": [
+          {
+            "title": "ESCALATED SEVERE: Flood Watch",
+            "message": "Expected action may be required.\n\nFlood Watch upgraded\n\nFlood Watch description.\n\nAreas: Test County\n\nExpires: Oct 30 6:00 PM",
+            "timeout": 15,
+            "sound_event": null,
+            "sound_candidates": [
+              "severe",
+              "alert",
+              "notify"
+            ],
+            "play_sound": true,
+            "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=a1"
+          }
+        ],
+        "popups": [],
+        "radio": [],
+        "tokens": 5.333333333,
+        "notifications_this_hour": 7,
+        "state": "{\n  \"schema_version\": 1,\n  \"alerts\": {\n    \"schema_version\": 1,\n    \"last_global_notification\": \"2026-09-25T16:20:00+00:00\",\n    \"alert_states\": [\n      {\n        \"alert_id\": \"a1\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:20:00+00:00\",\n        \"notification_count\": 2,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"e3d1e6b47f7c61b78eb94b78c61f86af\",\n            3,\n            1790352000.0\n          ],\n          [\n            \"da8e23c75637c9bdfe16d885f7aecd69\",\n            4,\n            1790353200.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"a2\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:10:00+00:00\",\n        \"notification_count\": 2,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"d9c7d7f72c39666424dd6646145168c6\",\n            5,\n            1790352000.0\n          ],\n          [\n            \"8c18aa17af9026dd5bb77ce9083b7d0b\",\n            5,\n            1790352600.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"a3\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"6be35b38ddf7ba6dd97f9838d2963e8f\",\n            4,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"a6\",\n        \"first_seen\": \"2026-09-25T16:10:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:10:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": \"2026-09-25T12:01:00-04:00\",\n        \"hash_history\": [\n          [\n            \"6b8388c2646680e47ac9ad34b3f83279\",\n            3,\n            1790352600.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"heat_advisory-moderate-heat_advisory_in_effect-nws-y,z\",\n        \"first_seen\": \"2026-09-25T16:10:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:10:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"e328c575308d0bfcf5322953c3db7ced\",\n            3,\n            1790352600.0\n          ]\n        ]\n      }\n    ]\n  },\n  \"notification_events\": {\n    \"schema_version\": 1,\n    \"discussion\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_check_time\": null\n    },\n    \"severe_risk\": {\n      \"last_value\": null,\n      \"last_check_time\": null\n    },\n    \"hwo\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_summary_signature\": null,\n      \"last_check_time\": null\n    },\n    \"sps\": {\n      \"last_product_ids\": [],\n      \"last_check_time\": null\n    }\n  },\n  \"meta\": {\n    \"migrated_from\": [],\n    \"migrated_at\": null\n  }\n}"
+      },
+      {
+        "sent": 1,
+        "toasts": [
+          {
+            "title": "UPDATED MODERATE: Flood Watch",
+            "message": "Expected action may be required.\n\nFlood Watch downgraded\n\nFlood Watch description.\n\nAreas: Test County\n\nExpires: Oct 30 6:00 PM",
+            "timeout": 15,
+            "sound_event": null,
+            "sound_candidates": [
+              "alert_updated",
+              "moderate",
+              "alert",
+              "notify"
+            ],
+            "play_sound": true,
+            "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=a1"
+          }
+        ],
+        "popups": [],
+        "radio": [],
+        "tokens": 6.0,
+        "notifications_this_hour": 8,
+        "state": "{\n  \"schema_version\": 1,\n  \"alerts\": {\n    \"schema_version\": 1,\n    \"last_global_notification\": \"2026-09-25T16:30:00+00:00\",\n    \"alert_states\": [\n      {\n        \"alert_id\": \"a1\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:30:00+00:00\",\n        \"notification_count\": 3,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"e3d1e6b47f7c61b78eb94b78c61f86af\",\n            3,\n            1790352000.0\n          ],\n          [\n            \"da8e23c75637c9bdfe16d885f7aecd69\",\n            4,\n            1790353200.0\n          ],\n          [\n            \"fd970a177e167beb5bbaca68b28b81da\",\n            3,\n            1790353800.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"a2\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:10:00+00:00\",\n        \"notification_count\": 2,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"d9c7d7f72c39666424dd6646145168c6\",\n            5,\n            1790352000.0\n          ],\n          [\n            \"8c18aa17af9026dd5bb77ce9083b7d0b\",\n            5,\n            1790352600.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"a3\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"6be35b38ddf7ba6dd97f9838d2963e8f\",\n            4,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"a6\",\n        \"first_seen\": \"2026-09-25T16:10:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:10:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": \"2026-09-25T12:01:00-04:00\",\n        \"hash_history\": [\n          [\n            \"6b8388c2646680e47ac9ad34b3f83279\",\n            3,\n            1790352600.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"heat_advisory-moderate-heat_advisory_in_effect-nws-y,z\",\n        \"first_seen\": \"2026-09-25T16:10:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:10:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"e328c575308d0bfcf5322953c3db7ced\",\n            3,\n            1790352600.0\n          ]\n        ]\n      }\n    ]\n  },\n  \"notification_events\": {\n    \"schema_version\": 1,\n    \"discussion\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_check_time\": null\n    },\n    \"severe_risk\": {\n      \"last_value\": null,\n      \"last_check_time\": null\n    },\n    \"hwo\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_summary_signature\": null,\n      \"last_check_time\": null\n    },\n    \"sps\": {\n      \"last_product_ids\": [],\n      \"last_check_time\": null\n    }\n  },\n  \"meta\": {\n    \"migrated_from\": [],\n    \"migrated_at\": null\n  }\n}"
+      },
+      {
+        "sent": 0,
+        "toasts": [],
+        "popups": [],
+        "radio": [],
+        "tokens": 6.0,
+        "notifications_this_hour": 8,
+        "state": "{\n  \"schema_version\": 1,\n  \"alerts\": {\n    \"schema_version\": 1,\n    \"last_global_notification\": \"2026-09-25T16:30:00+00:00\",\n    \"alert_states\": [\n      {\n        \"alert_id\": \"a1\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:30:00+00:00\",\n        \"notification_count\": 3,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"e3d1e6b47f7c61b78eb94b78c61f86af\",\n            3,\n            1790352000.0\n          ],\n          [\n            \"da8e23c75637c9bdfe16d885f7aecd69\",\n            4,\n            1790353200.0\n          ],\n          [\n            \"fd970a177e167beb5bbaca68b28b81da\",\n            3,\n            1790353800.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"a2\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:10:00+00:00\",\n        \"notification_count\": 2,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"d9c7d7f72c39666424dd6646145168c6\",\n            5,\n            1790352000.0\n          ],\n          [\n            \"8c18aa17af9026dd5bb77ce9083b7d0b\",\n            5,\n            1790352600.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"a3\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"6be35b38ddf7ba6dd97f9838d2963e8f\",\n            4,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"a6\",\n        \"first_seen\": \"2026-09-25T16:10:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:10:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": \"2026-09-25T12:01:00-04:00\",\n        \"hash_history\": [\n          [\n            \"6b8388c2646680e47ac9ad34b3f83279\",\n            3,\n            1790352600.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"heat_advisory-moderate-heat_advisory_in_effect-nws-y,z\",\n        \"first_seen\": \"2026-09-25T16:10:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:10:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"e328c575308d0bfcf5322953c3db7ced\",\n            3,\n            1790352600.0\n          ]\n        ]\n      }\n    ]\n  },\n  \"notification_events\": {\n    \"schema_version\": 1,\n    \"discussion\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_check_time\": null\n    },\n    \"severe_risk\": {\n      \"last_value\": null,\n      \"last_check_time\": null\n    },\n    \"hwo\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_summary_signature\": null,\n      \"last_check_time\": null\n    },\n    \"sps\": {\n      \"last_product_ids\": [],\n      \"last_check_time\": null\n    }\n  },\n  \"meta\": {\n    \"migrated_from\": [],\n    \"migrated_at\": null\n  }\n}"
+      },
+      {
+        "sent": 0,
+        "toasts": [],
+        "popups": [],
+        "radio": [],
+        "tokens": 6.0,
+        "notifications_this_hour": 8,
+        "state": "{\n  \"schema_version\": 1,\n  \"alerts\": {\n    \"schema_version\": 1,\n    \"last_global_notification\": \"2026-09-25T16:30:00+00:00\",\n    \"alert_states\": []\n  },\n  \"notification_events\": {\n    \"schema_version\": 1,\n    \"discussion\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_check_time\": null\n    },\n    \"severe_risk\": {\n      \"last_value\": null,\n      \"last_check_time\": null\n    },\n    \"hwo\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_summary_signature\": null,\n      \"last_check_time\": null\n    },\n    \"sps\": {\n      \"last_product_ids\": [],\n      \"last_check_time\": null\n    }\n  },\n  \"meta\": {\n    \"migrated_from\": [],\n    \"migrated_at\": null\n  }\n}"
+      },
+      {
+        "sent": 1,
+        "toasts": [
+          {
+            "title": "MODERATE ALERT: Flood Watch",
+            "message": "Expected action may be required.\n\nFlood Watch downgraded\n\nFlood Watch description.\n\nAreas: Test County\n\nExpires: Oct 30 6:00 PM",
+            "timeout": 15,
+            "sound_event": null,
+            "sound_candidates": [
+              "moderate",
+              "alert",
+              "notify"
+            ],
+            "play_sound": true,
+            "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=a1"
+          }
+        ],
+        "popups": [],
+        "radio": [
+          "a1"
+        ],
+        "tokens": 9.0,
+        "notifications_this_hour": 1,
+        "state": "{\n  \"schema_version\": 1,\n  \"alerts\": {\n    \"schema_version\": 1,\n    \"last_global_notification\": \"2026-10-03T16:10:00+00:00\",\n    \"alert_states\": [\n      {\n        \"alert_id\": \"a1\",\n        \"first_seen\": \"2026-10-03T16:10:00+00:00\",\n        \"last_notified\": \"2026-10-03T16:10:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"fd970a177e167beb5bbaca68b28b81da\",\n            3,\n            1791043800.0\n          ]\n        ]\n      }\n    ]\n  },\n  \"notification_events\": {\n    \"schema_version\": 1,\n    \"discussion\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_check_time\": null\n    },\n    \"severe_risk\": {\n      \"last_value\": null,\n      \"last_check_time\": null\n    },\n    \"hwo\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_summary_signature\": null,\n      \"last_check_time\": null\n    },\n    \"sps\": {\n      \"last_product_ids\": [],\n      \"last_check_time\": null\n    }\n  },\n  \"meta\": {\n    \"migrated_from\": [],\n    \"migrated_at\": null\n  }\n}"
+      }
+    ]
+  },
+  {
+    "name": "fresh",
+    "settings": {
+      "sound_pack": "golden-missing-pack"
+    },
+    "seed_files": {
+      "state/runtime_state.json": "{\n  \"schema_version\": 1,\n  \"alerts\": {\n    \"schema_version\": 1,\n    \"last_global_notification\": null,\n    \"alert_states\": [\n      {\n        \"alert_id\": \"fresh-1\",\n        \"first_seen\": \"2026-09-25T15:00:00+00:00\",\n        \"last_notified\": null,\n        \"notification_count\": 0,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"e18052f35f5f60c4fb5c4a764fac20bb\",\n            4,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"stale-1\",\n        \"first_seen\": \"2026-09-25T15:00:00+00:00\",\n        \"last_notified\": null,\n        \"notification_count\": 0,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"6b8388c2646680e47ac9ad34b3f83279\",\n            3,\n            1790352000.0\n          ]\n        ]\n      }\n    ]\n  },\n  \"notification_events\": {\n    \"schema_version\": 1,\n    \"discussion\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_check_time\": null\n    },\n    \"severe_risk\": {\n      \"last_value\": null,\n      \"last_check_time\": null\n    },\n    \"hwo\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_summary_signature\": null,\n      \"last_check_time\": null\n    },\n    \"sps\": {\n      \"last_product_ids\": [],\n      \"last_check_time\": null\n    }\n  },\n  \"meta\": {\n    \"migrated_from\": [],\n    \"migrated_at\": null\n  }\n}"
+    },
+    "steps": [
+      {
+        "kind": "process",
+        "now": "2026-09-25T16:00:00+00:00",
+        "alerts": [
+          {
+            "id": "fresh-1",
+            "title": "Flood Warning",
+            "description": "Flood Warning description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Flood Warning",
+            "headline": "Flood Warning in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ],
+            "sent": "2026-09-25T11:55:00-04:00"
+          },
+          {
+            "id": "stale-1",
+            "title": "Wind Advisory",
+            "description": "Wind Advisory description.",
+            "severity": "Moderate",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Wind Advisory",
+            "headline": "Wind Advisory in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ],
+            "sent": "2026-09-25T11:00:00-04:00"
+          }
+        ]
+      }
+    ],
+    "results": [
+      {
+        "sent": 1,
+        "toasts": [
+          {
+            "title": "SEVERE ALERT: Flood Warning",
+            "message": "Immediate action may be required.\n\nFlood Warning in effect\n\nFlood Warning description.\n\nAreas: Test County\n\nExpires: Oct 30 6:00 PM",
+            "timeout": 15,
+            "sound_event": null,
+            "sound_candidates": [
+              "severe",
+              "alert",
+              "notify"
+            ],
+            "play_sound": true,
+            "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=fresh-1"
+          }
+        ],
+        "popups": [],
+        "radio": [],
+        "tokens": 9.0,
+        "notifications_this_hour": 1,
+        "state": "{\n  \"schema_version\": 1,\n  \"alerts\": {\n    \"schema_version\": 1,\n    \"last_global_notification\": \"2026-09-25T16:00:00+00:00\",\n    \"alert_states\": [\n      {\n        \"alert_id\": \"fresh-1\",\n        \"first_seen\": \"2026-09-25T15:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"e18052f35f5f60c4fb5c4a764fac20bb\",\n            4,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"stale-1\",\n        \"first_seen\": \"2026-09-25T15:00:00+00:00\",\n        \"last_notified\": null,\n        \"notification_count\": 0,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"6b8388c2646680e47ac9ad34b3f83279\",\n            3,\n            1790352000.0\n          ]\n        ]\n      }\n    ]\n  },\n  \"notification_events\": {\n    \"schema_version\": 1,\n    \"discussion\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_check_time\": null\n    },\n    \"severe_risk\": {\n      \"last_value\": null,\n      \"last_check_time\": null\n    },\n    \"hwo\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_summary_signature\": null,\n      \"last_check_time\": null\n    },\n    \"sps\": {\n      \"last_product_ids\": [],\n      \"last_check_time\": null\n    }\n  },\n  \"meta\": {\n    \"migrated_from\": [],\n    \"migrated_at\": null\n  }\n}"
+      }
+    ]
+  },
+  {
+    "name": "legacy_migration",
+    "settings": {
+      "sound_pack": "golden-missing-pack"
+    },
+    "seed_files": {
+      "alert_state.json": "{\"alert_states\": [{\"alert_id\": \"legacy-1\", \"first_seen\": \"2026-09-25T14:00:00+00:00\", \"last_notified\": \"2026-09-25T15:30:00+00:00\", \"notification_count\": 1, \"alert_sent_time\": null, \"hash_history\": [[\"bc937a12b6268b13924abae4f278ab48\", 4, 1790352000.0]]}, {\"alert_id\": \"old-format\", \"content_hash\": \"abc\", \"first_seen\": \"2026-09-25T15:00:00+00:00\"}], \"last_global_notification\": \"2026-09-25T15:30:00+00:00\"}"
+    },
+    "steps": [
+      {
+        "kind": "process",
+        "now": "2026-09-25T16:00:00+00:00",
+        "alerts": [
+          {
+            "id": "legacy-1",
+            "title": "Winter Storm Warning",
+            "description": "Winter Storm Warning description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Winter Storm Warning",
+            "headline": "Winter Storm Warning in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          }
+        ]
+      },
+      {
+        "kind": "process",
+        "now": "2026-09-25T16:40:00+00:00",
+        "alerts": [
+          {
+            "id": "legacy-1",
+            "title": "Winter Storm Warning",
+            "description": "Winter Storm Warning description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Winter Storm Warning",
+            "headline": "Winter Storm Warning in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "n1",
+            "title": "Flood Warning",
+            "description": "Flood Warning description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Flood Warning",
+            "headline": "Flood Warning in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          }
+        ]
+      }
+    ],
+    "results": [
+      {
+        "sent": 0,
+        "toasts": [],
+        "popups": [],
+        "radio": [],
+        "tokens": 10.0,
+        "notifications_this_hour": 0,
+        "state": "{\n  \"schema_version\": 1,\n  \"alerts\": {\n    \"schema_version\": 1,\n    \"last_global_notification\": \"2026-09-25T15:30:00+00:00\",\n    \"alert_states\": [\n      {\n        \"alert_id\": \"legacy-1\",\n        \"first_seen\": \"2026-09-25T14:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T15:30:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"bc937a12b6268b13924abae4f278ab48\",\n            4,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"old-format\",\n        \"first_seen\": \"2026-09-25T15:00:00+00:00\",\n        \"last_notified\": null,\n        \"notification_count\": 0,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"abc\",\n            1,\n            1790352000.0\n          ]\n        ]\n      }\n    ]\n  },\n  \"notification_events\": {\n    \"schema_version\": 1,\n    \"discussion\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_check_time\": null\n    },\n    \"severe_risk\": {\n      \"last_value\": null,\n      \"last_check_time\": null\n    },\n    \"hwo\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_summary_signature\": null,\n      \"last_check_time\": null\n    },\n    \"sps\": {\n      \"last_product_ids\": [],\n      \"last_check_time\": null\n    }\n  },\n  \"meta\": {\n    \"migrated_from\": [\n      \"alert_state.json\"\n    ],\n    \"migrated_at\": \"2026-09-25T16:00:00+00:00\"\n  }\n}"
+      },
+      {
+        "sent": 1,
+        "toasts": [
+          {
+            "title": "SEVERE ALERT: Flood Warning",
+            "message": "Immediate action may be required.\n\nFlood Warning in effect\n\nFlood Warning description.\n\nAreas: Test County\n\nExpires: Oct 30 6:00 PM",
+            "timeout": 15,
+            "sound_event": null,
+            "sound_candidates": [
+              "severe",
+              "alert",
+              "notify"
+            ],
+            "play_sound": true,
+            "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=n1"
+          }
+        ],
+        "popups": [],
+        "radio": [
+          "n1"
+        ],
+        "tokens": 9.0,
+        "notifications_this_hour": 1,
+        "state": "{\n  \"schema_version\": 1,\n  \"alerts\": {\n    \"schema_version\": 1,\n    \"last_global_notification\": \"2026-09-25T16:40:00+00:00\",\n    \"alert_states\": [\n      {\n        \"alert_id\": \"legacy-1\",\n        \"first_seen\": \"2026-09-25T14:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T15:30:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"bc937a12b6268b13924abae4f278ab48\",\n            4,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"old-format\",\n        \"first_seen\": \"2026-09-25T15:00:00+00:00\",\n        \"last_notified\": null,\n        \"notification_count\": 0,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"abc\",\n            1,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"n1\",\n        \"first_seen\": \"2026-09-25T16:40:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:40:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"e18052f35f5f60c4fb5c4a764fac20bb\",\n            4,\n            1790354400.0\n          ]\n        ]\n      }\n    ]\n  },\n  \"notification_events\": {\n    \"schema_version\": 1,\n    \"discussion\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_check_time\": null\n    },\n    \"severe_risk\": {\n      \"last_value\": null,\n      \"last_check_time\": null\n    },\n    \"hwo\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_summary_signature\": null,\n      \"last_check_time\": null\n    },\n    \"sps\": {\n      \"last_product_ids\": [],\n      \"last_check_time\": null\n    }\n  },\n  \"meta\": {\n    \"migrated_from\": [\n      \"alert_state.json\"\n    ],\n    \"migrated_at\": \"2026-09-25T16:00:00+00:00\"\n  }\n}"
+      }
+    ]
+  },
+  {
+    "name": "rate_limit",
+    "settings": {
+      "sound_pack": "golden-missing-pack",
+      "alert_max_notifications_per_hour": 2,
+      "alert_global_cooldown_minutes": 0
+    },
+    "seed_files": {},
+    "steps": [
+      {
+        "kind": "process",
+        "now": "2026-09-25T16:00:00+00:00",
+        "alerts": [
+          {
+            "id": "r0",
+            "title": "Event 0",
+            "description": "Event 0 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 0",
+            "headline": "Event 0 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "r1",
+            "title": "Event 1",
+            "description": "Event 1 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 1",
+            "headline": "Event 1 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "r2",
+            "title": "Event 2",
+            "description": "Event 2 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 2",
+            "headline": "Event 2 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "r3",
+            "title": "Event 3",
+            "description": "Event 3 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 3",
+            "headline": "Event 3 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "r4",
+            "title": "Event 4",
+            "description": "Event 4 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 4",
+            "headline": "Event 4 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          }
+        ]
+      },
+      {
+        "kind": "process",
+        "now": "2026-09-25T16:01:00+00:00",
+        "alerts": [
+          {
+            "id": "r0",
+            "title": "Event 0",
+            "description": "Event 0 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 0",
+            "headline": "Event 0 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "r1",
+            "title": "Event 1",
+            "description": "Event 1 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 1",
+            "headline": "Event 1 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "r2",
+            "title": "Event 2",
+            "description": "Event 2 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 2",
+            "headline": "Event 2 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "r3",
+            "title": "Event 3",
+            "description": "Event 3 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 3",
+            "headline": "Event 3 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "r4",
+            "title": "Event 4",
+            "description": "Event 4 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 4",
+            "headline": "Event 4 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          }
+        ]
+      },
+      {
+        "kind": "process",
+        "now": "2026-09-25T16:31:00+00:00",
+        "alerts": [
+          {
+            "id": "r0",
+            "title": "Event 0",
+            "description": "Event 0 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 0",
+            "headline": "Event 0 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "r1",
+            "title": "Event 1",
+            "description": "Event 1 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 1",
+            "headline": "Event 1 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "r2",
+            "title": "Event 2",
+            "description": "Event 2 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 2",
+            "headline": "Event 2 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "r3",
+            "title": "Event 3",
+            "description": "Event 3 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 3",
+            "headline": "Event 3 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "r4",
+            "title": "Event 4",
+            "description": "Event 4 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 4",
+            "headline": "Event 4 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          }
+        ]
+      },
+      {
+        "kind": "update_settings",
+        "now": "2026-09-25T16:31:30+00:00",
+        "settings": {
+          "sound_pack": "golden-missing-pack",
+          "alert_max_notifications_per_hour": 4,
+          "alert_global_cooldown_minutes": 0
+        }
+      },
+      {
+        "kind": "process",
+        "now": "2026-09-25T17:02:00+00:00",
+        "alerts": [
+          {
+            "id": "r0",
+            "title": "Event 0",
+            "description": "Event 0 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 0",
+            "headline": "Event 0 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "r1",
+            "title": "Event 1",
+            "description": "Event 1 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 1",
+            "headline": "Event 1 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "r2",
+            "title": "Event 2",
+            "description": "Event 2 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 2",
+            "headline": "Event 2 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "r3",
+            "title": "Event 3",
+            "description": "Event 3 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 3",
+            "headline": "Event 3 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "r4",
+            "title": "Event 4",
+            "description": "Event 4 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 4",
+            "headline": "Event 4 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          }
+        ]
+      },
+      {
+        "kind": "process",
+        "now": "2026-09-25T18:05:00+00:00",
+        "alerts": [
+          {
+            "id": "r0",
+            "title": "Event 0",
+            "description": "Event 0 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 0",
+            "headline": "Event 0 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "r1",
+            "title": "Event 1",
+            "description": "Event 1 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 1",
+            "headline": "Event 1 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "r2",
+            "title": "Event 2",
+            "description": "Event 2 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 2",
+            "headline": "Event 2 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "r3",
+            "title": "Event 3",
+            "description": "Event 3 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 3",
+            "headline": "Event 3 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "r4",
+            "title": "Event 4",
+            "description": "Event 4 description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Event 4",
+            "headline": "Event 4 in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          }
+        ]
+      }
+    ],
+    "results": [
+      {
+        "sent": 2,
+        "toasts": [
+          {
+            "title": "SEVERE ALERT: Event 0",
+            "message": "Immediate action may be required.\n\nEvent 0 in effect\n\nEvent 0 description.\n\nAreas: Test County\n\nExpires: Oct 30 6:00 PM",
+            "timeout": 15,
+            "sound_event": null,
+            "sound_candidates": [
+              "severe",
+              "alert",
+              "notify"
+            ],
+            "play_sound": true,
+            "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=r0"
+          },
+          {
+            "title": "SEVERE ALERT: Event 1",
+            "message": "Immediate action may be required.\n\nEvent 1 in effect\n\nEvent 1 description.\n\nAreas: Test County\n\nExpires: Oct 30 6:00 PM",
+            "timeout": 15,
+            "sound_event": null,
+            "sound_candidates": null,
+            "play_sound": false,
+            "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=r1"
+          }
+        ],
+        "popups": [],
+        "radio": [
+          "r0",
+          "r1"
+        ],
+        "tokens": 0.0,
+        "notifications_this_hour": 2,
+        "state": "{\n  \"schema_version\": 1,\n  \"alerts\": {\n    \"schema_version\": 1,\n    \"last_global_notification\": \"2026-09-25T16:00:00+00:00\",\n    \"alert_states\": [\n      {\n        \"alert_id\": \"r0\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"f49d99906052d435e1a0d8a33acca903\",\n            4,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"r1\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"6c68ce2fc13b0b9d53563b009a300d5d\",\n            4,\n            1790352000.0\n          ]\n        ]\n      }\n    ]\n  },\n  \"notification_events\": {\n    \"schema_version\": 1,\n    \"discussion\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_check_time\": null\n    },\n    \"severe_risk\": {\n      \"last_value\": null,\n      \"last_check_time\": null\n    },\n    \"hwo\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_summary_signature\": null,\n      \"last_check_time\": null\n    },\n    \"sps\": {\n      \"last_product_ids\": [],\n      \"last_check_time\": null\n    }\n  },\n  \"meta\": {\n    \"migrated_from\": [],\n    \"migrated_at\": null\n  }\n}"
+      },
+      {
+        "sent": 0,
+        "toasts": [],
+        "popups": [],
+        "radio": [],
+        "tokens": 0.033333333,
+        "notifications_this_hour": 2,
+        "state": "{\n  \"schema_version\": 1,\n  \"alerts\": {\n    \"schema_version\": 1,\n    \"last_global_notification\": \"2026-09-25T16:00:00+00:00\",\n    \"alert_states\": [\n      {\n        \"alert_id\": \"r0\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"f49d99906052d435e1a0d8a33acca903\",\n            4,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"r1\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"6c68ce2fc13b0b9d53563b009a300d5d\",\n            4,\n            1790352000.0\n          ]\n        ]\n      }\n    ]\n  },\n  \"notification_events\": {\n    \"schema_version\": 1,\n    \"discussion\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_check_time\": null\n    },\n    \"severe_risk\": {\n      \"last_value\": null,\n      \"last_check_time\": null\n    },\n    \"hwo\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_summary_signature\": null,\n      \"last_check_time\": null\n    },\n    \"sps\": {\n      \"last_product_ids\": [],\n      \"last_check_time\": null\n    }\n  },\n  \"meta\": {\n    \"migrated_from\": [],\n    \"migrated_at\": null\n  }\n}"
+      },
+      {
+        "sent": 1,
+        "toasts": [
+          {
+            "title": "SEVERE ALERT: Event 2",
+            "message": "Immediate action may be required.\n\nEvent 2 in effect\n\nEvent 2 description.\n\nAreas: Test County\n\nExpires: Oct 30 6:00 PM",
+            "timeout": 15,
+            "sound_event": null,
+            "sound_candidates": [
+              "severe",
+              "alert",
+              "notify"
+            ],
+            "play_sound": true,
+            "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=r2"
+          }
+        ],
+        "popups": [],
+        "radio": [
+          "r2"
+        ],
+        "tokens": 0.033333333,
+        "notifications_this_hour": 3,
+        "state": "{\n  \"schema_version\": 1,\n  \"alerts\": {\n    \"schema_version\": 1,\n    \"last_global_notification\": \"2026-09-25T16:31:00+00:00\",\n    \"alert_states\": [\n      {\n        \"alert_id\": \"r0\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"f49d99906052d435e1a0d8a33acca903\",\n            4,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"r1\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"6c68ce2fc13b0b9d53563b009a300d5d\",\n            4,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"r2\",\n        \"first_seen\": \"2026-09-25T16:31:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:31:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"623a561e5c59bfd77c17f9be403c27b5\",\n            4,\n            1790353860.0\n          ]\n        ]\n      }\n    ]\n  },\n  \"notification_events\": {\n    \"schema_version\": 1,\n    \"discussion\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_check_time\": null\n    },\n    \"severe_risk\": {\n      \"last_value\": null,\n      \"last_check_time\": null\n    },\n    \"hwo\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_summary_signature\": null,\n      \"last_check_time\": null\n    },\n    \"sps\": {\n      \"last_product_ids\": [],\n      \"last_check_time\": null\n    }\n  },\n  \"meta\": {\n    \"migrated_from\": [],\n    \"migrated_at\": null\n  }\n}"
+      },
+      {
+        "sent": null,
+        "toasts": [],
+        "popups": [],
+        "radio": [],
+        "tokens": 0.066666667,
+        "notifications_this_hour": 3,
+        "state": "{\n  \"schema_version\": 1,\n  \"alerts\": {\n    \"schema_version\": 1,\n    \"last_global_notification\": \"2026-09-25T16:31:00+00:00\",\n    \"alert_states\": [\n      {\n        \"alert_id\": \"r0\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"f49d99906052d435e1a0d8a33acca903\",\n            4,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"r1\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"6c68ce2fc13b0b9d53563b009a300d5d\",\n            4,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"r2\",\n        \"first_seen\": \"2026-09-25T16:31:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:31:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"623a561e5c59bfd77c17f9be403c27b5\",\n            4,\n            1790353860.0\n          ]\n        ]\n      }\n    ]\n  },\n  \"notification_events\": {\n    \"schema_version\": 1,\n    \"discussion\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_check_time\": null\n    },\n    \"severe_risk\": {\n      \"last_value\": null,\n      \"last_check_time\": null\n    },\n    \"hwo\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_summary_signature\": null,\n      \"last_check_time\": null\n    },\n    \"sps\": {\n      \"last_product_ids\": [],\n      \"last_check_time\": null\n    }\n  },\n  \"meta\": {\n    \"migrated_from\": [],\n    \"migrated_at\": null\n  }\n}"
+      },
+      {
+        "sent": 2,
+        "toasts": [
+          {
+            "title": "SEVERE ALERT: Event 3",
+            "message": "Immediate action may be required.\n\nEvent 3 in effect\n\nEvent 3 description.\n\nAreas: Test County\n\nExpires: Oct 30 6:00 PM",
+            "timeout": 15,
+            "sound_event": null,
+            "sound_candidates": [
+              "severe",
+              "alert",
+              "notify"
+            ],
+            "play_sound": true,
+            "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=r3"
+          },
+          {
+            "title": "SEVERE ALERT: Event 4",
+            "message": "Immediate action may be required.\n\nEvent 4 in effect\n\nEvent 4 description.\n\nAreas: Test County\n\nExpires: Oct 30 6:00 PM",
+            "timeout": 15,
+            "sound_event": null,
+            "sound_candidates": null,
+            "play_sound": false,
+            "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=r4"
+          }
+        ],
+        "popups": [],
+        "radio": [
+          "r3",
+          "r4"
+        ],
+        "tokens": 0.133333333,
+        "notifications_this_hour": 2,
+        "state": "{\n  \"schema_version\": 1,\n  \"alerts\": {\n    \"schema_version\": 1,\n    \"last_global_notification\": \"2026-09-25T17:02:00+00:00\",\n    \"alert_states\": [\n      {\n        \"alert_id\": \"r0\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"f49d99906052d435e1a0d8a33acca903\",\n            4,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"r1\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"6c68ce2fc13b0b9d53563b009a300d5d\",\n            4,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"r2\",\n        \"first_seen\": \"2026-09-25T16:31:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:31:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"623a561e5c59bfd77c17f9be403c27b5\",\n            4,\n            1790353860.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"r3\",\n        \"first_seen\": \"2026-09-25T17:02:00+00:00\",\n        \"last_notified\": \"2026-09-25T17:02:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"7e4e5ec9c6df1ac39cbf1c7ed77c0762\",\n            4,\n            1790355720.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"r4\",\n        \"first_seen\": \"2026-09-25T17:02:00+00:00\",\n        \"last_notified\": \"2026-09-25T17:02:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"c348bf2ceeb9455a0456439826ee1fc0\",\n            4,\n            1790355720.0\n          ]\n        ]\n      }\n    ]\n  },\n  \"notification_events\": {\n    \"schema_version\": 1,\n    \"discussion\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_check_time\": null\n    },\n    \"severe_risk\": {\n      \"last_value\": null,\n      \"last_check_time\": null\n    },\n    \"hwo\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_summary_signature\": null,\n      \"last_check_time\": null\n    },\n    \"sps\": {\n      \"last_product_ids\": [],\n      \"last_check_time\": null\n    }\n  },\n  \"meta\": {\n    \"migrated_from\": [],\n    \"migrated_at\": null\n  }\n}"
+      },
+      {
+        "sent": 0,
+        "toasts": [],
+        "popups": [],
+        "radio": [],
+        "tokens": 0.133333333,
+        "notifications_this_hour": 2,
+        "state": "{\n  \"schema_version\": 1,\n  \"alerts\": {\n    \"schema_version\": 1,\n    \"last_global_notification\": \"2026-09-25T17:02:00+00:00\",\n    \"alert_states\": [\n      {\n        \"alert_id\": \"r0\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"f49d99906052d435e1a0d8a33acca903\",\n            4,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"r1\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"6c68ce2fc13b0b9d53563b009a300d5d\",\n            4,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"r2\",\n        \"first_seen\": \"2026-09-25T16:31:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:31:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"623a561e5c59bfd77c17f9be403c27b5\",\n            4,\n            1790353860.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"r3\",\n        \"first_seen\": \"2026-09-25T17:02:00+00:00\",\n        \"last_notified\": \"2026-09-25T17:02:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"7e4e5ec9c6df1ac39cbf1c7ed77c0762\",\n            4,\n            1790355720.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"r4\",\n        \"first_seen\": \"2026-09-25T17:02:00+00:00\",\n        \"last_notified\": \"2026-09-25T17:02:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"c348bf2ceeb9455a0456439826ee1fc0\",\n            4,\n            1790355720.0\n          ]\n        ]\n      }\n    ]\n  },\n  \"notification_events\": {\n    \"schema_version\": 1,\n    \"discussion\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_check_time\": null\n    },\n    \"severe_risk\": {\n      \"last_value\": null,\n      \"last_check_time\": null\n    },\n    \"hwo\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_summary_signature\": null,\n      \"last_check_time\": null\n    },\n    \"sps\": {\n      \"last_product_ids\": [],\n      \"last_check_time\": null\n    }\n  },\n  \"meta\": {\n    \"migrated_from\": [],\n    \"migrated_at\": null\n  }\n}"
+      }
+    ]
+  },
+  {
+    "name": "settings",
+    "settings": {
+      "sound_pack": "golden-specific",
+      "specific_alert_sound_packs": [
+        "golden-specific"
+      ],
+      "immediate_alert_details_popups": true,
+      "alert_notify_minor": true,
+      "alert_ignored_categories": [
+        "heat advisory"
+      ],
+      "time_display_mode": "both",
+      "show_timezone_suffix": true,
+      "time_format_12hour": false
+    },
+    "seed_files": {},
+    "steps": [
+      {
+        "kind": "process",
+        "now": "2026-09-25T16:00:00+00:00",
+        "alerts": [
+          {
+            "id": "s1",
+            "title": "Frost Advisory",
+            "description": "Frost Advisory description.",
+            "severity": "Minor",
+            "urgency": "Future",
+            "certainty": "Observed",
+            "event": "Frost Advisory",
+            "headline": "Frost Advisory in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "s2",
+            "title": "Heat Advisory",
+            "description": "Heat Advisory description.",
+            "severity": "Severe",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Heat Advisory",
+            "headline": "Heat Advisory in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "s3",
+            "title": "Air Quality Alert",
+            "description": "Air Quality Alert description.",
+            "severity": "Unknown",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Air Quality Alert",
+            "headline": "Air Quality Alert in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "s4",
+            "title": "Special Weather Statement",
+            "description": "Issued by the office. Ice possible.",
+            "severity": "Moderate",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Special Weather Statement",
+            "headline": "Special Weather Statement in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          },
+          {
+            "id": "s5",
+            "title": "Hurricane Force Wind Warning",
+            "description": "Hurricane Force Wind Warning description.",
+            "severity": "Extreme",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Hurricane Force Wind Warning",
+            "headline": "Hurricane Force Wind Warning in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ],
+            "message_type": "alert "
+          }
+        ]
+      },
+      {
+        "kind": "update_settings",
+        "now": "2026-09-25T16:01:00+00:00",
+        "settings": {
+          "sound_pack": "golden-specific",
+          "specific_alert_sound_packs": [
+            "golden-specific"
+          ],
+          "immediate_alert_details_popups": true,
+          "alert_notify_minor": true,
+          "alert_ignored_categories": [
+            "heat advisory"
+          ],
+          "time_display_mode": "both",
+          "show_timezone_suffix": true,
+          "time_format_12hour": false,
+          "alert_notifications_enabled": false
+        }
+      },
+      {
+        "kind": "process",
+        "now": "2026-09-25T16:20:00+00:00",
+        "alerts": [
+          {
+            "id": "s6",
+            "title": "Tornado Warning",
+            "description": "Tornado Warning description.",
+            "severity": "Extreme",
+            "urgency": "Immediate",
+            "certainty": "Observed",
+            "event": "Tornado Warning",
+            "headline": "Tornado Warning in effect",
+            "expires": "2026-10-30T18:00:00-04:00",
+            "areas": [
+              "Test County"
+            ]
+          }
+        ]
+      },
+      {
+        "kind": "lifecycle",
+        "now": "2026-09-25T16:21:00+00:00",
+        "diff": {
+          "cancelled_alerts": [
+            {
+              "kind": "cancelled",
+              "alert_id": "x",
+              "title": "Tornado Warning"
+            }
+          ]
+        }
+      }
+    ],
+    "results": [
+      {
+        "sent": 3,
+        "toasts": [
+          {
+            "title": "EXTREME ALERT: Hurricane Force Wind Warning",
+            "message": "Immediate action may be required.\n\nHurricane Force Wind Warning in effect\n\nHurricane Force Wind Warning description.\n\nAreas: Test County\n\nExpires: Oct 30 18:00 UTC-04:00 (Oct 30 22:00 UTC)",
+            "timeout": 15,
+            "sound_event": null,
+            "sound_candidates": [
+              "hurricane_force_wind_warning",
+              "wind_warning",
+              "wind_extreme",
+              "wind",
+              "warning",
+              "extreme",
+              "alert",
+              "notify"
+            ],
+            "play_sound": true,
+            "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=s5"
+          },
+          {
+            "title": "MODERATE ALERT: Special Weather Statement",
+            "message": "Immediate action may be required.\n\nSpecial Weather Statement in effect\n\nIssued by the office. Ice possible.\n\nAreas: Test County\n\nExpires: Oct 30 18:00 UTC-04:00 (Oct 30 22:00 UTC)",
+            "timeout": 15,
+            "sound_event": null,
+            "sound_candidates": null,
+            "play_sound": false,
+            "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=s4"
+          },
+          {
+            "title": "MINOR ALERT: Frost Advisory",
+            "message": "Frost Advisory in effect\n\nFrost Advisory description.\n\nAreas: Test County\n\nExpires: Oct 30 18:00 UTC-04:00 (Oct 30 22:00 UTC)",
+            "timeout": 15,
+            "sound_event": null,
+            "sound_candidates": null,
+            "play_sound": false,
+            "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=s1"
+          }
+        ],
+        "popups": [
+          "s5",
+          "s4",
+          "s1"
+        ],
+        "radio": [
+          "s5",
+          "s4",
+          "s1"
+        ],
+        "tokens": 7.0,
+        "notifications_this_hour": 3,
+        "state": "{\n  \"schema_version\": 1,\n  \"alerts\": {\n    \"schema_version\": 1,\n    \"last_global_notification\": \"2026-09-25T16:00:00+00:00\",\n    \"alert_states\": [\n      {\n        \"alert_id\": \"s1\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"3b79813fd96ba9913aad7486d7f403b1\",\n            2,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"s4\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"dadf5b519a912477acad38ecf36ce627\",\n            3,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"s5\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"c656a9f9ebf65b9e8b49394b32d49c47\",\n            5,\n            1790352000.0\n          ]\n        ]\n      }\n    ]\n  },\n  \"notification_events\": {\n    \"schema_version\": 1,\n    \"discussion\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_check_time\": null\n    },\n    \"severe_risk\": {\n      \"last_value\": null,\n      \"last_check_time\": null\n    },\n    \"hwo\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_summary_signature\": null,\n      \"last_check_time\": null\n    },\n    \"sps\": {\n      \"last_product_ids\": [],\n      \"last_check_time\": null\n    }\n  },\n  \"meta\": {\n    \"migrated_from\": [],\n    \"migrated_at\": null\n  }\n}"
+      },
+      {
+        "sent": null,
+        "toasts": [],
+        "popups": [],
+        "radio": [],
+        "tokens": 7.0,
+        "notifications_this_hour": 3,
+        "state": "{\n  \"schema_version\": 1,\n  \"alerts\": {\n    \"schema_version\": 1,\n    \"last_global_notification\": \"2026-09-25T16:00:00+00:00\",\n    \"alert_states\": [\n      {\n        \"alert_id\": \"s1\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"3b79813fd96ba9913aad7486d7f403b1\",\n            2,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"s4\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"dadf5b519a912477acad38ecf36ce627\",\n            3,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"s5\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"c656a9f9ebf65b9e8b49394b32d49c47\",\n            5,\n            1790352000.0\n          ]\n        ]\n      }\n    ]\n  },\n  \"notification_events\": {\n    \"schema_version\": 1,\n    \"discussion\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_check_time\": null\n    },\n    \"severe_risk\": {\n      \"last_value\": null,\n      \"last_check_time\": null\n    },\n    \"hwo\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_summary_signature\": null,\n      \"last_check_time\": null\n    },\n    \"sps\": {\n      \"last_product_ids\": [],\n      \"last_check_time\": null\n    }\n  },\n  \"meta\": {\n    \"migrated_from\": [],\n    \"migrated_at\": null\n  }\n}"
+      },
+      {
+        "sent": 0,
+        "toasts": [],
+        "popups": [],
+        "radio": [],
+        "tokens": 7.0,
+        "notifications_this_hour": 3,
+        "state": "{\n  \"schema_version\": 1,\n  \"alerts\": {\n    \"schema_version\": 1,\n    \"last_global_notification\": \"2026-09-25T16:00:00+00:00\",\n    \"alert_states\": [\n      {\n        \"alert_id\": \"s1\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"3b79813fd96ba9913aad7486d7f403b1\",\n            2,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"s4\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"dadf5b519a912477acad38ecf36ce627\",\n            3,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"s5\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"c656a9f9ebf65b9e8b49394b32d49c47\",\n            5,\n            1790352000.0\n          ]\n        ]\n      }\n    ]\n  },\n  \"notification_events\": {\n    \"schema_version\": 1,\n    \"discussion\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_check_time\": null\n    },\n    \"severe_risk\": {\n      \"last_value\": null,\n      \"last_check_time\": null\n    },\n    \"hwo\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_summary_signature\": null,\n      \"last_check_time\": null\n    },\n    \"sps\": {\n      \"last_product_ids\": [],\n      \"last_check_time\": null\n    }\n  },\n  \"meta\": {\n    \"migrated_from\": [],\n    \"migrated_at\": null\n  }\n}"
+      },
+      {
+        "sent": 0,
+        "toasts": [],
+        "popups": [],
+        "radio": [],
+        "tokens": 7.0,
+        "notifications_this_hour": 3,
+        "state": "{\n  \"schema_version\": 1,\n  \"alerts\": {\n    \"schema_version\": 1,\n    \"last_global_notification\": \"2026-09-25T16:00:00+00:00\",\n    \"alert_states\": [\n      {\n        \"alert_id\": \"s1\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"3b79813fd96ba9913aad7486d7f403b1\",\n            2,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"s4\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"dadf5b519a912477acad38ecf36ce627\",\n            3,\n            1790352000.0\n          ]\n        ]\n      },\n      {\n        \"alert_id\": \"s5\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"c656a9f9ebf65b9e8b49394b32d49c47\",\n            5,\n            1790352000.0\n          ]\n        ]\n      }\n    ]\n  },\n  \"notification_events\": {\n    \"schema_version\": 1,\n    \"discussion\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_check_time\": null\n    },\n    \"severe_risk\": {\n      \"last_value\": null,\n      \"last_check_time\": null\n    },\n    \"hwo\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_summary_signature\": null,\n      \"last_check_time\": null\n    },\n    \"sps\": {\n      \"last_product_ids\": [],\n      \"last_check_time\": null\n    }\n  },\n  \"meta\": {\n    \"migrated_from\": [],\n    \"migrated_at\": null\n  }\n}"
+      }
+    ]
+  },
+  {
+    "name": "lifecycle",
+    "settings": {
+      "sound_pack": "golden-missing-pack"
+    },
+    "seed_files": {},
+    "steps": [
+      {
+        "kind": "lifecycle",
+        "now": "2026-09-25T16:00:00+00:00",
+        "diff": {}
+      },
+      {
+        "kind": "lifecycle",
+        "now": "2026-09-25T16:01:00+00:00",
+        "diff": {
+          "new_alerts": [
+            {
+              "kind": "new",
+              "alert": {
+                "id": "a1",
+                "title": "Flood Watch",
+                "description": "Flood Watch description.",
+                "severity": "Moderate",
+                "urgency": "Expected",
+                "certainty": "Observed",
+                "event": "Flood Watch",
+                "headline": "Flood Watch in effect",
+                "expires": "2026-10-30T18:00:00-04:00",
+                "areas": [
+                  "Test County"
+                ],
+                "message_type": "Alert"
+              },
+              "alert_id": "a1",
+              "title": "Flood Watch"
+            }
+          ]
+        }
+      },
+      {
+        "kind": "lifecycle",
+        "now": "2026-09-25T16:02:00+00:00",
+        "diff": {
+          "updated_alerts": [
+            {
+              "kind": "updated",
+              "alert": {
+                "id": "a1",
+                "title": "Flood Watch",
+                "description": "Flood Watch description.",
+                "severity": "Moderate",
+                "urgency": "Expected",
+                "certainty": "Observed",
+                "event": "Flood Watch",
+                "headline": "Flood Watch in effect",
+                "expires": "2026-10-30T18:00:00-04:00",
+                "areas": [
+                  "Test County"
+                ],
+                "message_type": "Alert"
+              },
+              "alert_id": "a1",
+              "title": "Flood Watch"
+            },
+            {
+              "kind": "updated",
+              "alert": null,
+              "alert_id": "gone",
+              "title": "Gone"
+            }
+          ],
+          "escalated_alerts": [
+            {
+              "kind": "escalated",
+              "alert": {
+                "id": "a1",
+                "title": "Flood Watch",
+                "description": "Flood Watch description.",
+                "severity": "Severe",
+                "urgency": "Expected",
+                "certainty": "Observed",
+                "event": "Flood Watch",
+                "headline": "Flood Watch upgraded",
+                "expires": "2026-10-30T18:00:00-04:00",
+                "areas": [
+                  "Test County"
+                ],
+                "message_type": "Alert"
+              },
+              "alert_id": "a1",
+              "title": "Flood Watch",
+              "old_severity": "Moderate",
+              "new_severity": "Severe"
+            }
+          ],
+          "extended_alerts": [
+            {
+              "kind": "extended",
+              "alert": {
+                "id": "a4",
+                "title": "Frost Advisory",
+                "description": "Frost Advisory description.",
+                "severity": "Minor",
+                "urgency": "Immediate",
+                "certainty": "Observed",
+                "event": "Frost Advisory",
+                "headline": "Frost Advisory in effect",
+                "expires": "2026-10-30T18:00:00-04:00",
+                "areas": [
+                  "Test County"
+                ]
+              },
+              "alert_id": "a4",
+              "title": "Frost Advisory"
+            }
+          ],
+          "cancelled_alerts": [
+            {
+              "kind": "cancelled",
+              "alert_id": "a3",
+              "title": "Winter Storm Warning"
+            },
+            {
+              "kind": "cancelled",
+              "alert_id": "a9",
+              "title": ""
+            }
+          ]
+        }
+      }
+    ],
+    "results": [
+      {
+        "sent": 0,
+        "toasts": [],
+        "popups": [],
+        "radio": [],
+        "tokens": 10.0,
+        "notifications_this_hour": 0,
+        "state": null
+      },
+      {
+        "sent": 0,
+        "toasts": [],
+        "popups": [],
+        "radio": [],
+        "tokens": 10.0,
+        "notifications_this_hour": 0,
+        "state": null
+      },
+      {
+        "sent": 5,
+        "toasts": [
+          {
+            "title": "UPDATED MODERATE: Flood Watch",
+            "message": "Expected action may be required.\n\nFlood Watch in effect\n\nFlood Watch description.\n\nAreas: Test County\n\nExpires: Oct 30 6:00 PM",
+            "timeout": 15,
+            "sound_event": null,
+            "sound_candidates": [
+              "alert_updated",
+              "moderate",
+              "alert",
+              "notify"
+            ],
+            "play_sound": true,
+            "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=a1"
+          },
+          {
+            "title": "ESCALATED SEVERE: Flood Watch",
+            "message": "Expected action may be required.\n\nFlood Watch upgraded\n\nFlood Watch description.\n\nAreas: Test County\n\nExpires: Oct 30 6:00 PM",
+            "timeout": 15,
+            "sound_event": null,
+            "sound_candidates": [
+              "severe",
+              "alert",
+              "notify"
+            ],
+            "play_sound": true,
+            "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=a1"
+          },
+          {
+            "title": "MINOR ALERT: Frost Advisory",
+            "message": "Immediate action may be required.\n\nFrost Advisory in effect\n\nFrost Advisory description.\n\nAreas: Test County\n\nExpires: Oct 30 6:00 PM",
+            "timeout": 15,
+            "sound_event": null,
+            "sound_candidates": null,
+            "play_sound": false,
+            "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=a4"
+          },
+          {
+            "title": "CANCELLED: Winter Storm Warning",
+            "message": "The alert 'Winter Storm Warning' has been cancelled or expired.",
+            "timeout": 10,
+            "sound_event": null,
+            "sound_candidates": null,
+            "play_sound": false,
+            "activation_arguments": null
+          },
+          {
+            "title": "Alert Cancelled",
+            "message": "A weather alert has been cancelled.",
+            "timeout": 10,
+            "sound_event": null,
+            "sound_candidates": null,
+            "play_sound": false,
+            "activation_arguments": null
+          }
+        ],
+        "popups": [],
+        "radio": [],
+        "tokens": 10.0,
+        "notifications_this_hour": 0,
+        "state": null
+      }
+    ]
+  },
+  {
+    "name": "poll",
+    "settings": {
+      "sound_pack": "golden-missing-pack"
+    },
+    "seed_files": {},
+    "steps": [
+      {
+        "kind": "poll",
+        "now": "2026-09-25T16:00:00+00:00",
+        "data": {
+          "location": {
+            "name": "Home",
+            "latitude": 40.0,
+            "longitude": -75.0
+          },
+          "alerts": {
+            "alerts": [
+              {
+                "id": "a2",
+                "title": "Tornado Warning",
+                "description": "Tornado Warning description.",
+                "severity": "Extreme",
+                "urgency": "Immediate",
+                "certainty": "Observed",
+                "event": "Tornado Warning",
+                "headline": "Tornado Warning in effect",
+                "expires": "2026-10-30T18:00:00-04:00",
+                "areas": [
+                  "A",
+                  "B",
+                  "C",
+                  "D"
+                ],
+                "message_type": "Alert"
+              }
+            ]
+          },
+          "alert_lifecycle_diff": {
+            "new_alerts": [
+              {
+                "kind": "new",
+                "alert": {
+                  "id": "a2",
+                  "title": "Tornado Warning",
+                  "description": "Tornado Warning description.",
+                  "severity": "Extreme",
+                  "urgency": "Immediate",
+                  "certainty": "Observed",
+                  "event": "Tornado Warning",
+                  "headline": "Tornado Warning in effect",
+                  "expires": "2026-10-30T18:00:00-04:00",
+                  "areas": [
+                    "A",
+                    "B",
+                    "C",
+                    "D"
+                  ],
+                  "message_type": "Alert"
+                },
+                "alert_id": "a2",
+                "title": "Tornado Warning"
+              }
+            ],
+            "cancelled_alerts": [
+              {
+                "kind": "cancelled",
+                "alert_id": "a3",
+                "title": "Flood Watch"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "kind": "poll",
+        "now": "2026-09-25T16:01:00+00:00",
+        "data": {
+          "location": {
+            "name": "Home",
+            "latitude": 40.0,
+            "longitude": -75.0
+          },
+          "alerts": {
+            "alerts": []
+          },
+          "alert_lifecycle_diff": {
+            "updated_alerts": [
+              {
+                "kind": "updated",
+                "alert": {
+                  "id": "a2",
+                  "title": "Tornado Warning",
+                  "description": "Tornado Warning description, updated with a much longer text Tornado Warning description, updated with a much longer text Tornado Warning description, updated with a much longer text ",
+                  "severity": "Extreme",
+                  "urgency": "Immediate",
+                  "certainty": "Observed",
+                  "event": "Tornado Warning",
+                  "headline": "Tornado Warning in effect",
+                  "expires": "2026-10-30T18:00:00-04:00",
+                  "areas": [
+                    "A",
+                    "B",
+                    "C",
+                    "D"
+                  ],
+                  "message_type": "Alert"
+                },
+                "alert_id": "a2",
+                "title": "Tornado Warning"
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "results": [
+      {
+        "sent": null,
+        "toasts": [
+          {
+            "title": "EXTREME ALERT: Tornado Warning",
+            "message": "Immediate action may be required.\n\nTornado Warning in effect\n\nTornado Warning description.\n\nAreas: A, B and 2 more\n\nExpires: Oct 30 6:00 PM",
+            "timeout": 15,
+            "sound_event": null,
+            "sound_candidates": [
+              "extreme",
+              "alert",
+              "notify"
+            ],
+            "play_sound": true,
+            "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=a2"
+          },
+          {
+            "title": "CANCELLED: Flood Watch",
+            "message": "The alert 'Flood Watch' has been cancelled or expired.",
+            "timeout": 10,
+            "sound_event": null,
+            "sound_candidates": null,
+            "play_sound": false,
+            "activation_arguments": null
+          }
+        ],
+        "popups": [],
+        "radio": [
+          "a2"
+        ],
+        "tokens": 9.0,
+        "notifications_this_hour": 1,
+        "state": "{\n  \"schema_version\": 1,\n  \"alerts\": {\n    \"schema_version\": 1,\n    \"last_global_notification\": \"2026-09-25T16:00:00+00:00\",\n    \"alert_states\": [\n      {\n        \"alert_id\": \"a2\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"d9c7d7f72c39666424dd6646145168c6\",\n            5,\n            1790352000.0\n          ]\n        ]\n      }\n    ]\n  },\n  \"notification_events\": {\n    \"schema_version\": 1,\n    \"discussion\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_check_time\": null\n    },\n    \"severe_risk\": {\n      \"last_value\": null,\n      \"last_check_time\": null\n    },\n    \"hwo\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_summary_signature\": null,\n      \"last_check_time\": null\n    },\n    \"sps\": {\n      \"last_product_ids\": [],\n      \"last_check_time\": null\n    }\n  },\n  \"meta\": {\n    \"migrated_from\": [],\n    \"migrated_at\": null\n  }\n}"
+      },
+      {
+        "sent": null,
+        "toasts": [
+          {
+            "title": "UPDATED EXTREME: Tornado Warning",
+            "message": "Immediate action may be required.\n\nTornado Warning in effect\n\nTornado Warning description, updated with a much longer text Tornado Warning description, updated wi...\n\nAreas: A, B and 2 more\n\nExpires: Oct 30 6:00 PM",
+            "timeout": 15,
+            "sound_event": null,
+            "sound_candidates": [
+              "alert_updated",
+              "extreme",
+              "alert",
+              "notify"
+            ],
+            "play_sound": true,
+            "activation_arguments": "accessiweather-toast:kind=alert_details&alert_id=a2"
+          }
+        ],
+        "popups": [],
+        "radio": [],
+        "tokens": 9.0,
+        "notifications_this_hour": 1,
+        "state": "{\n  \"schema_version\": 1,\n  \"alerts\": {\n    \"schema_version\": 1,\n    \"last_global_notification\": \"2026-09-25T16:00:00+00:00\",\n    \"alert_states\": [\n      {\n        \"alert_id\": \"a2\",\n        \"first_seen\": \"2026-09-25T16:00:00+00:00\",\n        \"last_notified\": \"2026-09-25T16:00:00+00:00\",\n        \"notification_count\": 1,\n        \"alert_sent_time\": null,\n        \"hash_history\": [\n          [\n            \"d9c7d7f72c39666424dd6646145168c6\",\n            5,\n            1790352000.0\n          ]\n        ]\n      }\n    ]\n  },\n  \"notification_events\": {\n    \"schema_version\": 1,\n    \"discussion\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_check_time\": null\n    },\n    \"severe_risk\": {\n      \"last_value\": null,\n      \"last_check_time\": null\n    },\n    \"hwo\": {\n      \"last_issuance_time\": null,\n      \"last_text\": null,\n      \"last_summary_signature\": null,\n      \"last_check_time\": null\n    },\n    \"sps\": {\n      \"last_product_ids\": [],\n      \"last_check_time\": null\n    }\n  },\n  \"meta\": {\n    \"migrated_from\": [],\n    \"migrated_at\": null\n  }\n}"
+      }
+    ]
+  }
+]

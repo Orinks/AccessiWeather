@@ -1,0 +1,43 @@
+{
+  "system_info": {
+    "app_version": "0.10.1",
+    "os_system": "Windows",
+    "os_release": "11",
+    "python": "3.12.4",
+    "text": "- App Version: 0.10.1\n- OS: Windows 11\n- Python: 3.12.4"
+  },
+  "issue_url": "https://github.com/Orinks/AccessiWeather/issues/new",
+  "urls": [
+    {
+      "issue_type": 0,
+      "title": "Test & Title",
+      "description": "Description with <special> chars",
+      "url": "https://github.com/Orinks/AccessiWeather/issues/new?title=Test+%26+Title&body=Description+with+%3Cspecial%3E+chars%0A%0A---%0A%2A%2ASystem+Information%3A%2A%2A%0A%60%60%60%0A-+App+Version%3A+0.10.1%0A-+OS%3A+Windows+11%0A-+Python%3A+3.12.4%0A%60%60%60&labels=bug",
+      "message_box": null
+    },
+    {
+      "issue_type": 1,
+      "title": "  Feature: dark mode?  ",
+      "description": "",
+      "url": "https://github.com/Orinks/AccessiWeather/issues/new?title=Feature%3A+dark+mode%3F&body=%0A---%0A%2A%2ASystem+Information%3A%2A%2A%0A%60%60%60%0A-+App+Version%3A+0.10.1%0A-+OS%3A+Windows+11%0A-+Python%3A+3.12.4%0A%60%60%60&labels=enhancement",
+      "message_box": null
+    },
+    {
+      "issue_type": 0,
+      "title": "Crash",
+      "description": "Line 1\nLine 2 — ünïcode ~ * ' \" + % #",
+      "url": "https://github.com/Orinks/AccessiWeather/issues/new?title=Crash&body=Line+1%0ALine+2+%E2%80%94+%C3%BCn%C3%AFcode+~+%2A+%27+%22+%2B+%25+%23%0A%0A---%0A%2A%2ASystem+Information%3A%2A%2A%0A%60%60%60%0A-+App+Version%3A+0.10.1%0A-+OS%3A+Windows+11%0A-+Python%3A+3.12.4%0A%60%60%60&labels=bug",
+      "message_box": null
+    },
+    {
+      "issue_type": 0,
+      "title": "   ",
+      "description": "no title",
+      "url": null,
+      "message_box": [
+        "Title Required",
+        "Please enter a title for the issue."
+      ]
+    }
+  ]
+}

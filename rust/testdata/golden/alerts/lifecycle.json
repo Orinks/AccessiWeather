@@ -1,0 +1,2164 @@
+[
+ {
+  "name": "both_none",
+  "now": "2026-07-15T16:00:00+00:00",
+  "previous": null,
+  "current": null,
+  "confirmed_cancel_ids": null,
+  "diff": {
+   "new_alerts": [],
+   "updated_alerts": [],
+   "escalated_alerts": [],
+   "extended_alerts": [],
+   "cancelled_alerts": [],
+   "summary": "No changes"
+  },
+  "has_changes": false
+ },
+ {
+  "name": "previous_none_recent_and_old",
+  "now": "2026-07-15T16:00:00+00:00",
+  "previous": null,
+  "current": {
+   "alerts": [
+    {
+     "title": "R",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": "2026-07-15T15:55:00+00:00",
+     "areas": [],
+     "references": [],
+     "id": "r",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "O",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": "2026-07-15T14:00:00+00:00",
+     "areas": [],
+     "references": [],
+     "id": "o",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "N",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "n",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "confirmed_cancel_ids": null,
+  "diff": {
+   "new_alerts": [
+    {
+     "kind": "new",
+     "alert": {
+      "title": "R",
+      "description": "A description.",
+      "severity": "Moderate",
+      "urgency": "Expected",
+      "certainty": "Unknown",
+      "event": null,
+      "headline": null,
+      "instruction": null,
+      "onset": null,
+      "expires": null,
+      "sent": null,
+      "effective": "2026-07-15T15:55:00+00:00",
+      "areas": [],
+      "references": [],
+      "id": "r",
+      "source": null,
+      "message_type": null,
+      "affected_zones": [],
+      "same_codes": [],
+      "same_event_codes": []
+     },
+     "alert_id": "r",
+     "title": "R",
+     "old_severity": null,
+     "new_severity": null
+    },
+    {
+     "kind": "new",
+     "alert": {
+      "title": "N",
+      "description": "A description.",
+      "severity": "Moderate",
+      "urgency": "Expected",
+      "certainty": "Unknown",
+      "event": null,
+      "headline": null,
+      "instruction": null,
+      "onset": null,
+      "expires": null,
+      "sent": null,
+      "effective": null,
+      "areas": [],
+      "references": [],
+      "id": "n",
+      "source": null,
+      "message_type": null,
+      "affected_zones": [],
+      "same_codes": [],
+      "same_event_codes": []
+     },
+     "alert_id": "n",
+     "title": "N",
+     "old_severity": null,
+     "new_severity": null
+    }
+   ],
+   "updated_alerts": [],
+   "escalated_alerts": [],
+   "extended_alerts": [],
+   "cancelled_alerts": [],
+   "summary": "2 new alerts"
+  },
+  "has_changes": true
+ },
+ {
+  "name": "previous_none_onset_fallback",
+  "now": "2026-07-15T16:00:00+00:00",
+  "previous": null,
+  "current": {
+   "alerts": [
+    {
+     "title": "On",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": "2026-07-15T14:00:00+00:00",
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "on",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "On2",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": "2026-07-15T15:55:00+00:00",
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "on2",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "confirmed_cancel_ids": null,
+  "diff": {
+   "new_alerts": [
+    {
+     "kind": "new",
+     "alert": {
+      "title": "On2",
+      "description": "A description.",
+      "severity": "Moderate",
+      "urgency": "Expected",
+      "certainty": "Unknown",
+      "event": null,
+      "headline": null,
+      "instruction": null,
+      "onset": "2026-07-15T15:55:00+00:00",
+      "expires": null,
+      "sent": null,
+      "effective": null,
+      "areas": [],
+      "references": [],
+      "id": "on2",
+      "source": null,
+      "message_type": null,
+      "affected_zones": [],
+      "same_codes": [],
+      "same_event_codes": []
+     },
+     "alert_id": "on2",
+     "title": "On2",
+     "old_severity": null,
+     "new_severity": null
+    }
+   ],
+   "updated_alerts": [],
+   "escalated_alerts": [],
+   "extended_alerts": [],
+   "cancelled_alerts": [],
+   "summary": "1 new alert"
+  },
+  "has_changes": true
+ },
+ {
+  "name": "new_alert",
+  "now": "2026-07-15T16:00:00+00:00",
+  "previous": {
+   "alerts": []
+  },
+  "current": {
+   "alerts": [
+    {
+     "title": "New",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": "2026-07-15T14:00:00+00:00",
+     "areas": [],
+     "references": [],
+     "id": "a1",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "confirmed_cancel_ids": null,
+  "diff": {
+   "new_alerts": [
+    {
+     "kind": "new",
+     "alert": {
+      "title": "New",
+      "description": "A description.",
+      "severity": "Moderate",
+      "urgency": "Expected",
+      "certainty": "Unknown",
+      "event": null,
+      "headline": null,
+      "instruction": null,
+      "onset": null,
+      "expires": null,
+      "sent": null,
+      "effective": "2026-07-15T14:00:00+00:00",
+      "areas": [],
+      "references": [],
+      "id": "a1",
+      "source": null,
+      "message_type": null,
+      "affected_zones": [],
+      "same_codes": [],
+      "same_event_codes": []
+     },
+     "alert_id": "a1",
+     "title": "New",
+     "old_severity": null,
+     "new_severity": null
+    }
+   ],
+   "updated_alerts": [],
+   "escalated_alerts": [],
+   "extended_alerts": [],
+   "cancelled_alerts": [],
+   "summary": "1 new alert"
+  },
+  "has_changes": true
+ },
+ {
+  "name": "cancelled_generic_source",
+  "now": "2026-07-15T16:00:00+00:00",
+  "previous": {
+   "alerts": [
+    {
+     "title": "Gone",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "g",
+     "source": "VisualCrossing",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "current": {
+   "alerts": []
+  },
+  "confirmed_cancel_ids": null,
+  "diff": {
+   "new_alerts": [],
+   "updated_alerts": [],
+   "escalated_alerts": [],
+   "extended_alerts": [],
+   "cancelled_alerts": [
+    {
+     "kind": "cancelled",
+     "alert": null,
+     "alert_id": "g",
+     "title": "Gone",
+     "old_severity": null,
+     "new_severity": null
+    }
+   ],
+   "summary": "1 cancelled"
+  },
+  "has_changes": true
+ },
+ {
+  "name": "cancelled_no_source",
+  "now": "2026-07-15T16:00:00+00:00",
+  "previous": {
+   "alerts": [
+    {
+     "title": "Gone",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "g",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "current": null,
+  "confirmed_cancel_ids": null,
+  "diff": {
+   "new_alerts": [],
+   "updated_alerts": [],
+   "escalated_alerts": [],
+   "extended_alerts": [],
+   "cancelled_alerts": [
+    {
+     "kind": "cancelled",
+     "alert": null,
+     "alert_id": "g",
+     "title": "Gone",
+     "old_severity": null,
+     "new_severity": null
+    }
+   ],
+   "summary": "1 cancelled"
+  },
+  "has_changes": true
+ },
+ {
+  "name": "nws_cancel_unconfirmed_none",
+  "now": "2026-07-15T16:00:00+00:00",
+  "previous": {
+   "alerts": [
+    {
+     "title": "N",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "n1",
+     "source": "NWS",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "current": {
+   "alerts": []
+  },
+  "confirmed_cancel_ids": null,
+  "diff": {
+   "new_alerts": [],
+   "updated_alerts": [],
+   "escalated_alerts": [],
+   "extended_alerts": [],
+   "cancelled_alerts": [],
+   "summary": "No changes"
+  },
+  "has_changes": false
+ },
+ {
+  "name": "nws_cancel_confirmed",
+  "now": "2026-07-15T16:00:00+00:00",
+  "previous": {
+   "alerts": [
+    {
+     "title": "N",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "n1",
+     "source": "nws",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "current": {
+   "alerts": []
+  },
+  "confirmed_cancel_ids": [
+   "n1",
+   "other"
+  ],
+  "diff": {
+   "new_alerts": [],
+   "updated_alerts": [],
+   "escalated_alerts": [],
+   "extended_alerts": [],
+   "cancelled_alerts": [
+    {
+     "kind": "cancelled",
+     "alert": null,
+     "alert_id": "n1",
+     "title": "N",
+     "old_severity": null,
+     "new_severity": null
+    }
+   ],
+   "summary": "1 cancelled"
+  },
+  "has_changes": true
+ },
+ {
+  "name": "nws_cancel_not_in_set",
+  "now": "2026-07-15T16:00:00+00:00",
+  "previous": {
+   "alerts": [
+    {
+     "title": "N",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "n1",
+     "source": " NWS ",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "current": {
+   "alerts": []
+  },
+  "confirmed_cancel_ids": [
+   "zzz"
+  ],
+  "diff": {
+   "new_alerts": [],
+   "updated_alerts": [],
+   "escalated_alerts": [],
+   "extended_alerts": [],
+   "cancelled_alerts": [],
+   "summary": "No changes"
+  },
+  "has_changes": false
+ },
+ {
+  "name": "pirate_cancel_suppressed",
+  "now": "2026-07-15T16:00:00+00:00",
+  "previous": {
+   "alerts": [
+    {
+     "title": "P",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "p1",
+     "source": "pirateweather",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "current": {
+   "alerts": []
+  },
+  "confirmed_cancel_ids": [],
+  "diff": {
+   "new_alerts": [],
+   "updated_alerts": [],
+   "escalated_alerts": [],
+   "extended_alerts": [],
+   "cancelled_alerts": [],
+   "summary": "No changes"
+  },
+  "has_changes": false
+ },
+ {
+  "name": "content_change",
+  "now": "2026-07-15T16:00:00+00:00",
+  "previous": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "old",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "x",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "current": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "new",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "x",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "confirmed_cancel_ids": null,
+  "diff": {
+   "new_alerts": [],
+   "updated_alerts": [
+    {
+     "kind": "updated",
+     "alert": {
+      "title": "A",
+      "description": "new",
+      "severity": "Moderate",
+      "urgency": "Expected",
+      "certainty": "Unknown",
+      "event": null,
+      "headline": null,
+      "instruction": null,
+      "onset": null,
+      "expires": null,
+      "sent": null,
+      "effective": null,
+      "areas": [],
+      "references": [],
+      "id": "x",
+      "source": null,
+      "message_type": null,
+      "affected_zones": [],
+      "same_codes": [],
+      "same_event_codes": []
+     },
+     "alert_id": "x",
+     "title": "A",
+     "old_severity": "Moderate",
+     "new_severity": "Moderate"
+    }
+   ],
+   "escalated_alerts": [],
+   "extended_alerts": [],
+   "cancelled_alerts": [],
+   "summary": "1 updated"
+  },
+  "has_changes": true
+ },
+ {
+  "name": "severity_downgrade",
+  "now": "2026-07-15T16:00:00+00:00",
+  "previous": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description.",
+     "severity": "Severe",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "x",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "current": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description.",
+     "severity": "Minor",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "x",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "confirmed_cancel_ids": null,
+  "diff": {
+   "new_alerts": [],
+   "updated_alerts": [
+    {
+     "kind": "updated",
+     "alert": {
+      "title": "A",
+      "description": "A description.",
+      "severity": "Minor",
+      "urgency": "Expected",
+      "certainty": "Unknown",
+      "event": null,
+      "headline": null,
+      "instruction": null,
+      "onset": null,
+      "expires": null,
+      "sent": null,
+      "effective": null,
+      "areas": [],
+      "references": [],
+      "id": "x",
+      "source": null,
+      "message_type": null,
+      "affected_zones": [],
+      "same_codes": [],
+      "same_event_codes": []
+     },
+     "alert_id": "x",
+     "title": "A",
+     "old_severity": "Severe",
+     "new_severity": "Minor"
+    }
+   ],
+   "escalated_alerts": [],
+   "extended_alerts": [],
+   "cancelled_alerts": [],
+   "summary": "1 updated"
+  },
+  "has_changes": true
+ },
+ {
+  "name": "urgency_change",
+  "now": "2026-07-15T16:00:00+00:00",
+  "previous": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Future",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "x",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "current": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Immediate",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "x",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "confirmed_cancel_ids": null,
+  "diff": {
+   "new_alerts": [],
+   "updated_alerts": [
+    {
+     "kind": "updated",
+     "alert": {
+      "title": "A",
+      "description": "A description.",
+      "severity": "Moderate",
+      "urgency": "Immediate",
+      "certainty": "Unknown",
+      "event": null,
+      "headline": null,
+      "instruction": null,
+      "onset": null,
+      "expires": null,
+      "sent": null,
+      "effective": null,
+      "areas": [],
+      "references": [],
+      "id": "x",
+      "source": null,
+      "message_type": null,
+      "affected_zones": [],
+      "same_codes": [],
+      "same_event_codes": []
+     },
+     "alert_id": "x",
+     "title": "A",
+     "old_severity": "Moderate",
+     "new_severity": "Moderate"
+    }
+   ],
+   "escalated_alerts": [],
+   "extended_alerts": [],
+   "cancelled_alerts": [],
+   "summary": "1 updated"
+  },
+  "has_changes": true
+ },
+ {
+  "name": "identical",
+  "now": "2026-07-15T16:00:00+00:00",
+  "previous": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "x",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "current": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "x",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "confirmed_cancel_ids": null,
+  "diff": {
+   "new_alerts": [],
+   "updated_alerts": [],
+   "escalated_alerts": [],
+   "extended_alerts": [],
+   "cancelled_alerts": [],
+   "summary": "No changes"
+  },
+  "has_changes": false
+ },
+ {
+  "name": "escalated",
+  "now": "2026-07-15T16:00:00+00:00",
+  "previous": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "x",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "current": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description.",
+     "severity": "Extreme",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "x",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "confirmed_cancel_ids": null,
+  "diff": {
+   "new_alerts": [],
+   "updated_alerts": [],
+   "escalated_alerts": [
+    {
+     "kind": "escalated",
+     "alert": {
+      "title": "A",
+      "description": "A description.",
+      "severity": "Extreme",
+      "urgency": "Expected",
+      "certainty": "Unknown",
+      "event": null,
+      "headline": null,
+      "instruction": null,
+      "onset": null,
+      "expires": null,
+      "sent": null,
+      "effective": null,
+      "areas": [],
+      "references": [],
+      "id": "x",
+      "source": null,
+      "message_type": null,
+      "affected_zones": [],
+      "same_codes": [],
+      "same_event_codes": []
+     },
+     "alert_id": "x",
+     "title": "A",
+     "old_severity": "Moderate",
+     "new_severity": "Extreme"
+    }
+   ],
+   "extended_alerts": [],
+   "cancelled_alerts": [],
+   "summary": "1 escalated (to Extreme)"
+  },
+  "has_changes": true
+ },
+ {
+  "name": "escalate_from_unrecognised",
+  "now": "2026-07-15T16:00:00+00:00",
+  "previous": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description.",
+     "severity": "Bogus",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "x",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "current": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description.",
+     "severity": "Unknown",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "x",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "confirmed_cancel_ids": null,
+  "diff": {
+   "new_alerts": [],
+   "updated_alerts": [],
+   "escalated_alerts": [
+    {
+     "kind": "escalated",
+     "alert": {
+      "title": "A",
+      "description": "A description.",
+      "severity": "Unknown",
+      "urgency": "Expected",
+      "certainty": "Unknown",
+      "event": null,
+      "headline": null,
+      "instruction": null,
+      "onset": null,
+      "expires": null,
+      "sent": null,
+      "effective": null,
+      "areas": [],
+      "references": [],
+      "id": "x",
+      "source": null,
+      "message_type": null,
+      "affected_zones": [],
+      "same_codes": [],
+      "same_event_codes": []
+     },
+     "alert_id": "x",
+     "title": "A",
+     "old_severity": "Bogus",
+     "new_severity": "Unknown"
+    }
+   ],
+   "extended_alerts": [],
+   "cancelled_alerts": [],
+   "summary": "1 escalated (to Unknown)"
+  },
+  "has_changes": true
+ },
+ {
+  "name": "extended",
+  "now": "2026-07-15T16:00:00+00:00",
+  "previous": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": "2026-07-15T17:00:00+00:00",
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "x",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "current": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": "2026-07-15T19:00:00+00:00",
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "x",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "confirmed_cancel_ids": null,
+  "diff": {
+   "new_alerts": [],
+   "updated_alerts": [],
+   "escalated_alerts": [],
+   "extended_alerts": [
+    {
+     "kind": "extended",
+     "alert": {
+      "title": "A",
+      "description": "A description.",
+      "severity": "Moderate",
+      "urgency": "Expected",
+      "certainty": "Unknown",
+      "event": null,
+      "headline": null,
+      "instruction": null,
+      "onset": null,
+      "expires": "2026-07-15T19:00:00+00:00",
+      "sent": null,
+      "effective": null,
+      "areas": [],
+      "references": [],
+      "id": "x",
+      "source": null,
+      "message_type": null,
+      "affected_zones": [],
+      "same_codes": [],
+      "same_event_codes": []
+     },
+     "alert_id": "x",
+     "title": "A",
+     "old_severity": null,
+     "new_severity": null
+    }
+   ],
+   "cancelled_alerts": [],
+   "summary": "1 extended"
+  },
+  "has_changes": true
+ },
+ {
+  "name": "expiry_earlier_not_extended",
+  "now": "2026-07-15T16:00:00+00:00",
+  "previous": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": "2026-07-15T19:00:00+00:00",
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "x",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "current": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": "2026-07-15T17:00:00+00:00",
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "x",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "confirmed_cancel_ids": null,
+  "diff": {
+   "new_alerts": [],
+   "updated_alerts": [],
+   "escalated_alerts": [],
+   "extended_alerts": [],
+   "cancelled_alerts": [],
+   "summary": "No changes"
+  },
+  "has_changes": false
+ },
+ {
+  "name": "expired_alerts_ignored",
+  "now": "2026-07-15T16:00:00+00:00",
+  "previous": {
+   "alerts": [
+    {
+     "title": "Old",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": "2026-07-15T15:59:00+00:00",
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "e1",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "current": {
+   "alerts": [
+    {
+     "title": "Now",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": "2026-07-15T16:00:00+00:00",
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "e2",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "confirmed_cancel_ids": null,
+  "diff": {
+   "new_alerts": [],
+   "updated_alerts": [],
+   "escalated_alerts": [],
+   "extended_alerts": [],
+   "cancelled_alerts": [],
+   "summary": "No changes"
+  },
+  "has_changes": false
+ },
+ {
+  "name": "combined_summary",
+  "now": "2026-07-15T16:00:00+00:00",
+  "previous": {
+   "alerts": [
+    {
+     "title": "Keep",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "k",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "Esc1",
+     "description": "A description.",
+     "severity": "Minor",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "e1",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "Esc2",
+     "description": "A description.",
+     "severity": "Minor",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "e2",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "Upd",
+     "description": "v1",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "u",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "Ext",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": "2026-07-15T17:00:00+00:00",
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "x",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "Gone",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "g",
+     "source": "VisualCrossing",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "current": {
+   "alerts": [
+    {
+     "title": "Keep",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "k",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "Esc1",
+     "description": "A description.",
+     "severity": "Severe",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "e1",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "Esc2",
+     "description": "A description.",
+     "severity": "Extreme",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "e2",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "Upd",
+     "description": "v2",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "u",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "Ext",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": "2026-07-15T19:00:00+00:00",
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "x",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "New1",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "n1",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "New2",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "n2",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "confirmed_cancel_ids": [],
+  "diff": {
+   "new_alerts": [
+    {
+     "kind": "new",
+     "alert": {
+      "title": "New1",
+      "description": "A description.",
+      "severity": "Moderate",
+      "urgency": "Expected",
+      "certainty": "Unknown",
+      "event": null,
+      "headline": null,
+      "instruction": null,
+      "onset": null,
+      "expires": null,
+      "sent": null,
+      "effective": null,
+      "areas": [],
+      "references": [],
+      "id": "n1",
+      "source": null,
+      "message_type": null,
+      "affected_zones": [],
+      "same_codes": [],
+      "same_event_codes": []
+     },
+     "alert_id": "n1",
+     "title": "New1",
+     "old_severity": null,
+     "new_severity": null
+    },
+    {
+     "kind": "new",
+     "alert": {
+      "title": "New2",
+      "description": "A description.",
+      "severity": "Moderate",
+      "urgency": "Expected",
+      "certainty": "Unknown",
+      "event": null,
+      "headline": null,
+      "instruction": null,
+      "onset": null,
+      "expires": null,
+      "sent": null,
+      "effective": null,
+      "areas": [],
+      "references": [],
+      "id": "n2",
+      "source": null,
+      "message_type": null,
+      "affected_zones": [],
+      "same_codes": [],
+      "same_event_codes": []
+     },
+     "alert_id": "n2",
+     "title": "New2",
+     "old_severity": null,
+     "new_severity": null
+    }
+   ],
+   "updated_alerts": [
+    {
+     "kind": "updated",
+     "alert": {
+      "title": "Upd",
+      "description": "v2",
+      "severity": "Moderate",
+      "urgency": "Expected",
+      "certainty": "Unknown",
+      "event": null,
+      "headline": null,
+      "instruction": null,
+      "onset": null,
+      "expires": null,
+      "sent": null,
+      "effective": null,
+      "areas": [],
+      "references": [],
+      "id": "u",
+      "source": null,
+      "message_type": null,
+      "affected_zones": [],
+      "same_codes": [],
+      "same_event_codes": []
+     },
+     "alert_id": "u",
+     "title": "Upd",
+     "old_severity": "Moderate",
+     "new_severity": "Moderate"
+    }
+   ],
+   "escalated_alerts": [
+    {
+     "kind": "escalated",
+     "alert": {
+      "title": "Esc1",
+      "description": "A description.",
+      "severity": "Severe",
+      "urgency": "Expected",
+      "certainty": "Unknown",
+      "event": null,
+      "headline": null,
+      "instruction": null,
+      "onset": null,
+      "expires": null,
+      "sent": null,
+      "effective": null,
+      "areas": [],
+      "references": [],
+      "id": "e1",
+      "source": null,
+      "message_type": null,
+      "affected_zones": [],
+      "same_codes": [],
+      "same_event_codes": []
+     },
+     "alert_id": "e1",
+     "title": "Esc1",
+     "old_severity": "Minor",
+     "new_severity": "Severe"
+    },
+    {
+     "kind": "escalated",
+     "alert": {
+      "title": "Esc2",
+      "description": "A description.",
+      "severity": "Extreme",
+      "urgency": "Expected",
+      "certainty": "Unknown",
+      "event": null,
+      "headline": null,
+      "instruction": null,
+      "onset": null,
+      "expires": null,
+      "sent": null,
+      "effective": null,
+      "areas": [],
+      "references": [],
+      "id": "e2",
+      "source": null,
+      "message_type": null,
+      "affected_zones": [],
+      "same_codes": [],
+      "same_event_codes": []
+     },
+     "alert_id": "e2",
+     "title": "Esc2",
+     "old_severity": "Minor",
+     "new_severity": "Extreme"
+    }
+   ],
+   "extended_alerts": [
+    {
+     "kind": "extended",
+     "alert": {
+      "title": "Ext",
+      "description": "A description.",
+      "severity": "Moderate",
+      "urgency": "Expected",
+      "certainty": "Unknown",
+      "event": null,
+      "headline": null,
+      "instruction": null,
+      "onset": null,
+      "expires": "2026-07-15T19:00:00+00:00",
+      "sent": null,
+      "effective": null,
+      "areas": [],
+      "references": [],
+      "id": "x",
+      "source": null,
+      "message_type": null,
+      "affected_zones": [],
+      "same_codes": [],
+      "same_event_codes": []
+     },
+     "alert_id": "x",
+     "title": "Ext",
+     "old_severity": null,
+     "new_severity": null
+    }
+   ],
+   "cancelled_alerts": [
+    {
+     "kind": "cancelled",
+     "alert": null,
+     "alert_id": "g",
+     "title": "Gone",
+     "old_severity": null,
+     "new_severity": null
+    }
+   ],
+   "summary": "2 new alerts, 1 updated, 2 escalateds (to Extreme), 1 extended, 1 cancelled"
+  },
+  "has_changes": true
+ },
+ {
+  "name": "derived_ids",
+  "now": "2026-07-15T16:00:00+00:00",
+  "previous": {
+   "alerts": [
+    {
+     "title": "T",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": "Wind Advisory",
+     "headline": "Wind Advisory issued",
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [
+      "B",
+      "A"
+     ],
+     "references": [],
+     "id": null,
+     "source": "NWS",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "current": {
+   "alerts": [
+    {
+     "title": "T",
+     "description": "changed",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": "Wind Advisory",
+     "headline": "Wind Advisory issued",
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [
+      "A",
+      "B"
+     ],
+     "references": [],
+     "id": null,
+     "source": "NWS",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "T2",
+     "description": "A description.",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": "Heat",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [
+      "Z"
+     ],
+     "references": [],
+     "id": null,
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "confirmed_cancel_ids": null,
+  "diff": {
+   "new_alerts": [
+    {
+     "kind": "new",
+     "alert": {
+      "title": "T2",
+      "description": "A description.",
+      "severity": "Moderate",
+      "urgency": "Expected",
+      "certainty": "Unknown",
+      "event": "Heat",
+      "headline": null,
+      "instruction": null,
+      "onset": null,
+      "expires": null,
+      "sent": null,
+      "effective": null,
+      "areas": [
+       "Z"
+      ],
+      "references": [],
+      "id": null,
+      "source": null,
+      "message_type": null,
+      "affected_zones": [],
+      "same_codes": [],
+      "same_event_codes": []
+     },
+     "alert_id": "heat-moderate-t2-z",
+     "title": "T2",
+     "old_severity": null,
+     "new_severity": null
+    }
+   ],
+   "updated_alerts": [
+    {
+     "kind": "updated",
+     "alert": {
+      "title": "T",
+      "description": "changed",
+      "severity": "Moderate",
+      "urgency": "Expected",
+      "certainty": "Unknown",
+      "event": "Wind Advisory",
+      "headline": "Wind Advisory issued",
+      "instruction": null,
+      "onset": null,
+      "expires": null,
+      "sent": null,
+      "effective": null,
+      "areas": [
+       "A",
+       "B"
+      ],
+      "references": [],
+      "id": null,
+      "source": "NWS",
+      "message_type": null,
+      "affected_zones": [],
+      "same_codes": [],
+      "same_event_codes": []
+     },
+     "alert_id": "wind_advisory-moderate-wind_advisory_issued-nws-a,b",
+     "title": "T",
+     "old_severity": "Moderate",
+     "new_severity": "Moderate"
+    }
+   ],
+   "escalated_alerts": [],
+   "extended_alerts": [],
+   "cancelled_alerts": [],
+   "summary": "1 new alert, 1 updated"
+  },
+  "has_changes": true
+ },
+ {
+  "name": "duplicate_ids_last_wins",
+  "now": "2026-07-15T16:00:00+00:00",
+  "previous": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "one",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "d",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "current": {
+   "alerts": [
+    {
+     "title": "A",
+     "description": "one",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "d",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "B",
+     "description": "two",
+     "severity": "Moderate",
+     "urgency": "Expected",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "d",
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  },
+  "confirmed_cancel_ids": null,
+  "diff": {
+   "new_alerts": [],
+   "updated_alerts": [
+    {
+     "kind": "updated",
+     "alert": {
+      "title": "B",
+      "description": "two",
+      "severity": "Moderate",
+      "urgency": "Expected",
+      "certainty": "Unknown",
+      "event": null,
+      "headline": null,
+      "instruction": null,
+      "onset": null,
+      "expires": null,
+      "sent": null,
+      "effective": null,
+      "areas": [],
+      "references": [],
+      "id": "d",
+      "source": null,
+      "message_type": null,
+      "affected_zones": [],
+      "same_codes": [],
+      "same_event_codes": []
+     },
+     "alert_id": "d",
+     "title": "B",
+     "old_severity": "Moderate",
+     "new_severity": "Moderate"
+    }
+   ],
+   "escalated_alerts": [],
+   "extended_alerts": [],
+   "cancelled_alerts": [],
+   "summary": "1 updated"
+  },
+  "has_changes": true
+ }
+]

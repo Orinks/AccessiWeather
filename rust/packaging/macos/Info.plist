@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key><string>AccessiWeather</string>
+    <key>CFBundleDisplayName</key><string>AccessiWeather</string>
+    <key>CFBundleIdentifier</key><string>net.orinks.accessiweather</string>
+    <key>CFBundleVersion</key><string>@VERSION@</string>
+    <key>CFBundleShortVersionString</key><string>@VERSION@</string>
+    <key>CFBundleExecutable</key><string>AccessiWeather</string>
+    <key>CFBundleIconFile</key><string>app.icns</string>
+    <key>CFBundlePackageType</key><string>APPL</string>
+    <key>LSMinimumSystemVersion</key><string>11.0</string>
+    <key>NSHighResolutionCapable</key><true/>
+    <key>NSSupportsAutomaticGraphicsSwitching</key><true/>
+    <key>NSLocationWhenInUseUsageDescription</key><string>AccessiWeather uses your location only when you choose Use my current location to add or edit a saved weather location.</string>
+</dict>
+</plist>

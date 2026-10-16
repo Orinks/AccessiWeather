@@ -1,0 +1,17 @@
+{
+ "exchanges": [
+  {
+   "url": "https://api.pirateweather.net/forecast/secret/40.7128,-74.006?units=uk2&extend=hourly&version=2",
+   "headers": {
+    "user-agent": "AccessiWeather/2.0"
+   },
+   "status": 429,
+   "body": {}
+  }
+ ],
+ "output": null,
+ "error": {
+  "message": "API rate limit exceeded",
+  "status_code": 429
+ }
+}

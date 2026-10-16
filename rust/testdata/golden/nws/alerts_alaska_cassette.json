@@ -1,0 +1,49 @@
+{
+ "now": "2026-01-20T18:30:00+00:00",
+ "call": "alerts",
+ "location": {
+  "name": "Anchorage, AK",
+  "latitude": 61.2181,
+  "longitude": -149.9003,
+  "timezone": null,
+  "country_code": null,
+  "marine_mode": false,
+  "forecast_zone_id": null,
+  "cwa_office": null,
+  "county_zone_id": null,
+  "fire_zone_id": null,
+  "radar_station": null
+ },
+ "radius": "point",
+ "responses": [
+  {
+   "url": "https://api.weather.gov/alerts/active?point=61.2181%2C-149.9003&status=actual",
+   "status": 200,
+   "body": "{\"@context\":{\"@version\":\"1.1\"},\"type\":\"FeatureCollection\",\"features\":[],\"title\":\"Current watches, warnings, and advisories for 61.2181 N, 149.9003 W\",\"updated\":\"2026-01-18T15:00:00+00:00\"}"
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://api.weather.gov/alerts/active",
+   "params": [
+    [
+     "point",
+     "61.2181,-149.9003"
+    ],
+    [
+     "status",
+     "actual"
+    ]
+   ],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  }
+ ],
+ "result": {
+  "alerts": []
+ }
+}

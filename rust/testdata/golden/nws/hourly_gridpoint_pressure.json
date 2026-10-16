@@ -1,0 +1,216 @@
+{
+ "now": "2026-01-20T18:30:00+00:00",
+ "call": "hourly_forecast",
+ "location": {
+  "name": "New York, NY",
+  "latitude": 40.7128,
+  "longitude": -74.006,
+  "timezone": "America/New_York",
+  "country_code": null,
+  "marine_mode": false,
+  "forecast_zone_id": null,
+  "cwa_office": null,
+  "county_zone_id": null,
+  "fire_zone_id": null,
+  "radar_station": null
+ },
+ "responses": [
+  {
+   "url": "https://api.weather.gov/points/40.7128,-74.006",
+   "status": 200,
+   "body": "{\"properties\":{\"forecastHourly\":\"https://api.weather.gov/gridpoints/OKX/33,35/forecast/hourly\",\"forecastGridData\":\"https://api.weather.gov/gridpoints/OKX/33,35\"}}"
+  },
+  {
+   "url": "https://api.weather.gov/gridpoints/OKX/33,35/forecast/hourly",
+   "status": 200,
+   "body": "{\"properties\":{\"periods\":[{\"startTime\":\"2026-01-20T13:00:00-05:00\",\"endTime\":\"2026-01-20T14:00:00-05:00\",\"temperature\":{\"unitCode\":\"wmoUnit:degC\",\"value\":1.1},\"windSpeed\":\"10 mph\",\"windDirection\":\"W\",\"shortForecast\":\"Sunny\",\"probabilityOfPrecipitation\":{\"value\":5}},{\"startTime\":\"2026-01-20T14:00:00-05:00\",\"temperature\":35,\"temperatureUnit\":\"F\",\"windSpeed\":{\"unitCode\":\"wmoUnit:km_h-1\",\"value\":16.0}},{\"startTime\":\"2026-01-20T20:00:00-05:00\",\"temperature\":30},{\"temperature\":29}]}}"
+  },
+  {
+   "url": "https://api.weather.gov/gridpoints/OKX/33,35",
+   "status": 200,
+   "body": "{\"properties\":{\"pressure\":{\"uom\":\"wmoUnit:Pa\",\"values\":[{\"validTime\":\"2026-01-20T18:00:00+00:00/PT1H\",\"value\":101325},{\"validTime\":\"2026-01-20T19:00:00+00:00/PT2H\",\"value\":30.02,\"uom\":\"\"},{\"validTime\":\"garbage\",\"value\":1}]}}}"
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://api.weather.gov/points/40.7128,-74.006",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/gridpoints/OKX/33,35/forecast/hourly",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ],
+    [
+     "Feature-Flags",
+     "forecast_temperature_qv, forecast_wind_speed_qv"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/gridpoints/OKX/33,35",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  }
+ ],
+ "result": {
+  "periods": [
+   {
+    "start_time": "2026-01-20T13:00:00-05:00",
+    "temperature": 33.98,
+    "temperature_unit": "F",
+    "short_forecast": "Sunny",
+    "wind_speed": "10 mph",
+    "wind_direction": "W",
+    "icon": null,
+    "end_time": "2026-01-20T14:00:00-05:00",
+    "humidity": null,
+    "dewpoint_f": null,
+    "dewpoint_c": null,
+    "pressure_mb": 1013.25,
+    "pressure_in": 29.9212725,
+    "precipitation_probability": 5.0,
+    "snowfall": null,
+    "uv_index": null,
+    "cloud_cover": null,
+    "wind_speed_mph": 10.0,
+    "wind_gust_mph": null,
+    "precipitation_amount": null,
+    "snow_depth": null,
+    "freezing_level_ft": null,
+    "wind_chill_f": null,
+    "wind_chill_c": null,
+    "heat_index_f": null,
+    "heat_index_c": null,
+    "air_quality_index": null,
+    "frost_risk": null,
+    "pollen_level": null,
+    "precipitation_type": null,
+    "feels_like": null,
+    "visibility_miles": null,
+    "visibility_km": null
+   },
+   {
+    "start_time": "2026-01-20T14:00:00-05:00",
+    "temperature": 35.0,
+    "temperature_unit": "F",
+    "short_forecast": null,
+    "wind_speed": "10 mph (16 km/h)",
+    "wind_direction": null,
+    "icon": null,
+    "end_time": null,
+    "humidity": null,
+    "dewpoint_f": null,
+    "dewpoint_c": null,
+    "pressure_mb": 0.3002,
+    "pressure_in": 0.008864906,
+    "precipitation_probability": null,
+    "snowfall": null,
+    "uv_index": null,
+    "cloud_cover": null,
+    "wind_speed_mph": 9.941936,
+    "wind_gust_mph": null,
+    "precipitation_amount": null,
+    "snow_depth": null,
+    "freezing_level_ft": null,
+    "wind_chill_f": null,
+    "wind_chill_c": null,
+    "heat_index_f": null,
+    "heat_index_c": null,
+    "air_quality_index": null,
+    "frost_risk": null,
+    "pollen_level": null,
+    "precipitation_type": null,
+    "feels_like": null,
+    "visibility_miles": null,
+    "visibility_km": null
+   },
+   {
+    "start_time": "2026-01-20T20:00:00-05:00",
+    "temperature": 30.0,
+    "temperature_unit": "F",
+    "short_forecast": null,
+    "wind_speed": null,
+    "wind_direction": null,
+    "icon": null,
+    "end_time": null,
+    "humidity": null,
+    "dewpoint_f": null,
+    "dewpoint_c": null,
+    "pressure_mb": null,
+    "pressure_in": null,
+    "precipitation_probability": null,
+    "snowfall": null,
+    "uv_index": null,
+    "cloud_cover": null,
+    "wind_speed_mph": null,
+    "wind_gust_mph": null,
+    "precipitation_amount": null,
+    "snow_depth": null,
+    "freezing_level_ft": null,
+    "wind_chill_f": null,
+    "wind_chill_c": null,
+    "heat_index_f": null,
+    "heat_index_c": null,
+    "air_quality_index": null,
+    "frost_risk": null,
+    "pollen_level": null,
+    "precipitation_type": null,
+    "feels_like": null,
+    "visibility_miles": null,
+    "visibility_km": null
+   },
+   {
+    "start_time": "2026-01-20T18:30:00+00:00",
+    "temperature": 29.0,
+    "temperature_unit": "F",
+    "short_forecast": null,
+    "wind_speed": null,
+    "wind_direction": null,
+    "icon": null,
+    "end_time": null,
+    "humidity": null,
+    "dewpoint_f": null,
+    "dewpoint_c": null,
+    "pressure_mb": 1013.25,
+    "pressure_in": 29.9212725,
+    "precipitation_probability": null,
+    "snowfall": null,
+    "uv_index": null,
+    "cloud_cover": null,
+    "wind_speed_mph": null,
+    "wind_gust_mph": null,
+    "precipitation_amount": null,
+    "snow_depth": null,
+    "freezing_level_ft": null,
+    "wind_chill_f": null,
+    "wind_chill_c": null,
+    "heat_index_f": null,
+    "heat_index_c": null,
+    "air_quality_index": null,
+    "frost_risk": null,
+    "pollen_level": null,
+    "precipitation_type": null,
+    "feels_like": null,
+    "visibility_miles": null,
+    "visibility_km": null
+   }
+  ],
+  "generated_at": "2026-01-20T18:30:00+00:00",
+  "summary": null
+ }
+}

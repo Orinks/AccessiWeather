@@ -8,15 +8,20 @@ from collections.abc import Callable
 from datetime import datetime
 
 from .ai_explainer_models import (
+    MODEL_REFUSAL_MESSAGE,
+    AIExplainerError,
     EmptyResponseError,
     ExplanationResult,
     ExplanationStyle,
+    InsufficientCreditsError,
     InvalidAPIKeyError,
     InvalidModelError,
     NetworkError,
+    ProviderPermissionError,
     RateLimitError,
     RequestTimeoutError,
     TextProductType,
+    is_model_refusal,
 )
 
 logger = logging.getLogger(__name__)
@@ -169,6 +174,10 @@ class AIExplainerTextProductMixin:
                 )
 
                 content = response["content"]
+                if is_model_refusal(content):
+                    last_error = AIExplainerError(MODEL_REFUSAL_MESSAGE)
+                    response = None
+                    continue
                 if content and len(content.strip()) >= 20:
                     logger.info(f"Got valid {product_type} response from model: {model}")
                     break
@@ -191,7 +200,11 @@ class AIExplainerTextProductMixin:
 
             except Exception as e:
                 last_error = e
-                logger.warning(f"Model {model} failed for {product_type}: {e}, trying fallback...")
+                if isinstance(
+                    e, (InvalidAPIKeyError, ProviderPermissionError, InsufficientCreditsError)
+                ):
+                    raise
+                logger.warning("Text-product model attempt failed (%s)", type(e).__name__)
                 if attempt_index + 1 < len(models_to_try):
                     reason = self._describe_generation_error(e)
                     self._notify_generation_status(
@@ -205,16 +218,15 @@ class AIExplainerTextProductMixin:
             if last_error:
                 if self.provider == "venice":
                     raise last_error
-                logger.error(
-                    f"All models failed for {product_type}. Last error: {last_error}",
-                    exc_info=True,
-                )
+                logger.error("All attempted text-product models failed")
+                if isinstance(last_error, AIExplainerError):
+                    raise last_error
                 error_message = str(last_error).lower()
 
                 if "api key" in error_message or "api_key" in error_message:
                     raise InvalidAPIKeyError(
                         "OpenRouter API key is required.\n\n"
-                        "Please add your API key in Settings → AI Explanations.\n"
+                        "Please add your API key in Settings > AI.\n"
                         "Get a free key at: openrouter.ai/keys"
                     ) from last_error
 
@@ -227,7 +239,7 @@ class AIExplainerTextProductMixin:
                     raise InvalidModelError(
                         f"The AI model '{primary_model}' was not found.\n\n"
                         "It may have been removed or renamed by OpenRouter.\n"
-                        "Please go to Settings → AI Explanations and select a different model."
+                        "Please go to Settings > AI and select a different model."
                     ) from last_error
 
                 if (

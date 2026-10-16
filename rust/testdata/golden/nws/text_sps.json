@@ -1,0 +1,111 @@
+{
+ "now": "2026-01-20T18:21:00+00:00",
+ "call": "text_product",
+ "product_type": "SPS",
+ "office": "OKX",
+ "responses": [
+  {
+   "url": "https://api.weather.gov/products/types/SPS/locations/OKX",
+   "status": 200,
+   "body": "{\"@graph\":[{\"id\":\"sps-middle\",\"issuanceTime\":\"2026-01-20T12:00:00+00:00\"},{\"id\":\"sps-oldest\",\"issuanceTime\":\"2026-01-20T09:00:00+00:00\"},{\"id\":\"sps-notext\"},{\"issuanceTime\":\"2026-01-20T13:00:00+00:00\"},{\"id\":\"sps-newest\",\"issuanceTime\":\"2026-01-20T11:00:00+00:00\"}]}"
+  },
+  {
+   "url": "https://api.weather.gov/products/sps-middle",
+   "status": 200,
+   "body": "{\"id\":\"sps-middle\",\"issuanceTime\":\"2026-01-20T12:00:00+00:00\",\"productText\":\"sps-middle TEXT\"}"
+  },
+  {
+   "url": "https://api.weather.gov/products/sps-oldest",
+   "status": 200,
+   "body": "{\"id\":\"sps-oldest\",\"issuanceTime\":null,\"productText\":\"sps-oldest TEXT\"}"
+  },
+  {
+   "url": "https://api.weather.gov/products/sps-notext",
+   "status": 200,
+   "body": "{\"productText\":\"\"}"
+  },
+  {
+   "url": "https://api.weather.gov/products/sps-newest",
+   "status": 200,
+   "body": "{\"id\":\"sps-newest\",\"issuanceTime\":\"2026-01-20T15:00:00Z\",\"productText\":\"sps-newest TEXT\",\"headline\":5}"
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://api.weather.gov/products/types/SPS/locations/OKX",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/products/sps-middle",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/products/sps-oldest",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/products/sps-notext",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/products/sps-newest",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  }
+ ],
+ "result": [
+  {
+   "product_type": "SPS",
+   "product_id": "sps-newest",
+   "cwa_office": "OKX",
+   "issuance_time": "2026-01-20T15:00:00+00:00",
+   "product_text": "sps-newest TEXT",
+   "headline": "5"
+  },
+  {
+   "product_type": "SPS",
+   "product_id": "sps-middle",
+   "cwa_office": "OKX",
+   "issuance_time": "2026-01-20T12:00:00+00:00",
+   "product_text": "sps-middle TEXT",
+   "headline": null
+  },
+  {
+   "product_type": "SPS",
+   "product_id": "sps-oldest",
+   "cwa_office": "OKX",
+   "issuance_time": "2026-01-20T09:00:00+00:00",
+   "product_text": "sps-oldest TEXT",
+   "headline": null
+  }
+ ]
+}
