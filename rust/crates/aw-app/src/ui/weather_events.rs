@@ -47,6 +47,9 @@ pub(crate) enum WeatherUpdate<'a> {
     /// minutely polling cadence and the NWS cancel confirmation). Only
     /// alerts and their lifecycle changes are processed here.
     EventPoll { weather_data: &'a WeatherData },
+    /// Alerts for the other saved locations, polled with `EventPoll` when
+    /// `alert_notifications_all_locations` is on.
+    OtherLocationsPoll { polls: &'a [WeatherData] },
 }
 
 // ---------------------------------------------------------------------------
@@ -253,6 +256,25 @@ impl Notifications {
         self.deliver_alerts(sinks, dispatch);
     }
 
+    /// Alerts for saved locations other than the selected one: `event_poll`'s
+    /// processing, with the location name leading each toast title. Radio
+    /// auto-tune stays with the selected location.
+    pub(crate) fn other_locations_poll(
+        &mut self,
+        sinks: &mut dyn Sinks,
+        polls: &[WeatherData],
+        now: DateTime<Utc>,
+    ) {
+        for data in polls {
+            let mut dispatch = self.alerts.on_event_poll(data, now);
+            dispatch.radio_auto_tune_alerts.clear();
+            for toast in &mut dispatch.toasts {
+                toast.title = format!("{}: {}", data.location.name, toast.title);
+            }
+            self.deliver_alerts(sinks, dispatch);
+        }
+    }
+
     /// `_check_daily_climate_notification`, after Forecaster Notes loads a
     /// report: unlike the refresh-time check, no Event Center line and no
     /// click action.
@@ -455,6 +477,11 @@ pub(crate) fn weather_updated(update: WeatherUpdate<'_>) {
                 n.event_poll(&mut AppSinks, weather_data, Utc::now())
             });
         }
+        WeatherUpdate::OtherLocationsPoll { polls } => {
+            with_notifications(&app, |n| {
+                n.other_locations_poll(&mut AppSinks, polls, Utc::now())
+            });
+        }
     }
 }
 
@@ -645,5 +672,55 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn other_locations_poll_names_the_location_and_skips_auto_tune() {
+        // "session" step 2: a poll issues a Tornado Warning with auto-tune.
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../testdata/golden/notifywire/sequences.json");
+        let scenarios: Value =
+            serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        let sc = scenarios
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|s| s["name"] == "session")
+            .unwrap();
+        let (steps, results) = (&sc["steps"], &sc["results"]);
+        let dir = tempfile::tempdir().unwrap();
+        let settings: AppSettings = from(&sc["settings"]);
+        let start = time(&steps[0]["now"]).with_timezone(&Utc);
+        let mut n = Notifications::new(RuntimeState::open(dir.path()), &settings, None, start);
+        let location: Option<Location> = from(&steps[0]["location"]);
+        let cached = products(&steps[0]);
+        n.displayed(
+            &mut Recorded::default(),
+            &from(&steps[0]["weather"]),
+            &settings,
+            location.as_ref(),
+            cached.as_cached(),
+            false,
+            time(&results[0]["local_now"]),
+        );
+
+        let poll_now = time(&steps[1]["now"]).with_timezone(&Utc);
+        n.event_poll(
+            &mut Recorded::default(),
+            &from(&steps[1]["weather"]),
+            poll_now,
+        );
+
+        let weather: WeatherData = from(&steps[2]["weather"]);
+        let mut rec = Recorded::default();
+        let now = time(&steps[2]["now"]).with_timezone(&Utc);
+        n.other_locations_poll(&mut rec, std::slice::from_ref(&weather), now);
+
+        assert_eq!(rec.toasts.len(), 1);
+        assert_eq!(
+            rec.toasts[0]["title"],
+            format!("{}: EXTREME ALERT: Tornado Warning", weather.location.name)
+        );
+        assert!(rec.radio.is_empty());
     }
 }

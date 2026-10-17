@@ -17,7 +17,7 @@ impl WeatherClient {
     pub fn get_notification_event_data(&self, location: &Location) -> WeatherData {
         tracing::info!("Fetching notification event data for {}", location.name);
         let mut weather = WeatherData::new(location.clone());
-        if let Err(e) = self.notification_poll(location, &mut weather) {
+        if let Err(e) = self.notification_poll(location, &mut weather, false) {
             tracing::error!(
                 "Failed to fetch notification event data for {}: {e}",
                 location.name
@@ -29,10 +29,24 @@ impl WeatherClient {
         weather
     }
 
+    /// Alerts only (with the lifecycle diff), for saved locations other than
+    /// the selected one when `alert_notifications_all_locations` is on.
+    pub fn get_alert_poll_data(&self, location: &Location) -> WeatherData {
+        let mut weather = WeatherData::new(location.clone());
+        if let Err(e) = self.notification_poll(location, &mut weather, true) {
+            tracing::error!("Failed to fetch alerts for {}: {e}", location.name);
+            if weather.alerts.is_none() {
+                weather.alerts = Some(WeatherAlerts::default());
+            }
+        }
+        weather
+    }
+
     fn notification_poll(
         &self,
         location: &Location,
         weather: &mut WeatherData,
+        alerts_only: bool,
     ) -> SourceResult<()> {
         let cfg = self.cfg();
         let settings = &cfg.settings;
@@ -41,7 +55,13 @@ impl WeatherClient {
         let pirate_like = matches!(source, "auto" | "pirateweather");
         let pirate = cfg.sources.pirate_weather.clone().filter(|_| pirate_like);
 
-        if nws_like && self.is_us(location) {
+        if nws_like && self.is_us(location) && alerts_only {
+            let alerts = cfg
+                .sources
+                .nws
+                .get_alerts(location, &settings.alert_radius_type);
+            weather.alerts = Some(alerts?.unwrap_or_default());
+        } else if nws_like && self.is_us(location) {
             // Discussion-only so a forecast outage cannot hide AFD updates.
             let radius = &settings.alert_radius_type;
             let (discussion, alerts) = std::thread::scope(|scope| {
@@ -54,6 +74,9 @@ impl WeatherClient {
             weather.discussion = discussion;
             weather.discussion_issuance_time = issuance;
             weather.alerts = Some(alerts.unwrap_or_default());
+        } else if let Some(pirate) = pirate.as_ref().filter(|_| alerts_only) {
+            let alerts = pirate.get_alerts(location, Self::pirate_units(settings, location));
+            weather.alerts = Some(alerts?.unwrap_or_default());
         } else if let Some(pirate) = &pirate {
             let units = Self::pirate_units(settings, location);
             let (current, alerts) = std::thread::scope(|scope| {
@@ -70,9 +93,10 @@ impl WeatherClient {
 
         // Minutely data only when the user wants precipitation notifications,
         // and no more often than the polling cadence allows.
-        let wants_minutely = settings.notify_minutely_precipitation_start
-            || settings.notify_minutely_precipitation_stop
-            || settings.notify_precipitation_likelihood;
+        let wants_minutely = !alerts_only
+            && (settings.notify_minutely_precipitation_start
+                || settings.notify_minutely_precipitation_stop
+                || settings.notify_precipitation_likelihood);
         if let Some(pirate) = &pirate {
             if wants_minutely && self.should_fetch_minutely_precipitation(location) {
                 weather.minutely_precipitation =

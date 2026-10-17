@@ -191,6 +191,9 @@ pub struct AppSettings {
     pub alert_notify_minor: bool,
     #[serde(default)]
     pub alert_notify_unknown: bool,
+    /// Alert notifications for every saved location, not just the selected one.
+    #[serde(default)]
+    pub alert_notifications_all_locations: bool,
     #[serde(default)]
     pub immediate_alert_details_popups: bool,
     #[serde(default = "d_5")]

@@ -226,6 +226,7 @@ pub(crate) struct Controls {
     pub notify_moderate: CheckBox,
     pub notify_minor: CheckBox,
     pub notify_unknown: CheckBox,
+    pub alerts_all_locations: CheckBox,
     pub notify_discussion_update: CheckBox,
     pub notify_daily_climate_report_update: CheckBox,
     pub notify_hwo_update: CheckBox,
@@ -530,6 +531,11 @@ pub(crate) fn build(notebook: &Notebook, sound_pack_names: &[String], portable: 
     coverage_section.add(&notify_minor, 0, LRB, 10);
     let notify_unknown = check(&alerts, "Uncategorized alerts");
     coverage_section.add(&notify_unknown, 0, LRB, 10);
+    let alerts_all_locations = check(
+        &alerts,
+        "Send alert notifications for all saved locations, not just the selected one",
+    );
+    coverage_section.add(&alerts_all_locations, 0, LRBE, 10);
     let event_section = create_section(&alerts, &sizer, "Extra weather event notifications");
     let event_intro = text(
         &alerts,
@@ -930,6 +936,7 @@ pub(crate) fn build(notebook: &Notebook, sound_pack_names: &[String], portable: 
         notify_moderate,
         notify_minor,
         notify_unknown,
+        alerts_all_locations,
         notify_discussion_update,
         notify_daily_climate_report_update,
         notify_hwo_update,
@@ -1056,6 +1063,7 @@ impl Controls {
             (&self.notify_moderate, "Moderate severity alerts"),
             (&self.notify_minor, "Minor severity alerts"),
             (&self.notify_unknown, "Uncategorized alerts"),
+            (&self.alerts_all_locations, "Send alert notifications for all saved locations, not just the selected one"),
             (&self.immediate_alert_details_popups, "Open alert details immediately while AccessiWeather is running"),
             (&self.auto_tune_weather_radio_alerts, "Automatically tune NOAA Weather Radio for qualifying Specific Area Message Encoding (SAME) alerts"),
             (&self.auto_tune_weather_radio_duration_minutes, "Play weather radio for this many minutes"),
@@ -1161,6 +1169,7 @@ impl Controls {
         self.notify_moderate.set_value(f.notify_moderate);
         self.notify_minor.set_value(f.notify_minor);
         self.notify_unknown.set_value(f.notify_unknown);
+        self.alerts_all_locations.set_value(f.alerts_all_locations);
         self.immediate_alert_details_popups
             .set_value(f.immediate_alert_details_popups);
         self.auto_tune_weather_radio_alerts
@@ -1269,6 +1278,7 @@ impl Controls {
         f.notify_moderate = self.notify_moderate.is_checked();
         f.notify_minor = self.notify_minor.is_checked();
         f.notify_unknown = self.notify_unknown.is_checked();
+        f.alerts_all_locations = self.alerts_all_locations.is_checked();
         f.notify_discussion_update = self.notify_discussion_update.is_checked();
         f.notify_daily_climate_report_update = self.notify_daily_climate_report_update.is_checked();
         f.notify_hwo_update = self.notify_hwo_update.is_checked();
