@@ -16,4 +16,4 @@ APNS_TEAM_ID = "GANLL6R3Q9"
 APNS_TOPIC = "net.orinks.AccessiWeather"
 NWS_USER_AGENT = "AccessiWeather push (orin8722@gmail.com)"
 
-# Secrets (wrangler secret put): APNS_KEY_P8, APNS_KEY_ID
+# Secrets (wrangler secret put): APNS_KEY_P8, APNS_KEY_ID, KEY_ENCRYPTION_KEY (base64 32 bytes)

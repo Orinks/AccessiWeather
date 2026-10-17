@@ -3,6 +3,10 @@ CREATE TABLE IF NOT EXISTS devices (
   environment TEXT NOT NULL,
   severities TEXT NOT NULL,
   notify_unknown INTEGER NOT NULL DEFAULT 0,
+  -- comma-separated: discussion, hwo, sps, precip_start, precip_stop
+  events TEXT NOT NULL DEFAULT '',
+  -- the user's own Pirate Weather key, AES-GCM encrypted with KEY_ENCRYPTION_KEY
+  pw_key TEXT,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
 );
@@ -16,7 +20,10 @@ CREATE TABLE IF NOT EXISTS locations (
   latitude REAL NOT NULL,
   longitude REAL NOT NULL,
   zones TEXT NOT NULL,
+  office TEXT NOT NULL DEFAULT '',
   baselined INTEGER NOT NULL DEFAULT 0,
+  pw_baselined INTEGER NOT NULL DEFAULT 0,
+  minutely_signature TEXT,
   PRIMARY KEY (token, location_id)
 );
 
@@ -33,4 +40,13 @@ CREATE TABLE IF NOT EXISTS meta (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL,
   updated_at INTEGER NOT NULL
+);
+
+-- Last seen AFD/HWO/SPS per forecast office (JSON ProductState).
+CREATE TABLE IF NOT EXISTS offices (
+  office TEXT NOT NULL,
+  product TEXT NOT NULL,
+  state TEXT NOT NULL,
+  updated_at INTEGER NOT NULL,
+  PRIMARY KEY (office, product)
 );

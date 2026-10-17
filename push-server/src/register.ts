@@ -4,11 +4,14 @@ export interface Registration {
   enabled: boolean;
   severities: string[];
   notifyUnknown: boolean;
+  events: string[];
+  pirateWeatherKey: string | null;
   locations: { id: string; name: string; latitude: number; longitude: number }[];
 }
 
 export const MAX_LOCATIONS = 20;
 const SEVERITIES = new Set(["extreme", "severe", "moderate", "minor"]);
+export const EVENTS = ["discussion", "hwo", "sps", "precip_start", "precip_stop"];
 
 export function validateRegistration(body: unknown): Registration | string {
   const b = body as Record<string, any> | null;
@@ -29,12 +32,17 @@ export function validateRegistration(body: unknown): Registration | string {
   const severities = Array.isArray(b.severities)
     ? b.severities.filter((s: unknown): s is string => typeof s === "string" && SEVERITIES.has(s.toLowerCase())).map((s: string) => s.toLowerCase())
     : [];
+  const events = EVENTS.filter((name) => b.events?.[name] === true);
+  const key = typeof b.pirateWeatherKey === "string" ? b.pirateWeatherKey.trim() : "";
+  if (key.length > 200 || /[^A-Za-z0-9_-]/.test(key)) return "invalid Pirate Weather key";
   return {
     token: b.token.toLowerCase(),
     environment: b.environment,
     enabled: b.enabled === true,
     severities,
     notifyUnknown: b.notifyUnknown === true,
+    events,
+    pirateWeatherKey: key || null,
     locations,
   };
 }
