@@ -48,6 +48,25 @@ struct OpenRouterClient {
         return request
     }
 
+    /// Raw chat completion for tool-calling conversations; returns the first choice's message.
+    func chat(body: [String: Any], key: String) async throws -> [String: Any] {
+        var request = URLRequest(url: Self.endpoint)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+        request.setValue("https://accessiweather.orinks.net", forHTTPHeaderField: "HTTP-Referer")
+        request.setValue("AccessiWeather", forHTTPHeaderField: "X-Title")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (data, response) = try await session.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw WeatherError.invalidResponse("OpenRouter") }
+        guard (200..<300).contains(http.statusCode) else { throw WeatherError.unsupported(Self.errorMessage(status: http.statusCode)) }
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let message = (json["choices"] as? [[String: Any]])?.first?["message"] as? [String: Any] else {
+            throw WeatherError.unsupported("Received an empty response. Try again or switch models in Settings.")
+        }
+        return message
+    }
+
     func complete(system: String, user: String, model: String, key: String) async throws -> String {
         let request = try makeRequest(system: system, user: user, model: model, key: key)
         let (data, response) = try await session.data(for: request)

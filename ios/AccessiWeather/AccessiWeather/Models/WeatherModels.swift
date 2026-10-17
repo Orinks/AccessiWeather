@@ -23,6 +23,8 @@ struct AirQuality: Equatable {
     var dominantPollutant: String?
     var pollutantLevels = AirQualityPollutantLevels()
     var hourly: [AirQualityHour] = []
+    var reportingArea: String? = nil
+    var source: String? = nil
 
     var category: String {
         switch aqi {
@@ -147,6 +149,7 @@ struct WeatherReport: Equatable {
     var observationStationID: String? = nil
     var alertsAreCurrent: Bool = true
     var minutely: [MinutelyPoint]? = nil
+    var marine: MarineForecast? = nil
 }
 
 enum WeatherError: LocalizedError {

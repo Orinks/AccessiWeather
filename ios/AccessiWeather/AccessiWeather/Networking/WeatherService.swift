@@ -1,6 +1,6 @@
 import Foundation
 
-/// Fetches and merges weather data. Automatic mode uses NWS inside the United States and Open-Meteo elsewhere;
+/// Fetches and merges weather data. Automatic mode fuses NWS (US only), Open-Meteo and Pirate Weather (with a key);
 /// Open-Meteo always supplies air quality, UV, sunrise and sunset because NWS does not offer them.
 actor WeatherService {
     static let cacheLifetime: TimeInterval = 5 * 60
@@ -32,7 +32,7 @@ actor WeatherService {
     }
 
     private func cacheKey(_ location: SavedLocation, source: WeatherSource) -> String {
-        "\(source.rawValue)|\(NWSClient.pointPath(latitude: location.latitude, longitude: location.longitude))"
+        "\(source.rawValue)|\(NWSClient.pointPath(latitude: location.latitude, longitude: location.longitude))|\(location.marineMode)"
     }
 
     func invalidate(location: SavedLocation) {
@@ -55,7 +55,7 @@ actor WeatherService {
         let resolved: WeatherSource
         switch source {
         case .automatic:
-            resolved = location.isInUnitedStates ? .nws : .openMeteo
+            resolved = .automatic
         case .nws:
             guard location.isInUnitedStates else {
                 throw WeatherError.unsupported("The National Weather Service only covers United States locations. Choose Automatic or Open-Meteo in Settings for this location.")
@@ -81,6 +81,8 @@ actor WeatherService {
                 key: pirateWeatherKey
             )
             report = PirateWeatherClient.report(from: response, location: location)
+        case .automatic:
+            report = try await fetchAutomatic(location: location, pirateWeatherKey: pirateWeatherKey)
         default:
             report = try await fetchOpenMeteo(location: location)
         }
@@ -118,6 +120,17 @@ actor WeatherService {
             )
         }
 
+        let airNowKey = KeychainStore.read(.airNow)
+        if location.isInUnitedStates, !airNowKey.isEmpty,
+           let observation = try? await AirNowClient().current(latitude: location.latitude, longitude: location.longitude, key: airNowKey) {
+            var airQuality = report.current.airQuality ?? AirQuality(aqi: observation.aqi)
+            airQuality.aqi = observation.aqi
+            airQuality.dominantPollutant = observation.pollutant
+            airQuality.reportingArea = observation.reportingArea
+            airQuality.source = AirNowClient.source
+            report.current.airQuality = airQuality
+        }
+
         reportCache[key] = CacheEntry(report: report, storedAt: Date())
         return report
     }
@@ -132,6 +145,38 @@ actor WeatherService {
         return product
     }
 
+    private var officeCache: [String: String] = [:]
+
+    /// Active NWS alerts only, for background checks of every saved location.
+    func activeAlerts(for location: SavedLocation) async throws -> [WeatherAlert] {
+        guard location.isInUnitedStates else { return [] }
+        return try await nws.activeAlerts(latitude: location.latitude, longitude: location.longitude)
+            .map(NWSClient.weatherAlert(from:))
+    }
+
+    /// The NWS forecast office (CWA) for a US location, cached for the life of the process.
+    func forecastOfficeID(for location: SavedLocation) async throws -> String? {
+        guard location.isInUnitedStates else { return nil }
+        let key = NWSClient.pointPath(latitude: location.latitude, longitude: location.longitude)
+        if let cached = officeCache[key] { return cached }
+        let point = try await nws.point(latitude: location.latitude, longitude: location.longitude)
+        guard let office = point.cwa ?? point.gridId else { return nil }
+        officeCache[key] = office
+        return office
+    }
+
+    func productItems(type: String, officeID: String) async throws -> [NWSClient.ProductListItem] {
+        try await nws.productList(type: type, officeID: officeID)
+    }
+
+    func product(id: String) async throws -> NWSClient.ProductResponse {
+        try await nws.product(id: id)
+    }
+
+    func minutely(for location: SavedLocation, pirateWeatherKey: String) async throws -> [MinutelyPoint]? {
+        try await report(for: location, source: .pirateWeather, pirateWeatherKey: pirateWeatherKey).minutely
+    }
+
     func aviationWeather(icao: String) async throws -> AviationWeather {
         let code = ICAOCodeValidation.normalized(icao)
         if let cached = aviationCache[code],
@@ -144,8 +189,18 @@ actor WeatherService {
         async let tafResult = captureAviationProduct {
             try await aviationWeatherClient.tafs(icao: code)
         }
+        async let advisoriesResult = nws.aviationAdvisories(icao: code)
         let (metars, metarError) = await metarResult
-        let (tafs, tafError) = await tafResult
+        var (tafs, tafError) = await tafResult
+        var tafSummary: String?
+        let avwxKey = KeychainStore.read(.avwx)
+        if !AviationAdvisories.isUSStation(code), !avwxKey.isEmpty,
+           let avwx = try? await AVWXClient().taf(icao: code, key: avwxKey) {
+            tafs = [TAFProduct(rawTAF: avwx.raw, fcsts: nil)]
+            tafError = nil
+            tafSummary = avwx.speech
+        }
+        let advisories = await advisoriesResult
         if let metarError, let tafError {
             throw WeatherError.unsupported("METAR and TAF requests failed. \(metarError) \(tafError)")
         }
@@ -153,7 +208,10 @@ actor WeatherService {
             metars: metars ?? [],
             tafs: tafs ?? [],
             metarError: metarError,
-            tafError: tafError
+            tafError: tafError,
+            tafSummary: tafSummary,
+            sigmets: advisories.sigmets,
+            cwas: advisories.cwas
         )
         if metarError == nil, tafError == nil {
             aviationCache[code] = (weather, Date())
@@ -219,6 +277,36 @@ actor WeatherService {
     }
 
     // MARK: - NWS
+
+    /// Fetches every available source at once and fuses them; any one source failing is not fatal.
+    private func fetchAutomatic(location: SavedLocation, pirateWeatherKey: String) async throws -> WeatherReport {
+        let key = pirateWeatherKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        let pirateWeather = pirateWeather
+        async let nwsResult: Result<WeatherReport, Error>? = location.isInUnitedStates
+            ? await WeatherService.capture { try await self.fetchNWS(location: location) }
+            : nil
+        async let openMeteoResult = WeatherService.capture { try await self.fetchOpenMeteo(location: location) }
+        async let pirateResult: Result<WeatherReport, Error>? = key.isEmpty ? nil : await WeatherService.capture {
+            let response = try await pirateWeather.forecast(latitude: location.latitude, longitude: location.longitude, key: key)
+            return PirateWeatherClient.report(from: response, location: location)
+        }
+        let (nws, openMeteo, pirate) = await (nwsResult, openMeteoResult, pirateResult)
+        if let fused = DataFusion.merge(
+            location: location,
+            nws: try? nws?.get(),
+            openMeteo: try? openMeteo.get(),
+            pirateWeather: try? pirate?.get()
+        ) {
+            return fused
+        }
+        if let nws { _ = try nws.get() }
+        _ = try openMeteo.get()
+        throw WeatherError.noData("weather")
+    }
+
+    private static func capture<T>(_ body: () async throws -> T) async -> Result<T, Error> {
+        do { return .success(try await body()) } catch { return .failure(error) }
+    }
 
     private func fetchNWS(location: SavedLocation) async throws -> WeatherReport {
         let point = try await nws.point(latitude: location.latitude, longitude: location.longitude)
@@ -298,7 +386,15 @@ actor WeatherService {
             current.temperatureC = current.temperatureC ?? first.temperatureC
         }
 
-        let mappedAlerts = alerts.map(NWSClient.weatherAlert(from:))
+        var mappedAlerts = alerts.map(NWSClient.weatherAlert(from:))
+        var marine: MarineForecast?
+        if location.marineMode,
+           let result = try? await nws.marine(latitude: location.latitude, longitude: location.longitude) {
+            marine = result.forecast
+            for alert in result.alerts.map(NWSClient.weatherAlert(from:)) where !mappedAlerts.contains(where: { $0.id == alert.id }) {
+                mappedAlerts.append(alert)
+            }
+        }
 
         return WeatherReport(
             location: location,
@@ -311,7 +407,8 @@ actor WeatherService {
             fetchedAt: Date(),
             forecastOfficeID: point.cwa ?? point.gridId,
             observationStationID: observationResult?.stationID,
-            alertsAreCurrent: alertsResult != nil
+            alertsAreCurrent: alertsResult != nil,
+            marine: marine
         )
     }
 

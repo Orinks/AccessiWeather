@@ -89,6 +89,9 @@ struct WeatherView: View {
                 CurrentConditionsSection(report: report, formatter: formatter)
                 HourlyForecastSection(report: report, formatter: formatter)
                 DailyForecastSection(report: report, formatter: formatter)
+                if let marine = report.marine, marine.hasData {
+                    marineSection(marine)
+                }
                 moreSection(report: report, formatter: formatter)
             } else if model.isLoading {
                 Section {
@@ -132,6 +135,21 @@ struct WeatherView: View {
                 }
                 .accessibilityHint("Opens the National Weather Service Area Forecast Discussion")
             }
+            if model.hasOpenRouterKey {
+                NavigationLink {
+                    WeatherAssistantView(model: model)
+                } label: {
+                    Label("Weather Assistant", systemImage: "bubble.left.and.bubble.right")
+                }
+                .accessibilityHint("Chat about the weather using live weather data")
+            }
+
+            NavigationLink {
+                NationalProductsView()
+            } label: {
+                Label("National Products", systemImage: "map")
+            }
+            .accessibilityHint("Shows national forecast discussions and SPC, WPC, NHC and CPC outlooks")
             NavigationLink {
                 AviationWeatherView(report: report)
             } label: {
@@ -452,6 +470,12 @@ struct AirQualityDetailView: View {
             Section {
                 MeasurementRow(label: "US AQI", value: "\(airQuality.aqi)")
                 MeasurementRow(label: "Category", value: airQuality.category)
+                if let area = airQuality.reportingArea {
+                    MeasurementRow(label: "Reporting area", value: area)
+                }
+                if let source = airQuality.source {
+                    MeasurementRow(label: "Source", value: source)
+                }
                 if let pollutant = airQuality.dominantPollutant {
                     MeasurementRow(label: "Dominant pollutant", value: pollutant)
                 }
@@ -510,5 +534,35 @@ struct AirQualityDetailView: View {
             value: "\(amount) µg/m³",
             spokenValue: "\(amount) micrograms per cubic meter"
         )
+    }
+}
+
+extension WeatherView {
+    /// The desktop "Marine conditions" section: zone, summary, wind and wave highlights, next periods.
+    @ViewBuilder
+    func marineSection(_ marine: MarineForecast) -> some View {
+        Section {
+            if let zone = marine.zoneLabel {
+                LabeledContent("Marine zone", value: zone)
+                    .accessibilityElement(children: .combine)
+            }
+            if let summary = marine.summary, !summary.isEmpty {
+                LabeledContent("Summary", value: summary)
+                    .accessibilityElement(children: .combine)
+            }
+            ForEach(marine.highlights, id: \.self) { highlight in
+                Text(highlight)
+                    .accessibilityLabel("Wind and wave highlight: \(highlight)")
+            }
+            ForEach(Array(marine.periods.enumerated()), id: \.offset) { _, period in
+                VStack(alignment: .leading) {
+                    Text(period.name).font(.headline)
+                    Text(period.summary)
+                }
+                .accessibilityElement(children: .combine)
+            }
+        } header: {
+            SectionHeader("Marine Conditions")
+        }
     }
 }

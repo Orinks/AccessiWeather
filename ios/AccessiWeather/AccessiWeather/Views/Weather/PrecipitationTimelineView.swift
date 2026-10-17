@@ -97,7 +97,6 @@ struct PrecipitationTimelineView: View {
             return
         }
         if let report = model.report,
-           report.sourceDescription == "Pirate Weather",
            let minutely = report.minutely {
             points = PrecipitationTimelineText.points(minutely, from: Date())
             unavailable = points.isEmpty

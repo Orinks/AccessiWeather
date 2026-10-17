@@ -47,7 +47,18 @@ struct LocationsView: View {
                             }
                             .foregroundStyle(.primary)
                             .accessibilityLabel(location.name)
-                            .accessibilityValue(location.id == model.selectedLocation?.id ? "Selected" : "")
+                            .accessibilityValue(
+                                [location.id == model.selectedLocation?.id ? "Selected" : nil, location.marineMode ? "Marine Mode" : nil]
+                                    .compactMap { $0 }.joined(separator: ", ")
+                            )
+                            .contextMenu {
+                                Button(location.marineMode ? "Turn Off Marine Mode" : "Turn On Marine Mode") {
+                                    toggleMarineMode(location)
+                                }
+                            }
+                            .accessibilityAction(named: location.marineMode ? "Turn Off Marine Mode" : "Turn On Marine Mode") {
+                                toggleMarineMode(location)
+                            }
                             .accessibilityAddTraits(location.id == model.selectedLocation?.id ? .isSelected : [])
                             .accessibilityHint("Shows weather for this location")
                         }
@@ -80,5 +91,16 @@ struct LocationsView: View {
                 AddLocationView()
             }
         }
+    }
+
+    /// Marine Mode adds the nearby NWS marine zone forecast and marine alerts for US coastal locations.
+    private func toggleMarineMode(_ location: SavedLocation) {
+        var updated = location
+        updated.marineMode.toggle()
+        locationStore.update(updated)
+        if location.id == model.selectedLocation?.id {
+            model.select(updated)
+        }
+        AccessibilityNotification.Announcement(updated.marineMode ? "Marine Mode on" : "Marine Mode off").post()
     }
 }

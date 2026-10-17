@@ -80,8 +80,29 @@ struct AviationWeatherView: View {
                             tafRows(item.element)
                         }
                     }
+                    if let summary = weather.tafSummary {
+                        MeasurementRow(label: "AVWX summary", value: summary)
+                    }
                 } header: {
                     SectionHeader("Terminal Aerodrome Forecast (TAF)")
+                }
+
+                Section {
+                    if weather.sigmets.isEmpty {
+                        Text("No active SIGMETs or AIRMETs near this airport.")
+                    }
+                    ForEach(weather.sigmets, id: \.self) { Text($0) }
+                } header: {
+                    SectionHeader("SIGMETs and AIRMETs")
+                }
+
+                Section {
+                    if weather.cwas.isEmpty {
+                        Text("No active Center Weather Advisories.")
+                    }
+                    ForEach(weather.cwas, id: \.self) { Text($0) }
+                } header: {
+                    SectionHeader("Center Weather Advisories")
                 }
             }
         }

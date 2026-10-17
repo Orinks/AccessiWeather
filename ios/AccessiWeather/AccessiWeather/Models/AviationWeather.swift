@@ -117,6 +117,9 @@ struct AviationWeather: Equatable {
     var tafs: [TAFProduct]
     var metarError: String? = nil
     var tafError: String? = nil
+    var tafSummary: String? = nil
+    var sigmets: [String] = []
+    var cwas: [String] = []
 }
 
 enum AviationWeatherFormatting {

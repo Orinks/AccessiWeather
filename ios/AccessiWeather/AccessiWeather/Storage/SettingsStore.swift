@@ -48,6 +48,14 @@ final class SettingsStore: ObservableObject {
         notifySevere = defaults.object(forKey: "notifySevere") as? Bool ?? true
         notifyModerate = defaults.object(forKey: "notifyModerate") as? Bool ?? true
         notifyMinor = defaults.bool(forKey: "notifyMinor")
+        notifyUnknown = defaults.bool(forKey: "notifyUnknown")
+        alertsForAllLocations = defaults.object(forKey: "alertsForAllLocations") as? Bool ?? true
+        updateIntervalMinutes = defaults.object(forKey: "updateIntervalMinutes") as? Int ?? 10
+        notifyDiscussionUpdates = defaults.bool(forKey: "notifyDiscussionUpdates")
+        notifyHazardousWeatherOutlook = defaults.bool(forKey: "notifyHazardousWeatherOutlook")
+        notifySpecialWeatherStatements = defaults.bool(forKey: "notifySpecialWeatherStatements")
+        notifyPrecipitationStart = defaults.bool(forKey: "notifyPrecipitationStart")
+        notifyPrecipitationStop = defaults.bool(forKey: "notifyPrecipitationStop")
         radioAutoTuneEnabled = defaults.bool(forKey: "radioAutoTuneEnabled")
         radioAutoTuneDurationMinutes = Self.boundedRadioAutoTuneDuration(
             defaults.object(forKey: "radioAutoTuneDurationMinutes") as? Int ?? 5
@@ -78,6 +86,15 @@ final class SettingsStore: ObservableObject {
     @Published var notifySevere: Bool { didSet { defaults.set(notifySevere, forKey: "notifySevere") } }
     @Published var notifyModerate: Bool { didSet { defaults.set(notifyModerate, forKey: "notifyModerate") } }
     @Published var notifyMinor: Bool { didSet { defaults.set(notifyMinor, forKey: "notifyMinor") } }
+    @Published var notifyUnknown: Bool { didSet { defaults.set(notifyUnknown, forKey: "notifyUnknown") } }
+    /// Alert notifications for every saved location, or only the selected one.
+    @Published var alertsForAllLocations: Bool { didSet { defaults.set(alertsForAllLocations, forKey: "alertsForAllLocations") } }
+    @Published var updateIntervalMinutes: Int { didSet { defaults.set(updateIntervalMinutes, forKey: "updateIntervalMinutes") } }
+    @Published var notifyDiscussionUpdates: Bool { didSet { defaults.set(notifyDiscussionUpdates, forKey: "notifyDiscussionUpdates") } }
+    @Published var notifyHazardousWeatherOutlook: Bool { didSet { defaults.set(notifyHazardousWeatherOutlook, forKey: "notifyHazardousWeatherOutlook") } }
+    @Published var notifySpecialWeatherStatements: Bool { didSet { defaults.set(notifySpecialWeatherStatements, forKey: "notifySpecialWeatherStatements") } }
+    @Published var notifyPrecipitationStart: Bool { didSet { defaults.set(notifyPrecipitationStart, forKey: "notifyPrecipitationStart") } }
+    @Published var notifyPrecipitationStop: Bool { didSet { defaults.set(notifyPrecipitationStop, forKey: "notifyPrecipitationStop") } }
     @Published var radioAutoTuneEnabled: Bool { didSet { defaults.set(radioAutoTuneEnabled, forKey: "radioAutoTuneEnabled") } }
     @Published var radioAutoTuneDurationMinutes: Int {
         didSet {
@@ -117,7 +134,30 @@ final class SettingsStore: ObservableObject {
         case "severe": return notifySevere
         case "moderate": return notifyModerate
         case "minor": return notifyMinor
-        default: return false
+        default: return notifyUnknown
         }
+    }
+
+    var alertGateSettings: AlertGateSettings {
+        let severities = ["extreme", "severe", "moderate", "minor"].filter { wantsNotification(forSeverity: $0) }
+        return AlertGateSettings(
+            notificationsEnabled: alertNotificationsEnabled,
+            notifiedSeverities: Set(severities + (notifyUnknown ? ["unknown"] : []))
+        )
+    }
+
+    var eventNotificationSettings: EventNotificationSettings {
+        EventNotificationSettings(
+            discussionUpdates: notifyDiscussionUpdates,
+            hazardousWeatherOutlook: notifyHazardousWeatherOutlook,
+            specialWeatherStatements: notifySpecialWeatherStatements,
+            precipitationStart: notifyPrecipitationStart,
+            precipitationStop: notifyPrecipitationStop
+        )
+    }
+
+    var anyNotificationsEnabled: Bool {
+        alertNotificationsEnabled || notifyDiscussionUpdates || notifyHazardousWeatherOutlook
+            || notifySpecialWeatherStatements || notifyPrecipitationStart || notifyPrecipitationStop
     }
 }
