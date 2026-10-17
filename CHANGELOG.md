@@ -10,7 +10,7 @@ All notable changes to this project will be documented in this file.
 - The iPhone app can stream the nearest NOAA Weather Radio stations from the Weather tab, with Lock Screen controls.
 - The iPhone app now supports Pirate Weather, forecast explanations, forecaster notes, weather history, UV and air quality details, aviation reports, an Event Center, and warning radio auto-tune.
 - The iPhone app now checks for alerts in the background and notifies you, merges NWS, Open-Meteo and Pirate Weather in Automatic mode, and adds marine mode, national products, AirNow, aviation advisories and a Weather Assistant.
-- The iPhone app can follow your current location in the Locations tab, so weather and alerts follow you when you travel, including Extreme and Severe alerts already active where you arrive.
+- You can now turn on Follow my current location in the iPhone app's Locations tab, so weather and alerts follow you when you travel.
 - On iPhone, Extreme and Severe alert notifications are now Time Sensitive, so they come through Focus and Sleep unless you turn that off for AccessiWeather.
 - You can now get alert notifications for all saved locations, not just the selected one, and each names its location. Turn it on in Settings, Alerts tab.
 
