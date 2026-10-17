@@ -48,6 +48,12 @@ describe("rain and Pirate Weather", () => {
     expect(minutelyChange(dry.signature, points(7), now, 15, { start: true, stop: true }).event).toBeNull();
   });
 
+  it("notifies for the first rain start when the first check saw it beyond the lead time", () => {
+    const early = minutelyChange(null, points(40), now, 15, { start: true, stop: true });
+    expect(early).toEqual({ signature: "none", event: null });
+    expect(minutelyChange(early.signature, points(8), now, 15, { start: true, stop: true }).event?.title).toBe("Rain starting in 8 minutes");
+  });
+
   it("parses alerts with the app's IDs", () => {
     const { alerts, minutely } = parsePirate({
       alerts: [{ title: "Yellow Warning", severity: "moderate", time: 1700000000, expires: 1700003600, regions: ["London"] }, { title: "X", uri: "https://u" }],

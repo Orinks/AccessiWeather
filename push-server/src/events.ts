@@ -166,7 +166,7 @@ export function minutelyChange(
   const precipType = (starting ? change : first).type;
   const next = `${type}:${precipType ?? ""}`;
   const minutes = Math.max(1, Math.round((change.time * 1000 - now) / 60_000));
-  if (minutes > leadMinutes) return { signature, event: null };
+  if (minutes > leadMinutes) return { signature: signature ?? "none", event: null };
   if (signature === null) return { signature: next, event: null };
   if (signature === next) return { signature, event: null };
   if (!(starting ? wants.start : wants.stop)) return { signature: next, event: null };
