@@ -211,6 +211,9 @@ extension AppModel {
         content.subtitle = notice.locationName
         content.body = alert.headline ?? alert.areaDescription ?? notice.locationName
         content.threadIdentifier = notice.locationID.uuidString
+        if ["extreme", "severe"].contains(alert.severity.lowercased()) {
+            content.interruptionLevel = .timeSensitive
+        }
         content.userInfo = [
             NotificationRouter.alertIDKey: alert.id,
             NotificationRouter.locationIDKey: notice.locationID.uuidString,

@@ -29,6 +29,7 @@ targets:
       path: AccessiWeather/AccessiWeather.entitlements
       properties:
         aps-environment: development
+        com.apple.developer.usernotifications.time-sensitive: true
     info:
       path: AccessiWeather/Info.plist
       properties:

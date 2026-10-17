@@ -111,6 +111,9 @@ export function wants(severities: string, notifyUnknown: boolean, severity: stri
 }
 
 /** Same wording as the app's local alert notifications (AppModel+Notifications.swift). */
+/** Extreme and Severe alerts break through Focus unless the user turns Time Sensitive off for the app. */
+export const isTimeSensitive = (severity: string): boolean => ["extreme", "severe"].includes(severity.toLowerCase());
+
 export function buildPayload(
   kind: Decision,
   alert: NwsAlert,
@@ -125,6 +128,7 @@ export function buildPayload(
       alert: { title, subtitle: location.name, body: alert.headline ?? alert.areaDesc ?? location.name },
       sound: "default",
       "thread-id": location.id,
+      ...(isTimeSensitive(alert.severity) ? { "interruption-level": "time-sensitive" } : {}),
     },
     alertID: alert.id,
     locationID: location.id,

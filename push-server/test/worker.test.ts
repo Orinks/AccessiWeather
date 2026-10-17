@@ -57,6 +57,8 @@ describe("alerts", () => {
     expect((buildPayload("updated", alert(), loc).aps as any).alert.title).toBe("Updated alert: Flood Warning");
     expect((buildPayload("escalated", alert(), loc).aps as any).alert.title).toBe("Escalated to Severe: Flood Warning");
     expect(buildPayload("new", alert(), loc)).toMatchObject({ alertID: "urn:a1", locationID: "L1" });
+    expect((buildPayload("new", alert(), loc).aps as any)["interruption-level"]).toBe("time-sensitive");
+    expect((buildPayload("new", alert({ severity: "Moderate" }), loc).aps as any)["interruption-level"]).toBeUndefined();
   });
 
   it("reads forecast, county and fire zones from /points", () => {
