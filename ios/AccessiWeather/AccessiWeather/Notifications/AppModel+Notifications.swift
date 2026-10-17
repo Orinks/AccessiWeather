@@ -80,6 +80,8 @@ extension AppModel {
     /// notified alert IDs.
     func checkAlerts(selectedReport: WeatherReport?) async -> Set<String> {
         await syncPush()
+        // The push server checks alerts for every source while this device is registered.
+        guard !PushRegistration.shared.isActive else { return [] }
         guard settings.alertNotificationsEnabled, await notificationsAuthorized() else { return [] }
         let service = weatherService
         let others = settings.alertsForAllLocations
@@ -103,10 +105,6 @@ extension AppModel {
                 batches.append((location, alerts))
             }
         }
-        if PushRegistration.shared.isActive {
-            // The push server sends NWS alerts for US locations.
-            batches.removeAll { $0.location.isInUnitedStates }
-        }
         let notices = notificationState.alerts.process(batches, settings: settings.alertGateSettings)
         notificationState.save(to: notificationStateURL)
         for notice in notices {
@@ -127,12 +125,15 @@ extension AppModel {
             enabled: authorized && settings.alertNotificationsEnabled,
             severities: ["extreme", "severe", "moderate", "minor"].filter { settings.wantsNotification(forSeverity: $0) },
             notifyUnknown: settings.wantsNotification(forSeverity: "unknown"),
+            events: settings.eventNotificationSettings,
+            pirateWeatherKey: KeychainStore.read(.pirateWeather),
             locations: locations
         )
     }
 
     /// Forecast product and precipitation event notifications for one location.
     func checkEvents(for location: SavedLocation, report: WeatherReport?) async {
+        guard !PushRegistration.shared.isActive else { return }
         let wanted = settings.eventNotificationSettings
         let wantsProducts = wanted.discussionUpdates || wanted.hazardousWeatherOutlook || wanted.specialWeatherStatements
         let wantsMinutely = wanted.precipitationStart || wanted.precipitationStop

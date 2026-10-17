@@ -26,7 +26,7 @@ final class PushRegistration {
 
     var deviceToken: String? { defaults.string(forKey: Self.tokenKey) }
 
-    /// True while the server holds this device's locations; the app then leaves US alerts to push.
+    /// True while the server holds this device's locations; the app then leaves alert and event checks to it.
     var isActive: Bool { serverURL != nil && defaults.string(forKey: Self.signatureKey) != nil }
 
     static var environment: String {
@@ -55,6 +55,8 @@ final class PushRegistration {
         enabled: Bool,
         severities: [String],
         notifyUnknown: Bool,
+        events: EventNotificationSettings,
+        pirateWeatherKey: String,
         locations: [SavedLocation]
     ) -> [String: Any] {
         [
@@ -63,16 +65,34 @@ final class PushRegistration {
             "enabled": enabled,
             "severities": severities,
             "notifyUnknown": notifyUnknown,
-            "locations": locations.filter(\.isInUnitedStates).prefix(maxLocations).map {
+            "events": [
+                "discussion": events.discussionUpdates,
+                "hwo": events.hazardousWeatherOutlook,
+                "sps": events.specialWeatherStatements,
+                "precip_start": events.precipitationStart,
+                "precip_stop": events.precipitationStop,
+            ],
+            "pirateWeatherKey": pirateWeatherKey.trimmingCharacters(in: .whitespacesAndNewlines),
+            "locations": locations.prefix(maxLocations).map {
                 ["id": $0.id.uuidString, "name": $0.name, "latitude": $0.latitude, "longitude": $0.longitude] as [String: Any]
             },
         ]
     }
 
     /// Sends alert settings and locations when they changed, or once a day so the server keeps the device.
-    func sync(enabled: Bool, severities: [String], notifyUnknown: Bool, locations: [SavedLocation]) async {
+    func sync(
+        enabled: Bool,
+        severities: [String],
+        notifyUnknown: Bool,
+        events: EventNotificationSettings,
+        pirateWeatherKey: String,
+        locations: [SavedLocation]
+    ) async {
         guard let serverURL, let token = deviceToken else { return }
-        let body = Self.body(token: token, enabled: enabled, severities: severities, notifyUnknown: notifyUnknown, locations: locations)
+        let body = Self.body(
+            token: token, enabled: enabled, severities: severities, notifyUnknown: notifyUnknown,
+            events: events, pirateWeatherKey: pirateWeatherKey, locations: locations
+        )
         guard let data = try? JSONSerialization.data(withJSONObject: body, options: .sortedKeys) else { return }
         let signature = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
         let syncedAt = defaults.object(forKey: Self.syncedAtKey) as? Date ?? .distantPast
