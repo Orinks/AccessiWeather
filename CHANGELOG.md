@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
 - The iPhone app can stream the nearest NOAA Weather Radio stations from the Weather tab, with Lock Screen controls.
 - The iPhone app now supports Pirate Weather, forecast explanations, forecaster notes, weather history, UV and air quality details, aviation reports, an Event Center, and warning radio auto-tune.
 - The iPhone app now checks for alerts in the background and notifies you, merges NWS, Open-Meteo and Pirate Weather in Automatic mode, and adds marine mode, national products, AirNow, aviation advisories and a Weather Assistant.
+- You can now turn on Follow my current location in the iPhone app's Locations tab, so weather and alerts follow you when you travel.
+- On iPhone, Extreme and Severe alert notifications are now Time Sensitive, so they come through Focus and Sleep unless you turn that off for AccessiWeather.
 - You can now get alert notifications for all saved locations, not just the selected one, and each names its location. Turn it on in Settings, Alerts tab.
 
 ### Changed
@@ -17,6 +19,8 @@ All notable changes to this project will be documented in this file.
 - The OpenRouter model picker drops the retired Llama 3.3 70B option; choose the free router, the paid auto router, or browse models.
 
 ### Fixed
+- The iPhone app now asks to send notifications the first time you open it, and connects to push alerts as soon as you allow them.
+- The iPhone app no longer misses its first rain starting or stopping notification when the change was still more than 10 minutes away.
 - Sounds now follow your default output device when you switch between headphones and speakers, instead of staying on the old one.
 - AccessiWeather no longer opens a terminal window alongside the app on Windows.
 - Portable updates on Windows no longer open a command window while they install.

@@ -7,6 +7,7 @@ final class AccessibilityAuditTests: XCTestCase {
     func testTabsAreLabeledAndPassAudit() throws {
         continueAfterFailure = true
         let app = XCUIApplication()
+        app.launchArguments.append("-skipNotificationPrompt")
         app.launch()
 
         for tab in tabs {
@@ -24,6 +25,7 @@ final class AccessibilityAuditTests: XCTestCase {
 
     func testSettingsAndAddLocationControlsAreLabeled() {
         let app = XCUIApplication()
+        app.launchArguments.append("-skipNotificationPrompt")
         app.launch()
 
         app.tabBars.buttons["Settings"].tap()

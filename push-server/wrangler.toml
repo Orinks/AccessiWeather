@@ -1,0 +1,19 @@
+name = "accessiweather-push"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+
+# Checks NWS for registered locations every minute (Workers Free allows cron triggers).
+[triggers]
+crons = ["* * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "accessiweather-push"
+database_id = "834997bf-1fd0-43ab-9434-305bc23df03c"
+
+[vars]
+APNS_TEAM_ID = "GANLL6R3Q9"
+APNS_TOPIC = "net.orinks.AccessiWeather"
+NWS_USER_AGENT = "AccessiWeather push (orin8722@gmail.com)"
+
+# Secrets (wrangler secret put): APNS_KEY_P8, APNS_KEY_ID, KEY_ENCRYPTION_KEY (base64 32 bytes)

@@ -79,6 +79,9 @@ extension AppModel {
     /// posts notifications for new, updated and escalated alerts. Returns the selected location's
     /// notified alert IDs.
     func checkAlerts(selectedReport: WeatherReport?) async -> Set<String> {
+        await syncPush()
+        // The push server checks alerts for every source while this device is registered.
+        guard !PushRegistration.shared.isActive else { return [] }
         guard settings.alertNotificationsEnabled, await notificationsAuthorized() else { return [] }
         let service = weatherService
         let others = settings.alertsForAllLocations
@@ -110,8 +113,27 @@ extension AppModel {
         return Set(notices.filter { $0.locationID == selectedReport?.location.id }.map(\.alert.id))
     }
 
+    /// Keeps the push server's copy of this device's alert settings and locations current.
+    func syncPush() async {
+        let push = PushRegistration.shared
+        guard push.serverURL != nil else { return }
+        push.onTokenChange = { [weak self] in Task { await self?.syncPush() } }
+        push.requestToken()
+        let authorized = await notificationsAuthorized()
+        let locations = settings.alertsForAllLocations ? locationStore.locations : (selectedLocation.map { [$0] } ?? [])
+        await push.sync(
+            enabled: authorized && settings.alertNotificationsEnabled,
+            severities: ["extreme", "severe", "moderate", "minor"].filter { settings.wantsNotification(forSeverity: $0) },
+            notifyUnknown: settings.wantsNotification(forSeverity: "unknown"),
+            events: settings.eventNotificationSettings,
+            pirateWeatherKey: KeychainStore.read(.pirateWeather),
+            locations: locations
+        )
+    }
+
     /// Forecast product and precipitation event notifications for one location.
     func checkEvents(for location: SavedLocation, report: WeatherReport?) async {
+        guard !PushRegistration.shared.isActive else { return }
         let wanted = settings.eventNotificationSettings
         let wantsProducts = wanted.discussionUpdates || wanted.hazardousWeatherOutlook || wanted.specialWeatherStatements
         let wantsMinutely = wanted.precipitationStart || wanted.precipitationStop
@@ -189,6 +211,9 @@ extension AppModel {
         content.subtitle = notice.locationName
         content.body = alert.headline ?? alert.areaDescription ?? notice.locationName
         content.threadIdentifier = notice.locationID.uuidString
+        if ["extreme", "severe"].contains(alert.severity.lowercased()) {
+            content.interruptionLevel = .timeSensitive
+        }
         content.userInfo = [
             NotificationRouter.alertIDKey: alert.id,
             NotificationRouter.locationIDKey: notice.locationID.uuidString,

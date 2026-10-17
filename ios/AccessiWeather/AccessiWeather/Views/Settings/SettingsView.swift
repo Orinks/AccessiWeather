@@ -95,13 +95,17 @@ struct SettingsView: View {
         Section {
             Toggle("Notify me about new alerts", isOn: $settings.alertNotificationsEnabled)
                 .onChange(of: settings.alertNotificationsEnabled) { _, enabled in
-                    guard enabled else { return }
+                    guard enabled else {
+                        Task { await model.syncPush() }
+                        return
+                    }
                     Task {
                         let granted = await model.requestNotificationPermission()
                         if !granted {
                             settings.alertNotificationsEnabled = false
                             notificationPermissionDenied = true
                         }
+                        await model.syncPush()
                     }
                 }
             Group {
