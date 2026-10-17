@@ -43,6 +43,7 @@
 		8290F875716F14E6E4043A03 /* PrecipitationTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E953A01E8EC6314DEE39ED0 /* PrecipitationTimelineView.swift */; };
 		85340C214ECFBFE9F61E38E7 /* WeatherHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C29B15EFB79555145A20E01 /* WeatherHistory.swift */; };
 		932497DD366E8DC6547FC0E7 /* AlertNotificationGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6ADD2A900C3B84666D83875 /* AlertNotificationGate.swift */; };
+		93EBE9A63C41202F673B7900 /* LiveFusionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D51AB2E0134A861CE573B4F8 /* LiveFusionTests.swift */; };
 		94FC25E215E5B30347E89B60 /* EventLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1B9097EF5572BB376B4E1D /* EventLog.swift */; };
 		95FF86FB517991C2918A427D /* AlertsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2662C743328DA0610DD9057D /* AlertsView.swift */; };
 		97EC4A68C20BB8C073E7FCF0 /* WeatherExplainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA244718BA1D5557EDBFE30 /* WeatherExplainer.swift */; };
@@ -149,6 +150,7 @@
 		CD034C7A87C055DD9A85E638 /* NationalProductsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NationalProductsView.swift; sourceTree = "<group>"; };
 		CD0512FF0138155CD0D377A8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		D39AC64E51F119B2D5161506 /* GeocodingClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeocodingClient.swift; sourceTree = "<group>"; };
+		D51AB2E0134A861CE573B4F8 /* LiveFusionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveFusionTests.swift; sourceTree = "<group>"; };
 		D6ADD2A900C3B84666D83875 /* AlertNotificationGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertNotificationGate.swift; sourceTree = "<group>"; };
 		DCB6F23A9338D3BD57222E16 /* AirNowClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirNowClientTests.swift; sourceTree = "<group>"; };
 		E2CB86DAE205445A9FAE76DE /* WeatherAssistantTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherAssistantTests.swift; sourceTree = "<group>"; };
@@ -343,6 +345,7 @@
 				C8F37B285470715FC3AECF8F /* AviationAdvisoriesTests.swift */,
 				7E4FC8F7CF48A0E225242C5C /* DataFusionTests.swift */,
 				91B78119A095D819B10A7965 /* IEMClientTests.swift */,
+				D51AB2E0134A861CE573B4F8 /* LiveFusionTests.swift */,
 				C9D046FF5238253314F7DAF1 /* MarineForecastTests.swift */,
 				E2CB86DAE205445A9FAE76DE /* WeatherAssistantTests.swift */,
 			);
@@ -594,6 +597,7 @@
 				A4FA50D1311633887186C58F /* AviationAdvisoriesTests.swift in Sources */,
 				FF5C5DE5179E413CA7DE41ED /* DataFusionTests.swift in Sources */,
 				5A31069D342DC65F253A57FC /* IEMClientTests.swift in Sources */,
+				93EBE9A63C41202F673B7900 /* LiveFusionTests.swift in Sources */,
 				270F57AE3F960053181D4B9D /* MarineForecastTests.swift in Sources */,
 				9F42509F099C5C2F0BE83DB4 /* WeatherAssistantTests.swift in Sources */,
 			);
