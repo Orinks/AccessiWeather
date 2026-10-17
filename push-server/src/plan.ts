@@ -1,4 +1,7 @@
-import { alertKey, decide, severityPriority, wants, type Decision, type NwsAlert } from "./alerts";
+import { alertKey, decide, isTimeSensitive, severityPriority, wants, type Decision, type NwsAlert } from "./alerts";
+
+/** `baselined` value for a current location that just moved: its active Extreme and Severe alerts are pushed. */
+export const ARRIVAL_BASELINE = 2;
 
 export interface LocationRow {
   token: string;
@@ -54,6 +57,7 @@ export function planNotifications(
   for (const location of locations) {
     const zones = location.zones.split(",").filter(Boolean);
     const failed = zones.some((z) => failedZones.has(z));
+    const arriving = location.baselined === ARRIVAL_BASELINE;
     const matched = new Map<string, NwsAlert>();
     for (const zone of zones) for (const alert of alertsByZone.get(zone) ?? []) matched.set(alert.id, alert);
     const newestFirst = [...matched.values()].sort(
@@ -66,7 +70,7 @@ export function planNotifications(
       claimed.add(claim);
       const hash = hashes.get(alert.id) ?? "";
       const severity = severityPriority(alert.severity);
-      if (!location.baselined) {
+      if (!location.baselined || (arriving && !isTimeSensitive(alert.severity))) {
         if (!failed) plan.baselineRecords.push({ token: location.token, key, hash, severity });
         continue;
       }
@@ -74,7 +78,7 @@ export function planNotifications(
       const kind = decide(sent.get(claim), hash, severity);
       if (kind) plan.sends.push({ token: location.token, key, hash, severity, kind, alert, location });
     }
-    if (!location.baselined && !failed) {
+    if ((!location.baselined || arriving) && !failed) {
       plan.baselined.push({ token: location.token, location_id: location.location_id });
     }
   }

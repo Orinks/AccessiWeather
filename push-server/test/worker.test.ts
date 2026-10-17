@@ -78,6 +78,16 @@ describe("planNotifications", () => {
     expect(plan.baselined).toEqual([{ token, location_id: "L1" }]);
   });
 
+  it("pushes Extreme and Severe alerts already active where a current location arrived", () => {
+    const severe = alert();
+    const moderate = alert({ id: "urn:a2", severity: "Moderate" });
+    const zones = new Map([["NYZ072", [severe, moderate]]]);
+    const plan = planNotifications([location({ baselined: 2, severities: "extreme,severe,moderate" })], zones, new Map(), new Map([[severe.id, "h"], [moderate.id, "m"]]), new Set());
+    expect(plan.sends.map((s) => [s.kind, s.key])).toEqual([["new", "urn:a1"]]);
+    expect(plan.baselineRecords.map((r) => r.key)).toEqual(["urn:a2"]);
+    expect(plan.baselined).toEqual([{ token, location_id: "L1" }]);
+  });
+
   it("does not baseline when the location's zones failed to load", () => {
     const plan = planNotifications([location({ baselined: 0 })], new Map(), new Map(), new Map(), new Set(["NYC061"]));
     expect(plan.baselined).toHaveLength(0);

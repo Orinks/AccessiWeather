@@ -3,7 +3,7 @@ import { isDeadToken, isProviderTokenError, sendPush, signProviderToken, type Ap
 import { decryptText, encryptText } from "./crypto";
 import { discussionChange, hwoChange, minutelyChange, spsChange, spsEvent, type EventPush, type ProductState } from "./events";
 import { activeAlerts, pirateForecast, pointInfo, productList, productText } from "./nws";
-import { planNotifications, type LocationRow, type PlannedSend, type SentRow } from "./plan";
+import { ARRIVAL_BASELINE, planNotifications, type LocationRow, type PlannedSend, type SentRow } from "./plan";
 import { round4, validateRegistration } from "./register";
 
 export interface Env extends ApnsEnv {
@@ -105,7 +105,9 @@ async function register(request: Request, env: Env): Promise<Response> {
       rows.push({ ...prior, id: location.id, name: location.name });
     } else {
       const point = await pointInfo(env.NWS_USER_AGENT, latitude, longitude);
-      rows.push({ id: location.id, name: location.name, latitude, longitude, zones: point.zones.join(","), office: point.office, baselined: 0, pw_baselined: 0, minutely_signature: null });
+      // A current location that moved notifies Extreme and Severe alerts already active where it arrived.
+      const baseline = location.current ? ARRIVAL_BASELINE : 0;
+      rows.push({ id: location.id, name: location.name, latitude, longitude, zones: point.zones.join(","), office: point.office, baselined: baseline, pw_baselined: baseline, minutely_signature: null });
     }
   }
   const pwKey = registration.pirateWeatherKey ? await encryptText(env.KEY_ENCRYPTION_KEY, registration.pirateWeatherKey) : null;

@@ -43,6 +43,7 @@
 		7D2078965DC9080F4FCE47D9 /* AppModel+Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9FC59D5F97833923BB807CD /* AppModel+Notifications.swift */; };
 		8290F875716F14E6E4043A03 /* PrecipitationTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E953A01E8EC6314DEE39ED0 /* PrecipitationTimelineView.swift */; };
 		85340C214ECFBFE9F61E38E7 /* WeatherHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C29B15EFB79555145A20E01 /* WeatherHistory.swift */; };
+		8C910EC7BCEB50E87C6CED2F /* CurrentLocationTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80E772D9F0B104F9FF662BF8 /* CurrentLocationTracker.swift */; };
 		932497DD366E8DC6547FC0E7 /* AlertNotificationGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6ADD2A900C3B84666D83875 /* AlertNotificationGate.swift */; };
 		93EBE9A63C41202F673B7900 /* LiveFusionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D51AB2E0134A861CE573B4F8 /* LiveFusionTests.swift */; };
 		94FC25E215E5B30347E89B60 /* EventLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1B9097EF5572BB376B4E1D /* EventLog.swift */; };
@@ -124,6 +125,7 @@
 		7A9DD5159D1B8FD9742DBDF2 /* IEMClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IEMClient.swift; sourceTree = "<group>"; };
 		7C7787EE033C34CFDC064A76 /* NotificationEventChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationEventChecker.swift; sourceTree = "<group>"; };
 		7E4FC8F7CF48A0E225242C5C /* DataFusionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataFusionTests.swift; sourceTree = "<group>"; };
+		80E772D9F0B104F9FF662BF8 /* CurrentLocationTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrentLocationTracker.swift; sourceTree = "<group>"; };
 		84D6E19F5CE7034B8512AB26 /* AviationWeatherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AviationWeatherView.swift; sourceTree = "<group>"; };
 		88B995A72838023DA7FCE61B /* OpenMeteoClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMeteoClient.swift; sourceTree = "<group>"; };
 		8C29B15EFB79555145A20E01 /* WeatherHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherHistory.swift; sourceTree = "<group>"; };
@@ -183,6 +185,7 @@
 				1168368B7ED01825573BAF87 /* AccessiWeatherApp.swift */,
 				23758312FA0ECCA217CDD140 /* AppModel.swift */,
 				BC92A323527201EBFBECBE87 /* ContentView.swift */,
+				80E772D9F0B104F9FF662BF8 /* CurrentLocationTracker.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -552,6 +555,7 @@
 				7651C98132BCFAE37AD8CA29 /* AviationWeatherClient.swift in Sources */,
 				C35943C081EF6955833D7C58 /* AviationWeatherView.swift in Sources */,
 				23D38E31A8A37AC12AF07120 /* ContentView.swift in Sources */,
+				8C910EC7BCEB50E87C6CED2F /* CurrentLocationTracker.swift in Sources */,
 				0E84C862B28589FDC42449DE /* DataFusion.swift in Sources */,
 				D4212F100FD014AB9EAC4C17 /* EmptyStateView.swift in Sources */,
 				08C212BCE6F42412C0C8C5DD /* EventCenterView.swift in Sources */,
@@ -720,7 +724,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AccessiWeather/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = AccessiWeather;
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "AccessiWeather uses your location to find weather for where you are when you choose Use Current Location.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "AccessiWeather updates your current location while it's closed so weather alerts follow you when you travel. Only your latest approximate position is sent to the alert server, never a history.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "AccessiWeather uses your location to show weather and alerts for where you are when you use your current location.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -850,7 +855,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AccessiWeather/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = AccessiWeather;
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "AccessiWeather uses your location to find weather for where you are when you choose Use Current Location.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "AccessiWeather updates your current location while it's closed so weather alerts follow you when you travel. Only your latest approximate position is sent to the alert server, never a history.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "AccessiWeather uses your location to show weather and alerts for where you are when you use your current location.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";

@@ -6,7 +6,8 @@ export interface Registration {
   notifyUnknown: boolean;
   events: string[];
   pirateWeatherKey: string | null;
-  locations: { id: string; name: string; latitude: number; longitude: number }[];
+  /** `current` marks the location that follows the device. */
+  locations: { id: string; name: string; latitude: number; longitude: number; current: boolean }[];
 }
 
 export const MAX_LOCATIONS = 20;
@@ -27,7 +28,7 @@ export function validateRegistration(body: unknown): Registration | string {
       typeof l.latitude !== "number" || Math.abs(l.latitude) > 90 ||
       typeof l.longitude !== "number" || Math.abs(l.longitude) > 180
     ) return "invalid location";
-    locations.push({ id: l.id, name: l.name, latitude: l.latitude, longitude: l.longitude });
+    locations.push({ id: l.id, name: l.name, latitude: l.latitude, longitude: l.longitude, current: l.current === true });
   }
   const severities = Array.isArray(b.severities)
     ? b.severities.filter((s: unknown): s is string => typeof s === "string" && SEVERITIES.has(s.toLowerCase())).map((s: string) => s.toLowerCase())

@@ -3,7 +3,7 @@ import SwiftUI
 @main
 struct AccessiWeatherApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @StateObject private var model = AppModel()
+    @StateObject private var model = AppModel.shared
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
@@ -19,7 +19,9 @@ struct AccessiWeatherApp: App {
         }
         .onChange(of: scenePhase) { _, phase in
             switch phase {
-            case .active: model.startAutoRefresh()
+            case .active:
+                model.startAutoRefresh()
+                model.updateCurrentLocation()
             case .background: model.didEnterBackground()
             default: break
             }

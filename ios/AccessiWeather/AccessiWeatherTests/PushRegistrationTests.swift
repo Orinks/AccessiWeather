@@ -28,6 +28,24 @@ final class PushRegistrationTests: XCTestCase {
         XCTAssertNoThrow(try JSONSerialization.data(withJSONObject: body))
     }
 
+    func testBodyMarksTheCurrentLocation() throws {
+        var here = SavedLocation(name: "Here", latitude: 39.98, longitude: -74.78)
+        here.isCurrentLocation = true
+        let home = SavedLocation(name: "Home", latitude: 40, longitude: -74)
+        let body = PushRegistration.body(
+            token: "ab", enabled: true, severities: [], notifyUnknown: false,
+            events: events, pirateWeatherKey: "", locations: [here, home]
+        )
+        let locations = try XCTUnwrap(body["locations"] as? [[String: Any]])
+        XCTAssertEqual(locations.map { $0["current"] as? Bool }, [true, false])
+    }
+
+    func testSavedLocationsWithoutCurrentFlagStillDecode() throws {
+        let json = #"[{"id":"A79BD8FA-7017-4B10-AD50-FD3EBE1F7864","name":"Home","latitude":40,"longitude":-74}]"#
+        let decoded = try JSONDecoder().decode([SavedLocation].self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.first?.isCurrentLocation, false)
+    }
+
     func testBodyCapsLocations() throws {
         let many = (0..<25).map { SavedLocation(name: "L\($0)", latitude: 40, longitude: -74) }
         let body = PushRegistration.body(

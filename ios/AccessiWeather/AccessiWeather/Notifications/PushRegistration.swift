@@ -74,7 +74,13 @@ final class PushRegistration {
             ],
             "pirateWeatherKey": pirateWeatherKey.trimmingCharacters(in: .whitespacesAndNewlines),
             "locations": locations.prefix(maxLocations).map {
-                ["id": $0.id.uuidString, "name": $0.name, "latitude": $0.latitude, "longitude": $0.longitude] as [String: Any]
+                [
+                    "id": $0.id.uuidString,
+                    "name": $0.name,
+                    "latitude": $0.latitude,
+                    "longitude": $0.longitude,
+                    "current": $0.isCurrentLocation,
+                ] as [String: Any]
             },
         ]
     }
@@ -116,6 +122,15 @@ final class PushRegistration {
 }
 
 final class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        // iOS relaunches the app in the background after significant moves; the tracker must be running to get them.
+        AppModel.shared.startFollowingCurrentLocation()
+        return true
+    }
+
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         Task { @MainActor in PushRegistration.shared.didReceive(token: deviceToken) }
     }
