@@ -7,6 +7,8 @@ actor WeatherService {
 
     private let nws: NWSClient
     private let openMeteo: OpenMeteoClient
+    private let pirateWeather: PirateWeatherClient
+    private let aviationWeatherClient: AviationWeatherClient
 
     private struct CacheEntry {
         var report: WeatherReport
@@ -14,11 +16,19 @@ actor WeatherService {
     }
 
     private var reportCache: [String: CacheEntry] = [:]
-    private var discussionCache: [String: (text: String, storedAt: Date)] = [:]
+    private var productCache: [String: (product: NWSClient.ProductResponse?, storedAt: Date)] = [:]
+    private var aviationCache: [String: (weather: AviationWeather, storedAt: Date)] = [:]
 
-    init(nws: NWSClient = NWSClient(), openMeteo: OpenMeteoClient = OpenMeteoClient()) {
+    init(
+        nws: NWSClient = NWSClient(),
+        openMeteo: OpenMeteoClient = OpenMeteoClient(),
+        pirateWeather: PirateWeatherClient = PirateWeatherClient(),
+        aviationWeatherClient: AviationWeatherClient = AviationWeatherClient()
+    ) {
         self.nws = nws
         self.openMeteo = openMeteo
+        self.pirateWeather = pirateWeather
+        self.aviationWeatherClient = aviationWeatherClient
     }
 
     private func cacheKey(_ location: SavedLocation, source: WeatherSource) -> String {
@@ -31,7 +41,12 @@ actor WeatherService {
         }
     }
 
-    func report(for location: SavedLocation, source: WeatherSource, forceRefresh: Bool = false) async throws -> WeatherReport {
+    func report(
+        for location: SavedLocation,
+        source: WeatherSource,
+        forceRefresh: Bool = false,
+        pirateWeatherKey: String = ""
+    ) async throws -> WeatherReport {
         let key = cacheKey(location, source: source)
         if !forceRefresh, let entry = reportCache[key], Date().timeIntervalSince(entry.storedAt) < WeatherService.cacheLifetime {
             return entry.report
@@ -49,13 +64,23 @@ actor WeatherService {
         case .openMeteo:
             resolved = .openMeteo
         case .pirateWeather:
-            throw WeatherError.unsupported("Pirate Weather is not available in this version of the iOS app yet. Choose Automatic, National Weather Service, or Open-Meteo in Settings.")
+            guard !pirateWeatherKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw WeatherError.unsupported("Add a Pirate Weather API key in Settings to use Pirate Weather.")
+            }
+            resolved = .pirateWeather
         }
 
         var report: WeatherReport
         switch resolved {
         case .nws:
             report = try await fetchNWS(location: location)
+        case .pirateWeather:
+            let response = try await pirateWeather.forecast(
+                latitude: location.latitude,
+                longitude: location.longitude,
+                key: pirateWeatherKey
+            )
+            report = PirateWeatherClient.report(from: response, location: location)
         default:
             report = try await fetchOpenMeteo(location: location)
         }
@@ -68,20 +93,129 @@ actor WeatherService {
         }
         if let aq = try? await openMeteo.airQuality(latitude: location.latitude, longitude: location.longitude),
            let current = aq.current, let aqi = current.us_aqi {
-            report.current.airQuality = AirQuality(aqi: aqi, dominantPollutant: OpenMeteoClient.dominantPollutant(current))
+            let timeZone = aq.timezone.flatMap(TimeZone.init(identifier:)) ?? report.timeZone
+            let now = Date()
+            var hourly: [AirQualityHour] = []
+            if let responseHourly = aq.hourly {
+                for index in responseHourly.time.indices {
+                    guard let time = OpenMeteoClient.date(from: responseHourly.time[index], in: timeZone),
+                          time.addingTimeInterval(3600) > now,
+                          let hourlyAQI = responseHourly.us_aqi?[safe: index] ?? nil else {
+                        continue
+                    }
+                    hourly.append(AirQualityHour(time: time, aqi: hourlyAQI))
+                }
+            }
+            report.current.airQuality = AirQuality(
+                aqi: aqi,
+                dominantPollutant: OpenMeteoClient.dominantPollutant(current),
+                pollutantLevels: AirQualityPollutantLevels(
+                    pm25: current.pm2_5,
+                    pm10: current.pm10,
+                    ozone: current.ozone
+                ),
+                hourly: Array(hourly.prefix(12))
+            )
         }
 
         reportCache[key] = CacheEntry(report: report, storedAt: Date())
         return report
     }
 
-    func forecastDiscussion(officeID: String) async throws -> String {
-        if let cached = discussionCache[officeID], Date().timeIntervalSince(cached.storedAt) < WeatherService.cacheLifetime {
-            return cached.text
+    func latestProduct(type: String, officeID: String) async throws -> NWSClient.ProductResponse? {
+        let key = "\(type.uppercased())|\(officeID.uppercased())"
+        if let cached = productCache[key], Date().timeIntervalSince(cached.storedAt) < WeatherService.cacheLifetime {
+            return cached.product
         }
-        let product = try await nws.areaForecastDiscussion(officeID: officeID)
-        discussionCache[officeID] = (product.productText, Date())
-        return product.productText
+        let product = try await nws.latestProduct(type: type, officeID: officeID)
+        productCache[key] = (product, Date())
+        return product
+    }
+
+    func aviationWeather(icao: String) async throws -> AviationWeather {
+        let code = ICAOCodeValidation.normalized(icao)
+        if let cached = aviationCache[code],
+           Date().timeIntervalSince(cached.storedAt) < WeatherService.cacheLifetime {
+            return cached.weather
+        }
+        async let metarResult = captureAviationProduct {
+            try await aviationWeatherClient.metars(icao: code)
+        }
+        async let tafResult = captureAviationProduct {
+            try await aviationWeatherClient.tafs(icao: code)
+        }
+        let (metars, metarError) = await metarResult
+        let (tafs, tafError) = await tafResult
+        if let metarError, let tafError {
+            throw WeatherError.unsupported("METAR and TAF requests failed. \(metarError) \(tafError)")
+        }
+        let weather = AviationWeather(
+            metars: metars ?? [],
+            tafs: tafs ?? [],
+            metarError: metarError,
+            tafError: tafError
+        )
+        if metarError == nil, tafError == nil {
+            aviationCache[code] = (weather, Date())
+        }
+        return weather
+    }
+
+    func history(for report: WeatherReport, temperatureUnit: TemperatureUnit) async throws -> WeatherHistory {
+        let response = try await openMeteo.history(
+            latitude: report.location.latitude,
+            longitude: report.location.longitude
+        )
+        guard let daily = response.daily else {
+            throw WeatherError.noData("weather history")
+        }
+        let timeZone = TimeZone(identifier: response.timezone) ?? report.timeZone
+        let todayFormatter = DateFormatter()
+        todayFormatter.locale = Locale(identifier: "en_US_POSIX")
+        todayFormatter.timeZone = timeZone
+        todayFormatter.dateFormat = "yyyy-MM-dd"
+        let today = todayFormatter.string(from: Date())
+        let days = daily.time.indices.compactMap { index -> WeatherHistoryDay? in
+            let dateString = daily.time[index]
+            guard dateString < today,
+                  let date = OpenMeteoClient.date(from: dateString, in: timeZone) else {
+                return nil
+            }
+            return WeatherHistoryDay(
+                date: date,
+                highC: daily.temperature_2m_max[safe: index] ?? nil,
+                lowC: daily.temperature_2m_min[safe: index] ?? nil,
+                meanC: daily.temperature_2m_mean?[safe: index] ?? nil,
+                condition: OpenMeteoClient.condition(forCode: daily.weather_code[safe: index] ?? nil)
+            )
+        }
+        let calendar = Calendar(identifier: .gregorian)
+        var localCalendar = calendar
+        localCalendar.timeZone = timeZone
+        let now = Date()
+        func day(from date: Date, daysAgo: Int) -> WeatherHistoryDay? {
+            guard let target = localCalendar.date(byAdding: .day, value: -daysAgo, to: localCalendar.startOfDay(for: date)) else {
+                return nil
+            }
+            return days.first { localCalendar.isDate($0.date, inSameDayAs: target) }
+        }
+        return WeatherHistory(
+            days: days.sorted { $0.date > $1.date },
+            yesterdayComparison: WeatherHistory.comparison(
+                currentTemperatureC: report.current.temperatureC,
+                currentCondition: report.current.description,
+                historicalDay: day(from: now, daysAgo: 1),
+                daysAgo: 1,
+                unit: temperatureUnit
+            ),
+            lastWeekComparison: WeatherHistory.comparison(
+                currentTemperatureC: report.current.temperatureC,
+                currentCondition: report.current.description,
+                historicalDay: day(from: now, daysAgo: 7),
+                daysAgo: 7,
+                unit: temperatureUnit
+            )
+        )
     }
 
     // MARK: - NWS
@@ -96,13 +230,13 @@ actor WeatherService {
         async let dailyTask = nws.forecast(url: forecastURL)
         async let hourlyTask = nws.forecast(url: hourlyURL)
         async let alertsTask = nws.activeAlerts(latitude: location.latitude, longitude: location.longitude)
-        async let observationTask: NWSClient.ObservationProperties? = {
+        async let observationTask: (stationID: String, observation: NWSClient.ObservationProperties)? = {
             guard let stationsURL = point.observationStations else { return nil }
             let stations = try await nws.stations(url: stationsURL)
             for station in stations.prefix(3) {
                 if let observation = try? await nws.latestObservation(stationID: station.stationIdentifier),
                    observation.temperature?.value != nil || observation.textDescription != nil {
-                    return observation
+                    return (station.stationIdentifier, observation)
                 }
             }
             return nil
@@ -110,8 +244,10 @@ actor WeatherService {
 
         let dailyPeriods = try await dailyTask
         let hourlyPeriods = try await hourlyTask
-        let alerts = (try? await alertsTask) ?? []
-        let observation = try? await observationTask
+        let alertsResult = try? await alertsTask
+        let alerts = alertsResult ?? []
+        let observationResult = try? await observationTask
+        let observation = observationResult?.observation
 
         let now = Date()
         let hourly: [HourlyPeriod] = hourlyPeriods
@@ -162,22 +298,7 @@ actor WeatherService {
             current.temperatureC = current.temperatureC ?? first.temperatureC
         }
 
-        let mappedAlerts = alerts.map { alert in
-            WeatherAlert(
-                id: alert.id,
-                event: alert.event,
-                severity: alert.severity ?? "Unknown",
-                urgency: alert.urgency,
-                certainty: alert.certainty,
-                headline: alert.headline,
-                description: alert.description,
-                instruction: alert.instruction,
-                areaDescription: alert.areaDesc,
-                sender: alert.senderName,
-                effective: alert.effective,
-                expires: alert.expires
-            )
-        }
+        let mappedAlerts = alerts.map(NWSClient.weatherAlert(from:))
 
         return WeatherReport(
             location: location,
@@ -188,7 +309,9 @@ actor WeatherService {
             sourceDescription: "National Weather Service",
             timeZone: timeZone,
             fetchedAt: Date(),
-            forecastOfficeID: point.cwa ?? point.gridId
+            forecastOfficeID: point.cwa ?? point.gridId,
+            observationStationID: observationResult?.stationID,
+            alertsAreCurrent: alertsResult != nil
         )
     }
 
@@ -221,7 +344,8 @@ actor WeatherService {
                     condition: OpenMeteoClient.condition(forCode: h.weather_code[safe: index] ?? nil),
                     windSpeedKph: h.wind_speed_10m?[safe: index] ?? nil,
                     windDirectionDegrees: h.wind_direction_10m?[safe: index] ?? nil,
-                    precipitationChance: h.precipitation_probability?[safe: index] ?? nil
+                    precipitationChance: h.precipitation_probability?[safe: index] ?? nil,
+                    uvIndex: h.uv_index?[safe: index] ?? nil
                 ))
             }
         }
@@ -262,7 +386,8 @@ actor WeatherService {
             sourceDescription: "Open-Meteo",
             timeZone: timeZone,
             fetchedAt: Date(),
-            forecastOfficeID: nil
+            forecastOfficeID: nil,
+            alertsAreCurrent: false
         )
         WeatherService.applyOpenMeteoExtras(response, to: &report)
         return report
@@ -285,11 +410,30 @@ actor WeatherService {
                     report.current.visibilityKm = meters / 1000
                 }
             }
+            for index in report.hourly.indices {
+                guard let sourceIndex = h.time.indices.first(where: { sourceIndex in
+                    guard let date = OpenMeteoClient.date(from: h.time[sourceIndex], in: timeZone) else { return false }
+                    return abs(date.timeIntervalSince(report.hourly[index].time)) < 1800
+                }) else {
+                    continue
+                }
+                report.hourly[index].uvIndex = h.uv_index?[safe: sourceIndex] ?? nil
+            }
         }
         if let d = response.daily, let sunrise = d.sunrise?.first, let sunset = d.sunset?.first {
             report.current.sunrise = OpenMeteoClient.date(from: sunrise, in: timeZone)
             report.current.sunset = OpenMeteoClient.date(from: sunset, in: timeZone)
         }
+    }
+}
+
+private func captureAviationProduct<Value>(
+    _ operation: () async throws -> Value
+) async -> (value: Value?, error: String?) {
+    do {
+        return (try await operation(), nil)
+    } catch {
+        return (nil, error.localizedDescription)
     }
 }
 

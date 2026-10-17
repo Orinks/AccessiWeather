@@ -48,12 +48,18 @@ final class SettingsStore: ObservableObject {
         notifySevere = defaults.object(forKey: "notifySevere") as? Bool ?? true
         notifyModerate = defaults.object(forKey: "notifyModerate") as? Bool ?? true
         notifyMinor = defaults.bool(forKey: "notifyMinor")
+        radioAutoTuneEnabled = defaults.bool(forKey: "radioAutoTuneEnabled")
+        radioAutoTuneDurationMinutes = Self.boundedRadioAutoTuneDuration(
+            defaults.object(forKey: "radioAutoTuneDurationMinutes") as? Int ?? 5
+        )
         weatherSource = WeatherSource(rawValue: defaults.string(forKey: "weatherSource") ?? "") ?? .automatic
         selectedLocationID = defaults.string(forKey: "selectedLocationID").flatMap(UUID.init(uuidString:))
         soundEnabled = defaults.object(forKey: "soundEnabled") as? Bool ?? true
         soundPackID = defaults.string(forKey: "soundPackID") ?? "default"
         mutedSoundEvents = Set(defaults.stringArray(forKey: "mutedSoundEvents") ?? Array(SoundEvent.defaultMuted))
         lastRadioStationCallSign = defaults.string(forKey: "lastRadioStationCallSign")
+        aiModel = defaults.string(forKey: "aiModel") ?? "openrouter/free"
+        aiExplanationStyle = ExplanationStyle(rawValue: defaults.string(forKey: "aiExplanationStyle") ?? "") ?? .standard
     }
 
     @Published var temperatureUnit: TemperatureUnit { didSet { defaults.set(temperatureUnit.rawValue, forKey: "temperatureUnit") } }
@@ -72,12 +78,29 @@ final class SettingsStore: ObservableObject {
     @Published var notifySevere: Bool { didSet { defaults.set(notifySevere, forKey: "notifySevere") } }
     @Published var notifyModerate: Bool { didSet { defaults.set(notifyModerate, forKey: "notifyModerate") } }
     @Published var notifyMinor: Bool { didSet { defaults.set(notifyMinor, forKey: "notifyMinor") } }
+    @Published var radioAutoTuneEnabled: Bool { didSet { defaults.set(radioAutoTuneEnabled, forKey: "radioAutoTuneEnabled") } }
+    @Published var radioAutoTuneDurationMinutes: Int {
+        didSet {
+            let duration = Self.boundedRadioAutoTuneDuration(radioAutoTuneDurationMinutes)
+            if duration != radioAutoTuneDurationMinutes {
+                radioAutoTuneDurationMinutes = duration
+            } else {
+                defaults.set(duration, forKey: "radioAutoTuneDurationMinutes")
+            }
+        }
+    }
     @Published var weatherSource: WeatherSource { didSet { defaults.set(weatherSource.rawValue, forKey: "weatherSource") } }
     @Published var selectedLocationID: UUID? { didSet { defaults.set(selectedLocationID?.uuidString, forKey: "selectedLocationID") } }
     @Published var soundEnabled: Bool { didSet { defaults.set(soundEnabled, forKey: "soundEnabled") } }
     @Published var soundPackID: String { didSet { defaults.set(soundPackID, forKey: "soundPackID") } }
     @Published var mutedSoundEvents: Set<String> { didSet { defaults.set(Array(mutedSoundEvents).sorted(), forKey: "mutedSoundEvents") } }
     @Published var lastRadioStationCallSign: String? { didSet { defaults.set(lastRadioStationCallSign, forKey: "lastRadioStationCallSign") } }
+    @Published var aiModel: String { didSet { defaults.set(aiModel, forKey: "aiModel") } }
+    @Published var aiExplanationStyle: ExplanationStyle { didSet { defaults.set(aiExplanationStyle.rawValue, forKey: "aiExplanationStyle") } }
+
+    private static func boundedRadioAutoTuneDuration(_ duration: Int) -> Int {
+        min(60, max(1, duration))
+    }
 
     func isMuted(_ event: SoundEvent) -> Bool {
         mutedSoundEvents.contains(event.rawValue)

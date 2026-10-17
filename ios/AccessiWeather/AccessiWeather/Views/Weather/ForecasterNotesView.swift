@@ -1,51 +1,332 @@
 import SwiftUI
 
-/// Shows the NWS Area Forecast Discussion for the current forecast office.
-struct ForecasterNotesView: View {
-    @EnvironmentObject private var model: AppModel
-    let officeID: String
+enum ForecasterProduct: String, CaseIterable, Identifiable {
+    case afd = "AFD"
+    case hwo = "HWO"
+    case sps = "SPS"
 
-    @State private var text: String?
-    @State private var errorMessage: String?
+    var id: String { rawValue }
 
-    var body: some View {
-        ScrollView {
-            if let text {
-                Text(text)
-                    .font(.body.monospaced())
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
-                    .textSelection(.enabled)
-            } else if let errorMessage {
-                ContentUnavailableView("Discussion Unavailable", systemImage: "exclamationmark.triangle", description: Text(errorMessage))
-            } else {
-                ProgressView("Loading forecast discussion…")
-                    .padding()
-            }
-        }
-        .navigationTitle("Forecaster Notes")
-        .navigationBarTitleDisplayMode(.inline)
-        .task {
-            do {
-                text = try await model.weatherService.forecastDiscussion(officeID: officeID)
-                model.sounds.play(.discussionUpdate)
-            } catch {
-                model.sounds.play(.fetchError)
-                errorMessage = error.localizedDescription
-            }
+    var fullName: String {
+        switch self {
+        case .afd: return "Area Forecast Discussion"
+        case .hwo: return "Hazardous Weather Outlook"
+        case .sps: return "Special Weather Statement"
         }
     }
 }
 
-/// Placeholder until the AI explanation feature is ported.
-struct ExplainConditionsView: View {
-    var body: some View {
-        ContentUnavailableView(
-            "Explain Conditions",
-            systemImage: "sparkles",
-            description: Text("Plain-language weather explanations require an OpenRouter API key and are not available in this version of the iOS app yet.")
+private struct ForecasterProductIdentity: Equatable {
+    let productType: String
+    let officeID: String
+    let issuanceTime: Date?
+
+    init(productType: String, officeID: String, issuanceTime: Date?) {
+        self.productType = productType.uppercased()
+        self.officeID = officeID.uppercased()
+        self.issuanceTime = issuanceTime
+    }
+}
+
+private struct WeatherReportIdentity: Equatable {
+    let locationID: UUID
+    let fetchedAt: Date
+}
+
+struct ForecasterNotesView: View {
+    @EnvironmentObject private var model: AppModel
+    @EnvironmentObject private var settings: SettingsStore
+    let officeID: String
+
+    @State private var selectedProduct: ForecasterProduct = .afd
+    @State private var productResponse: NWSClient.ProductResponse?
+    @State private var noProduct = false
+    @State private var errorMessage: String?
+    @State private var productSummary: String?
+    @State private var summaryError: String?
+    @State private var isLoading = false
+    @State private var isSummarizing = false
+    @State private var summaryCache: [String: String] = [:]
+
+    private var hasOpenRouterKey: Bool {
+        !KeychainStore.read(.openRouter).isEmpty
+    }
+
+    private var currentExplanationIdentity: ForecasterProductIdentity? {
+        guard let productResponse else { return nil }
+        return ForecasterProductIdentity(
+            productType: selectedProduct.rawValue,
+            officeID: officeID,
+            issuanceTime: productResponse.issuanceTime
         )
+    }
+
+    var body: some View {
+        List {
+            Section {
+                Picker("Product", selection: $selectedProduct) {
+                    ForEach(ForecasterProduct.allCases) { product in
+                        Text(product.rawValue)
+                            .accessibilityLabel(product.fullName)
+                            .tag(product)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .tint(.primary)
+                .accessibilityLabel("Product")
+            } header: {
+                SectionHeader("Forecaster Product")
+            }
+
+            if isLoading {
+                ProgressView("Loading \(selectedProduct.fullName)…")
+                    .accessibilityElement(children: .combine)
+            } else if let errorMessage {
+                ContentUnavailableView(
+                    "Product Unavailable",
+                    systemImage: "exclamationmark.triangle",
+                    description: Text(errorMessage)
+                )
+            } else if noProduct {
+                Text("No \(selectedProduct.fullName) is currently available from the \(officeID) office.")
+                    .accessibilityElement(children: .combine)
+            } else if let productResponse {
+                if let productSummary {
+                    Section {
+                        Text(productSummary)
+                            .textSelection(.enabled)
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel(productSummary)
+                    } header: {
+                        SectionHeader("Plain Language Summary")
+                    }
+                }
+                if hasOpenRouterKey {
+                    Section {
+                        if isSummarizing {
+                            ProgressView("Preparing summary…")
+                                .accessibilityElement(children: .combine)
+                        } else if let summaryError {
+                            Text(summaryError)
+                                .foregroundStyle(.secondary)
+                            Button("Try Again") { Task { await explain(product: productResponse) } }
+                                .accessibilityHint("Requests a new plain-language product summary")
+                        } else if productSummary == nil {
+                            Button("Explain This Product") { Task { await explain(product: productResponse) } }
+                                .accessibilityHint("Summarizes this National Weather Service product")
+                        }
+                    }
+                }
+                Section {
+                    Text(productResponse.productText)
+                        .font(.body.monospaced())
+                        .textSelection(.enabled)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(productResponse.productText)
+                } header: {
+                    SectionHeader(selectedProduct.fullName)
+                }
+            }
+        }
+        .navigationTitle("Forecaster Notes")
+        .navigationBarTitleDisplayMode(.inline)
+        .onChange(of: currentExplanationIdentity) { _, _ in
+            productSummary = nil
+            summaryError = nil
+            isSummarizing = false
+        }
+        .task(id: selectedProduct) {
+            isLoading = true
+            productResponse = nil
+            noProduct = false
+            errorMessage = nil
+            productSummary = nil
+            summaryError = nil
+            do {
+                productResponse = try await model.weatherService.latestProduct(
+                    type: selectedProduct.rawValue,
+                    officeID: officeID
+                )
+                noProduct = productResponse == nil
+                if selectedProduct == .afd, productResponse != nil {
+                    model.sounds.play(.discussionUpdate)
+                    if let issuanceTime = productResponse?.issuanceTime {
+                        model.recordDiscussionIssuance(
+                            issuanceTime,
+                            officeID: officeID,
+                            locationName: model.report?.location.name ?? officeID
+                        )
+                    }
+                }
+            } catch {
+                model.sounds.play(.fetchError)
+                errorMessage = error.localizedDescription
+            }
+            isLoading = false
+        }
+    }
+
+    @MainActor
+    private func explain(product: NWSClient.ProductResponse) async {
+        let identity = ForecasterProductIdentity(
+            productType: selectedProduct.rawValue,
+            officeID: officeID,
+            issuanceTime: product.issuanceTime
+        )
+        guard currentExplanationIdentity == identity else { return }
+        let key = KeychainStore.read(.openRouter)
+        guard !key.isEmpty else {
+            summaryError = "Add an OpenRouter API key in Settings > AI to explain this product."
+            return
+        }
+        let modelName = settings.aiModel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            ? "openrouter/free"
+            : settings.aiModel
+        let cacheKey = "\(identity.productType)|\(identity.officeID)|\(identity.issuanceTime?.timeIntervalSince1970 ?? 0)|\(product.id)|\(settings.aiExplanationStyle.rawValue)|\(modelName)|\(product.productText)"
+        if let cached = summaryCache[cacheKey] {
+            productSummary = cached
+            summaryError = nil
+            return
+        }
+        isSummarizing = true
+        summaryError = nil
+        defer {
+            if currentExplanationIdentity == identity {
+                isSummarizing = false
+            }
+        }
+        do {
+            let response = try await OpenRouterClient().complete(
+                system: "\(WeatherExplainer.defaultSystemPrompt)\n\n\(settings.aiExplanationStyle.systemInstruction)",
+                user: WeatherExplainer.textProductPrompt(
+                    text: product.productText,
+                    productType: selectedProduct.rawValue,
+                    locationName: model.report?.location.name ?? "this location",
+                    style: settings.aiExplanationStyle
+                ),
+                model: modelName,
+                key: key
+            )
+            guard currentExplanationIdentity == identity else { return }
+            let plainText = WeatherExplainer.stripMarkdown(response)
+            productSummary = plainText
+            summaryCache[cacheKey] = plainText
+            AccessibilityNotification.Announcement("Explanation ready").post()
+        } catch {
+            guard currentExplanationIdentity == identity else { return }
+            summaryError = error.localizedDescription
+        }
+    }
+}
+
+struct ExplainConditionsView: View {
+    @EnvironmentObject private var model: AppModel
+    @EnvironmentObject private var settings: SettingsStore
+    @State private var explanation: String?
+    @State private var errorMessage: String?
+    @State private var isLoading = false
+
+    private var reportIdentity: WeatherReportIdentity? {
+        guard let report = model.report else { return nil }
+        return WeatherReportIdentity(locationID: report.location.id, fetchedAt: report.fetchedAt)
+    }
+
+    var body: some View {
+        List {
+            Section {
+                if isLoading {
+                    ProgressView("Preparing your explanation…")
+                        .accessibilityElement(children: .combine)
+                } else if let explanation {
+                    Text(explanation)
+                        .textSelection(.enabled)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(explanation)
+                } else if let errorMessage {
+                    Text(errorMessage)
+                        .foregroundStyle(.secondary)
+                    Button("Try Again") { Task { await explain() } }
+                        .accessibilityHint("Requests a new weather explanation")
+                } else {
+                    Button("Explain") { Task { await explain() } }
+                        .accessibilityHint("Requests a plain-language explanation of the current weather")
+                }
+            } header: {
+                SectionHeader("Weather Explanation")
+            }
+        }
         .navigationTitle("Explain Conditions")
         .navigationBarTitleDisplayMode(.inline)
+        .onChange(of: reportIdentity) { _, _ in
+            explanation = nil
+            errorMessage = nil
+            isLoading = false
+        }
+    }
+
+    @MainActor
+    private func explain() async {
+        guard let report = model.report else {
+            errorMessage = "Weather data is not available yet. Refresh and try again."
+            return
+        }
+        let identity = WeatherReportIdentity(locationID: report.location.id, fetchedAt: report.fetchedAt)
+        let key = KeychainStore.read(.openRouter)
+        guard !key.isEmpty else {
+            errorMessage = "Add an OpenRouter API key in Settings > AI to explain weather."
+            return
+        }
+        let modelName = settings.aiModel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            ? "openrouter/free"
+            : settings.aiModel
+        if let cached = WeatherExplanationCache.shared.value(
+            locationID: report.location.id,
+            fetchedAt: report.fetchedAt,
+            style: settings.aiExplanationStyle,
+            model: modelName,
+            temperatureUnit: settings.temperatureUnit,
+            windSpeedUnit: settings.windSpeedUnit
+        ) {
+            explanation = cached
+            errorMessage = nil
+            return
+        }
+        isLoading = true
+        errorMessage = nil
+        defer {
+            if reportIdentity == identity {
+                isLoading = false
+            }
+        }
+        do {
+            let formatter = WeatherFormatter(settings: settings, timeZone: report.timeZone)
+            let messages = WeatherExplainer.messages(
+                report: report,
+                style: settings.aiExplanationStyle,
+                formatter: formatter
+            )
+            let response = try await OpenRouterClient().complete(
+                system: messages[0].content,
+                user: messages[1].content,
+                model: modelName,
+                key: key
+            )
+            guard reportIdentity == identity else { return }
+            let plainText = WeatherExplainer.stripMarkdown(response)
+            explanation = plainText
+            WeatherExplanationCache.shared.store(
+                plainText,
+                locationID: report.location.id,
+                fetchedAt: report.fetchedAt,
+                style: settings.aiExplanationStyle,
+                model: modelName,
+                temperatureUnit: settings.temperatureUnit,
+                windSpeedUnit: settings.windSpeedUnit
+            )
+            AccessibilityNotification.Announcement("Explanation ready").post()
+        } catch {
+            guard reportIdentity == identity else { return }
+            errorMessage = error.localizedDescription
+        }
     }
 }

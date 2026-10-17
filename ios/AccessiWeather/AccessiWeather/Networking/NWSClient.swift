@@ -102,6 +102,16 @@ struct NWSClient {
         var headline: String?
         var description: String?
         var instruction: String?
+        var geocode: AlertSAMECodes?
+        var eventCode: AlertSAMECodes?
+    }
+
+    struct AlertSAMECodes: Decodable {
+        var same: [String]?
+
+        enum CodingKeys: String, CodingKey {
+            case same = "SAME"
+        }
     }
 
     struct AlertFeature: Decodable {
@@ -164,13 +174,49 @@ struct NWSClient {
         return try await http.json(AlertsResponse.self, from: components.url!, accept: NWSClient.geoJSON, serviceName: "NWS alerts", decoder: .iso8601Flexible).features.map(\.properties)
     }
 
-    /// Latest Area Forecast Discussion for a forecast office (for example "PHI").
-    func areaForecastDiscussion(officeID: String) async throws -> ProductResponse {
-        let listURL = NWSClient.baseURL.appendingPathComponent("products/types/AFD/locations/\(officeID)")
-        let list = try await http.json(ProductListResponse.self, from: listURL, accept: NWSClient.ldJSON, serviceName: "NWS products", decoder: .iso8601Flexible)
-        guard let latest = list.graph.first else {
-            throw WeatherError.noData("forecast discussion")
+    static func weatherAlert(from alert: AlertProperties) -> WeatherAlert {
+        WeatherAlert(
+            id: alert.id,
+            event: alert.event,
+            severity: alert.severity ?? "Unknown",
+            urgency: alert.urgency,
+            certainty: alert.certainty,
+            headline: alert.headline,
+            description: alert.description,
+            instruction: alert.instruction,
+            areaDescription: alert.areaDesc,
+            sender: alert.senderName,
+            effective: alert.effective,
+            expires: alert.expires,
+            sameCountyCodes: normalizedSAMECountyCodes(alert.geocode?.same ?? []),
+            sameEventCodes: normalizedSAMEEventCodes(alert.eventCode?.same ?? [])
+        )
+    }
+
+    static func normalizedSAMECountyCodes(_ values: [String]) -> [String] {
+        var seen: Set<String> = []
+        return values.compactMap { value in
+            guard let code = WeatherIndexClient.normalizeSameCode(value),
+                  seen.insert(code).inserted else {
+                return nil
+            }
+            return code
         }
+    }
+
+    static func normalizedSAMEEventCodes(_ values: [String]) -> [String] {
+        var seen: Set<String> = []
+        return values.compactMap { value in
+            let code = value.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+            guard !code.isEmpty, code != "NWS", seen.insert(code).inserted else { return nil }
+            return code
+        }
+    }
+
+    func latestProduct(type: String, officeID: String) async throws -> ProductResponse? {
+        let listURL = NWSClient.baseURL.appendingPathComponent("products/types/\(type)/locations/\(officeID)")
+        let list = try await http.json(ProductListResponse.self, from: listURL, accept: NWSClient.ldJSON, serviceName: "NWS products", decoder: .iso8601Flexible)
+        guard let latest = list.graph.first else { return nil }
         let productURL = NWSClient.baseURL.appendingPathComponent("products/\(latest.id)")
         return try await http.json(ProductResponse.self, from: productURL, accept: NWSClient.ldJSON, serviceName: "NWS product", decoder: .iso8601Flexible)
     }

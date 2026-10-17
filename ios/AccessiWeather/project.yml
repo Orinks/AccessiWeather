@@ -29,6 +29,7 @@ targets:
       path: AccessiWeather/Info.plist
       properties:
         UIBackgroundModes: [audio]
+        ITSAppUsesNonExemptEncryption: false
         # Volunteer NOAA relays often lack forward-secrecy ciphers; relax ATS for AVFoundation media only.
         NSAppTransportSecurity:
           NSAllowsArbitraryLoadsForMedia: true

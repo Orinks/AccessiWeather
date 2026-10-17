@@ -1,4 +1,5 @@
 import Foundation
+import CoreFoundation
 
 /// One station record from the WeatherIndex directory (`GET /v1/stations/all`).
 struct WeatherIndexDirectoryStation: Decodable {
@@ -79,9 +80,12 @@ struct WeatherIndexDirectoryStation: Decodable {
 /// which NOAA Weather Radio transmitters currently have a live stream.
 struct WeatherIndexClient {
     static let directoryURL = URL(string: "https://api.wxindex.org/v1/stations/all")!
+    static let stationMetadataURL = URL(string: "https://api.wxindex.org/v1/stations")!
+    static let stationMetadataCacheLifetime: TimeInterval = 30 * 60
 
     private let http: HTTPClient
     private let url: URL
+    private let stationMetadataCache = WeatherIndexStationMetadataCache()
 
     init(http: HTTPClient = .shared, url: URL = WeatherIndexClient.directoryURL) {
         self.http = http
@@ -94,6 +98,31 @@ struct WeatherIndexClient {
         let stations = try Self.parse(data)
         guard !stations.isEmpty else { throw WeatherError.invalidResponse("WeatherIndex") }
         return (data, stations)
+    }
+
+    func stationMetadata(callSign: String) async -> WeatherIndexStationMetadata? {
+        let normalizedCallSign = callSign.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        guard !normalizedCallSign.isEmpty else { return nil }
+        let cached = await stationMetadataCache.value(
+            for: normalizedCallSign,
+            now: Date(),
+            lifetime: Self.stationMetadataCacheLifetime
+        )
+        if cached.found { return cached.metadata }
+
+        let stationURL = Self.stationMetadataURL.appendingPathComponent(normalizedCallSign)
+        do {
+            let data = try await http.data(
+                from: stationURL,
+                accept: "application/json",
+                serviceName: "WeatherIndex"
+            )
+            let metadata = Self.parseStationMetadata(data, requestedCallSign: normalizedCallSign)
+            await stationMetadataCache.store(metadata, for: normalizedCallSign, at: Date())
+            return metadata
+        } catch {
+            return nil
+        }
     }
 
     static func parse(_ data: Data) throws -> [RadioStation] {
@@ -114,7 +143,123 @@ struct WeatherIndexClient {
         return stations
     }
 
+    static func parseStationMetadata(
+        _ data: Data,
+        requestedCallSign: String
+    ) -> WeatherIndexStationMetadata? {
+        guard let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return nil
+        }
+        let station = payload["station"] as? [String: Any] ?? payload
+        guard !station.isEmpty else { return nil }
+        let servedCounties = (station["served_counties"] as? [[String: Any]] ?? []).compactMap {
+            county -> WeatherIndexServedCounty? in
+            guard let rawCode = county["same_code"],
+                  let sameCode = normalizeSameCode(rawCode),
+                  let name = county["county"] as? String,
+                  let state = county["state"] as? String else {
+                return nil
+            }
+            let area = (county["area"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+            return WeatherIndexServedCounty(
+                county: name.trimmingCharacters(in: .whitespacesAndNewlines),
+                sameCode: sameCode,
+                state: state.trimmingCharacters(in: .whitespacesAndNewlines).uppercased(),
+                area: area?.isEmpty == false ? area : nil
+            )
+        }
+        let callSign = (station["callsign"] as? String)
+            ?? (station["call_sign"] as? String)
+            ?? requestedCallSign
+        return WeatherIndexStationMetadata(
+            callSign: callSign.trimmingCharacters(in: .whitespacesAndNewlines).uppercased(),
+            wfo: (station["wfo"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
+            latitude: Self.double(station["latitude"]),
+            longitude: Self.double(station["longitude"]),
+            servedCounties: servedCounties
+        )
+    }
+
+    static func normalizeSameCode(_ value: String) -> String? {
+        let digits = value.filter { $0.isASCII && $0.isNumber }
+        guard !digits.isEmpty else { return nil }
+        return String(repeating: "0", count: max(0, 6 - digits.count)) + digits
+    }
+
+    private static func normalizeSameCode(_ value: Any) -> String? {
+        if let string = value as? String {
+            return normalizeSameCode(string)
+        }
+        guard let number = value as? NSNumber else { return nil }
+        guard CFGetTypeID(number) != CFBooleanGetTypeID() else { return nil }
+        let type = String(cString: number.objCType)
+        guard type != "d", type != "f" else { return nil }
+        return String(format: "%06lld", number.int64Value)
+    }
+
+    private static func double(_ value: Any?) -> Double? {
+        if let number = value as? NSNumber { return number.doubleValue }
+        if let string = value as? String { return Double(string) }
+        return nil
+    }
+
     private struct Wrapper: Decodable {
         let stations: [WeatherIndexDirectoryStation]
+    }
+}
+
+struct WeatherIndexServedCounty: Equatable, Sendable {
+    let county: String
+    let sameCode: String
+    let state: String
+    let area: String?
+}
+
+struct WeatherIndexStationMetadata: Equatable, Sendable {
+    let callSign: String
+    let wfo: String?
+    let latitude: Double?
+    let longitude: Double?
+    let servedCounties: [WeatherIndexServedCounty]
+}
+
+private actor WeatherIndexStationMetadataCache {
+    private var entries: [String: (metadata: WeatherIndexStationMetadata?, storedAt: Date)] = [:]
+
+    func value(
+        for callSign: String,
+        now: Date,
+        lifetime: TimeInterval
+    ) -> (found: Bool, metadata: WeatherIndexStationMetadata?) {
+        guard let entry = entries[callSign] else { return (false, nil) }
+        guard now.timeIntervalSince(entry.storedAt) < lifetime else {
+            entries[callSign] = nil
+            return (false, nil)
+        }
+        return (true, entry.metadata)
+    }
+
+    func store(_ metadata: WeatherIndexStationMetadata?, for callSign: String, at date: Date) {
+        entries[callSign] = (metadata, date)
+    }
+}
+
+enum WeatherIndexCoverageResolver {
+    static func firstCoveringStation(
+        candidates: [RadioStation],
+        sameCountyCodes: [String],
+        metadataFor: (String) async -> WeatherIndexStationMetadata?
+    ) async -> (station: RadioStation, matchedCountyCodes: Set<String>)? {
+        let alertCodes = Set(sameCountyCodes)
+        guard !alertCodes.isEmpty else { return nil }
+        for station in candidates.prefix(10) {
+            guard let metadata = await metadataFor(station.callSign) else { continue }
+            let coveredCodes = Set(metadata.servedCounties.map(\.sameCode))
+            let matches = alertCodes.intersection(coveredCodes)
+            if !matches.isEmpty {
+                return (station, matches)
+            }
+        }
+        return nil
     }
 }

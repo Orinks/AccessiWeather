@@ -27,6 +27,7 @@ final class RadioPlayer: ObservableObject {
 
     @Published private(set) var station: RadioStation?
     @Published private(set) var status: Status = .idle
+    @Published private(set) var playbackGeneration = 0
 
     private var player: AVPlayer?
     private var candidates: [URL] = []
@@ -49,6 +50,7 @@ final class RadioPlayer: ObservableObject {
     }
 
     func play(_ station: RadioStation) {
+        playbackGeneration += 1
         stopPlayer()
         self.station = station
         candidates = station.candidateURLs
@@ -67,6 +69,7 @@ final class RadioPlayer: ObservableObject {
     }
 
     func stop(announceStop: Bool = true) {
+        playbackGeneration += 1
         let name = station?.name
         stopPlayer()
         status = .idle

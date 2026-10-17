@@ -41,6 +41,7 @@ struct OpenMeteoClient {
             var weather_code: [Int?]
             var temperature_2m_max: [Double?]
             var temperature_2m_min: [Double?]
+            var temperature_2m_mean: [Double?]?
             var precipitation_probability_max: [Int?]?
             var wind_speed_10m_max: [Double?]?
             var wind_direction_10m_dominant: [Double?]?
@@ -51,7 +52,9 @@ struct OpenMeteoClient {
     }
 
     struct AirQualityResponse: Decodable {
+        var timezone: String?
         var current: Current?
+        var hourly: Hourly?
 
         struct Current: Decodable {
             var us_aqi: Int?
@@ -61,6 +64,14 @@ struct OpenMeteoClient {
             var nitrogen_dioxide: Double?
             var sulphur_dioxide: Double?
             var carbon_monoxide: Double?
+        }
+
+        struct Hourly: Decodable {
+            var time: [String]
+            var us_aqi: [Int?]?
+            var pm2_5: [Double?]?
+            var pm10: [Double?]?
+            var ozone: [Double?]?
         }
     }
 
@@ -78,12 +89,27 @@ struct OpenMeteoClient {
         return try await http.json(ForecastResponse.self, from: components.url!, serviceName: "Open-Meteo")
     }
 
+    func history(latitude: Double, longitude: Double) async throws -> ForecastResponse {
+        var components = URLComponents(string: "https://api.open-meteo.com/v1/forecast")!
+        components.queryItems = [
+            .init(name: "latitude", value: String(latitude)),
+            .init(name: "longitude", value: String(longitude)),
+            .init(name: "daily", value: "weather_code,temperature_2m_max,temperature_2m_min,temperature_2m_mean"),
+            .init(name: "past_days", value: "7"),
+            .init(name: "forecast_days", value: "1"),
+            .init(name: "timezone", value: "auto"),
+        ]
+        return try await http.json(ForecastResponse.self, from: components.url!, serviceName: "Open-Meteo history")
+    }
+
     func airQuality(latitude: Double, longitude: Double) async throws -> AirQualityResponse {
         var components = URLComponents(string: "https://air-quality-api.open-meteo.com/v1/air-quality")!
         components.queryItems = [
             .init(name: "latitude", value: String(latitude)),
             .init(name: "longitude", value: String(longitude)),
             .init(name: "current", value: "us_aqi,pm2_5,pm10,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide"),
+            .init(name: "hourly", value: "us_aqi,pm2_5,pm10,ozone"),
+            .init(name: "forecast_days", value: "1"),
             .init(name: "timezone", value: "auto"),
         ]
         return try await http.json(AirQualityResponse.self, from: components.url!, serviceName: "Open-Meteo air quality")

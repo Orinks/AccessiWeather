@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - A first native iPhone version of AccessiWeather, built for VoiceOver, with current conditions, forecasts, alerts, saved locations and settings.
 - The iPhone app now plays sound pack cues for refreshes and alerts, with a Sounds section in Settings to pick a pack and mute events.
 - The iPhone app can stream the nearest NOAA Weather Radio stations from the Weather tab, with Lock Screen controls.
+- The iPhone app now supports Pirate Weather, forecast explanations, forecaster notes, weather history, UV and air quality details, aviation reports, an Event Center, and warning radio auto-tune.
 
 ### Changed
 - AccessiWeather is now rebuilt in Rust as a native app for Windows, macOS and Linux, and updating keeps your saved locations and settings.
