@@ -36,7 +36,7 @@ targets:
         BGTaskSchedulerPermittedIdentifiers: [net.orinks.AccessiWeather.refresh]
         ITSAppUsesNonExemptEncryption: false
         # Push server base URL (push-server/); empty disables push registration.
-        AWPushServerURL: ""
+        AWPushServerURL: "https://accessiweather-push.orinks.workers.dev"
         # Volunteer NOAA relays often lack forward-secrecy ciphers; relax ATS for AVFoundation media only.
         NSAppTransportSecurity:
           NSAllowsArbitraryLoadsForMedia: true

@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>AWPushServerURL</key>
-	<string></string>
+	<string>https://accessiweather-push.orinks.workers.dev</string>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>net.orinks.AccessiWeather.refresh</string>
