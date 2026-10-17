@@ -50,6 +50,10 @@ final class SettingsStore: ObservableObject {
         notifyMinor = defaults.bool(forKey: "notifyMinor")
         weatherSource = WeatherSource(rawValue: defaults.string(forKey: "weatherSource") ?? "") ?? .automatic
         selectedLocationID = defaults.string(forKey: "selectedLocationID").flatMap(UUID.init(uuidString:))
+        soundEnabled = defaults.object(forKey: "soundEnabled") as? Bool ?? true
+        soundPackID = defaults.string(forKey: "soundPackID") ?? "default"
+        mutedSoundEvents = Set(defaults.stringArray(forKey: "mutedSoundEvents") ?? Array(SoundEvent.defaultMuted))
+        lastRadioStationCallSign = defaults.string(forKey: "lastRadioStationCallSign")
     }
 
     @Published var temperatureUnit: TemperatureUnit { didSet { defaults.set(temperatureUnit.rawValue, forKey: "temperatureUnit") } }
@@ -70,6 +74,18 @@ final class SettingsStore: ObservableObject {
     @Published var notifyMinor: Bool { didSet { defaults.set(notifyMinor, forKey: "notifyMinor") } }
     @Published var weatherSource: WeatherSource { didSet { defaults.set(weatherSource.rawValue, forKey: "weatherSource") } }
     @Published var selectedLocationID: UUID? { didSet { defaults.set(selectedLocationID?.uuidString, forKey: "selectedLocationID") } }
+    @Published var soundEnabled: Bool { didSet { defaults.set(soundEnabled, forKey: "soundEnabled") } }
+    @Published var soundPackID: String { didSet { defaults.set(soundPackID, forKey: "soundPackID") } }
+    @Published var mutedSoundEvents: Set<String> { didSet { defaults.set(Array(mutedSoundEvents).sorted(), forKey: "mutedSoundEvents") } }
+    @Published var lastRadioStationCallSign: String? { didSet { defaults.set(lastRadioStationCallSign, forKey: "lastRadioStationCallSign") } }
+
+    func isMuted(_ event: SoundEvent) -> Bool {
+        mutedSoundEvents.contains(event.rawValue)
+    }
+
+    func setMuted(_ muted: Bool, for event: SoundEvent) {
+        if muted { mutedSoundEvents.insert(event.rawValue) } else { mutedSoundEvents.remove(event.rawValue) }
+    }
 
     /// True when the alert's severity is one the user asked to be notified about.
     func wantsNotification(forSeverity severity: String) -> Bool {

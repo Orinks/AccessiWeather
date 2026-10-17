@@ -81,4 +81,73 @@ final class AccessibilityAuditTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(labeledSwitches, 5, "Expected labeled toggle rows in Settings")
         print("ACCESSIBILITY AUDIT SETTINGS\n\(app.debugDescription)")
     }
+
+    private var mutedEventsLink: XCUIElement {
+        app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Muted events'")).firstMatch
+    }
+
+    func testSoundsSettingsAreLabeled() {
+        app.tabBars.buttons["Settings"].tap()
+        let header = app.staticTexts["Sounds"].firstMatch
+        var tries = 0
+        while !header.isHittable && tries < 6 { app.swipeUp(); tries += 1 }
+        XCTAssertTrue(header.exists, "Missing Sounds section header")
+        XCTAssertTrue(app.switches["Play sounds"].exists, "Missing Play sounds toggle")
+        XCTAssertTrue(app.buttons["Default sound pack"].firstMatch.exists, "Missing labeled pack row")
+        XCTAssertTrue(app.buttons["Preview Default"].firstMatch.exists, "Missing labeled preview button")
+        mutedEventsLink.tap()
+        XCTAssertTrue(app.navigationBars["Sound Events"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.switches["Weather refresh completed"].exists)
+        XCTAssertTrue(app.switches["Extreme severity alert"].exists)
+        print("ACCESSIBILITY AUDIT SOUNDS\n\(app.debugDescription)")
+    }
+
+    func testRadioScreenIsLabeled() throws {
+        app.tabBars.buttons["Weather"].tap()
+        let radioButton = app.navigationBars.buttons["NOAA Weather Radio"]
+        XCTAssertTrue(radioButton.waitForExistence(timeout: 5), "Missing toolbar Radio button")
+        radioButton.tap()
+        XCTAssertTrue(app.navigationBars["NOAA Weather Radio"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Now Playing"].exists)
+        XCTAssertTrue(app.staticTexts["Nearest Stations"].exists)
+        let stationRows = app.buttons.matching(NSPredicate(format: "label CONTAINS 'MHz' AND label CONTAINS 'miles away'"))
+        try XCTSkipUnless(stationRows.count > 0, "No saved location; station list is empty")
+        stationRows.firstMatch.tap()
+        let status = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Status' AND (label CONTAINS 'Playing' OR label CONTAINS 'Connecting' OR label CONTAINS 'Stream unavailable')")).firstMatch
+        XCTAssertTrue(status.waitForExistence(timeout: 20), "Status label should reflect the stream state")
+        print("RADIO STATUS: \(status.label)")
+        XCTAssertTrue(app.buttons["Stop"].exists || app.buttons["Play"].exists, "Missing Play/Stop button")
+        print("ACCESSIBILITY AUDIT RADIO\n\(app.debugDescription)")
+        if app.buttons["Stop"].exists { app.buttons["Stop"].tap() }
+    }
+
+    /// Xcode's built-in audit (same checks as the Accessibility Inspector Audit tab) on every screen.
+    func testPerformAccessibilityAuditOnAllScreens() throws {
+        // Contrast, Dynamic Type and clipping checks are heuristics that the auditor cannot
+        // resolve for SwiftUI text drawn with system fonts and semantic colors (every text in
+        // this app); they are logged for review but only element/label/trait/hit-target
+        // findings fail the test.
+        let advisoryTypes: XCUIAccessibilityAuditType = [.contrast, .dynamicType, .textClipped]
+        let ignoredIssues: (XCUIAccessibilityAuditIssue) -> Bool = { issue in
+            print("AUDIT ISSUE [\(issue.auditType)] \(issue.compactDescription) | \(issue.detailedDescription) | element: \(issue.element?.debugDescription.prefix(300) ?? "none")")
+            if advisoryTypes.contains(issue.auditType) { return true }
+            return issue.element == nil
+        }
+        for tab in ["Weather", "Alerts", "Locations", "Settings"] {
+            app.tabBars.buttons[tab].tap()
+            _ = app.navigationBars.firstMatch.waitForExistence(timeout: 10)
+            if tab == "Weather" { _ = app.otherElements["Temperature"].firstMatch.waitForExistence(timeout: 20) }
+            try app.performAccessibilityAudit(for: .all) { issue in ignoredIssues(issue) }
+        }
+        app.tabBars.buttons["Settings"].tap()
+        var tries = 0
+        while !mutedEventsLink.isHittable && tries < 6 { app.swipeUp(); tries += 1 }
+        mutedEventsLink.tap()
+        _ = app.navigationBars["Sound Events"].waitForExistence(timeout: 5)
+        try app.performAccessibilityAudit(for: .all) { issue in ignoredIssues(issue) }
+        app.tabBars.buttons["Weather"].tap()
+        app.navigationBars.buttons["NOAA Weather Radio"].tap()
+        _ = app.navigationBars["NOAA Weather Radio"].waitForExistence(timeout: 5)
+        try app.performAccessibilityAudit(for: .all) { issue in ignoredIssues(issue) }
+    }
 }

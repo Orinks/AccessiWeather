@@ -8,6 +8,8 @@ final class AppModel: ObservableObject {
     let settings: SettingsStore
     let locationStore: LocationStore
     let weatherService: WeatherService
+    let sounds: SoundManager
+    let radio: RadioPlayer
 
     @Published private(set) var report: WeatherReport?
     @Published private(set) var isLoading = false
@@ -15,11 +17,14 @@ final class AppModel: ObservableObject {
     @Published var hasOpenRouterKey = !KeychainStore.read(.openRouter).isEmpty
 
     private var notifiedAlertIDs: Set<String> = []
+    private var seenAlertIDs: Set<String> = []
 
     init(settings: SettingsStore? = nil, locationStore: LocationStore? = nil, weatherService: WeatherService = WeatherService()) {
         self.settings = settings ?? SettingsStore()
         self.locationStore = locationStore ?? LocationStore()
         self.weatherService = weatherService
+        sounds = SoundManager(settings: self.settings)
+        radio = RadioPlayer()
     }
 
     var selectedLocation: SavedLocation? {
@@ -65,7 +70,15 @@ final class AppModel: ObservableObject {
         defer { isLoading = false }
         do {
             let fresh = try await weatherService.report(for: location, source: settings.weatherSource, forceRefresh: force)
+            let newAlertIDs = Set(fresh.alerts.map(\.id)).subtracting(seenAlertIDs)
+            seenAlertIDs.formUnion(newAlertIDs)
+            let hadReport = report != nil
             report = fresh
+            if hadReport, let strongest = fresh.alerts.first(where: { newAlertIDs.contains($0.id) }) {
+                sounds.play(SoundEvent.forSeverity(strongest.severity))
+            } else {
+                sounds.play(.dataUpdated)
+            }
             if announce {
                 let summary = fresh.current.description.map { ", \($0)" } ?? ""
                 AccessibilityNotification.Announcement("Weather updated for \(location.name)\(summary)").post()
@@ -73,6 +86,7 @@ final class AppModel: ObservableObject {
             await scheduleAlertNotifications(for: fresh)
         } catch {
             errorMessage = error.localizedDescription
+            sounds.play(.fetchError)
             if announce {
                 AccessibilityNotification.Announcement("Weather update failed. \(error.localizedDescription)").post()
             }
@@ -100,7 +114,11 @@ final class AppModel: ObservableObject {
             let content = UNMutableNotificationContent()
             content.title = "\(alert.severity) alert: \(alert.event)"
             content.body = alert.headline ?? alert.areaDescription ?? report.location.name
-            content.sound = .default
+            if let name = sounds.notificationSoundName(forSeverity: alert.severity) {
+                content.sound = UNNotificationSound(named: UNNotificationSoundName(name))
+            } else {
+                content.sound = .default
+            }
             let request = UNNotificationRequest(identifier: alert.id, content: content, trigger: nil)
             try? await center.add(request)
         }

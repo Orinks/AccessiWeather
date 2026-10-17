@@ -21,6 +21,17 @@ targets:
     platform: iOS
     sources:
       - path: AccessiWeather
+        excludes:
+          - Resources/SoundPacks/**
+      - path: AccessiWeather/Resources/SoundPacks
+        type: folder
+    info:
+      path: AccessiWeather/Info.plist
+      properties:
+        UIBackgroundModes: [audio]
+        # Volunteer NOAA relays often lack forward-secrecy ciphers; relax ATS for AVFoundation media only.
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoadsForMedia: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: net.orinks.AccessiWeather
