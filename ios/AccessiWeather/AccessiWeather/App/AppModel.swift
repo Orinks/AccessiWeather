@@ -248,6 +248,16 @@ final class AppModel: ObservableObject {
 
     // MARK: - Notifications
 
+    /// Asks for notification permission the first time the app opens, and turns on alert notifications if allowed.
+    func requestNotificationsOnFirstLaunch() async {
+        guard !ProcessInfo.processInfo.arguments.contains("-skipNotificationPrompt") else { return }
+        let status = await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
+        guard status == .notDetermined else { return }
+        if await requestNotificationPermission() {
+            settings.alertNotificationsEnabled = true
+        }
+    }
+
     func requestNotificationPermission() async -> Bool {
         let center = UNUserNotificationCenter.current()
         do {

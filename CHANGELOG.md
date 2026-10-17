@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 - The OpenRouter model picker drops the retired Llama 3.3 70B option; choose the free router, the paid auto router, or browse models.
 
 ### Fixed
+- The iPhone app now asks to send notifications the first time you open it, and connects to push alerts as soon as you allow them.
 - The iPhone app no longer misses its first rain starting or stopping notification when the change was still more than 10 minutes away.
 - Sounds now follow your default output device when you switch between headphones and speakers, instead of staying on the old one.
 - AccessiWeather no longer opens a terminal window alongside the app on Windows.
