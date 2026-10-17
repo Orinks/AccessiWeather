@@ -9,7 +9,7 @@ crons = ["* * * * *"]
 [[d1_databases]]
 binding = "DB"
 database_name = "accessiweather-push"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "834997bf-1fd0-43ab-9434-305bc23df03c"
 
 [vars]
 APNS_TEAM_ID = "GANLL6R3Q9"
