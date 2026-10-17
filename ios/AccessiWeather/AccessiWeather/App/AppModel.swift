@@ -10,6 +10,7 @@ final class AppModel: ObservableObject {
     let weatherService: WeatherService
     let sounds: SoundManager
     let radio: RadioPlayer
+    let radioStations: RadioStationDirectory
 
     @Published private(set) var report: WeatherReport?
     @Published private(set) var isLoading = false
@@ -25,6 +26,7 @@ final class AppModel: ObservableObject {
         self.weatherService = weatherService
         sounds = SoundManager(settings: self.settings)
         radio = RadioPlayer()
+        radioStations = RadioStationDirectory()
     }
 
     var selectedLocation: SavedLocation? {

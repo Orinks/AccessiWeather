@@ -42,7 +42,7 @@ After editing `project.yml`, regenerate with `xcodegen generate` and commit both
 | `Storage/` | `SettingsStore` (UserDefaults), `LocationStore` (JSON in Application Support), `KeychainStore` (API keys) |
 | `Formatting/` | `WeatherFormatter`: compact visible strings plus spoken strings with expanded units |
 | `Audio/` | `SoundPack` (reads the desktop `pack.json` format), `SoundManager` (AVAudioPlayer cues, notification sound install) |
-| `Radio/` | `RadioStation` + `RadioStationDatabase` (bundled `noaa_radio_stations.json`, nearest-station search), `RadioPlayer` (AVPlayer streaming, lock screen, interruptions) |
+| `Radio/` | `WeatherIndexClient` (`api.wxindex.org/v1/stations/all`), `RadioStationDirectory` (live list with disk cache and bundled fallback), `RadioStation` + `RadioStationDatabase` (nearest-station search), `RadioPlayer` (AVPlayer streaming, lock screen, interruptions) |
 | `Resources/` | `SoundPacks/<pack>/pack.json` plus clips (folder reference), `noaa_radio_stations.json` |
 | `Views/` | Weather, Alerts, Locations (+ Add Location sheet), Settings (+ Sound Events), Radio, shared views |
 | `../AccessiWeatherUITests/` | XCUITest accessibility audit |
@@ -75,9 +75,15 @@ soundpack backend are not ported.
 
 ## NOAA Weather Radio
 
-The station list and stream URLs from `src/accessiweather/noaa_radio/` are exported to
-`Resources/noaa_radio_stations.json` (148 stations, 135 with known stream URLs; the rest fall
-back to `broadcastify.cdnstream1.com/noaa/<call sign>`). The Radio screen opens from the
+The station list and stream URLs come from the WeatherIndex directory
+(`https://api.wxindex.org/v1/stations/all`), the same source the desktop app uses, so new
+and retired transmitters and changed relay URLs show up without an app update. Stations
+WeatherIndex marks `OUT OF SERVICE` are hidden. The directory is refreshed when the Radio
+screen opens (at most every 30 minutes, retrying 5 minutes after a failure) or via the Refresh
+Stations button / pull-to-refresh, and the last download is cached in `Caches/AccessiWeather/
+noaa_radio_stations.json`. If WeatherIndex is unreachable and there is no cache, the bundled
+`Resources/noaa_radio_stations.json` snapshot is used and the footer says so. Every station
+still falls back to `broadcastify.cdnstream1.com/noaa/<call sign>`. The Radio screen opens from the
 Weather tab toolbar or the "NOAA Weather Radio" row and lists the eight stations nearest the
 selected location with call sign, frequency and distance. Tapping a station streams it with
 `AVPlayer` (playback category, `audio` background mode, so it keeps playing when the screen

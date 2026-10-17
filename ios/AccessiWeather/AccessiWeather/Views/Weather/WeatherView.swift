@@ -22,7 +22,7 @@ struct WeatherView: View {
             .navigationTitle(model.selectedLocation?.name ?? "Weather")
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(isPresented: $showRadio) {
-                RadioView(radio: model.radio)
+                RadioView(radio: model.radio, directory: model.radioStations)
             }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -126,7 +126,7 @@ struct WeatherView: View {
                 .accessibilityHint("Opens the National Weather Service Area Forecast Discussion")
             }
             NavigationLink {
-                RadioView(radio: model.radio)
+                RadioView(radio: model.radio, directory: model.radioStations)
             } label: {
                 Label("NOAA Weather Radio", systemImage: "radio")
             }
