@@ -25,12 +25,18 @@ targets:
           - Resources/SoundPacks/**
       - path: AccessiWeather/Resources/SoundPacks
         type: folder
+    entitlements:
+      path: AccessiWeather/AccessiWeather.entitlements
+      properties:
+        aps-environment: development
     info:
       path: AccessiWeather/Info.plist
       properties:
         UIBackgroundModes: [audio, fetch]
         BGTaskSchedulerPermittedIdentifiers: [net.orinks.AccessiWeather.refresh]
         ITSAppUsesNonExemptEncryption: false
+        # Push server base URL (push-server/); empty disables push registration.
+        AWPushServerURL: ""
         # Volunteer NOAA relays often lack forward-secrecy ciphers; relax ATS for AVFoundation media only.
         NSAppTransportSecurity:
           NSAllowsArbitraryLoadsForMedia: true

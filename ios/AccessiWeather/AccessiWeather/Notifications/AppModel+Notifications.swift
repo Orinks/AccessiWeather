@@ -79,6 +79,7 @@ extension AppModel {
     /// posts notifications for new, updated and escalated alerts. Returns the selected location's
     /// notified alert IDs.
     func checkAlerts(selectedReport: WeatherReport?) async -> Set<String> {
+        await syncPush()
         guard settings.alertNotificationsEnabled, await notificationsAuthorized() else { return [] }
         let service = weatherService
         let others = settings.alertsForAllLocations
@@ -102,12 +103,32 @@ extension AppModel {
                 batches.append((location, alerts))
             }
         }
+        if PushRegistration.shared.isActive {
+            // The push server sends NWS alerts for US locations.
+            batches.removeAll { $0.location.isInUnitedStates }
+        }
         let notices = notificationState.alerts.process(batches, settings: settings.alertGateSettings)
         notificationState.save(to: notificationStateURL)
         for notice in notices {
             await post(notice)
         }
         return Set(notices.filter { $0.locationID == selectedReport?.location.id }.map(\.alert.id))
+    }
+
+    /// Keeps the push server's copy of this device's alert settings and locations current.
+    func syncPush() async {
+        let push = PushRegistration.shared
+        guard push.serverURL != nil else { return }
+        push.onTokenChange = { [weak self] in Task { await self?.syncPush() } }
+        push.requestToken()
+        let authorized = await notificationsAuthorized()
+        let locations = settings.alertsForAllLocations ? locationStore.locations : (selectedLocation.map { [$0] } ?? [])
+        await push.sync(
+            enabled: authorized && settings.alertNotificationsEnabled,
+            severities: ["extreme", "severe", "moderate", "minor"].filter { settings.wantsNotification(forSeverity: $0) },
+            notifyUnknown: settings.wantsNotification(forSeverity: "unknown"),
+            locations: locations
+        )
     }
 
     /// Forecast product and precipitation event notifications for one location.
