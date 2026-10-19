@@ -805,15 +805,19 @@ mod tests {
 
     fn build_repo(dir: &Path, scenario: &Value, real: &str) {
         git(dir, &["init", "-q", "-b", "main"]);
-        for (k, v) in [
-            ("user.name", "Golden"),
-            ("user.email", "golden@example.com"),
-            ("commit.gpgsign", "false"),
-            ("tag.gpgsign", "false"),
-            ("core.autocrlf", "false"),
-        ] {
-            git(dir, &["config", k, v]);
-        }
+        // Appended directly rather than one `git config` per key: spawning
+        // git is slow on Windows and this runs for every scenario.
+        let mut config = std::fs::OpenOptions::new()
+            .append(true)
+            .open(dir.join(".git/config"))
+            .unwrap();
+        config
+            .write_all(
+                b"[user]\n\tname = Golden\n\temail = golden@example.com\n\
+                  [commit]\n\tgpgsign = false\n[tag]\n\tgpgsign = false\n\
+                  [core]\n\tautocrlf = false\n",
+            )
+            .unwrap();
         for step in scenario["steps"].as_array().unwrap() {
             write_files(dir, &step["write"], real);
             for path in step["delete"].as_array().into_iter().flatten() {
@@ -842,34 +846,45 @@ mod tests {
             .join("../testdata/golden/changelog/scenarios.json");
         let golden: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
         let real = golden["real_changelog"].as_str().unwrap();
-        for scenario in golden["scenarios"].as_array().unwrap() {
-            let name = scenario["name"].as_str().unwrap();
-            let repo = tempfile::tempdir().unwrap();
-            let aux = tempfile::tempdir().unwrap();
-            build_repo(repo.path(), scenario, real);
-            write_files(aux.path(), &scenario["aux"], real);
-            let aux_dir = aux.path().to_str().unwrap();
-            let args: Vec<String> = std::iter::once("changelog".to_string())
-                .chain(
-                    scenario["args"]
-                        .as_array()
-                        .unwrap()
-                        .iter()
-                        .map(|a| a.as_str().unwrap().replace("{aux}", aux_dir)),
-                )
-                .collect();
-            let cmd = Cli::try_parse_from(&args).unwrap().cmd;
-            let (mut out, mut err) = (Vec::new(), Vec::new());
-            let code = run(repo.path(), cmd, &mut out, &mut err).unwrap();
-            let expected = &scenario["expected"];
-            let text = |b: Vec<u8>| String::from_utf8(b).unwrap().replace(aux_dir, "{aux}");
-            assert_eq!(code as u64, expected["code"].as_u64().unwrap(), "{name}");
-            assert_eq!(text(out), expected["stdout"].as_str().unwrap(), "{name}");
-            assert_eq!(text(err), expected["stderr"].as_str().unwrap(), "{name}");
-            if let Some(notes) = expected["output"].as_str() {
-                let written = std::fs::read_to_string(aux.path().join("notes.md")).unwrap();
-                assert_eq!(written, notes, "{name}");
+        let scenarios = golden["scenarios"].as_array().unwrap();
+        // Each scenario gets its own repositories, so they run in parallel;
+        // sequentially this took over 30 s on Windows CI.
+        let workers = std::thread::available_parallelism().map_or(4, |n| n.get());
+        let chunk = scenarios.len().div_ceil(workers).max(1);
+        std::thread::scope(|s| {
+            for batch in scenarios.chunks(chunk) {
+                s.spawn(move || batch.iter().for_each(|sc| run_scenario(sc, real)));
             }
+        });
+    }
+
+    fn run_scenario(scenario: &Value, real: &str) {
+        let name = scenario["name"].as_str().unwrap();
+        let repo = tempfile::tempdir().unwrap();
+        let aux = tempfile::tempdir().unwrap();
+        build_repo(repo.path(), scenario, real);
+        write_files(aux.path(), &scenario["aux"], real);
+        let aux_dir = aux.path().to_str().unwrap();
+        let args: Vec<String> = std::iter::once("changelog".to_string())
+            .chain(
+                scenario["args"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|a| a.as_str().unwrap().replace("{aux}", aux_dir)),
+            )
+            .collect();
+        let cmd = Cli::try_parse_from(&args).unwrap().cmd;
+        let (mut out, mut err) = (Vec::new(), Vec::new());
+        let code = run(repo.path(), cmd, &mut out, &mut err).unwrap();
+        let expected = &scenario["expected"];
+        let text = |b: Vec<u8>| String::from_utf8(b).unwrap().replace(aux_dir, "{aux}");
+        assert_eq!(code as u64, expected["code"].as_u64().unwrap(), "{name}");
+        assert_eq!(text(out), expected["stdout"].as_str().unwrap(), "{name}");
+        assert_eq!(text(err), expected["stderr"].as_str().unwrap(), "{name}");
+        if let Some(notes) = expected["output"].as_str() {
+            let written = std::fs::read_to_string(aux.path().join("notes.md")).unwrap();
+            assert_eq!(written, notes, "{name}");
         }
     }
 

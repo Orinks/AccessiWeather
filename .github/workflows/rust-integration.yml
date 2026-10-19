@@ -12,6 +12,8 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  # No debug info: a faster compile and a smaller cache.
+  CARGO_PROFILE_DEV_DEBUG: "0"
 
 jobs:
   live:
