@@ -2,13 +2,16 @@ name: Rust native app
 
 # Pull request checks for rust/: format, lint, tests, the headless
 # self-check and a windowed smoke test, all on the debug build so each job
-# compiles wxWidgets once. Release builds and packaging live in
-# rust-build.yml.
+# compiles wxWidgets once. Pushes to dev run the same checks and seed the
+# debug caches that pull requests restore. Release builds and packaging live
+# in rust-build.yml.
 
 on:
   pull_request:
     paths: ["rust/**", ".github/workflows/rust.yml"]
   push:
+    branches: [dev]
+    paths: ["rust/**", ".github/workflows/rust.yml"]
     tags: ["v*"]
   workflow_dispatch:
 
@@ -39,8 +42,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # The CHANGELOG gate compares against the base branch.
-          fetch-depth: ${{ matrix.os == 'ubuntu-latest' && 0 || 1 }}
+          # The CHANGELOG gate compares against the base branch. Quoted: a bare 0
+          # is falsy in expressions, so `&& 0 || 1` always picked 1.
+          fetch-depth: ${{ matrix.os == 'ubuntu-latest' && '0' || '1' }}
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
@@ -49,6 +53,9 @@ jobs:
           workspaces: rust
           shared-key: debug-${{ runner.os }}
           cache-on-failure: false
+          # Only dev saves, so pull requests restore its cache instead of
+          # uploading their own.
+          save-if: ${{ github.ref == 'refs/heads/dev' }}
 
       - name: Linux build dependencies
         if: runner.os == 'Linux'
