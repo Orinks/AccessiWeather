@@ -397,6 +397,25 @@ impl AppSettings {
                 });
             }
         }
+        // One malformed reading must not take the rest down with it.
+        if let Some(v) = data.get_mut("scheduled_readings") {
+            let readings: Vec<Value> = v
+                .as_array()
+                .map(|items| {
+                    items
+                        .iter()
+                        .filter(|item| {
+                            serde_json::from_value::<crate::scheduled_reading::ScheduledReading>(
+                                (*item).clone(),
+                            )
+                            .is_ok()
+                        })
+                        .cloned()
+                        .collect()
+                })
+                .unwrap_or_default();
+            *v = Value::Array(readings);
+        }
         if let Some(v) = data.get_mut("auto_tune_weather_radio_duration_minutes") {
             if !v.as_i64().is_some_and(|m| (1..=60).contains(&m)) {
                 *v = 5.into();
@@ -763,6 +782,27 @@ mod tests {
     }
 
     #[test]
+    fn a_malformed_scheduled_reading_drops_only_itself() {
+        let text = r#"{"settings":{"temperature_unit":"f","scheduled_readings":[
+                {"location":"Home","interval_minutes":30.5},{"location":"Work"}]}}"#;
+        let cfg = AppConfig::from_json(text).unwrap();
+        let locations: Vec<&str> = cfg
+            .settings
+            .scheduled_readings
+            .iter()
+            .map(|r| r.location.as_str())
+            .collect();
+        assert_eq!(locations, ["Work"]);
+        assert_eq!(cfg.settings.temperature_unit, "f");
+        let mistyped = r#"{"settings":{"scheduled_readings":"Home"}}"#;
+        assert!(AppConfig::from_json(mistyped)
+            .unwrap()
+            .settings
+            .scheduled_readings
+            .is_empty());
+    }
+
+    #[test]
     fn scheduled_readings_follow_location_renames_and_removals() {
         use crate::scheduled_reading::ScheduledReading;
         let text = r#"{"settings":{"scheduled_readings":[
@@ -770,6 +810,7 @@ mod tests {
             "locations":[{"name":"Home","latitude":40.0,"longitude":-75.0},
                          {"name":"Work","latitude":41.0,"longitude":-74.0}]}"#;
         let mut cfg = AppConfig::from_json(text).unwrap();
+        assert_eq!(cfg.settings.scheduled_readings.len(), 2);
         assert_eq!(cfg.settings.scheduled_readings[0].interval_minutes, 30);
         assert!(cfg.update_location_details("Home", 40.0, -75.0, None, false, Some("Cabin")));
         assert_eq!(cfg.settings.scheduled_readings[0].location, "Cabin");

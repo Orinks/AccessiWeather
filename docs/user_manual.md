@@ -1268,7 +1268,7 @@ This feature is most useful in NOAA coverage areas and depends on online station
 
 ### Scheduled Readings
 
-Use Tools > Scheduled Readings to have AccessiWeather read the weather aloud on a schedule, the way the old WeatherAloud program did. You can set up readings for up to five saved locations.
+Use Tools > Scheduled Readings to have AccessiWeather read the weather aloud on a schedule, the way the old WeatherAloud program did. You can set up to five readings, each for one of your saved locations.
 
 For each reading, choose:
 

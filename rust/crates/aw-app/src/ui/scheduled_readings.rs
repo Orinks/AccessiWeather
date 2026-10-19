@@ -6,6 +6,7 @@
 
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use aw_core::display::WeatherPresenter;
 use aw_core::model::WeatherData;
@@ -25,6 +26,10 @@ const CHECK_INTERVAL_MS: i32 = 15_000;
 
 const NO_VOICE_MESSAGE: &str =
     "Couldn't read the weather aloud: no screen reader or system voice is available.";
+
+/// Set while readings are being fetched, so a slow or stalled network can't
+/// pile up fetch threads and play a burst of stale readings later.
+static READING_IN_PROGRESS: AtomicBool = AtomicBool::new(false);
 
 thread_local! {
     static CLOCK: RefCell<ReadingClock> = RefCell::new(ReadingClock::new());
@@ -62,12 +67,13 @@ fn check_due_readings() {
     let due = CLOCK.with(|c| c.borrow_mut().due(&schedules, now));
     if !due.is_empty() {
         let due: Vec<ScheduledReading> = due.into_iter().map(|i| schedules[i].clone()).collect();
-        read_aloud(due, now);
+        read_aloud(due, now, false);
     }
 }
 
 /// Fetch the weather for each schedule, in order, and read it aloud.
-fn read_aloud(schedules: Vec<ScheduledReading>, now: NaiveDateTime) {
+/// `manual` is Read Now: a failure to speak is shown in a message box.
+fn read_aloud(schedules: Vec<ScheduledReading>, now: NaiveDateTime, manual: bool) {
     let Some(state) = with_state() else { return };
     let (client, jobs) = {
         let st = state.borrow();
@@ -89,22 +95,36 @@ fn read_aloud(schedules: Vec<ScheduledReading>, now: NaiveDateTime) {
     if jobs.is_empty() {
         return;
     }
+    if READING_IN_PROGRESS.swap(true, Ordering::SeqCst) {
+        tracing::warn!("Skipping scheduled reading: the previous one is still fetching");
+        return;
+    }
     let spawned = std::thread::Builder::new()
         .name("aw-scheduled-reading".into())
         .spawn(move || {
             for (schedule, location) in jobs {
                 tracing::info!("Scheduled reading for {}", location.name);
                 let data = client.get_weather_data(&location, false);
-                post_to_ui(move || speak_reading(&schedule, &data, now));
+                post_to_ui(move || speak_reading(&schedule, &data, now, manual));
             }
+            READING_IN_PROGRESS.store(false, Ordering::SeqCst);
         });
     if let Err(e) = spawned {
+        READING_IN_PROGRESS.store(false, Ordering::SeqCst);
         tracing::error!("Couldn't start the scheduled reading: {e}");
     }
 }
 
-fn speak_reading(schedule: &ScheduledReading, data: &WeatherData, now: NaiveDateTime) {
-    let Some(state) = with_state() else { return };
+fn speak_reading(
+    schedule: &ScheduledReading,
+    data: &WeatherData,
+    now: NaiveDateTime,
+    manual: bool,
+) {
+    // Nothing to do once the window has closed.
+    let (Some(state), Some(frame)) = (with_state(), main_frame()) else {
+        return;
+    };
     let text = {
         let st = state.borrow();
         let settings = &st.config.settings;
@@ -115,7 +135,17 @@ fn speak_reading(schedule: &ScheduledReading, data: &WeatherData, now: NaiveDate
             &spoken_time(now, settings.time_format_12hour),
         )
     };
-    if !crate::screen_reader::speak_aloud(&text) {
+    if crate::screen_reader::speak_aloud(&text) {
+        return;
+    }
+    if manual {
+        message_box(
+            &frame,
+            NO_VOICE_MESSAGE,
+            "Read Now",
+            MessageDialogStyle::OK | MessageDialogStyle::IconWarning,
+        );
+    } else {
         set_status(NO_VOICE_MESSAGE);
     }
 }
@@ -305,7 +335,9 @@ pub(crate) fn show_scheduled_readings_dialog(parent: &Frame) {
             };
             let removed = readings.borrow_mut().remove(index);
             refresh(Some(index));
-            status.set_label(&format!("Removed the reading for {}.", removed.location));
+            let message = format!("Removed the reading for {}.", removed.location);
+            status.set_label(&message);
+            crate::screen_reader::announce(&message);
             if readings.borrow().is_empty() {
                 add.set_focus();
             } else {
@@ -326,8 +358,7 @@ pub(crate) fn show_scheduled_readings_dialog(parent: &Frame) {
             if !reading.reads_anything() {
                 return;
             }
-            status.set_label(&format!("Reading the weather for {}...", reading.location));
-            read_aloud(vec![reading], Local::now().naive_local());
+            read_aloud(vec![reading], Local::now().naive_local(), true);
         });
     }
 
@@ -371,8 +402,14 @@ fn edit_reading(
 
     // Labels come right before their control so screen readers name it.
     root.add(&text(&dialog, "Location to read:"), 0, flags, 10);
+    // A reading whose location is missing (an imported or hand-edited
+    // config) keeps that name rather than silently moving to another place.
+    let mut location_names = location_names.to_vec();
+    if !location_names.contains(&initial.location) && !initial.location.is_empty() {
+        location_names.insert(0, initial.location.clone());
+    }
     let location = Choice::builder(&dialog)
-        .with_choices(location_names.to_vec())
+        .with_choices(location_names.clone())
         .build();
     location.set_name("Location to read");
     root.add(&location, 0, flags, 10);
