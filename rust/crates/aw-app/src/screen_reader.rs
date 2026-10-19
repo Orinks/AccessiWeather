@@ -63,12 +63,23 @@ fn running_screen_reader(prism: &'static Prism) -> Option<Backend<'static>> {
         .filter(|id| !TTS_ENGINES.contains(id))
         .filter(|&id| id != BackendId::UIA || narrator_running())
         .find_map(|id| {
-            let backend = prism.create(id).ok()?;
-            backend.initialize().ok()?;
-            backend
+            let name = prism.backend_name(id).unwrap_or_default();
+            let backend = match prism.create(id) {
+                Ok(b) => b,
+                Err(e) => {
+                    tracing::debug!("Screen reader {name} unavailable: {e}");
+                    return None;
+                }
+            };
+            if let Err(e) = backend.initialize() {
+                tracing::debug!("Screen reader {name} failed to start: {e}");
+                return None;
+            }
+            let running = backend
                 .features()
-                .contains(Features::IS_SUPPORTED_AT_RUNTIME)
-                .then_some(backend)
+                .contains(Features::IS_SUPPORTED_AT_RUNTIME);
+            tracing::debug!("Screen reader {name} running: {running}");
+            running.then_some(backend)
         })
 }
 
@@ -165,16 +176,23 @@ pub fn speak_aloud(text: &str) -> bool {
     if text.trim().is_empty() {
         return false;
     }
-    // A screen reader started after the app was opened is picked up here.
-    if BACKEND.with(|b| b.borrow().is_none()) {
-        init();
+    let speak_reader = || {
+        BACKEND.with(|b| {
+            b.borrow().as_ref().is_some_and(|backend| {
+                // UIA "speaks" without error into silence once Narrator quits.
+                (backend.name() != "UIA" || narrator_running())
+                    && backend.speak(text, false).is_ok()
+            })
+        })
+    };
+    if speak_reader() {
+        return true;
     }
-    let spoken = BACKEND.with(|b| {
-        b.borrow()
-            .as_ref()
-            .is_some_and(|backend| backend.speak(text, false).is_ok())
-    });
-    if spoken {
+    // The screen reader the app started with may have quit, and another
+    // (or none) may be running now: pick again before the system voice.
+    shutdown_reader();
+    init();
+    if speak_reader() {
         return true;
     }
     let Some(prism) = prism() else { return false };
@@ -197,9 +215,13 @@ pub fn speak_aloud(text: &str) -> bool {
     })
 }
 
+fn shutdown_reader() {
+    BACKEND.with(|b| b.borrow_mut().take());
+}
+
 /// Release the backends before the UI thread winds down.
 pub fn shutdown() {
-    BACKEND.with(|b| b.borrow_mut().take());
+    shutdown_reader();
     VOICE.with(|v| v.borrow_mut().take());
 }
 
