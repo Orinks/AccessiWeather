@@ -53,6 +53,12 @@ impl Station {
     pub fn is_out_of_service(&self) -> bool {
         self.status.trim().eq_ignore_ascii_case("OUT OF SERVICE")
     }
+
+    /// The directory reports the transmitter as degraded (on the air, but
+    /// with reduced coverage or audio problems).
+    pub fn is_degraded(&self) -> bool {
+        self.status.trim().eq_ignore_ascii_case("DEGRADED")
+    }
 }
 
 /// A live station list (the WeatherIndex directory).
