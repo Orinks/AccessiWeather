@@ -33,6 +33,7 @@ pub(crate) fn init(config_dir: &Path, http: Arc<dyn HttpClient>) {
         }
     };
     let ctx = RadioContext::new(config_dir, http, Arc::new(backend));
+    ctx.prewarm_station_directory();
     let auto_tuner = ctx.auto_tuner(
         Box::new(|| read_state(|st| st.config.settings.clone())),
         Box::new(|| read_state(|st| st.config.current_location.clone()).flatten()),

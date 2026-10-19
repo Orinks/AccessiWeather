@@ -173,10 +173,9 @@ impl FinderMode {
 
 /// "State or territory" choices: the "all" entry, then every state in the
 /// station list as `"Texas (TX)"` (or the bare code when unnamed).
+/// Runs on the UI thread, so it only uses stations already in memory.
 pub fn state_choices(db: &StationDatabase) -> Vec<String> {
-    let mut states: Vec<String> = db.get_all_stations().into_iter().map(|s| s.state).collect();
-    states.sort();
-    states.dedup();
+    let states = db.state_codes();
     std::iter::once(STATE_ALL_CHOICE.to_string())
         .chain(states.iter().map(|s| format_state_choice(s)))
         .collect()
