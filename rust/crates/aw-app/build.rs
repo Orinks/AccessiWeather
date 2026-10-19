@@ -2,9 +2,8 @@
 //!
 //! * Windows: embed an application manifest (Common Controls v6, per-monitor
 //!   DPI), the app icon and version information (Python's Nuitka build sets
-//!   the same, with the nightly tag in the company name), and delay-load the
-//!   screen reader DLLs that the statically linked prism imports, since most
-//!   machines don't have all of them.
+//!   the same, with the nightly tag in the company name). prism loads the
+//!   screen reader DLLs it needs at runtime, so none are linked here.
 //! * Linux/macOS: prism is a shared library shipped beside the executable, so
 //!   look for it there.
 
@@ -24,17 +23,6 @@ fn main() {
 }
 
 fn windows() {
-    if let Ok(dlls) = std::env::var("DEP_PRISMER_DELAY_LOAD_DLLS") {
-        for dll in dlls.split(';').filter(|dll| !dll.is_empty()) {
-            println!("cargo:rustc-link-arg=/DELAYLOAD:{dll}");
-        }
-        // Bridges for other platforms have no imports here; LNK4199 is expected.
-        println!("cargo:rustc-link-arg=/IGNORE:4199");
-        // prism's failure hook substitutes stubs for screen reader DLLs that
-        // aren't installed. Pull it in explicitly, or delayimp.lib's empty
-        // default wins and probing a missing reader crashes the process.
-        println!("cargo:rustc-link-arg=/INCLUDE:__pfnDliFailureHook2");
-    }
     let manifest = new_manifest("Orinks.AccessiWeather")
         .supported_os(Windows7..=Windows10)
         .active_code_page(ActiveCodePage::Utf8)
