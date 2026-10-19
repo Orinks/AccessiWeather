@@ -5,7 +5,7 @@
 
 use std::cell::{Cell, RefCell};
 
-use prismer::{Backend, Features, Prism};
+use prismer::{Backend, BackendId, Features, Prism};
 
 thread_local! {
     static BACKEND: RefCell<Option<Backend<'static>>> = const { RefCell::new(None) };
@@ -38,26 +38,92 @@ fn prism() -> Option<&'static Prism> {
     Some(prism)
 }
 
-/// Acquire the best screen reader backend for this (UI) thread.
+/// Prism backends that are text-to-speech engines rather than screen readers.
+const TTS_ENGINES: [BackendId; 7] = [
+    BackendId::SAPI,
+    BackendId::ONE_CORE,
+    BackendId::AV_SPEECH,
+    BackendId::SPEECH_DISPATCHER,
+    BackendId::ANDROID_TTS,
+    BackendId::WEB_SPEECH,
+    BackendId::SPIEL,
+];
+
+/// The highest-priority screen reader that is running right now.
+///
+/// Not `acquire_best`: that ranks the OneCore and SAPI voices above
+/// Narrator, and returns whatever backend is already cached before probing,
+/// so a running Narrator was never used. Narrator's route (UIA) reports
+/// runtime support whenever UI Automation exists, so it is only a candidate
+/// while Narrator itself is running.
+fn running_screen_reader(prism: &'static Prism) -> Option<Backend<'static>> {
+    let mut ids = prism.backend_ids();
+    ids.sort_by_key(|&id| std::cmp::Reverse(prism.backend_priority(id)));
+    ids.into_iter()
+        .filter(|id| !TTS_ENGINES.contains(id))
+        .filter(|&id| id != BackendId::UIA || narrator_running())
+        .find_map(|id| {
+            let backend = prism.create(id).ok()?;
+            backend.initialize().ok()?;
+            backend
+                .features()
+                .contains(Features::IS_SUPPORTED_AT_RUNTIME)
+                .then_some(backend)
+        })
+}
+
+/// True when Windows Narrator is running.
+#[cfg(windows)]
+fn narrator_running() -> bool {
+    use windows_sys::Win32::Foundation::{CloseHandle, INVALID_HANDLE_VALUE};
+    use windows_sys::Win32::System::Diagnostics::ToolHelp::{
+        CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W,
+        TH32CS_SNAPPROCESS,
+    };
+
+    // SAFETY: a plain Toolhelp32 walk. The snapshot handle is closed on every
+    // path out, and `entry` is a zeroed PROCESSENTRY32W with `dwSize` set
+    // before the first call, as the API requires.
+    unsafe {
+        let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        if snapshot.is_null() || snapshot == INVALID_HANDLE_VALUE {
+            return false;
+        }
+        let mut entry: PROCESSENTRY32W = std::mem::zeroed();
+        entry.dwSize = std::mem::size_of::<PROCESSENTRY32W>() as u32;
+        let mut found = Process32FirstW(snapshot, &mut entry) != 0;
+        let mut running = false;
+        while found {
+            let len = entry
+                .szExeFile
+                .iter()
+                .position(|&c| c == 0)
+                .unwrap_or(entry.szExeFile.len());
+            if String::from_utf16_lossy(&entry.szExeFile[..len])
+                .eq_ignore_ascii_case("narrator.exe")
+            {
+                running = true;
+                break;
+            }
+            found = Process32NextW(snapshot, &mut entry) != 0;
+        }
+        CloseHandle(snapshot);
+        running
+    }
+}
+
+#[cfg(not(windows))]
+fn narrator_running() -> bool {
+    false
+}
+
+/// Acquire the running screen reader's backend for this (UI) thread.
 pub fn init() {
     let Some(prism) = prism() else { return };
-    let backend = match prism.acquire_best() {
-        Ok(b) => b,
-        Err(e) => {
-            tracing::warn!("Failed to acquire screen reader backend: {e}");
-            return;
-        }
-    };
-    if !backend
-        .features()
-        .contains(Features::IS_SUPPORTED_AT_RUNTIME)
-    {
-        tracing::debug!(
-            "Screen reader backend found ({}) but not running at runtime",
-            backend.name()
-        );
+    let Some(backend) = running_screen_reader(prism) else {
+        tracing::debug!("No screen reader running");
         return;
-    }
+    };
     tracing::info!("Screen reader backend active: {}", backend.name());
     BACKEND.with(|b| *b.borrow_mut() = Some(backend));
 }
