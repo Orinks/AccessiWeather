@@ -14,6 +14,17 @@ use super::settings_actions;
 use super::settings_form::*;
 use super::tray_text_format_dialog::{supported_placeholders_help, validate_format_string};
 
+/// Settings added to the Rust edition after the Python goldens were
+/// generated, with the default every golden case expects.
+const RUST_ONLY_SETTINGS: &[(&str, bool)] = &[("alert_notifications_all_locations", false)];
+
+fn rust_only_default(key: &str) -> Option<Value> {
+    RUST_ONLY_SETTINGS
+        .iter()
+        .find(|(k, _)| *k == key)
+        .map(|(_, d)| Value::Bool(*d))
+}
+
 fn golden() -> Value {
     serde_json::from_str(include_str!(
         "../../../../testdata/golden/settings/cases.json"
@@ -122,7 +133,18 @@ fn assert_snapshot(form: &SettingsForm, snap: &Value, label: &str) {
     for (key, value) in &expected {
         assert_eq!(values.get(key), Some(value), "{label}: collected {key}");
     }
-    assert_eq!(values.len(), expected.len(), "{label}: collected keys");
+    for (key, default) in RUST_ONLY_SETTINGS {
+        assert_eq!(
+            values.get(*key),
+            Some(&Value::Bool(*default)),
+            "{label}: collected {key}"
+        );
+    }
+    assert_eq!(
+        values.len(),
+        expected.len() + RUST_ONLY_SETTINGS.len(),
+        "{label}: collected keys"
+    );
 
     // Python shows the hotkey warning on every collect: once when the
     // snapshot was taken, once more for any collect during the step.
@@ -144,6 +166,10 @@ fn defaults_match_python() {
     let python = g["defaults"].as_object().unwrap();
     let rust = serde_json::to_value(AppSettings::default()).unwrap();
     for (key, value) in rust.as_object().unwrap() {
+        if let Some(default) = rust_only_default(key) {
+            assert_eq!(value, &default, "default for {key}");
+            continue;
+        }
         assert_eq!(python.get(key), Some(value), "default for {key}");
     }
     for key in python.keys() {
