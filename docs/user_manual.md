@@ -1266,6 +1266,23 @@ Use View > NOAA Weather Radio to open the radio player for the current location.
 
 This feature is most useful in NOAA coverage areas and depends on online station streams being available.
 
+### Scheduled Readings
+
+Use Tools > Scheduled Readings to have AccessiWeather read the weather aloud on a schedule, the way the old WeatherAloud program did. You can set up to five readings, each for one of your saved locations.
+
+For each reading, choose:
+
+- the location to read
+- how often: every 15 or 30 minutes, every hour, or every 2, 3, 6 or 12 hours
+- what to read: current conditions, the forecast for the next two periods (such as Today and Tonight), and active alerts
+- whether the reading is turned on, so you can pause one without deleting it
+
+Readings land on the clock: every 30 minutes means on the hour and the half hour, and every 2 hours means midnight, 2:00, 4:00 and so on. A new or changed schedule waits for its next time rather than speaking right away. Use Read Now to hear a reading immediately.
+
+Readings use your screen reader when one is running. Otherwise they use your computer's built-in voice (Windows OneCore or SAPI voices, the macOS system voice, or Speech Dispatcher on Linux). AccessiWeather has to be running for readings to play, including when it is minimized to the tray. If your computer was asleep at a reading's time, that reading is skipped.
+
+If you rename a location, its readings follow the new name; removing a location removes its readings.
+
 ### Explain Weather
 
 Explain Weather gives you a one-shot AI explanation of the current weather.

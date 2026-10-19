@@ -76,6 +76,13 @@ pub(crate) fn on_soundpack_manager() {
     }
 }
 
+/// Tools > Scheduled Readings.
+pub(crate) fn on_scheduled_readings() {
+    if let Some(w) = window() {
+        super::scheduled_readings::show_scheduled_readings_dialog(&w.frame);
+    }
+}
+
 /// Help > Check for Updates.
 pub(crate) fn on_check_updates() {
     super::updates::check_for_updates(true);
