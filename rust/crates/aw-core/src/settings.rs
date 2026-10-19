@@ -305,6 +305,11 @@ pub struct AppSettings {
     pub auto_sources_us: Vec<String>,
     #[serde(default = "d_intl_sources")]
     pub auto_sources_international: Vec<String>,
+    /// Weather read aloud on a schedule (Tools > Scheduled Readings). Left
+    /// out of the file while empty, so existing configs and exports stay as
+    /// they were.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub scheduled_readings: Vec<crate::scheduled_reading::ScheduledReading>,
     #[serde(flatten)]
     pub extra: Map<String, Value>,
 }
@@ -619,6 +624,13 @@ impl AppConfig {
         location.longitude = longitude;
         location.country_code = country_code.map(|c| c.to_uppercase());
         location.marine_mode = marine_mode;
+        if location.name != name {
+            for reading in &mut self.settings.scheduled_readings {
+                if reading.location == name {
+                    reading.location.clone_from(&location.name);
+                }
+            }
+        }
         if moved {
             location.timezone = None;
             location.forecast_zone_id = None;
@@ -640,6 +652,9 @@ impl AppConfig {
             return false;
         };
         self.locations.remove(index);
+        self.settings
+            .scheduled_readings
+            .retain(|reading| reading.location != name);
         if self
             .current_location
             .as_ref()
@@ -742,6 +757,32 @@ mod tests {
         assert!(!s.extra.contains_key("specific_alert_sounds_enabled"));
         assert_eq!(s.extra["future_flag"], serde_json::json!([1]));
         assert!(defaulted && s.update_channel == "nightly");
+    }
+
+    #[test]
+    fn scheduled_readings_follow_location_renames_and_removals() {
+        use crate::scheduled_reading::ScheduledReading;
+        let text = r#"{"settings":{"scheduled_readings":[
+                {"location":"Home","interval_minutes":30},{"location":"Work"}]},
+            "locations":[{"name":"Home","latitude":40.0,"longitude":-75.0},
+                         {"name":"Work","latitude":41.0,"longitude":-74.0}]}"#;
+        let mut cfg = AppConfig::from_json(text).unwrap();
+        assert_eq!(cfg.settings.scheduled_readings[0].interval_minutes, 30);
+        assert!(cfg.update_location_details("Home", 40.0, -75.0, None, false, Some("Cabin")));
+        assert_eq!(cfg.settings.scheduled_readings[0].location, "Cabin");
+        assert!(cfg.remove_location("Work"));
+        assert_eq!(
+            cfg.settings.scheduled_readings,
+            [ScheduledReading {
+                interval_minutes: 30,
+                ..ScheduledReading::new("Cabin")
+            }]
+        );
+        let out: Value = serde_json::from_str(&cfg.to_json().unwrap()).unwrap();
+        assert_eq!(
+            out["settings"]["scheduled_readings"][0]["location"],
+            "Cabin"
+        );
     }
 
     #[test]

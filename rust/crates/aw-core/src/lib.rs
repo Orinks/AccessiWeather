@@ -15,6 +15,7 @@ pub mod location_sorting;
 pub mod model;
 pub mod provider_normalization;
 pub mod py;
+pub mod scheduled_reading;
 pub mod settings;
 pub mod shortcut_preferences;
 pub mod shortcuts;
