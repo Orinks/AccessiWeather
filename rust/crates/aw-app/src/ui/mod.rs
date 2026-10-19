@@ -22,6 +22,7 @@ mod noaa_radio_dialog;
 mod progress_dialog;
 mod refresh;
 mod report_issue;
+mod scheduled_readings;
 mod settings_actions;
 mod settings_dialog;
 mod settings_form;

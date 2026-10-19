@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - The iPhone app now supports Pirate Weather, forecast explanations, forecaster notes, weather history, UV and air quality details, aviation reports, an Event Center, and warning radio auto-tune.
 - The iPhone app now checks for alerts in the background and notifies you, merges NWS, Open-Meteo and Pirate Weather in Automatic mode, and adds marine mode, national products, AirNow, aviation advisories and a Weather Assistant.
 - You can now get alert notifications for all saved locations, not just the selected one, and each names its location. Turn it on in Settings, Alerts tab.
+- You can now have the weather read aloud on a schedule, such as every half hour, from Tools > Scheduled Readings.
 
 ### Changed
 - AccessiWeather is now rebuilt in Rust as a native app for Windows, macOS and Linux, and updating keeps your saved locations and settings.
@@ -21,6 +22,7 @@ All notable changes to this project will be documented in this file.
 - AccessiWeather no longer opens a terminal window alongside the app on Windows.
 - Portable updates on Windows no longer open a command window while they install.
 - NOAA Weather Radio now loads its station list and stream links from the WeatherIndex directory, so new and retired stations stay current instead of relying on a stale built-in list.
+- The radio finder now shows transmitter status: degraded stations say so, and out-of-service ones appear only with Show unavailable stations on.
 - AI error messages now distinguish invalid keys, depleted credits, denied access, unavailable models, rate limits, connection or timeout failures, and model refusals across the Weather Assistant and explanation views, without displaying raw provider errors.
 - After an AI summary finishes, keyboard focus moves to the result when Explain was focused; failed Weather Assistant questions return to the input for editing, and key errors point to the correct AI settings tab.
 - AI explanations now use your updated custom prompt and instructions immediately, and the Weather Assistant checks alerts for the selected place even when a model supplies an ambiguous location. It also reports when an alert shown in the app is missing from the live point lookup.

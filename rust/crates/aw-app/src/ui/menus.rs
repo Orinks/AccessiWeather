@@ -32,6 +32,7 @@ pub(crate) const ID_DEBUG_ALERT: Id = ID_HIGHEST + 19;
 pub(crate) const ID_DEBUG_SIMULATE_ALERT: Id = ID_HIGHEST + 20;
 pub(crate) const ID_DEBUG_DIAGNOSTICS: Id = ID_HIGHEST + 21;
 pub(crate) const ID_REPORT_ISSUE: Id = ID_HIGHEST + 22;
+pub(crate) const ID_SCHEDULED_READINGS: Id = ID_HIGHEST + 23;
 
 pub(crate) fn build_menu_bar(update_channel: &str, debug_mode: bool) -> MenuBar {
     let file = Menu::builder()
@@ -119,6 +120,11 @@ pub(crate) fn build_menu_bar(update_channel: &str, debug_mode: bool) -> MenuBar 
             "&Soundpack Manager...",
             "Manage sound packs",
         )
+        .append_item(
+            ID_SCHEDULED_READINGS,
+            "Scheduled &Readings...",
+            "Have the weather read aloud on a schedule",
+        )
         .build();
 
     let help = Menu::builder()
@@ -202,6 +208,7 @@ pub(crate) fn on_menu(id: Id) {
         ID_NOAA_RADIO => commands::on_noaa_radio(),
         ID_WEATHER_CHAT => commands::on_weather_chat(),
         ID_SOUNDPACK_MANAGER => commands::on_soundpack_manager(),
+        ID_SCHEDULED_READINGS => commands::on_scheduled_readings(),
         ID_CHECK_UPDATES => commands::on_check_updates(),
         ID_USER_MANUAL => commands::on_open_user_manual(),
         ID_DEBUG_DISCUSSION => commands::on_test_discussion_notification(),
