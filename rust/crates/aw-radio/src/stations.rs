@@ -2,7 +2,9 @@
 //!
 //! Ports `noaa_radio/stations.py` and `noaa_radio/station_db.py`.
 
+use std::borrow::Cow;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use serde::Serialize;
 
@@ -21,6 +23,10 @@ pub struct Station {
     pub lat: f64,
     pub lon: f64,
     pub state: String,
+    /// Operational status from the station directory (`NORMAL`,
+    /// `OUT OF SERVICE`, ...); empty when unknown.
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub status: String,
 }
 
 impl Station {
@@ -39,8 +45,22 @@ impl Station {
             lat,
             lon,
             state: state.to_string(),
+            status: String::new(),
         }
     }
+
+    /// The directory reports the transmitter as out of service.
+    pub fn is_out_of_service(&self) -> bool {
+        self.status.trim().eq_ignore_ascii_case("OUT OF SERVICE")
+    }
+}
+
+/// A live station list (the WeatherIndex directory).
+pub trait StationDirectory: Send + Sync {
+    /// Current stations; may block on the network. Empty when unavailable.
+    fn stations(&self) -> Vec<Station>;
+    /// Stations already in memory; never touches the network.
+    fn cached_stations(&self) -> Vec<Station>;
 }
 
 /// A station paired with its distance from a query point.
@@ -88,9 +108,22 @@ fn take(stations: Vec<Station>, limit: Option<usize>) -> Vec<Station> {
 }
 
 /// In-memory database of NOAA Weather Radio stations.
-#[derive(Debug, Clone)]
+///
+/// With a [`StationDirectory`], the directory is the station list and the
+/// bundled list is only used when the directory can't be loaded.
+#[derive(Clone)]
 pub struct StationDatabase {
     stations: Vec<Station>,
+    directory: Option<Arc<dyn StationDirectory>>,
+}
+
+impl std::fmt::Debug for StationDatabase {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("StationDatabase")
+            .field("stations", &self.stations.len())
+            .field("directory", &self.directory.is_some())
+            .finish()
+    }
 }
 
 impl Default for StationDatabase {
@@ -106,22 +139,68 @@ impl StationDatabase {
             .iter()
             .map(|&(cs, freq, name, lat, lon, state)| Station::new(cs, freq, name, lat, lon, state))
             .collect();
-        Self { stations }
+        Self {
+            stations,
+            directory: None,
+        }
     }
 
     /// A database over a caller-supplied station list (tests, custom data).
     pub fn with_stations(stations: Vec<Station>) -> Self {
-        Self { stations }
+        Self {
+            stations,
+            directory: None,
+        }
+    }
+
+    /// Stations come from `directory`, falling back to the bundled list
+    /// when it can't be loaded. Nothing is fetched until first use.
+    pub fn with_directory(directory: Arc<dyn StationDirectory>) -> Self {
+        Self {
+            directory: Some(directory),
+            ..Self::new()
+        }
+    }
+
+    /// The directory's stations, else this database's own list.
+    fn current(&self) -> Cow<'_, [Station]> {
+        if let Some(directory) = &self.directory {
+            let stations = directory.stations();
+            if !stations.is_empty() {
+                return Cow::Owned(stations);
+            }
+            tracing::debug!("Using bundled NOAA radio stations; station directory unavailable");
+        }
+        Cow::Borrowed(&self.stations)
     }
 
     pub fn get_all_stations(&self) -> Vec<Station> {
-        self.stations.clone()
+        self.current().into_owned()
+    }
+
+    /// State codes for the state chooser without touching the network: the
+    /// loaded directory's states, else the bundled list's.
+    pub fn state_codes(&self) -> Vec<String> {
+        let cached = self
+            .directory
+            .as_ref()
+            .map(|d| d.cached_stations())
+            .unwrap_or_default();
+        let source = if cached.is_empty() {
+            &self.stations
+        } else {
+            &cached
+        };
+        let mut states: Vec<String> = source.iter().map(|s| s.state.clone()).collect();
+        states.sort();
+        states.dedup();
+        states
     }
 
     /// Stations in a US state or territory (case-insensitive).
     pub fn get_stations_by_state(&self, state: &str) -> Vec<Station> {
         let state_upper = state.to_uppercase();
-        self.stations
+        self.current()
             .iter()
             .filter(|s| s.state.to_uppercase() == state_upper)
             .cloned()
@@ -132,8 +211,8 @@ impl StationDatabase {
     /// duplicates and unknown call signs.
     pub fn get_stations_by_call_signs<S: AsRef<str>>(&self, call_signs: &[S]) -> Vec<Station> {
         // Later entries win, like the Python dict comprehension.
-        let by_call_sign: HashMap<String, &Station> = self
-            .stations
+        let current = self.current();
+        let by_call_sign: HashMap<String, &Station> = current
             .iter()
             .map(|s| (s.call_sign.to_uppercase(), s))
             .collect();
@@ -172,7 +251,7 @@ impl StationDatabase {
         let upper = normalized.to_uppercase();
         let lower = normalized.to_lowercase();
         let matches = self
-            .stations
+            .current()
             .iter()
             .filter(|s| {
                 s.call_sign.to_uppercase().contains(&upper)
@@ -187,7 +266,7 @@ impl StationDatabase {
     /// Nearest stations, closest first (stable for equal distances).
     pub fn find_nearest(&self, lat: f64, lon: f64, limit: Option<usize>) -> Vec<StationResult> {
         let mut results: Vec<StationResult> = self
-            .stations
+            .current()
             .iter()
             .map(|s| StationResult {
                 station: s.clone(),
@@ -279,6 +358,59 @@ mod tests {
         let found = db.get_stations_by_call_signs(&["wxk27", " ", "KEC49", "WXK27", "NOPE"]);
         let call_signs: Vec<_> = found.iter().map(|s| s.call_sign.as_str()).collect();
         assert_eq!(call_signs, ["WXK27", "KEC49"]);
+    }
+
+    struct FakeDirectory {
+        live: Vec<Station>,
+        cached: Vec<Station>,
+    }
+
+    impl StationDirectory for FakeDirectory {
+        fn stations(&self) -> Vec<Station> {
+            self.live.clone()
+        }
+        fn cached_stations(&self) -> Vec<Station> {
+            self.cached.clone()
+        }
+    }
+
+    #[test]
+    fn directory_replaces_the_bundled_list() {
+        let keytesville = Station::new("WXL45", 162.475, "Keytesville, MO", 39.43, -92.94, "MO");
+        let db = StationDatabase::with_directory(Arc::new(FakeDirectory {
+            live: vec![keytesville.clone()],
+            cached: vec![],
+        }));
+        assert_eq!(db.get_all_stations(), std::slice::from_ref(&keytesville));
+        assert_eq!(
+            db.search("keytesville", None),
+            std::slice::from_ref(&keytesville)
+        );
+        assert_eq!(
+            db.get_stations_by_state("mo"),
+            std::slice::from_ref(&keytesville)
+        );
+        assert_eq!(db.find_nearest(39.0, -93.0, None).len(), 1);
+        // Nothing cached yet: the state chooser uses the bundled states.
+        assert_eq!(db.state_codes(), StationDatabase::new().state_codes());
+
+        let cached = StationDatabase::with_directory(Arc::new(FakeDirectory {
+            live: vec![],
+            cached: vec![keytesville],
+        }));
+        assert_eq!(cached.state_codes(), ["MO"]);
+    }
+
+    #[test]
+    fn unavailable_directory_falls_back_to_bundled_stations() {
+        let db = StationDatabase::with_directory(Arc::new(FakeDirectory {
+            live: vec![],
+            cached: vec![],
+        }));
+        assert_eq!(
+            db.get_all_stations(),
+            StationDatabase::new().get_all_stations()
+        );
     }
 
     fn call_signs(stations: &[Station]) -> Vec<String> {
