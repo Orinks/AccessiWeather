@@ -325,7 +325,10 @@ pub(crate) fn show_add_location_dialog(parent: &Frame) -> Option<String> {
     );
     search_sizer.add(&country_choice, 0, SizerFlag::Bottom, 8);
     search_sizer.add(
-        &label(&panel, "Search for a city, town, or postal code:"),
+        &label(
+            &panel,
+            "Search for a city, town, postal code, or coordinates:",
+        ),
         0,
         SizerFlag::Bottom,
         5,
@@ -334,7 +337,7 @@ pub(crate) fn show_add_location_dialog(parent: &Frame) -> Option<String> {
     let search_input = TextCtrl::builder(&panel)
         .with_style(TextCtrlStyle::ProcessEnter)
         .build();
-    set_hint(&search_input, "City, town, or postal code");
+    set_hint(&search_input, "City, town, postal code, or coordinates");
     search_row.add(&search_input, 1, SizerFlag::Right, 10);
     let search_button = Button::builder(&panel).with_label("Search").build();
     search_row.add(&search_button, 0, SizerFlag::empty(), 0);
@@ -349,8 +352,8 @@ pub(crate) fn show_add_location_dialog(parent: &Frame) -> Option<String> {
     search_sizer.add(&current_location_button, 0, SizerFlag::Top, 8);
     let search_help = label(
         &panel,
-        "Examples: 'Kuala Lumpur', 'M\u{fc}nchen', 'Perth', or '50000'. \
-         US street addresses also work.",
+        "Examples: 'Kuala Lumpur', 'M\u{fc}nchen', 'Perth', '50000', or coordinates \
+         like '1.35, 103.82'. US street addresses also work.",
     );
     text_colour(&search_help, true);
     search_sizer.add(&search_help, 0, SizerFlag::Top, 5);
@@ -397,7 +400,7 @@ pub(crate) fn show_add_location_dialog(parent: &Frame) -> Option<String> {
     // `_setup_accessibility`.
     name_input.set_name("Location name input");
     country_choice.set_name("Country to search in");
-    search_input.set_name("Search for a city, town, or postal code");
+    search_input.set_name("Search for a city, town, postal code, or coordinates");
     results.set_name("Search results");
     marine_mode_checkbox.set_name("Enable Marine Mode for this location");
     current_location_button.set_name("Use my current location");
@@ -753,7 +756,7 @@ pub(crate) fn show_edit_location_dialog(
         .build();
     set_hint(
         &address_input,
-        "City, town, postal code, or US street address",
+        "City, town, postal code, coordinates, or US street address",
     );
     address_input.set_name("Address lookup for saved location coordinates");
     search_row.add(&address_input, 1, SizerFlag::Right, 8);

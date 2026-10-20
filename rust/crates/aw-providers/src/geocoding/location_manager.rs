@@ -28,6 +28,12 @@ static STREET_ADDRESS_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
     )
     .expect("valid street address regex")
 });
+static COORDINATE_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(
+        r"^\s*([+-]?\d{1,3}(?:\.\d+)?)\s*°?\s*([NSns])?\s*([,;]|\s)\s*([+-]?\d{1,3}(?:\.\d+)?)\s*°?\s*([EWew])?\s*$",
+    )
+    .expect("valid coordinate regex")
+});
 static STARTS_WITH_NUMBER_PATTERN: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^\s*\d+\b").expect("valid number regex"));
 
@@ -113,6 +119,10 @@ impl<'a> LocationManager<'a> {
         if query.chars().count() < 2 {
             tracing::info!("Query too short for geocoding");
             return Ok(Vec::new());
+        }
+        // Coordinates name one place anywhere, so the country filter doesn't apply.
+        if let Some((latitude, longitude)) = parse_coordinates(query) {
+            return Ok(vec![self.coordinate_result(latitude, longitude)]);
         }
         let country_code = country_code
             .map(|c| c.trim().to_uppercase())
@@ -280,6 +290,31 @@ impl<'a> LocationManager<'a> {
 
     /// A friendly label for coordinates (NWS first, then Nominatim); `None`
     /// when neither source can name the point.
+    /// A typed latitude and longitude, named by reverse geocoding when it can
+    /// be, otherwise by the coordinates themselves.
+    fn coordinate_result(&self, latitude: f64, longitude: f64) -> LocationSearchResult {
+        let location = self
+            .reverse_geocode_coordinates(latitude, longitude)
+            .unwrap_or_else(|| {
+                Location::new(
+                    Self::format_coordinates(latitude, longitude, 4),
+                    latitude,
+                    longitude,
+                )
+            });
+        let country = location
+            .country_code
+            .as_deref()
+            .and_then(aw_core::countries::country_name)
+            .unwrap_or("")
+            .to_string();
+        LocationSearchResult {
+            location,
+            region: String::new(),
+            country,
+        }
+    }
+
     pub fn reverse_geocode_coordinates(&self, latitude: f64, longitude: f64) -> Option<Location> {
         self.reverse_geocode_with_nws(latitude, longitude)
             .or_else(|| self.reverse_geocode_with_nominatim(latitude, longitude))
@@ -393,6 +428,36 @@ impl<'a> LocationManager<'a> {
     }
 }
 
+/// A typed latitude and longitude such as `1.3521, 103.8198`,
+/// `-33.87 151.21` or `40.71°N, 74.01°W`. A space alone separates them only
+/// when both have decimals or compass letters, so postcodes like `110 00`
+/// stay postcodes.
+pub fn parse_coordinates(text: &str) -> Option<(f64, f64)> {
+    let caps = COORDINATE_PATTERN.captures(text)?;
+    let (lat_text, lon_text) = (&caps[1], &caps[4]);
+    let (lat_dir, lon_dir) = (caps.get(2), caps.get(5));
+    if lat_dir.is_some() != lon_dir.is_some() {
+        return None;
+    }
+    let signed = |value: &str, dir: Option<regex::Match>, negative: char| -> Option<f64> {
+        let number: f64 = value.parse().ok()?;
+        match dir {
+            Some(_) if value.starts_with(['+', '-']) => None,
+            Some(d) if d.as_str().eq_ignore_ascii_case(&negative.to_string()) => Some(-number),
+            _ => Some(number),
+        }
+    };
+    if caps[3].trim().is_empty() {
+        let decimals = lat_text.contains('.') && lon_text.contains('.');
+        if !decimals && lat_dir.is_none() {
+            return None;
+        }
+    }
+    let latitude = signed(lat_text, lat_dir, 'S')?;
+    let longitude = signed(lon_text, lon_dir, 'W')?;
+    LocationManager::validate_coordinates(latitude, longitude).then_some((latitude, longitude))
+}
+
 /// Editable label from a Nominatim reverse response: locality, region and
 /// country without case-insensitive repeats, else `display_name`.
 pub fn format_nominatim_location_name(data: &Value) -> Option<String> {
@@ -487,6 +552,57 @@ mod tests {
     use super::*;
     use crate::http::FixtureClient;
     use serde_json::json;
+
+    #[test]
+    fn coordinates_are_recognised() {
+        assert_eq!(
+            parse_coordinates("1.3521, 103.8198"),
+            Some((1.3521, 103.8198))
+        );
+        assert_eq!(parse_coordinates("-33.87 151.21"), Some((-33.87, 151.21)));
+        assert_eq!(parse_coordinates("40.71°N, 74.01°W"), Some((40.71, -74.01)));
+        assert_eq!(parse_coordinates("33.9 S 18.4 E"), Some((-33.9, 18.4)));
+        assert_eq!(parse_coordinates("51;0"), Some((51.0, 0.0)));
+        // Postcodes and other searches are left alone.
+        assert_eq!(parse_coordinates("50000"), None);
+        assert_eq!(parse_coordinates("110 00"), None);
+        assert_eq!(parse_coordinates("10 Main Street"), None);
+        assert_eq!(parse_coordinates("95, 10"), None);
+        assert_eq!(parse_coordinates("40.7N, 74.0"), None);
+        assert_eq!(parse_coordinates("-40.7S, 74.0E"), None);
+    }
+
+    #[test]
+    fn coordinate_search_reverse_geocodes_and_ignores_the_country_filter() {
+        let nominatim = json!({"address": {"city": "Singapore", "country": "Singapore",
+            "country_code": "sg"}});
+        let http = FixtureClient::new().with(NOMINATIM_BASE_URL, nominatim);
+        let found = LocationManager::new(&http)
+            .search_location_results("1.3521, 103.8198", 10, Some("US"), None)
+            .unwrap();
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].location.name, "Singapore");
+        assert_eq!(found[0].location.country_code.as_deref(), Some("SG"));
+        assert_eq!(found[0].country, "Singapore");
+        assert_eq!(
+            (found[0].location.latitude, found[0].location.longitude),
+            (1.3521, 103.8198)
+        );
+        assert!(http
+            .request_log()
+            .iter()
+            .all(|url| !url.starts_with(GEOCODING_BASE_URL)));
+    }
+
+    #[test]
+    fn coordinate_search_without_a_place_name_uses_the_coordinates() {
+        let http = FixtureClient::new();
+        let found = LocationManager::new(&http)
+            .search_location_results("-10.5, -150.25", 10, None, None)
+            .unwrap();
+        assert_eq!(found[0].location.name, "10.5000°S, 150.2500°W");
+        assert_eq!(found[0].country, "");
+    }
 
     #[test]
     fn street_address_detection() {

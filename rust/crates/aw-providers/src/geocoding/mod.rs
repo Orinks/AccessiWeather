@@ -15,7 +15,7 @@ use serde_json::Value;
 
 use crate::http::{build_url, HttpClient, HttpError};
 
-pub use location_manager::{LocationManager, LocationSearchResult};
+pub use location_manager::{parse_coordinates, LocationManager, LocationSearchResult};
 
 pub const BASE_URL: &str = "https://geocoding-api.open-meteo.com/v1";
 

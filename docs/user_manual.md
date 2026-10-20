@@ -64,7 +64,7 @@ To add a location:
 1. Open Location > Add Location, or press Ctrl+L.
 2. Enter a friendly name in Location Name.
 3. Check Country to search in. It starts on your computer's region; choose Any country to search worldwide.
-4. Search by city or town name, postal code, or US street address.
+4. Search by city or town name, postal code, coordinates such as 1.35, 103.82, or US street address.
 5. Select one result from the results list. Each result shows its state or region and country.
 6. Save the location.
 
@@ -76,6 +76,7 @@ Important things to know:
 - If nothing matches in the chosen country, AccessiWeather searches every country and says so.
 - AccessiWeather remembers the country you last searched in.
 - Place names come back in your computer's language when the search service supports it.
+- Coordinates can be decimal degrees (use a minus sign for south and west) or carry N, S, E and W letters. They ignore the country filter.
 - US street addresses use a precise address lookup first, then fall back to the normal place search if there is no address match.
 
 ### Edit a location

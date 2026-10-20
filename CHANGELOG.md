@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 - You can now get alert notifications for all saved locations, not just the selected one, and each names its location. Turn it on in Settings, Alerts tab.
 - You can now have the weather read aloud on a schedule, such as every half hour, from Tools > Scheduled Readings.
 - Add Location now has a Country to search in filter, starting on your computer's region, and results show each place's region and country.
+- You can now add a location by typing its coordinates, such as 1.35, 103.82, into Add Location.
 - First-run setup now asks which units you want, and new installs show units that match each location instead of Fahrenheit first.
 
 ### Changed
