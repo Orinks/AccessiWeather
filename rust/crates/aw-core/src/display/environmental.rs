@@ -11,7 +11,9 @@ use chrono_tz::Tz;
 use crate::air_quality::{self, AqiStandard};
 use crate::display::models::AirQualityPresentation;
 use crate::display::pyfmt::{round_int, title};
-use crate::display::time::{format_display_datetime, PyDateTime, DEFAULT_DATE_FORMAT};
+use crate::display::time::{
+    format_display_datetime, format_display_time, PyDateTime, DEFAULT_DATE_FORMAT,
+};
 use crate::model::EnvironmentalConditions;
 use crate::settings::AppSettings;
 
@@ -79,6 +81,19 @@ pub fn build_air_quality_panel(
         );
         format!("Updated {stamp}")
     });
+    // Observed or modelled, and from where; only providers that know it
+    // fill this, so legacy data keeps its old lines.
+    let reading_line = environmental.air_quality_provenance.as_ref().map(|p| {
+        let clock = |t: &crate::model::Timestamp| {
+            format_display_time(
+                Some(&PyDateTime::aware(*t, location_zone)),
+                &settings.time_display_mode,
+                settings.time_format_12hour,
+                settings.show_timezone_suffix,
+            )
+        };
+        air_quality::provenance_line(p, &clock)
+    });
     let guidance =
         air_quality::guidance(standard.unwrap_or(AqiStandard::Us), category.unwrap_or(""));
     let mut sources: Vec<String> = environmental
@@ -102,7 +117,7 @@ pub fn build_air_quality_panel(
             details.push(pd);
         }
     }
-    for line in [&summary_line, &pollutant_line, &updated_line]
+    for line in [&summary_line, &pollutant_line, &updated_line, &reading_line]
         .into_iter()
         .flatten()
     {
@@ -258,6 +273,33 @@ mod tests {
         env.air_quality_index_standard = None;
         let p = build_air_quality_panel("Paris", &env, &AppSettings::default(), None).unwrap();
         assert_eq!(p.summary, "AQI 35 (Fair)");
+    }
+
+    #[test]
+    fn panel_says_where_the_reading_came_from() {
+        use crate::model::{AirQualityProvenance, ReadingKind};
+        let mut env = EnvironmentalConditions {
+            air_quality_index: Some(35.0),
+            air_quality_category: Some("Fair".into()),
+            air_quality_index_standard: Some(AqiStandard::European),
+            ..Default::default()
+        };
+        let legacy = build_air_quality_panel("Paris", &env, &AppSettings::default(), None).unwrap();
+        assert!(!legacy.fallback_text.contains("Reading:"));
+        env.air_quality_provenance = Some(AirQualityProvenance {
+            kind: ReadingKind::Modelled,
+            provider: "Open-Meteo".into(),
+            detail: Some("CAMS European model, about 11 km grid".into()),
+            station_name: None,
+            station_distance_km: None,
+            time: Some(chrono::DateTime::parse_from_rfc3339("2025-06-01T14:00:00+02:00").unwrap()),
+        });
+        let p = build_air_quality_panel("Paris", &env, &AppSettings::default(), None).unwrap();
+        let line = "Reading: Modelled by Open-Meteo, CAMS European model, about 11 km grid, \
+                    forecast for 2:00 PM";
+        assert_eq!(p.details.last().map(String::as_str), Some(line));
+        assert!(p.fallback_text.contains(&format!("• {line}")));
+        assert_eq!(p.summary, legacy.summary);
     }
 
     #[test]

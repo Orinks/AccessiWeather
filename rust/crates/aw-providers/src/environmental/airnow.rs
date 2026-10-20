@@ -28,14 +28,17 @@ pub struct AirNowObservation {
     pub reporting_area: Option<String>,
 }
 
+type CachedObservations = (Option<AirNowObservation>, Vec<AirNowObservation>);
+
 pub struct AirNowClient {
     http: Arc<dyn HttpClient>,
     api_key: String,
     pub user_agent: String,
     pub distance: i64,
     ttl: Duration,
-    /// `None` caches "a successful response without a usable observation".
-    cache: Mutex<HashMap<String, (Instant, Option<AirNowObservation>)>>,
+    /// The headline observation (`None` caches "a successful response
+    /// without a usable observation") and the highest one per pollutant.
+    cache: Mutex<HashMap<String, (Instant, CachedObservations)>>,
 }
 
 fn timezone_offset_hours(name: &str) -> Option<i32> {
@@ -175,6 +178,60 @@ pub fn parse_observations(payload: &Value) -> Option<AirNowObservation> {
     })
 }
 
+/// Every valid observation in a list response, keeping the highest AQI
+/// per pollutant, in the order the pollutants first appear.
+pub fn parse_all_observations(payload: &Value) -> Vec<AirNowObservation> {
+    let mut result: Vec<AirNowObservation> = Vec::new();
+    let Some(items) = payload.as_array() else {
+        return result;
+    };
+    for item in items.iter().filter_map(Value::as_object) {
+        let Some(aqi) = coerce_aqi(field(item, &["AQI", "nowcastAQI"])) else {
+            continue;
+        };
+        let text = |names: &[&str]| {
+            field(item, names)
+                .and_then(Value::as_str)
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .map(str::to_string)
+        };
+        let observation = AirNowObservation {
+            aqi,
+            category: category_name(field(item, &["Category", "aqiCategoryName"]))
+                .unwrap_or_else(|| air_quality_category(aqi as f64).to_string()),
+            pollutant: text(&["ParameterName", "parameterName"])
+                .unwrap_or_else(|| "Unknown".into()),
+            observed_at: parse_observed_at(item),
+            reporting_area: text(&["ReportingArea", "reportingAreaName"]),
+        };
+        let key = observation.pollutant.to_uppercase();
+        match result
+            .iter_mut()
+            .find(|o| o.pollutant.to_uppercase() == key)
+        {
+            Some(existing) if existing.aqi < aqi => *existing = observation,
+            Some(_) => {}
+            None => result.push(observation),
+        }
+    }
+    result
+}
+
+/// The [`PollutantReading`](aw_core::model::PollutantReading) code for an
+/// AirNow parameter name ("PM2.5", "O3", "OZONE").
+pub fn pollutant_code(parameter: &str) -> Option<&'static str> {
+    Some(match parameter.trim().to_uppercase().as_str() {
+        "PM2.5" | "PM25" | "PM2_5" => "pm2_5",
+        "PM10" => "pm10",
+        "O3" | "OZONE" => "o3",
+        "NO2" => "no2",
+        "SO2" => "so2",
+        "CO" => "co",
+        _ => return None,
+    })
+}
+
 /// Coordinate validation error (Python raises `ValueError`).
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 #[error("{0}")]
@@ -240,6 +297,20 @@ impl AirNowClient {
         &self,
         location: &Location,
     ) -> Result<Option<AirNowObservation>, InvalidCoordinates> {
+        Ok(self.fetch_cached(location)?.0)
+    }
+
+    /// The highest current observation of each pollutant near `location`,
+    /// from the same cached request as
+    /// [`fetch_current_air_quality`](Self::fetch_current_air_quality).
+    pub fn fetch_current_observations(
+        &self,
+        location: &Location,
+    ) -> Result<Vec<AirNowObservation>, InvalidCoordinates> {
+        Ok(self.fetch_cached(location)?.1)
+    }
+
+    fn fetch_cached(&self, location: &Location) -> Result<CachedObservations, InvalidCoordinates> {
         let (lat, lon) = Self::validated_coordinates(location)?;
         let key = self.cache_key(lat, lon);
         if let Some((stored, cached)) = self.cache.lock().unwrap().get(&key) {
@@ -248,7 +319,7 @@ impl AirNowClient {
             }
         }
         if self.api_key().is_empty() {
-            return Ok(None);
+            return Ok((None, Vec::new()));
         }
         let payload = match self
             .http
@@ -258,17 +329,18 @@ impl AirNowClient {
             Err(e) => {
                 // Never log the error text: the URL carries the API key.
                 tracing::warn!("AirNow current AQI request failed ({})", error_kind(&e));
-                return Ok(None);
+                return Ok((None, Vec::new()));
             }
         };
         let observation = parse_observations(&payload);
+        let all = parse_all_observations(&payload);
         if observation.is_some() || payload.is_array() {
             self.cache
                 .lock()
                 .unwrap()
-                .insert(key, (Instant::now(), observation.clone()));
+                .insert(key, (Instant::now(), (observation.clone(), all.clone())));
         }
-        Ok(observation)
+        Ok((observation, all))
     }
 
     /// Check the key against the live API: `(true, None)` or `(false, reason)`.
@@ -445,6 +517,48 @@ mod tests {
             AirNowClient::new(Arc::new(FixtureClient::new()), "", "UA").validate_api_key(),
             (false, Some("No API key provided".into()))
         );
+    }
+
+    #[test]
+    fn all_observations_keep_the_highest_per_pollutant() {
+        let payload = json!([
+            {"AQI": 42, "ParameterName": "O3", "Category": {"Number": 1, "Name": "Good"},
+             "DateObserved": "2025-01-15", "HourObserved": 11, "LocalTimeZone": "EST",
+             "ReportingArea": "Philadelphia"},
+            {"AQI": "87", "ParameterName": "PM2.5", "Category": {"Number": 2, "Name": "Moderate"},
+             "DateObserved": "2025-01-15", "HourObserved": "11", "LocalTimeZone": "EST",
+             "ReportingArea": " Philadelphia "},
+            {"AQI": 30, "ParameterName": "PM2.5", "Category": {"Name": "Good"}},
+            {"AQI": -1, "ParameterName": "PM10"}
+        ]);
+        let all = parse_all_observations(&payload);
+        assert_eq!(all.len(), 2);
+        assert_eq!((all[0].pollutant.as_str(), all[0].aqi), ("O3", 42));
+        assert_eq!((all[1].pollutant.as_str(), all[1].aqi), ("PM2.5", 87));
+        assert_eq!(all[1].category, "Moderate");
+        assert_eq!(all[1].reporting_area.as_deref(), Some("Philadelphia"));
+        assert_eq!(
+            all[1].observed_at.unwrap().to_rfc3339(),
+            "2025-01-15T11:00:00-05:00"
+        );
+        // The headline parser still picks the single highest.
+        assert_eq!(parse_observations(&payload).unwrap().aqi, 87);
+        assert!(parse_all_observations(&json!({"a": 1})).is_empty());
+        assert_eq!(pollutant_code("PM2.5"), Some("pm2_5"));
+        assert_eq!(pollutant_code("OZONE"), Some("o3"));
+        assert_eq!(pollutant_code("xyz"), None);
+    }
+
+    #[test]
+    fn observations_share_the_cached_request() {
+        let (http, c) = client(FixtureClient::new().with(
+            ENDPOINT,
+            json!([{"AQI": 42, "ParameterName": "O3"}, {"AQI": 61, "ParameterName": "PM2.5"}]),
+        ));
+        let here = Location::new("x", 40.0, -75.0);
+        assert_eq!(c.fetch_current_air_quality(&here).unwrap().unwrap().aqi, 61);
+        assert_eq!(c.fetch_current_observations(&here).unwrap().len(), 2);
+        assert_eq!(http.request_log().len(), 1);
     }
 
     #[test]

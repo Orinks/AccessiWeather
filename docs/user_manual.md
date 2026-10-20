@@ -1268,6 +1268,17 @@ For US locations, current AQI comes from EPA AirNow when an AirNow API key is co
 
 Air quality uses the index set in Settings > Display > Air quality index. By default, European locations show the European AQI and its categories (Good, Fair, Moderate, Poor, Very poor, Extremely poor), and everywhere else shows the US AQI. The current reading, its health guidance and each line of the hourly forecast name the index they use.
 
+Under Current Pollutant Levels, the Air Quality window has a Pollutant readings list with one row per pollutant: PM2.5, PM10, ozone, nitrogen dioxide, sulphur dioxide and carbon monoxide, when the source reports them. Use the Up and Down arrow keys to move between rows. Each row has these columns:
+
+- Pollutant: the pollutant's name.
+- Concentration: the amount in the air, such as 12.3 μg/m³, and the period it is averaged over, such as a 1-hour average. AirNow reports only index values, so its rows say Not measured here.
+- Index: the pollutant's own value and category on the AQI in use, and the averaging period that index uses, for example a 24-hour average for particles, an 8-hour average for ozone on the US AQI, or NowCast for AirNow. Not rated means the source gives no index for that pollutant.
+- Type: Observed when a monitoring station measured it, Modelled when it comes from a forecast model.
+- Source: who supplied it. Observed readings name the provider and the station or reporting area. Modelled readings from Open-Meteo name the CAMS model and its approximate resolution: the European model, about 11 km, across Europe, and the global model, about 45 km, everywhere else. A modelled value is an estimate for the surrounding area, not a measurement at your street.
+- Time: when it was observed, or the forecast hour a modelled value is for.
+
+Observed readings come first, and the model fills in any pollutant no station reported, so each pollutant appears once. The line under the list sums up which pollutants came from which source. The current air quality summary also has a Reading line saying whether the headline index was observed or modelled, by whom, and for what time.
+
 ### Aviation Weather
 
 Use View > Aviation Weather to fetch decoded aviation weather by four-letter ICAO airport code, such as KJFK.

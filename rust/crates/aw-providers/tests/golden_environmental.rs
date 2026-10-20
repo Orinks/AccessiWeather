@@ -23,6 +23,8 @@ fn options(value: &Value) -> FetchOptions {
     options.prefer_airnow = flag("prefer_airnow", false);
     // Python only knew the US AQI.
     options.aqi_preference = AqiPreference::Us;
+    // Nor per-pollutant detail, which adds request variables.
+    options.pollutant_detail = false;
     if let Some(hours) = value.get("hourly_hours").and_then(Value::as_u64) {
         options.hourly_hours = hours as usize;
     }
@@ -49,7 +51,12 @@ fn fetch_matches_python() {
             &case["output"],
             &to_value(result).unwrap(),
             &name,
-            &["air_quality_index_standard", "aqi_standard"],
+            &[
+                "air_quality_index_standard",
+                "aqi_standard",
+                "air_quality_provenance",
+                "pollutant_readings",
+            ],
         );
     }
 }

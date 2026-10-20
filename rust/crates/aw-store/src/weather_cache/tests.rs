@@ -180,6 +180,57 @@ fn air_quality_standard_round_trips_only_when_known() {
 }
 
 #[test]
+fn pollutant_readings_round_trip_only_when_present() {
+    use aw_core::model::{
+        AirQualityProvenance, AqiStandard, EnvironmentalConditions, PollutantReading, ReadingKind,
+    };
+    let dir = tempfile::tempdir().unwrap();
+    let cache = cache_in(&dir, 60);
+    let now = Utc::now();
+    let mut weather = test_weather();
+    let env = EnvironmentalConditions {
+        air_quality_index: Some(35.0),
+        ..Default::default()
+    };
+    let legacy = serialize_environmental(&env);
+    assert!(legacy.get("air_quality_provenance").is_none());
+    assert!(legacy.get("pollutant_readings").is_none());
+
+    let provenance = AirQualityProvenance {
+        kind: ReadingKind::Observed,
+        provider: "AirNow".into(),
+        detail: None,
+        station_name: Some("Metro".into()),
+        station_distance_km: Some(2.5),
+        time: Some(chrono::DateTime::parse_from_rfc3339("2025-06-01T09:00:00-04:00").unwrap()),
+    };
+    let reading = PollutantReading {
+        code: "o3".into(),
+        concentration: None,
+        unit: None,
+        averaging: None,
+        index_value: Some(42.0),
+        index_category: Some("Good".into()),
+        index_standard: Some(AqiStandard::Us),
+        index_averaging: Some("NowCast".into()),
+        provenance: provenance.clone(),
+    };
+    weather.environmental = Some(EnvironmentalConditions {
+        air_quality_provenance: Some(provenance.clone()),
+        pollutant_readings: vec![reading.clone()],
+        ..env
+    });
+    cache.store(&test_location(), &weather, now);
+    let loaded = cache
+        .load(&test_location(), true, now)
+        .unwrap()
+        .environmental
+        .unwrap();
+    assert_eq!(loaded.air_quality_provenance, Some(provenance));
+    assert_eq!(loaded.pollutant_readings, vec![reading]);
+}
+
+#[test]
 fn missing_and_invalidated_entries_load_nothing() {
     let dir = tempfile::tempdir().unwrap();
     let cache = cache_in(&dir, 60);

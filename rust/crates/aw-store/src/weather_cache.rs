@@ -481,6 +481,12 @@ fn serialize_environmental(e: &EnvironmentalConditions) -> Value {
     if let Some(standard) = e.air_quality_index_standard {
         pairs.insert(6, ("air_quality_index_standard", json!(standard)));
     }
+    if let Some(provenance) = &e.air_quality_provenance {
+        pairs.push(("air_quality_provenance", json!(provenance)));
+    }
+    if !e.pollutant_readings.is_empty() {
+        pairs.push(("pollutant_readings", json!(e.pollutant_readings)));
+    }
     obj(pairs)
 }
 
@@ -744,6 +750,22 @@ fn deserialize_environmental(d: &Fields) -> Option<EnvironmentalConditions> {
             .0
             .get("air_quality_index_standard")
             .and_then(|v| serde_json::from_value(v.clone()).ok()),
+        air_quality_provenance: d
+            .0
+            .get("air_quality_provenance")
+            .and_then(|v| serde_json::from_value(v.clone()).ok()),
+        // A malformed entry drops only itself.
+        pollutant_readings: d
+            .0
+            .get("pollutant_readings")
+            .and_then(Value::as_array)
+            .map(|items| {
+                items
+                    .iter()
+                    .filter_map(|v| serde_json::from_value(v.clone()).ok())
+                    .collect()
+            })
+            .unwrap_or_default(),
         pollen_index: d.f64("pollen_index"),
         pollen_category: d.string("pollen_category"),
         pollen_tree_index: d.f64("pollen_tree_index"),
