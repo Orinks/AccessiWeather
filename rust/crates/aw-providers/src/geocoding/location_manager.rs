@@ -168,7 +168,15 @@ impl<'a> LocationManager<'a> {
             .cloned()
             .unwrap_or_default();
         if results.is_empty() {
-            return self.unicode_fallback(query, limit, &language, country_code.as_deref());
+            let found = self.unicode_fallback(query, limit, &language, country_code.as_deref())?;
+            return match &country_code {
+                // Open-Meteo doesn't index every country's postcodes
+                // (Germany's, for one), so ask Nominatim for the postcode.
+                Some(code) if found.is_empty() && query.chars().any(|c| c.is_ascii_digit()) => {
+                    Ok(self.search_postcode_with_nominatim(query, code, &language, limit))
+                }
+                _ => Ok(found),
+            };
         }
 
         let population = |item: &Value| {
@@ -362,6 +370,70 @@ impl<'a> LocationManager<'a> {
             .map(py::value_str);
         location.country_code = Some("US".into());
         Some(location)
+    }
+
+    /// Places with `postcode` in `country_code`, from Nominatim's structured
+    /// search. Empty when Nominatim can't be reached or knows no such code.
+    fn search_postcode_with_nominatim(
+        &self,
+        postcode: &str,
+        country_code: &str,
+        language: &str,
+        limit: usize,
+    ) -> Vec<LocationSearchResult> {
+        let url = build_url(
+            &format!("{}/search", self.nominatim_base_url),
+            &[
+                ("postalcode", postcode.to_string()),
+                ("countrycodes", country_code.to_lowercase()),
+                ("format", "jsonv2".into()),
+                ("addressdetails", "1".into()),
+                ("limit", limit.clamp(1, 10).to_string()),
+                ("accept-language", language.to_string()),
+            ],
+        );
+        let data = match self.http.get_json_with_headers(
+            &url,
+            &[
+                ("User-Agent", REVERSE_USER_AGENT),
+                ("Accept", "application/json"),
+            ],
+        ) {
+            Ok(d) => d,
+            Err(e) => {
+                tracing::debug!("Nominatim postcode search failed: {e}");
+                return Vec::new();
+            }
+        };
+        let mut unique: Vec<LocationSearchResult> = Vec::new();
+        for item in data.as_array().into_iter().flatten() {
+            let coordinate = |key: &str| text_or_empty(item.get(key)).parse::<f64>().ok();
+            let (Some(latitude), Some(longitude)) = (coordinate("lat"), coordinate("lon")) else {
+                continue;
+            };
+            let Some(place) = format_nominatim_location_name(item) else {
+                continue;
+            };
+            let address = item.get("address");
+            let field = |key: &str| text_or_empty(address.and_then(|a| a.get(key)));
+            let code = field("country_code").to_uppercase();
+            let mut location = Location::new(format!("{postcode} {place}"), latitude, longitude);
+            location.country_code = Some(if code.is_empty() {
+                country_code.to_uppercase()
+            } else {
+                code
+            });
+            let key = location.name.to_lowercase();
+            if !unique.iter().any(|r| r.location.name.to_lowercase() == key) {
+                unique.push(LocationSearchResult {
+                    location,
+                    region: field("state"),
+                    country: field("country"),
+                });
+            }
+        }
+        unique.truncate(limit);
+        unique
     }
 
     fn reverse_geocode_with_nominatim(&self, latitude: f64, longitude: f64) -> Option<Location> {
@@ -691,6 +763,48 @@ mod tests {
             http.request_log()[0],
             format!("{GEOCODING_BASE_URL}/search?name=Paris&count=5&language=en&format=json")
         );
+    }
+
+    #[test]
+    fn postcode_open_meteo_lacks_comes_from_nominatim_in_that_country() {
+        // Open-Meteo answers German postcodes with no "results" at all.
+        let http = FixtureClient::new()
+            .with(GEOCODING_BASE_URL, json!({"generationtime_ms": 0.5}))
+            .with(
+                NOMINATIM_BASE_URL,
+                json!([{"lat": "52.5323", "lon": "13.3846", "display_name": "10115, Mitte, Berlin, Deutschland",
+                        "address": {"postcode": "10115", "suburb": "Mitte", "city": "Berlin",
+                                    "state": "Berlin", "country": "Deutschland", "country_code": "de"}}]),
+            );
+        let found = LocationManager::new(&http)
+            .search_location_results("10115", 10, Some("DE"), Some("de"))
+            .unwrap();
+        let log = http.request_log();
+        assert_eq!(
+            log.last().unwrap(),
+            &format!(
+                "{NOMINATIM_BASE_URL}/search?postalcode=10115&countrycodes=de&format=jsonv2\
+                 &addressdetails=1&limit=10&accept-language=de"
+            )
+        );
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].location.name, "10115 Berlin, Deutschland");
+        assert_eq!(found[0].location.country_code.as_deref(), Some("DE"));
+        assert_eq!(found[0].region, "Berlin");
+        assert!((found[0].location.latitude - 52.5323).abs() < 1e-9);
+    }
+
+    #[test]
+    fn place_names_never_go_to_nominatim() {
+        let http = FixtureClient::new().with(GEOCODING_BASE_URL, json!({"results": []}));
+        let found = LocationManager::new(&http)
+            .search_location_results("Nowhereville", 10, Some("DE"), None)
+            .unwrap();
+        assert!(found.is_empty());
+        assert!(http
+            .request_log()
+            .iter()
+            .all(|u| !u.starts_with(NOMINATIM_BASE_URL)));
     }
 
     #[test]
