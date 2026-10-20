@@ -318,6 +318,7 @@ impl EnvironmentalConditions {
             || !self.hourly_air_quality.is_empty()
             || self.uv_index.is_some()
             || !self.hourly_uv_index.is_empty()
+            || !self.pollutant_readings.is_empty()
     }
 }
 

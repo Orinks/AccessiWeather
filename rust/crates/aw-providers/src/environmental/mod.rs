@@ -3,6 +3,7 @@
 //! pollen and forecast APIs plus AirNow for current U.S. AQI).
 
 pub mod airnow;
+pub mod openaq;
 
 use std::sync::{Arc, RwLock};
 
@@ -19,15 +20,18 @@ use crate::http::{build_url, HttpClient};
 use crate::openmeteo::mapper::map_hourly_uv_index;
 
 pub use airnow::{AirNowClient, AirNowObservation};
+pub use openaq::{OpenAqClient, OpenAqStation};
 
 pub const AIR_QUALITY_ENDPOINT: &str = "https://air-quality-api.open-meteo.com/v1/air-quality";
 pub const POLLEN_ENDPOINT: &str = "https://pollen-api.open-meteo.com/v1/pollen";
 pub const FORECAST_ENDPOINT: &str = "https://api.open-meteo.com/v1/forecast";
 const AIRNOW_SOURCE: &str = "EPA AirNow and participating agencies";
 const OPENMETEO_AQ_SOURCE: &str = "Open-Meteo Air Quality";
+const OPENAQ_SOURCE: &str = "OpenAQ";
 /// Provider names on [`AirQualityProvenance`].
 const AIRNOW_PROVIDER: &str = "AirNow";
 const OPENMETEO_PROVIDER: &str = "Open-Meteo";
+const OPENAQ_PROVIDER: &str = "OpenAQ";
 /// Open-Meteo's documented unit for every concentration variable.
 const OPENMETEO_DEFAULT_UNIT: &str = "μg/m³";
 
@@ -86,6 +90,7 @@ pub struct EnvironmentalDataClient {
     http: Arc<dyn HttpClient>,
     pub user_agent: String,
     airnow: RwLock<Arc<AirNowClient>>,
+    openaq: RwLock<Arc<OpenAqClient>>,
 }
 
 fn is_sequence(value: Option<&Value>) -> bool {
@@ -240,11 +245,32 @@ fn append_source(environmental: &mut EnvironmentalConditions, source: &str) {
 impl EnvironmentalDataClient {
     pub fn new(http: Arc<dyn HttpClient>, user_agent: &str, airnow_api_key: &str) -> Self {
         let airnow = Arc::new(AirNowClient::new(http.clone(), airnow_api_key, user_agent));
+        let openaq = Arc::new(OpenAqClient::new(http.clone(), "", user_agent));
         Self {
             http,
             user_agent: user_agent.to_string(),
             airnow: RwLock::new(airnow),
+            openaq: RwLock::new(openaq),
         }
+    }
+
+    /// Ask OpenAQ for observed station readings with `api_key`.
+    pub fn with_openaq_key(self, api_key: &str) -> Self {
+        self.set_openaq_api_key(api_key);
+        self
+    }
+
+    /// Replace the OpenAQ client so a changed key takes effect immediately.
+    pub fn set_openaq_api_key(&self, api_key: &str) {
+        *self.openaq.write().unwrap() = Arc::new(OpenAqClient::new(
+            self.http.clone(),
+            api_key,
+            &self.user_agent,
+        ));
+    }
+
+    pub fn openaq(&self) -> Arc<OpenAqClient> {
+        self.openaq.read().unwrap().clone()
     }
 
     /// Replace the AirNow client so a changed key takes effect immediately.
@@ -400,6 +426,11 @@ impl EnvironmentalDataClient {
         let standard = options.aqi_preference.resolve(location);
         let mut environmental = EnvironmentalConditions::default();
         let mut airnow_supplied_current = false;
+        // Observed pollutant levels: OpenAQ first, then AirNow, then the
+        // model fills whatever is left, one row per pollutant.
+        if options.include_air_quality && options.pollutant_detail {
+            self.populate_openaq(location, &mut environmental, now);
+        }
         // AirNow only reports the US AQI.
         if options.include_air_quality && options.prefer_airnow && standard == AqiStandard::Us {
             airnow_supplied_current = self.populate_airnow_air_quality(
@@ -437,6 +468,69 @@ impl EnvironmentalDataClient {
             }
         }
         environmental.has_data().then_some(environmental)
+    }
+
+    /// Observed concentrations from the nearest OpenAQ station. Failures
+    /// and empty answers leave `environmental` untouched.
+    fn populate_openaq(
+        &self,
+        location: &Location,
+        environmental: &mut EnvironmentalConditions,
+        now: Timestamp,
+    ) {
+        let client = self.openaq();
+        if client.api_key().is_empty() {
+            return;
+        }
+        let station = match client.fetch_nearest(location, now) {
+            Ok(Some(station)) => station,
+            Ok(None) => {
+                tracing::debug!("No recent OpenAQ station nearby");
+                return;
+            }
+            Err(e) => {
+                tracing::debug!("OpenAQ unavailable ({})", airnow::error_kind(&e));
+                return;
+            }
+        };
+        let station_name = station.display_name();
+        let (detail, averaging) = if station.is_monitor {
+            ("reference monitor", "1-hour")
+        } else {
+            ("low-cost sensor", "Latest sensor reading")
+        };
+        let mut added = false;
+        for reading in &station.readings {
+            if environmental
+                .pollutant_readings
+                .iter()
+                .any(|r| r.code == reading.code)
+            {
+                continue;
+            }
+            environmental.pollutant_readings.push(PollutantReading {
+                code: reading.code.into(),
+                concentration: Some(reading.value),
+                unit: reading.unit.clone(),
+                averaging: Some(averaging.into()),
+                index_value: None,
+                index_category: None,
+                index_standard: None,
+                index_averaging: None,
+                provenance: AirQualityProvenance {
+                    kind: ReadingKind::Observed,
+                    provider: OPENAQ_PROVIDER.into(),
+                    detail: Some(detail.into()),
+                    station_name: Some(station_name.clone()),
+                    station_distance_km: station.distance_km,
+                    time: Some(reading.time),
+                },
+            });
+            added = true;
+        }
+        if added {
+            append_source(environmental, OPENAQ_SOURCE);
+        }
     }
 
     fn populate_airnow_air_quality(
@@ -1085,6 +1179,211 @@ mod tests {
         assert_eq!(http.request_log().len(), before + 1);
         assert!(env.pollutant_readings.is_empty());
         assert!(env.air_quality_provenance.is_none());
+    }
+
+    fn paris_station() -> Value {
+        let mut station = openaq::tests::station(
+            4321,
+            "Paris 18e",
+            2400.0,
+            "2025-06-01T14:00:00Z",
+            &[(51, "pm25", "µg/m³"), (52, "no2", "µg/m³")],
+        );
+        // The locality is already in the name, so it is not repeated.
+        station["locality"] = json!("Paris");
+        station
+    }
+
+    fn openaq_latest_url(id: i64) -> String {
+        format!("{}/{id}/latest", openaq::LOCATIONS_ENDPOINT)
+    }
+
+    #[test]
+    fn openaq_observations_come_first_and_the_model_fills_the_rest() {
+        let http = Arc::new(
+            FixtureClient::new()
+                .with(AIR_QUALITY_ENDPOINT, european_detail_payload())
+                .with(
+                    openaq::LOCATIONS_ENDPOINT,
+                    openaq::tests::search(vec![paris_station()]),
+                )
+                .with(
+                    &openaq_latest_url(4321),
+                    openaq::tests::latest(
+                        4321,
+                        &[
+                            (51, 14.2, "2025-06-01T14:00:00Z"),
+                            (52, 31.0, "2025-06-01T14:00:00Z"),
+                        ],
+                    ),
+                ),
+        );
+        let client = EnvironmentalDataClient::new(http.clone(), "AccessiWeather/2.0", "")
+            .with_openaq_key("oaq");
+        let paris = Location::new("Paris", 48.8566, 2.3522).with_country("FR");
+        let options = FetchOptions {
+            include_hourly_air_quality: false,
+            ..aq_only()
+        };
+        let env = client.fetch(&paris, options, now()).unwrap();
+        let rows: Vec<(&str, ReadingKind, &str)> = env
+            .pollutant_readings
+            .iter()
+            .map(|r| {
+                (
+                    r.code.as_str(),
+                    r.provenance.kind,
+                    r.provenance.provider.as_str(),
+                )
+            })
+            .collect();
+        assert_eq!(
+            rows,
+            [
+                ("pm2_5", ReadingKind::Observed, "OpenAQ"),
+                ("no2", ReadingKind::Observed, "OpenAQ"),
+                ("pm10", ReadingKind::Modelled, "Open-Meteo"),
+                ("o3", ReadingKind::Modelled, "Open-Meteo"),
+                ("so2", ReadingKind::Modelled, "Open-Meteo"),
+                ("co", ReadingKind::Modelled, "Open-Meteo"),
+            ]
+        );
+        let pm = &env.pollutant_readings[0];
+        assert_eq!(pm.concentration, Some(14.2));
+        assert_eq!(pm.unit.as_deref(), Some("µg/m³"));
+        assert_eq!(pm.averaging.as_deref(), Some("1-hour"));
+        assert_eq!((pm.index_value, pm.index_category.as_deref()), (None, None));
+        assert_eq!(pm.provenance.detail.as_deref(), Some("reference monitor"));
+        assert_eq!(pm.provenance.station_name.as_deref(), Some("Paris 18e"));
+        assert_eq!(pm.provenance.station_distance_km, Some(2.4));
+        assert_eq!(
+            pm.provenance.time.unwrap().to_rfc3339(),
+            "2025-06-01T14:00:00+00:00"
+        );
+        // The headline index is still the model's: OpenAQ has no index.
+        assert_eq!(env.air_quality_category.as_deref(), Some("Moderate"));
+        assert_eq!(
+            env.air_quality_provenance.unwrap().kind,
+            ReadingKind::Modelled
+        );
+        assert!(env.sources.iter().any(|s| s == "OpenAQ"));
+        assert!(env.sources.iter().any(|s| s == OPENMETEO_AQ_SOURCE));
+    }
+
+    #[test]
+    fn openaq_failure_in_the_us_falls_back_to_airnow() {
+        let airnow = json!([
+            {"AQI": 61, "ParameterName": "PM2.5", "Category": {"Number": 2, "Name": "Moderate"},
+             "DateObserved": "2025-06-01", "HourObserved": 9, "LocalTimeZone": "EDT",
+             "ReportingArea": "Metro"}
+        ]);
+        let aq = json!({"utc_offset_seconds": -14400, "hourly": {"time": times(8, 4),
+            "us_aqi": [50, 55, 60, 65], "pm10": [20, 21, 22, 23]}});
+        let http = Arc::new(
+            FixtureClient::new()
+                .with(airnow::ENDPOINT, airnow)
+                .with(AIR_QUALITY_ENDPOINT, aq)
+                .with_status(openaq::LOCATIONS_ENDPOINT, 500),
+        );
+        let client = EnvironmentalDataClient::new(http.clone(), "AccessiWeather/2.0", "key")
+            .with_openaq_key("oaq");
+        let nyc = Location::new("NYC", 40.7, -74.0).with_country("US");
+        let options = FetchOptions {
+            prefer_airnow: true,
+            include_hourly_air_quality: false,
+            ..aq_only()
+        };
+        let env = client.fetch(&nyc, options, now()).unwrap();
+        let rows: Vec<(&str, &str)> = env
+            .pollutant_readings
+            .iter()
+            .map(|r| (r.code.as_str(), r.provenance.provider.as_str()))
+            .collect();
+        assert_eq!(rows, [("pm2_5", "AirNow"), ("pm10", "Open-Meteo")]);
+        assert!(!env.sources.iter().any(|s| s == "OpenAQ"));
+        assert_eq!(env.air_quality_source.as_deref(), Some(AIRNOW_SOURCE));
+    }
+
+    #[test]
+    fn openaq_with_nothing_nearby_leaves_the_model_readings() {
+        let http = Arc::new(
+            FixtureClient::new()
+                .with(AIR_QUALITY_ENDPOINT, european_detail_payload())
+                .with(openaq::LOCATIONS_ENDPOINT, openaq::tests::search(vec![])),
+        );
+        let client = EnvironmentalDataClient::new(http.clone(), "AccessiWeather/2.0", "")
+            .with_openaq_key("oaq");
+        let paris = Location::new("Paris", 48.8566, 2.3522).with_country("FR");
+        let options = FetchOptions {
+            include_hourly_air_quality: false,
+            ..aq_only()
+        };
+        let env = client.fetch(&paris, options, now()).unwrap();
+        assert_eq!(env.pollutant_readings.len(), 6);
+        assert!(env
+            .pollutant_readings
+            .iter()
+            .all(|r| r.provenance.kind == ReadingKind::Modelled));
+        assert!(!env.sources.iter().any(|s| s == "OpenAQ"));
+    }
+
+    #[test]
+    fn openaq_is_only_asked_with_a_key_and_pollutant_detail() {
+        let http = Arc::new(
+            FixtureClient::new()
+                .with(AIR_QUALITY_ENDPOINT, european_detail_payload())
+                .with(openaq::LOCATIONS_ENDPOINT, openaq::tests::search(vec![])),
+        );
+        let paris = Location::new("Paris", 48.8566, 2.3522).with_country("FR");
+        let options = FetchOptions {
+            include_hourly_air_quality: false,
+            ..aq_only()
+        };
+        EnvironmentalDataClient::new(http.clone(), "AccessiWeather/2.0", "").fetch(
+            &paris,
+            options,
+            now(),
+        );
+        EnvironmentalDataClient::new(http.clone(), "AccessiWeather/2.0", "")
+            .with_openaq_key("oaq")
+            .fetch(
+                &paris,
+                FetchOptions {
+                    pollutant_detail: false,
+                    ..options
+                },
+                now(),
+            );
+        let log = http.request_log();
+        assert_eq!(log.len(), 2);
+        assert!(!log.iter().any(|u| u.contains("api.openaq.org")), "{log:?}");
+    }
+
+    #[test]
+    fn openaq_readings_alone_still_count_as_data() {
+        let http = Arc::new(
+            FixtureClient::new()
+                .with_status(AIR_QUALITY_ENDPOINT, 500)
+                .with(
+                    openaq::LOCATIONS_ENDPOINT,
+                    openaq::tests::search(vec![paris_station()]),
+                )
+                .with(
+                    &openaq_latest_url(4321),
+                    openaq::tests::latest(4321, &[(51, 14.2, "2025-06-01T14:00:00Z")]),
+                ),
+        );
+        let client =
+            EnvironmentalDataClient::new(http, "AccessiWeather/2.0", "").with_openaq_key("oaq");
+        let paris = Location::new("Paris", 48.8566, 2.3522).with_country("FR");
+        let options = FetchOptions {
+            include_hourly_air_quality: false,
+            ..aq_only()
+        };
+        let env = client.fetch(&paris, options, now()).unwrap();
+        assert_eq!(env.air_quality_index, None);
+        assert_eq!(env.pollutant_readings.len(), 1);
+        assert_eq!(env.sources, ["OpenAQ"]);
     }
 
     #[test]

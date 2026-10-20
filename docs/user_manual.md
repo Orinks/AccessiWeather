@@ -954,16 +954,18 @@ Start here with no keys unless you already know you need more. AccessiWeather wo
 The Data Sources tab includes API key fields for:
 
 - AirNow
+- OpenAQ
 - Pirate Weather
 
 Each provider includes:
 
 - an API key field
 - a button to get a key
-
-Pirate Weather also includes a button to validate its key.
+- a button to validate the key
 
 AirNow is optional and supplies official current US Air Quality Index observations. Create your own public AirNow API account, enter its key here, and AccessiWeather will use AirNow for current US AQI while retaining its existing hourly air-quality forecast and fallback source. AirNow is only used when the location's air quality index is the US AQI.
+
+OpenAQ is optional and adds official station readings worldwide. Create a free account with the Get OpenAQ key button, paste the key into OpenAQ API key, and use Validate OpenAQ key to check it. AccessiWeather then looks for the nearest fixed monitoring station within 25 km that has reported in the last three hours, and shows its latest pollutant concentrations in the Air Quality window. OpenAQ gives concentrations but no index, so the headline air quality index still comes from AirNow or the forecast model. If OpenAQ has no station nearby or can't be reached, AccessiWeather uses AirNow in the US and the forecast model elsewhere.
 
 Pirate Weather is the optional weather-provider key worth adding. Use it when you want worldwide alert coverage in many regions, minutely precipitation timing, moon phase, or Dark Sky-style summary text. This can be worth it if short-term rain timing matters to you or if you need alerts outside the US.
 
@@ -1276,6 +1278,8 @@ Under Current Pollutant Levels, the Air Quality window has a Pollutant readings 
 - Type: Observed when a monitoring station measured it, Modelled when it comes from a forecast model.
 - Source: who supplied it. Observed readings name the provider and the station or reporting area. Modelled readings from Open-Meteo name the CAMS model and its approximate resolution: the European model, about 11 km, across Europe, and the global model, about 45 km, everywhere else. A modelled value is an estimate for the surrounding area, not a measurement at your street.
 - Time: when it was observed, or the forecast hour a modelled value is for.
+
+With an OpenAQ key, readings from the nearest OpenAQ station come first. Their Source column names the station, whether it's a reference monitor or a low-cost sensor, and how far away it is, for example "OpenAQ, reference monitor at Del Norte, Albuquerque, 1.8 km away". Reference monitors report 1-hour averages; low-cost sensors show their latest reading. In the US, AirNow fills in pollutants OpenAQ didn't report.
 
 Observed readings come first, and the model fills in any pollutant no station reported, so each pollutant appears once. The line under the list sums up which pollutants came from which source. The current air quality summary also has a Reading line saying whether the headline index was observed or modelled, by whom, and for what time.
 

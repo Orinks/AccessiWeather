@@ -19,13 +19,18 @@ use super::tray_text_format_dialog::{supported_placeholders_help, validate_forma
 /// expects.
 /// Rust-only settings the Settings form collects.
 /// Every golden case collects their `rust_only_default`.
-const RUST_ONLY_SETTINGS: &[&str] = &["alert_notifications_all_locations", "air_quality_index"];
+const RUST_ONLY_SETTINGS: &[&str] = &[
+    "alert_notifications_all_locations",
+    "air_quality_index",
+    "openaq_api_key",
+];
 
 fn rust_only_default(key: &str) -> Option<Value> {
     match key {
         "alert_notifications_all_locations" => Some(Value::Bool(false)),
         "location_search_country" => Some(Value::String(String::new())),
         "air_quality_index" => Some(Value::String("auto".into())),
+        "openaq_api_key" => Some(Value::String(String::new())),
         // New installs follow each location's units instead of showing both.
         "temperature_unit" => Some(Value::String("auto".into())),
         _ => None,
@@ -277,11 +282,18 @@ fn save_guard_keeps_keys_unless_cleared() {
                 _ => form.venice_key = value,
             }
         }
-        let cleared = fields.map(|f| case["cleared"][f].as_bool().unwrap());
+        let [pw, airnow, openrouter, venice] =
+            fields.map(|f| case["cleared"][f].as_bool().unwrap());
+        // OpenAQ is Rust-only: never loaded, edited or cleared here.
+        let cleared = [pw, airnow, openrouter, venice, false];
         let (mut values, _) = form.collect();
         form.guard_api_keys(&mut values, cleared);
         let expected = case["saved_keys"].as_object().unwrap();
         for (setting, _) in GUARDED_API_KEYS {
+            if setting == "openaq_api_key" {
+                assert_eq!(values.get(setting), Some(&Value::String(String::new())));
+                continue;
+            }
             assert_eq!(values.get(setting), expected.get(setting), "{setting}");
         }
     }

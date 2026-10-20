@@ -381,7 +381,7 @@ impl AirNowClient {
 }
 
 /// An httpx-style exception name for log and validation messages.
-fn error_kind(e: &HttpError) -> &'static str {
+pub(crate) fn error_kind(e: &HttpError) -> &'static str {
     match e {
         HttpError::Status { .. } => "HTTPStatusError",
         HttpError::Json { .. } => "JSONDecodeError",

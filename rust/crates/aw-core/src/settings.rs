@@ -132,6 +132,9 @@ pub struct AppSettings {
     pub pirate_weather_api_key: String,
     #[serde(default, skip_serializing)]
     pub airnow_api_key: String,
+    /// OpenAQ v3 key for observed station readings worldwide.
+    #[serde(default, skip_serializing)]
+    pub openaq_api_key: String,
     #[serde(default = "d_true")]
     pub auto_update_enabled: bool,
     #[serde(default = "d_stable")]

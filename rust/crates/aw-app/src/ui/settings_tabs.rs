@@ -257,6 +257,9 @@ pub(crate) struct Controls {
     pub airnow_key: TextCtrl,
     pub get_airnow_key: Button,
     pub validate_airnow_key: Button,
+    pub openaq_key: TextCtrl,
+    pub get_openaq_key: Button,
+    pub validate_openaq_key: Button,
     // AI
     pub ai_provider: Choice,
     pub openrouter_panel: Panel,
@@ -707,6 +710,25 @@ pub(crate) fn build(notebook: &Notebook, sound_pack_names: &[String], portable: 
         10,
     );
     keys_section.add_sizer(&airnow_sizer, 0, SizerFlag::Expand, 0);
+
+    let openaq_sizer = BoxSizer::builder(Orientation::Vertical).build();
+    openaq_sizer.add(&text(&sources, "OpenAQ"), 0, LRBE, 10);
+    let (_, openaq_key) = labeled(&sources, &openaq_sizer, "OpenAQ API key:", true, 8, |p| {
+        text_ctrl(p, 280, TextCtrlStyle::Password)
+    });
+    let openaq_buttons = BoxSizer::builder(Orientation::Horizontal).build();
+    let get_openaq_key = button(&sources, "Get OpenAQ key");
+    openaq_buttons.add(&get_openaq_key, 0, SizerFlag::Right, 10);
+    let validate_openaq_key = button(&sources, "Validate OpenAQ key");
+    openaq_buttons.add(&validate_openaq_key, 0, SizerFlag::empty(), 0);
+    openaq_sizer.add_sizer(&openaq_buttons, 0, LRB, 10);
+    add_help_text(
+        &sources,
+        &openaq_sizer,
+        "Optional: adds official station readings worldwide from the nearest monitor within 25 km. Your API key is stored securely.",
+        10,
+    );
+    keys_section.add_sizer(&openaq_sizer, 0, SizerFlag::Expand, 0);
     finish_page(notebook, sources, sizer, TAB_LABELS[4]);
 
     // --- AI (`settings_tabs/ai.py`) ---
@@ -982,6 +1004,9 @@ pub(crate) fn build(notebook: &Notebook, sound_pack_names: &[String], portable: 
         airnow_key,
         get_airnow_key,
         validate_airnow_key,
+        openaq_key,
+        get_openaq_key,
+        validate_openaq_key,
         ai_provider,
         openrouter_panel,
         openrouter_key,
@@ -1101,6 +1126,9 @@ impl Controls {
             (&self.airnow_key, "AirNow API key"),
             (&self.get_airnow_key, "Get AirNow key"),
             (&self.validate_airnow_key, "Validate AirNow key"),
+            (&self.openaq_key, "OpenAQ API key"),
+            (&self.get_openaq_key, "Get OpenAQ key, opens browser"),
+            (&self.validate_openaq_key, "Validate OpenAQ key"),
             (&self.source_settings_summary, "Automatic mode source summary"),
             (&self.configure_source_settings, "Configure automatic mode budget and sources"),
             (&self.ai_provider, "AI provider"),
@@ -1223,6 +1251,7 @@ impl Controls {
         self.data_source.set_selection(f.data_source as u32);
         self.pirate_weather.key.change_value(&f.pw_key);
         self.airnow_key.change_value(&f.airnow_key);
+        self.openaq_key.change_value(&f.openaq_key);
         self.push_source_settings_summary(f);
         self.update_api_key_visibility(f);
 
@@ -1316,6 +1345,7 @@ impl Controls {
         f.data_source = selection(&self.data_source);
         f.pw_key = self.pirate_weather.key.get_value();
         f.airnow_key = self.airnow_key.get_value();
+        f.openaq_key = self.openaq_key.get_value();
 
         f.ai_provider = selection(&self.ai_provider);
         f.openrouter_key = self.openrouter_key.get_value();

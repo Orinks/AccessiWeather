@@ -361,6 +361,12 @@ fn settings_and_locations_export_documents() {
     );
     assert_eq!(exported.remove("location_search_country"), Some(json!("")));
     assert_eq!(exported.remove("air_quality_index"), Some(json!("auto")));
+    // API keys, the Rust-only OpenAQ one included, never leave the keyring.
+    assert!(!exported.contains_key("openaq_api_key"));
+    let mut with_key = config.clone();
+    with_key.settings.openaq_api_key = "secret".into();
+    let keyed = import_export::settings_export(&with_key, "now");
+    assert!(keyed["settings"].get("openaq_api_key").is_none());
     if !g["config"]["settings"]
         .as_object()
         .is_some_and(|m| m.contains_key("temperature_unit"))

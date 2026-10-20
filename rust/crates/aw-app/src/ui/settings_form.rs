@@ -153,11 +153,12 @@ pub(crate) const UPDATE_CHANNEL_CHOICES: [&str; 2] = [
 
 /// The API key fields guarded against accidental blanking on save, in
 /// `_save_settings` order: (setting, control).
-pub(crate) const GUARDED_API_KEYS: [(&str, &str); 4] = [
+pub(crate) const GUARDED_API_KEYS: [(&str, &str); 5] = [
     ("pirate_weather_api_key", "pw_key"),
     ("airnow_api_key", "airnow_key"),
     ("openrouter_api_key", "openrouter_key"),
     ("venice_api_key", "venice_key"),
+    ("openaq_api_key", "openaq_key"),
 ];
 
 fn position<T: PartialEq>(values: &[T], value: &T) -> Option<usize> {
@@ -318,7 +319,7 @@ pub(crate) struct DialogState {
     /// `GeneralTab._saved_hotkey`.
     pub saved_hotkey: String,
     /// `_original_*_key`, in `GUARDED_API_KEYS` order.
-    pub original_keys: [String; 4],
+    pub original_keys: [String; 5],
     /// `_loaded_startup_enabled`.
     pub loaded_startup_enabled: bool,
 }
@@ -393,6 +394,7 @@ pub(crate) struct SettingsForm {
     pub data_source: usize,
     pub pw_key: String,
     pub airnow_key: String,
+    pub openaq_key: String,
     // AI
     pub ai_provider: usize,
     pub openrouter_key: String,
@@ -557,6 +559,8 @@ impl SettingsForm {
         self.airnow_key = s.airnow_api_key.clone();
         self.state.original_keys[0] = s.pirate_weather_api_key.clone();
         self.state.original_keys[1] = s.airnow_api_key.clone();
+        self.openaq_key = s.openaq_api_key.clone();
+        self.state.original_keys[4] = s.openaq_api_key.clone();
         let strategy = index_of(&STATION_STRATEGY_VALUES, &s.station_selection_strategy, 0);
         let budget = position(&AUTO_MODE_BUDGET_VALUES, &s.auto_mode_api_budget.as_str())
             .map_or(DEFAULT_BUDGET_INDEX, |i| i as i32);
@@ -861,6 +865,7 @@ impl SettingsForm {
                 "data_source": SOURCE_VALUES[self.data_source],
                 "pirate_weather_api_key": self.pw_key,
                 "airnow_api_key": self.airnow_key,
+                "openaq_api_key": self.openaq_key,
                 "source_priority_us": us,
                 "source_priority_international": international,
                 "auto_mode_api_budget": budget,
@@ -910,7 +915,7 @@ impl SettingsForm {
     /// The API key guard in `_save_settings`: a key that loaded non-empty and
     /// is now blank is only dropped when the user edited that field
     /// (`cleared`); otherwise the stored key is kept.
-    pub fn guard_api_keys(&self, values: &mut Map<String, Value>, cleared: [bool; 4]) {
+    pub fn guard_api_keys(&self, values: &mut Map<String, Value>, cleared: [bool; 5]) {
         for (i, (setting, _)) in GUARDED_API_KEYS.iter().enumerate() {
             let blank = values
                 .get(*setting)
