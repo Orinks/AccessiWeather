@@ -25,11 +25,14 @@ pub const STATE_FILE_NAME: &str = "runtime_state.json";
 pub const LEGACY_ALERT_STATE_FILE: &str = "alert_state.json";
 pub const LEGACY_NOTIFICATION_EVENT_STATE_FILE: &str = "notification_event_state.json";
 
-/// The two sections Python's `_SECTION_DEFAULTS` knows about.
+/// The two sections Python's `_SECTION_DEFAULTS` knows about, plus the
+/// Rust-only air quality alert section (absent from [`default_state`], so
+/// the file only gains it once that feature has something to remember).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Section {
     Alerts,
     NotificationEvents,
+    AirQualityAlerts,
 }
 
 impl Section {
@@ -37,13 +40,16 @@ impl Section {
         match self {
             Section::Alerts => "alerts",
             Section::NotificationEvents => "notification_events",
+            Section::AirQualityAlerts => "air_quality_alerts",
         }
     }
 
-    fn legacy_file_name(self) -> &'static str {
+    /// The per-feature file Python used before the unified file, if any.
+    fn legacy_file_name(self) -> Option<&'static str> {
         match self {
-            Section::Alerts => LEGACY_ALERT_STATE_FILE,
-            Section::NotificationEvents => LEGACY_NOTIFICATION_EVENT_STATE_FILE,
+            Section::Alerts => Some(LEGACY_ALERT_STATE_FILE),
+            Section::NotificationEvents => Some(LEGACY_NOTIFICATION_EVENT_STATE_FILE),
+            Section::AirQualityAlerts => None,
         }
     }
 
@@ -163,7 +169,7 @@ impl RuntimeState {
         let Some(legacy) = load_legacy_section(&inner.config_root, section) else {
             return section.defaults();
         };
-        inner.save_section(section, &legacy, Some(section.legacy_file_name()), now);
+        inner.save_section(section, &legacy, section.legacy_file_name(), now);
         legacy
     }
 
@@ -270,7 +276,7 @@ fn load_raw_state(path: &Path) -> Option<Map<String, Value>> {
 }
 
 fn load_legacy_section(config_root: &Path, section: Section) -> Option<Map<String, Value>> {
-    let data = load_json_object(&config_root.join(section.legacy_file_name()))?;
+    let data = load_json_object(&config_root.join(section.legacy_file_name()?))?;
     let get = |k: &str| data.get(k).cloned().unwrap_or(Value::Null);
     let overlay = match section {
         Section::Alerts => json!({
@@ -291,6 +297,7 @@ fn load_legacy_section(config_root: &Path, section: Section) -> Option<Map<Strin
                 },
             })
         }
+        Section::AirQualityAlerts => return None,
     };
     Some(merge_nested(&section.defaults(), &as_map(overlay)))
 }
@@ -348,6 +355,26 @@ mod tests {
                 "future"
             ]
         );
+    }
+
+    #[test]
+    fn air_quality_section_is_absent_until_saved() {
+        let dir = tempfile::tempdir().unwrap();
+        let rs = RuntimeState::open(dir.path());
+        assert!(!default_state().contains_key("air_quality_alerts"));
+        assert!(rs.load_section(Section::AirQualityAlerts, now()).is_empty());
+        assert!(!rs.state_file().exists());
+        rs.save_section(Section::Alerts, &Map::new(), None, now());
+        assert!(!rs.load_state().contains_key("air_quality_alerts"));
+        let data = as_map(json!({"locations": {"Paris": {"standard": "european"}}}));
+        assert!(rs.save_section(Section::AirQualityAlerts, &data, None, now()));
+        let reopened = RuntimeState::open(dir.path());
+        assert_eq!(
+            reopened.load_section(Section::AirQualityAlerts, now())["locations"]["Paris"]
+                ["standard"],
+            "european"
+        );
+        assert_eq!(reopened.load_state()["meta"]["migrated_from"], json!([]));
     }
 
     #[test]

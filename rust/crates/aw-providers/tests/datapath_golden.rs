@@ -39,6 +39,8 @@ fn fixture(routes: &Value) -> FixtureClient {
 
 fn settings(overrides: &Value) -> AppSettings {
     let mut value = serde_json::to_value(AppSettings::default()).unwrap();
+    // The goldens were recorded when "both" was the default unit.
+    value["temperature_unit"] = "both".into();
     for (key, v) in overrides.as_object().unwrap() {
         value[key] = v.clone();
     }

@@ -2,6 +2,7 @@
 //!
 //! Port of `accessiweather/impact_summary.py`.
 
+use crate::air_quality::AqiStandard;
 use crate::display::models::ImpactSummary;
 use crate::model::{CurrentConditions, EnvironmentalConditions, ForecastPeriod};
 
@@ -147,15 +148,27 @@ fn pollen_rank(category: &str) -> i32 {
     }
 }
 
-fn air_quality_rank(category: &str) -> i32 {
-    match category {
-        "Good" => 1,
-        "Moderate" => 2,
-        "Unhealthy for Sensitive Groups" => 3,
-        "Unhealthy" => 4,
-        "Very Unhealthy" => 5,
-        "Hazardous" => 6,
-        _ => 0,
+fn air_quality_rank(category: &str, standard: Option<AqiStandard>) -> i32 {
+    match standard {
+        // European "Moderate" sits below the US "Unhealthy for Sensitive
+        // Groups" band, so it never triggers that wording.
+        Some(AqiStandard::European) => match category {
+            "Good" => 1,
+            "Fair" | "Moderate" => 2,
+            "Poor" => 4,
+            "Very poor" => 5,
+            "Extremely poor" => 6,
+            _ => 0,
+        },
+        _ => match category {
+            "Good" => 1,
+            "Moderate" => 2,
+            "Unhealthy for Sensitive Groups" => 3,
+            "Unhealthy" => 4,
+            "Very Unhealthy" => 5,
+            "Hazardous" => 6,
+            _ => 0,
+        },
     }
 }
 
@@ -166,6 +179,7 @@ fn allergy_from_conditions(
     pollen_primary_allergen: Option<&str>,
     wind_speed_mph: Option<f64>,
     air_quality_category: Option<&str>,
+    air_quality_standard: Option<AqiStandard>,
 ) -> Option<String> {
     let mut parts: Vec<String> = Vec::new();
     let rank = pollen_rank(pollen_category.unwrap_or(""));
@@ -201,7 +215,7 @@ fn allergy_from_conditions(
         parts.push("wind increasing pollen dispersion".into());
     }
 
-    let aq_rank = air_quality_rank(air_quality_category.unwrap_or(""));
+    let aq_rank = air_quality_rank(air_quality_category.unwrap_or(""), air_quality_standard);
     if aq_rank >= 4 {
         parts.push(format!(
             "air quality {} - limit outdoor exposure",
@@ -242,6 +256,7 @@ pub fn build_impact_summary(
         environmental.and_then(|e| e.pollen_primary_allergen.as_deref()),
         current.wind_speed_mph,
         environmental.and_then(|e| e.air_quality_category.as_deref()),
+        environmental.and_then(|e| e.air_quality_index_standard),
     );
     ImpactSummary {
         outdoor,
@@ -286,6 +301,7 @@ pub fn build_forecast_impact_summary(period: &ForecastPeriod) -> ImpactSummary {
         period.pollen_forecast.as_deref(),
         None,
         wind_mph,
+        None,
         None,
     );
     ImpactSummary {
@@ -359,16 +375,42 @@ mod tests {
     #[test]
     fn allergy_rules() {
         assert_eq!(
-            allergy_from_conditions(None, Some("High"), Some("Oak"), Some(20.0), Some("Unhealthy")).unwrap(),
+            allergy_from_conditions(None, Some("High"), Some("Oak"), Some(20.0), Some("Unhealthy"), None).unwrap(),
             "High pollen (Oak) - sensitive individuals should limit exposure; wind increasing pollen dispersion; air quality Unhealthy - limit outdoor exposure"
         );
         assert_eq!(
-            allergy_from_conditions(Some(6.0), None, None, None, None).unwrap(),
+            allergy_from_conditions(Some(6.0), None, None, None, None, None).unwrap(),
             "Moderate pollen index"
         );
         assert_eq!(
-            allergy_from_conditions(None, None, None, None, Some("Good")),
+            allergy_from_conditions(None, None, None, None, Some("Good"), None),
             None
+        );
+    }
+
+    #[test]
+    fn european_air_quality_ranks() {
+        let eu = Some(AqiStandard::European);
+        // European "Moderate" is not "unhealthy for sensitive groups".
+        assert_eq!(
+            allergy_from_conditions(None, None, None, None, Some("Moderate"), eu),
+            None
+        );
+        assert_eq!(
+            allergy_from_conditions(None, None, None, None, Some("Poor"), eu).unwrap(),
+            "air quality Poor - limit outdoor exposure"
+        );
+        assert_eq!(
+            allergy_from_conditions(
+                None,
+                None,
+                None,
+                None,
+                Some("Unhealthy for Sensitive Groups"),
+                None
+            )
+            .unwrap(),
+            "air quality unhealthy for sensitive groups"
         );
     }
 

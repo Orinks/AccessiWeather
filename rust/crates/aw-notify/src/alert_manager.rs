@@ -444,6 +444,32 @@ impl AlertManager {
         Ok(())
     }
 
+    /// Take one notification slot for something other than a weather alert
+    /// (air quality alerts): the global cooldown and token bucket apply, and
+    /// a granted slot counts toward the hour and restarts the cooldown.
+    ///
+    /// Unlike `can_notify_now`, the cooldown is checked before a token is
+    /// taken, so a refused reservation costs nothing. Air quality checks that
+    /// are held back retry on every tick and must not drain the bucket that
+    /// weather alerts share.
+    pub fn reserve_notification(&mut self, now: DateTime<Utc>) -> Result<(), &'static str> {
+        self.ensure_state_loaded(now);
+        if !self.settings.notifications_enabled {
+            return Err("notifications_disabled");
+        }
+        if !self.can_send_global_notification(now) {
+            return Err("global_cooldown_active");
+        }
+        if !self.check_rate_limit(now) {
+            return Err("rate_limit_exceeded");
+        }
+        self.last_global_notification = Some(now.fixed_offset());
+        self.reset_hourly_counter(now);
+        self.notifications_this_hour += 1;
+        self.save_state(now);
+        Ok(())
+    }
+
     /// `process_alerts`: the active alerts to notify about, with the reason
     /// (`new_alert`, `content_changed`, `escalation` or `fresh_alert`).
     pub fn process_alerts(
@@ -688,6 +714,74 @@ mod tests {
         );
         assert_eq!(sent.len(), 1);
         assert_eq!(sent[0].0.id.as_deref(), Some("NWS-2"));
+    }
+
+    #[test]
+    fn reservations_share_the_bucket_and_cooldown() {
+        let dir = tempfile::tempdir().unwrap();
+        let now = at("2026-09-25T12:00:00Z");
+        let settings = AlertSettings {
+            max_notifications_per_hour: 2,
+            global_cooldown: 5,
+            ..AlertSettings::default()
+        };
+        let mut m = AlertManager::new(RuntimeState::open(dir.path()), settings, now);
+        assert_eq!(m.reserve_notification(now), Ok(()));
+        assert_eq!(m.notifications_this_hour(), 1);
+        assert_eq!(m.last_global_notification(), Some(now.fixed_offset()));
+        // Inside the cooldown: refused without spending a token.
+        assert_eq!(
+            m.reserve_notification(now + Duration::minutes(1)),
+            Err("global_cooldown_active")
+        );
+        // After the cooldown the second token is still there.
+        assert_eq!(m.reserve_notification(now + Duration::minutes(6)), Ok(()));
+        // Now the bucket is empty, even after the next cooldown.
+        assert_eq!(
+            m.reserve_notification(now + Duration::minutes(12)),
+            Err("rate_limit_exceeded")
+        );
+        // A weather alert in the same window is held back too.
+        let a = alert("NWS-1", "Severe", "Wind Advisory", now);
+        assert!(m
+            .process_alerts(
+                &WeatherAlerts { alerts: vec![a] },
+                now + Duration::minutes(12)
+            )
+            .is_empty());
+        // The reservation was persisted.
+        let restarted = manager(dir.path(), now);
+        let mut restarted = restarted;
+        restarted.ensure_state_loaded(now);
+        assert_eq!(
+            restarted.last_global_notification(),
+            Some(now + Duration::minutes(6)).map(|t| t.fixed_offset())
+        );
+    }
+
+    #[test]
+    fn refused_reservations_do_not_starve_weather_alerts() {
+        let dir = tempfile::tempdir().unwrap();
+        let now = at("2026-09-25T12:00:00Z");
+        let settings = AlertSettings {
+            max_notifications_per_hour: 2,
+            global_cooldown: 5,
+            ..AlertSettings::default()
+        };
+        let mut m = AlertManager::new(RuntimeState::open(dir.path()), settings, now);
+        assert_eq!(m.reserve_notification(now), Ok(()));
+        // An air quality check retries every minute during the cooldown.
+        for minute in 1..=5 {
+            assert_eq!(
+                m.reserve_notification(now + Duration::minutes(minute)),
+                Err("global_cooldown_active")
+            );
+        }
+        // A warning arriving after the cooldown still goes out.
+        let later = now + Duration::minutes(6);
+        let a = alert("NWS-T", "Extreme", "Tornado Warning", later);
+        let sent = m.process_alerts(&WeatherAlerts { alerts: vec![a] }, later);
+        assert_eq!(sent.len(), 1);
     }
 
     #[test]

@@ -4,11 +4,12 @@
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
+use aw_core::countries::{country_name, known_country, COUNTRIES};
 use aw_core::Location;
 use aw_providers::current_location::{
     CurrentLocationService, LocationDetectionStatus, DEFAULT_TIMEOUT,
 };
-use aw_providers::geocoding::LocationManager;
+use aw_providers::geocoding::{LocationManager, LocationSearchResult};
 use aw_providers::HttpClient;
 use wxdragon::prelude::*;
 
@@ -20,6 +21,39 @@ const MARINE_TOOLTIP: &str =
     "Adds nearby NWS marine zone summary, wind and wave highlights, and marine advisories.";
 const NAME_HINT: &str = "Enter a descriptive name for this location";
 const ZONE_NOT_RESOLVED: &str = "Not yet resolved - will populate after next weather refresh";
+/// `location_search_country` value for a worldwide search.
+const ANY_COUNTRY: &str = "ANY";
+const ANY_COUNTRY_LABEL: &str = "Any country";
+
+/// The country the Add Location search starts with: a saved choice wins
+/// ("ANY" is worldwide), otherwise the computer's region when known.
+/// `None` means any country.
+pub(crate) fn initial_search_country(
+    saved: &str,
+    detected_region: Option<&str>,
+) -> Option<&'static str> {
+    let saved = saved.trim();
+    if saved.eq_ignore_ascii_case(ANY_COUNTRY) {
+        return None;
+    }
+    known_country(saved).or_else(|| detected_region.and_then(known_country))
+}
+
+/// The `location_search_country` value to save after adding a location, or
+/// `None` to leave it alone: an untouched filter keeps following the
+/// computer's region.
+pub(crate) fn search_country_to_save(
+    saved: &str,
+    initial: Option<&str>,
+    selected: Option<&str>,
+) -> Option<String> {
+    let saved = saved.trim().to_uppercase();
+    if saved.is_empty() && selected == initial {
+        return None;
+    }
+    let value = selected.unwrap_or(ANY_COUNTRY).to_string();
+    (value != saved).then_some(value)
+}
 
 /// `wx.TextCtrl.SetHint`: wxDragon lacks it, so send the cue banner the way
 /// wxMSW does. Elsewhere the hint is skipped.
@@ -88,6 +122,63 @@ fn search_locations(
         .map_err(|e| e.to_string())
 }
 
+/// What an Add Location search found. `widened_from` names the country the
+/// filter was set to when it found nothing and the search went worldwide.
+struct CountrySearch {
+    results: Vec<LocationSearchResult>,
+    widened_from: Option<&'static str>,
+}
+
+/// Search within `country`, then worldwide if that finds nothing (blocking).
+fn search_in_country(
+    http: &dyn HttpClient,
+    query: &str,
+    country: Option<&'static str>,
+    language: Option<&str>,
+) -> Result<CountrySearch, String> {
+    let manager = LocationManager::new(http);
+    let results = manager
+        .search_location_results(query, 10, country, language)
+        .map_err(|e| e.to_string())?;
+    if results.is_empty() && country.is_some() {
+        let wider = manager
+            .search_location_results(query, 10, None, language)
+            .map_err(|e| e.to_string())?;
+        let widened_from = (!wider.is_empty()).then_some(country).flatten();
+        return Ok(CountrySearch {
+            results: wider,
+            widened_from,
+        });
+    }
+    Ok(CountrySearch {
+        results,
+        widened_from: None,
+    })
+}
+
+fn fill_search_results(list: &ListCtrl, results: &[LocationSearchResult]) {
+    for result in results {
+        let location = &result.location;
+        let index = list.insert_item(list.get_item_count() as i64, &location.name, None) as i64;
+        let country = if result.country.is_empty() {
+            location
+                .country_code
+                .as_deref()
+                .and_then(country_name)
+                .unwrap_or("")
+        } else {
+            result.country.as_str()
+        };
+        list.set_item_text_by_column(index, 1, &result.region);
+        list.set_item_text_by_column(index, 2, country);
+        list.set_item_text_by_column(
+            index,
+            3,
+            &format_coordinates(location.latitude, location.longitude),
+        );
+    }
+}
+
 /// `_do_current_location_detection` + `_resolve_detected_location`
 /// (blocking): one native request, then a reverse-geocoded label when one
 /// exists. `Err` carries the message the dialog shows.
@@ -145,6 +236,11 @@ struct AddLocationDialog {
     dialog: Dialog,
     name_input: TextCtrl,
     marine_mode_checkbox: CheckBox,
+    country_choice: Choice,
+    /// The country behind each `country_choice` entry; `None` is any country.
+    country_codes: Vec<Option<&'static str>>,
+    saved_search_country: String,
+    initial_country: Option<&'static str>,
     search_input: TextCtrl,
     search_button: Button,
     current_location_button: Button,
@@ -198,11 +294,40 @@ pub(crate) fn show_add_location_dialog(parent: &Frame) -> Option<String> {
     name_sizer.add(&marine_mode_checkbox, 0, SizerFlag::Top, 8);
     main_sizer.add_sizer(&name_sizer, 0, SizerFlag::Expand | SizerFlag::All, 10);
 
+    let saved_search_country = with_state()
+        .map(|s| s.borrow().config.settings.location_search_country.clone())
+        .unwrap_or_default();
+    let initial_country =
+        initial_search_country(&saved_search_country, aw_services::region::detect_region());
+    let country_codes: Vec<Option<&'static str>> = std::iter::once(None)
+        .chain(COUNTRIES.iter().map(|(code, _)| Some(*code)))
+        .collect();
+    let country_labels: Vec<String> = std::iter::once(ANY_COUNTRY_LABEL)
+        .chain(COUNTRIES.iter().map(|(_, name)| *name))
+        .map(str::to_string)
+        .collect();
+
     let search_sizer = BoxSizer::builder(Orientation::Vertical).build();
+    search_sizer.add(
+        &label(&panel, "Country to search in:"),
+        0,
+        SizerFlag::Bottom,
+        5,
+    );
+    let country_choice = Choice::builder(&panel).with_choices(country_labels).build();
+    let initial_index = country_codes
+        .iter()
+        .position(|c| *c == initial_country)
+        .unwrap_or(0);
+    country_choice.set_selection(initial_index as u32);
+    country_choice.set_tooltip(
+        "Limit search results to one country. Choose Any country to search worldwide.",
+    );
+    search_sizer.add(&country_choice, 0, SizerFlag::Bottom, 8);
     search_sizer.add(
         &label(
             &panel,
-            "Search for Location (city, ZIP/postal code, or US address):",
+            "Search for a city, town, postal code, or coordinates:",
         ),
         0,
         SizerFlag::Bottom,
@@ -212,7 +337,7 @@ pub(crate) fn show_add_location_dialog(parent: &Frame) -> Option<String> {
     let search_input = TextCtrl::builder(&panel)
         .with_style(TextCtrlStyle::ProcessEnter)
         .build();
-    set_hint(&search_input, "City, ZIP/postal code, or US street address");
+    set_hint(&search_input, "City, town, postal code, or coordinates");
     search_row.add(&search_input, 1, SizerFlag::Right, 10);
     let search_button = Button::builder(&panel).with_label("Search").build();
     search_row.add(&search_button, 0, SizerFlag::empty(), 0);
@@ -227,7 +352,8 @@ pub(crate) fn show_add_location_dialog(parent: &Frame) -> Option<String> {
     search_sizer.add(&current_location_button, 0, SizerFlag::Top, 8);
     let search_help = label(
         &panel,
-        "Examples: 'London', 'New York', '10001', or '123 Main St, Carrollton, TX'",
+        "Examples: 'Kuala Lumpur', 'M\u{fc}nchen', 'Perth', '50000', or coordinates \
+         like '1.35, 103.82'. US street addresses also work.",
     );
     text_colour(&search_help, true);
     search_sizer.add(&search_help, 0, SizerFlag::Top, 5);
@@ -239,7 +365,13 @@ pub(crate) fn show_add_location_dialog(parent: &Frame) -> Option<String> {
         SizerFlag::Left | SizerFlag::Right | SizerFlag::Top,
         10,
     );
-    let results = results_list(&panel, ("Location", 300), 200);
+    let results = ListCtrl::builder(&panel)
+        .with_style(ListCtrlStyle::Report | ListCtrlStyle::SingleSel)
+        .build();
+    results.insert_column(0, "Location", ListColumnFormat::Left, 220);
+    results.insert_column(1, "State or region", ListColumnFormat::Left, 140);
+    results.insert_column(2, "Country", ListColumnFormat::Left, 120);
+    results.insert_column(3, "Coordinates", ListColumnFormat::Left, 150);
     main_sizer.add(&results, 1, SizerFlag::Expand | SizerFlag::All, 10);
 
     let status_label = label(&panel, "Ready to add location");
@@ -267,7 +399,8 @@ pub(crate) fn show_add_location_dialog(parent: &Frame) -> Option<String> {
 
     // `_setup_accessibility`.
     name_input.set_name("Location name input");
-    search_input.set_name("Search for location");
+    country_choice.set_name("Country to search in");
+    search_input.set_name("Search for a city, town, postal code, or coordinates");
     results.set_name("Search results");
     marine_mode_checkbox.set_name("Enable Marine Mode for this location");
     current_location_button.set_name("Use my current location");
@@ -276,6 +409,10 @@ pub(crate) fn show_add_location_dialog(parent: &Frame) -> Option<String> {
         dialog,
         name_input,
         marine_mode_checkbox,
+        country_choice,
+        country_codes,
+        saved_search_country,
+        initial_country,
         search_input,
         search_button,
         current_location_button,
@@ -346,8 +483,10 @@ impl AddLocationDialog {
         self.update_status(&format!("Searching for '{query}'..."), false);
         self.results_list.delete_all_items();
         self.search_results.borrow_mut().clear();
+        let country = self.selected_country();
+        let language = aw_services::region::detect_language();
         in_background(
-            move |http| search_locations(http, &query, 10),
+            move |http| search_in_country(http, &query, country, language),
             |result| {
                 if let Some(d) = open_add_dialog() {
                     d.on_search_complete(result);
@@ -356,7 +495,15 @@ impl AddLocationDialog {
         );
     }
 
-    fn on_search_complete(&self, result: Result<Vec<Location>, String>) {
+    /// The country picked in the filter, or `None` for any country.
+    fn selected_country(&self) -> Option<&'static str> {
+        self.country_choice
+            .get_selection()
+            .and_then(|i| self.country_codes.get(i as usize).copied())
+            .unwrap_or(self.initial_country)
+    }
+
+    fn on_search_complete(&self, result: Result<CountrySearch, String>) {
         self.is_searching.set(false);
         self.search_button.enable(true);
         match result {
@@ -364,12 +511,28 @@ impl AddLocationDialog {
                 tracing::error!("Search failed: {error}");
                 self.update_status(&format!("Search failed: {error}"), true);
             }
-            Ok(locations) if locations.is_empty() => {
+            Ok(found) if found.results.is_empty() => {
                 self.update_status("No locations found. Try a different search term.", true);
             }
-            Ok(locations) => {
-                fill_results(&self.results_list, &locations);
-                self.update_status(&format!("Found {} locations", locations.len()), false);
+            Ok(found) => {
+                fill_search_results(&self.results_list, &found.results);
+                let count = found.results.len();
+                let count_text = format!(
+                    "Found {count} location{}",
+                    if count == 1 { "" } else { "s" }
+                );
+                match found.widened_from {
+                    Some(code) => self.update_status(
+                        &format!(
+                            "No matches in {}. {count_text} in other countries.",
+                            country_name(code).unwrap_or(code)
+                        ),
+                        false,
+                    ),
+                    None => self.update_status(&count_text, false),
+                }
+                let locations: Vec<Location> =
+                    found.results.into_iter().map(|r| r.location).collect();
                 if self.name_input.get_value().trim().is_empty() {
                     self.name_input.set_value(&locations[0].name);
                 }
@@ -402,7 +565,14 @@ impl AddLocationDialog {
 
     fn apply_detected_location(&self, location: Location) {
         self.results_list.delete_all_items();
-        fill_results(&self.results_list, std::slice::from_ref(&location));
+        fill_search_results(
+            &self.results_list,
+            &[LocationSearchResult {
+                location: location.clone(),
+                region: String::new(),
+                country: String::new(),
+            }],
+        );
         if self.name_input.get_value().trim().is_empty() {
             self.name_input.set_value(&location.name);
         }
@@ -450,9 +620,21 @@ impl AddLocationDialog {
         let mut location = Location::new(name.clone(), selected.latitude, selected.longitude);
         location.country_code = selected.country_code;
         location.marine_mode = self.marine_mode_checkbox.is_checked();
+        let search_country = search_country_to_save(
+            &self.saved_search_country,
+            self.initial_country,
+            self.selected_country(),
+        );
         let success = with_state().is_some_and(|state| {
             let mut st = state.borrow_mut();
-            st.config.add_location(location) && save(&st).is_ok()
+            if !st.config.add_location(location) {
+                return false;
+            }
+            // Remember the country filter for next time.
+            if let Some(value) = search_country {
+                st.config.settings.location_search_country = value;
+            }
+            save(&st).is_ok()
         });
         if success {
             *self.added_location.borrow_mut() = Some(name);
@@ -572,7 +754,10 @@ pub(crate) fn show_edit_location_dialog(
     let address_input = TextCtrl::builder(&address_box)
         .with_style(TextCtrlStyle::ProcessEnter)
         .build();
-    set_hint(&address_input, "Street address, city, state, and ZIP");
+    set_hint(
+        &address_input,
+        "City, town, postal code, coordinates, or US street address",
+    );
     address_input.set_name("Address lookup for saved location coordinates");
     search_row.add(&address_input, 1, SizerFlag::Right, 8);
     let address_search_button = Button::builder(&address_box).with_label("Search").build();
@@ -988,4 +1173,40 @@ pub(crate) fn show_reorder_locations_dialog(parent: &Frame) -> Option<Vec<String
     let result = dialog.show_modal();
     dialog.destroy();
     (result == ID_OK).then(|| names.borrow().clone())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn initial_country_prefers_saved_then_region() {
+        assert_eq!(initial_search_country("", Some("MY")), Some("MY"));
+        assert_eq!(initial_search_country("", None), None);
+        assert_eq!(initial_search_country("", Some("XX")), None);
+        assert_eq!(initial_search_country("ANY", Some("MY")), None);
+        assert_eq!(initial_search_country("gb", Some("MY")), Some("GB"));
+        assert_eq!(initial_search_country("bogus", Some("de")), Some("DE"));
+    }
+
+    #[test]
+    fn search_country_is_saved_only_when_changed() {
+        // Untouched filter following the region: nothing to save.
+        assert_eq!(search_country_to_save("", Some("MY"), Some("MY")), None);
+        // Picked another country, or any country.
+        assert_eq!(
+            search_country_to_save("", Some("MY"), Some("SG")),
+            Some("SG".into())
+        );
+        assert_eq!(
+            search_country_to_save("", Some("MY"), None),
+            Some("ANY".into())
+        );
+        // A saved choice is only rewritten when it changes.
+        assert_eq!(search_country_to_save("GB", Some("GB"), Some("GB")), None);
+        assert_eq!(
+            search_country_to_save("ANY", None, Some("FR")),
+            Some("FR".into())
+        );
+    }
 }

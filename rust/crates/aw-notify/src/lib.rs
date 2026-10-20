@@ -12,11 +12,15 @@
 //!   [`events::NotificationEventManager`].
 //! * [`toast::Notifier`] — shows a toast; [`Toast::sound_keys`] is the
 //!   sound cue for the audio layer; [`activation`] handles clicks.
+//! * [`air_quality::AirQualityAlertTracker`] — air quality alerts when a
+//!   location's index reaches the user's level, through the alert manager's
+//!   rate limits.
 //! * [`runtime_state::RuntimeState`] — the `state/runtime_state.json` file
 //!   shared with the Python app. Give both managers the same handle.
 //! * [`debug`] — test-alert presets and notification diagnostics.
 
 pub mod activation;
+pub mod air_quality;
 pub mod alert_manager;
 pub mod alert_notifications;
 pub mod debug;
@@ -29,6 +33,7 @@ pub mod toast;
 use aw_core::settings::AppSettings;
 
 pub use activation::{ActivationKind, ActivationRequest, ActivationRoute};
+pub use air_quality::{AirQualityAlertTracker, AirQualityEvent, AirQualityNotification};
 pub use alert_manager::{AlertManager, AlertSettings};
 pub use alert_notifications::{AlertDispatch, AlertNotificationSystem};
 pub use events::window::{

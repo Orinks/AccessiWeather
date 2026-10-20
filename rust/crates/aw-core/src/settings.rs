@@ -22,8 +22,13 @@ macro_rules! default_fn {
     };
 }
 
-default_fn!(d_both, String, s("both"));
 default_fn!(d_auto, String, s("auto"));
+default_fn!(
+    d_aq_threshold_us,
+    String,
+    s("unhealthy_for_sensitive_groups")
+);
+default_fn!(d_aq_threshold_european, String, s("poor"));
 default_fn!(d_10, i64, 10);
 default_fn!(d_true, bool, true);
 default_fn!(
@@ -104,7 +109,8 @@ default_fn!(
 /// settings it does not understand yet.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AppSettings {
-    #[serde(default = "d_both")]
+    /// "auto" (the default) picks units from each location's country.
+    #[serde(default = "d_auto")]
     pub temperature_unit: String,
     #[serde(default = "d_auto")]
     pub wind_speed_unit: String,
@@ -132,6 +138,9 @@ pub struct AppSettings {
     pub pirate_weather_api_key: String,
     #[serde(default, skip_serializing)]
     pub airnow_api_key: String,
+    /// OpenAQ v3 key for observed station readings worldwide.
+    #[serde(default, skip_serializing)]
+    pub openaq_api_key: String,
     #[serde(default = "d_true")]
     pub auto_update_enabled: bool,
     #[serde(default = "d_stable")]
@@ -224,6 +233,21 @@ pub struct AppSettings {
     pub show_seasonal_data: bool,
     #[serde(default = "d_true")]
     pub air_quality_enabled: bool,
+    /// AQI scale: "auto" (European AQI in Europe, US AQI elsewhere), "us"
+    /// or "european".
+    #[serde(default = "d_auto")]
+    pub air_quality_index: String,
+    /// Notify when a location's air quality reaches the alert level below.
+    #[serde(default)]
+    pub air_quality_alerts_enabled: bool,
+    /// US AQI alert level: a key from
+    /// [`crate::air_quality::US_ALERT_THRESHOLDS`].
+    #[serde(default = "d_aq_threshold_us")]
+    pub air_quality_alert_threshold_us: String,
+    /// European AQI alert level: a key from
+    /// [`crate::air_quality::EUROPEAN_ALERT_THRESHOLDS`].
+    #[serde(default = "d_aq_threshold_european")]
+    pub air_quality_alert_threshold_european: String,
     #[serde(default = "d_true")]
     pub pollen_enabled: bool,
     #[serde(default = "d_true")]
@@ -250,6 +274,10 @@ pub struct AppSettings {
     pub location_buttons_on_top: bool,
     #[serde(default = "d_alphabetical")]
     pub location_sort_order: String,
+    /// Add Location's country filter: "" follows the computer's region,
+    /// "ANY" searches worldwide, otherwise an ISO 3166-1 alpha-2 code.
+    #[serde(default)]
+    pub location_search_country: String,
     #[serde(default = "d_iso")]
     pub date_format: String,
     #[serde(default)]
@@ -300,6 +328,9 @@ pub struct AppSettings {
     pub round_values: bool,
     #[serde(default)]
     pub show_impact_summaries: bool,
+    /// Official station readings near each location (View > Local Readings).
+    #[serde(default = "d_true")]
+    pub show_local_official_readings: bool,
     #[serde(default = "d_parallel_timeout")]
     pub parallel_fetch_timeout: f64,
     #[serde(default = "d_max_coverage")]
@@ -475,6 +506,21 @@ impl AppSettings {
             "iso",
         );
         keep_valid(&mut s.data_source, &VALID_DATA_SOURCES, "auto");
+        keep_valid(
+            &mut s.air_quality_index,
+            &["auto", "us", "european"],
+            "auto",
+        );
+        keep_valid(
+            &mut s.air_quality_alert_threshold_us,
+            &crate::air_quality::US_ALERT_THRESHOLDS,
+            "unhealthy_for_sensitive_groups",
+        );
+        keep_valid(
+            &mut s.air_quality_alert_threshold_european,
+            &crate::air_quality::EUROPEAN_ALERT_THRESHOLDS,
+            "poor",
+        );
         let defaults = AppSettings::default();
         for (list, default) in [
             (&mut s.source_priority_us, &defaults.source_priority_us),
@@ -729,9 +775,55 @@ mod tests {
     use super::*;
 
     #[test]
+    fn air_quality_index_falls_back_to_auto() {
+        for (value, expected) in [
+            (Value::from("european"), "european"),
+            (Value::from("us"), "us"),
+            (Value::from("eaqi"), "auto"),
+            (Value::from(3), "auto"),
+        ] {
+            let data = Map::from_iter([("air_quality_index".to_string(), value)]);
+            assert_eq!(
+                AppSettings::from_python_dict(data).air_quality_index,
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn air_quality_alert_settings_default_and_validate() {
+        let s = AppSettings::default();
+        assert!(!s.air_quality_alerts_enabled);
+        assert_eq!(
+            s.air_quality_alert_threshold_us,
+            "unhealthy_for_sensitive_groups"
+        );
+        assert_eq!(s.air_quality_alert_threshold_european, "poor");
+        let data = Map::from_iter([
+            (
+                "air_quality_alert_threshold_us".to_string(),
+                Value::from("very_poor"),
+            ),
+            (
+                "air_quality_alert_threshold_european".to_string(),
+                Value::from("very_poor"),
+            ),
+            ("air_quality_alerts_enabled".to_string(), Value::from(true)),
+        ]);
+        let s = AppSettings::from_python_dict(data);
+        assert!(s.air_quality_alerts_enabled);
+        assert_eq!(
+            s.air_quality_alert_threshold_us,
+            "unhealthy_for_sensitive_groups"
+        );
+        assert_eq!(s.air_quality_alert_threshold_european, "very_poor");
+    }
+
+    #[test]
     fn defaults_match_python() {
         let s = AppSettings::default();
-        assert_eq!(s.temperature_unit, "both");
+        assert_eq!(s.temperature_unit, "auto");
+        assert_eq!(s.air_quality_index, "auto");
         assert_eq!(s.update_interval_minutes, 10);
         assert!(s.enable_alerts);
         assert_eq!(s.forecast_duration_days, 7);
@@ -772,7 +864,7 @@ mod tests {
         let s = &cfg.settings;
         assert_eq!(
             (s.update_interval_minutes, s.temperature_unit.as_str()),
-            (10, "both")
+            (10, "auto")
         );
         assert_eq!(s.sound_pack, "chimes");
         assert_eq!(s.specific_alert_sound_packs, ["chimes"]);

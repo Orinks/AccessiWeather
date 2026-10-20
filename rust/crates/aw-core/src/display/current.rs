@@ -179,6 +179,9 @@ fn build_environmental_metrics(
         Some(aq.summary.clone())
     } else if let Some(index) = env.air_quality_index {
         let mut label = fixed(index, 0);
+        if let Some(standard) = env.air_quality_index_standard {
+            label = format!("{} {label}", standard.name());
+        }
         if let Some(cat) = nonempty(&env.air_quality_category) {
             label = format!("{label} ({cat})");
         }
@@ -773,6 +776,21 @@ mod tests {
             summary: None,
             sparkline: None,
         }
+    }
+
+    #[test]
+    fn environmental_metric_names_the_index() {
+        let mut env = EnvironmentalConditions {
+            air_quality_index: Some(35.0),
+            air_quality_category: Some("Fair".into()),
+            air_quality_index_standard: Some(crate::air_quality::AqiStandard::European),
+            ..Default::default()
+        };
+        let metrics = build_environmental_metrics(Some(&env), None);
+        assert_eq!(metrics[0].value, "European AQI 35 (Fair)");
+        env.air_quality_index_standard = None;
+        let metrics = build_environmental_metrics(Some(&env), None);
+        assert_eq!(metrics[0].value, "35 (Fair)");
     }
 
     #[test]

@@ -15,7 +15,7 @@ use serde_json::Value;
 
 use crate::http::{build_url, HttpClient, HttpError};
 
-pub use location_manager::LocationManager;
+pub use location_manager::{parse_coordinates, LocationManager, LocationSearchResult};
 
 pub const BASE_URL: &str = "https://geocoding-api.open-meteo.com/v1";
 
@@ -144,12 +144,27 @@ impl<'a> OpenMeteoGeocodingClient<'a> {
         count: usize,
         language: &str,
     ) -> Result<Vec<GeocodingResult>, GeocodingError> {
+        self.search_in(name, count, language, None)
+    }
+
+    /// [`Self::search`] limited to one ISO 3166-1 alpha-2 country when
+    /// `country_code` is given (Open-Meteo's `countryCode` filter).
+    pub fn search_in(
+        &self,
+        name: &str,
+        count: usize,
+        language: &str,
+        country_code: Option<&str>,
+    ) -> Result<Vec<GeocodingResult>, GeocodingError> {
         let search_name = name.trim();
-        let params = [
+        let mut params = vec![
             ("count", count.min(100).to_string()),
             ("language", language.to_string()),
             ("format", "json".to_string()),
         ];
+        if let Some(code) = country_code.map(str::trim).filter(|c| !c.is_empty()) {
+            params.push(("countryCode", code.to_uppercase()));
+        }
         let direct = self.search_once(search_name, &params)?;
         if !direct.is_empty() {
             return Ok(direct);
@@ -168,7 +183,7 @@ impl<'a> OpenMeteoGeocodingClient<'a> {
     fn search_once(
         &self,
         name: &str,
-        base: &[(&'static str, String); 3],
+        base: &[(&'static str, String)],
     ) -> Result<Vec<GeocodingResult>, GeocodingError> {
         let mut params = base.to_vec();
         params.push(("name", name.to_string()));
@@ -380,6 +395,14 @@ impl<'a> GeocodingService<'a> {
         format!("{base}, USA")
     }
 
+    /// Whether to search `text` as a US ZIP code. Malaysia, Germany, France,
+    /// Spain, Mexico and others also use 5-digit postcodes, so a bare 5-digit
+    /// query is pinned to the US only with the US-only NWS source; ZIP+4 is
+    /// always US.
+    fn treat_as_us_zip(&self, text: &str) -> bool {
+        Self::is_zip_code(text) && (text.contains('-') || self.data_source == "nws")
+    }
+
     fn filter_results_by_country(&self, results: Vec<GeocodingResult>) -> Vec<GeocodingResult> {
         if self.data_source == "nws" {
             results
@@ -394,7 +417,7 @@ impl<'a> GeocodingService<'a> {
     /// `(latitude, longitude, display_name)` for the first allowed match.
     pub fn geocode_address(&self, address: &str) -> Option<(f64, f64, String)> {
         let original = address.trim();
-        let query = if Self::is_zip_code(original) {
+        let query = if self.treat_as_us_zip(original) {
             Self::format_zip_code(original)
         } else {
             original.to_string()
@@ -444,7 +467,7 @@ impl<'a> GeocodingService<'a> {
         if query.chars().count() < 2 {
             return Vec::new();
         }
-        let query = if Self::is_zip_code(query) {
+        let query = if self.treat_as_us_zip(query) {
             Self::format_zip_code(query)
         } else {
             query.to_string()
@@ -486,6 +509,24 @@ mod tests {
             GeocodingService::format_zip_code("12345-6789"),
             "12345, USA"
         );
+    }
+
+    #[test]
+    fn five_digit_postcodes_are_only_pinned_to_the_us_for_nws() {
+        let kl = json!({"results": [result("Kuala Lumpur", "Malaysia", "MY", Some(1_450_000))]});
+        let http = FixtureClient::new().with(
+            &format!("{BASE_URL}/search?count=5&language=en&format=json&name=50000"),
+            kl,
+        );
+        let auto = GeocodingService::new(&http, "AccessiWeather", "auto");
+        assert_eq!(
+            auto.geocode_address("50000").map(|r| r.2),
+            Some("Kuala Lumpur, Malaysia".into())
+        );
+        assert!(auto.treat_as_us_zip("10001-1234"));
+        assert!(!auto.treat_as_us_zip("10115"));
+        let nws = GeocodingService::new(&http, "AccessiWeather", "nws");
+        assert!(nws.treat_as_us_zip("50000"));
     }
 
     #[test]

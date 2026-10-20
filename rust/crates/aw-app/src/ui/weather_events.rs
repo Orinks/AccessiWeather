@@ -17,14 +17,15 @@ use std::cell::RefCell;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use aw_core::model::EnvironmentalConditions;
 use aw_core::model::{Location, TextProduct, WeatherAlert, WeatherData};
 use aw_core::settings::AppSettings;
 use aw_notify::events::window::{
     process_notification_events, CachedProducts, EventCenterEntry, EVENT_TOAST_TIMEOUT_SECONDS,
 };
 use aw_notify::{
-    sound, AlertDispatch, AlertManager, AlertNotificationSystem, AlertSettings,
-    NotificationEventManager, RuntimeState, Toast,
+    sound, AirQualityAlertTracker, AlertDispatch, AlertManager, AlertNotificationSystem,
+    AlertSettings, NotificationEventManager, RuntimeState, Toast,
 };
 use aw_providers::products::{ForecastProductService, ProductResult};
 use chrono::{DateTime, FixedOffset, Local, Utc};
@@ -48,7 +49,9 @@ pub(crate) enum WeatherUpdate<'a> {
     /// alerts and their lifecycle changes are processed here.
     EventPoll { weather_data: &'a WeatherData },
     /// Alerts for the other saved locations, polled with `EventPoll` when
-    /// `alert_notifications_all_locations` is on.
+    /// `alert_notifications_all_locations` is on. Each carries the
+    /// location's air quality in `environmental` when air quality alerts
+    /// are on too.
     OtherLocationsPoll { polls: &'a [WeatherData] },
 }
 
@@ -105,6 +108,8 @@ impl NotifierSound {
 pub(crate) struct Notifications {
     alerts: AlertNotificationSystem,
     events: NotificationEventManager,
+    /// Which locations are at or above their air quality alert level.
+    air_quality: AirQualityAlertTracker,
     notifier: NotifierSound,
     /// `_suppress_startup_text_product_notifications`: the first refresh
     /// only sets discussion/HWO/SPS/CLI baselines.
@@ -128,7 +133,8 @@ impl Notifications {
         );
         Self {
             alerts: AlertNotificationSystem::new(manager, settings.clone(), soundpacks_dir),
-            events: NotificationEventManager::new(Some(store), now),
+            events: NotificationEventManager::new(Some(store.clone()), now),
+            air_quality: AirQualityAlertTracker::new(store),
             notifier: NotifierSound::from_settings(settings),
             suppress_startup: true,
         }
@@ -234,6 +240,13 @@ impl Notifications {
         for toast in &events.toasts {
             self.send(sinks, toast);
         }
+        let location_name = location.map_or(weather_data.location.name.as_str(), |l| &l.name);
+        self.check_air_quality(
+            sinks,
+            location_name,
+            weather_data.environmental.as_ref(),
+            now_utc,
+        );
         if play_refresh_sound {
             window_sound(sinks, settings, "data_updated");
         }
@@ -256,8 +269,27 @@ impl Notifications {
         self.deliver_alerts(sinks, dispatch);
     }
 
+    /// Air quality alert for one location: an Event Center line, then the
+    /// toast. Nothing happens while air quality alerts are off.
+    fn check_air_quality(
+        &mut self,
+        sinks: &mut dyn Sinks,
+        location_name: &str,
+        env: Option<&EnvironmentalConditions>,
+        now: DateTime<Utc>,
+    ) {
+        if let Some(n) =
+            self.alerts
+                .air_quality_notification(&mut self.air_quality, location_name, env, now)
+        {
+            sinks.event_center(&n.event_center);
+            self.send(sinks, &n.toast);
+        }
+    }
+
     /// Alerts for saved locations other than the selected one: `event_poll`'s
-    /// processing, with the location name leading each toast title. Radio
+    /// processing, with the location name leading each toast title, then
+    /// the air quality check (its title already names the location). Radio
     /// auto-tune stays with the selected location.
     pub(crate) fn other_locations_poll(
         &mut self,
@@ -272,6 +304,7 @@ impl Notifications {
                 toast.title = format!("{}: {}", data.location.name, toast.title);
             }
             self.deliver_alerts(sinks, dispatch);
+            self.check_air_quality(sinks, &data.location.name, data.environmental.as_ref(), now);
         }
     }
 
@@ -672,6 +705,107 @@ mod tests {
                 }
             }
         }
+    }
+
+    fn poor_air(location: &str) -> WeatherData {
+        let mut data = WeatherData::new(Location::new(location, 48.8566, 2.3522));
+        data.environmental = Some(EnvironmentalConditions {
+            air_quality_index: Some(65.0),
+            air_quality_category: Some("Poor".into()),
+            air_quality_index_standard: Some(aw_core::model::AqiStandard::European),
+            ..EnvironmentalConditions::default()
+        });
+        data
+    }
+
+    fn air_quality_settings() -> AppSettings {
+        AppSettings {
+            air_quality_alerts_enabled: true,
+            air_quality_alert_threshold_european: "poor".into(),
+            ..AppSettings::default()
+        }
+    }
+
+    #[test]
+    fn displayed_air_quality_reaching_the_level_notifies_once() {
+        let dir = tempfile::tempdir().unwrap();
+        let settings = air_quality_settings();
+        let now: DateTime<FixedOffset> = "2026-10-20T14:00:00+02:00".parse().unwrap();
+        let mut n = Notifications::new(
+            RuntimeState::open(dir.path()),
+            &settings,
+            None,
+            now.with_timezone(&Utc),
+        );
+        let data = poor_air("Paris");
+        let location = data.location.clone();
+        let mut rec = Recorded::default();
+        let show = |rec: &mut Recorded, n: &mut Notifications, at| {
+            n.displayed(
+                rec,
+                &data,
+                &settings,
+                Some(&location),
+                CachedProducts::default(),
+                false,
+                at,
+            )
+        };
+        show(&mut rec, &mut n, now);
+        assert_eq!(rec.toasts.len(), 1);
+        assert_eq!(rec.toasts[0]["title"], "Air quality alert: Paris");
+        assert_eq!(
+            rec.toasts[0]["message"],
+            "European AQI 65 (Poor) in Paris, at or above your alert level of Poor."
+        );
+        assert_eq!(
+            rec.toasts[0]["sound_candidates"],
+            json!(["air_quality_alert", "air_quality"])
+        );
+        assert_eq!(
+            rec.sounds,
+            [json!({"candidates": ["air_quality_alert", "air_quality"], "pack": "default"})]
+        );
+        assert_eq!(rec.event_center[0]["category"], "Air quality alert: Paris");
+
+        // Still Poor on the next refresh: quiet.
+        let mut rec = Recorded::default();
+        show(&mut rec, &mut n, now + chrono::Duration::minutes(30));
+        assert!(rec.toasts.is_empty());
+
+        // Turned off: nothing at all.
+        let off = AppSettings::default();
+        let mut quiet = Notifications::new(
+            RuntimeState::open(tempfile::tempdir().unwrap().path()),
+            &off,
+            None,
+            now.with_timezone(&Utc),
+        );
+        let mut rec = Recorded::default();
+        quiet.displayed(
+            &mut rec,
+            &poor_air("Lyon"),
+            &off,
+            None,
+            CachedProducts::default(),
+            false,
+            now,
+        );
+        assert!(rec.toasts.is_empty() && rec.event_center.is_empty());
+    }
+
+    #[test]
+    fn other_locations_poll_checks_air_quality() {
+        let dir = tempfile::tempdir().unwrap();
+        let settings = air_quality_settings();
+        let now: DateTime<Utc> = "2026-10-20T12:00:00Z".parse().unwrap();
+        let mut n = Notifications::new(RuntimeState::open(dir.path()), &settings, None, now);
+        let mut rec = Recorded::default();
+        let mut lyon = poor_air("Lyon");
+        lyon.alerts = Some(aw_core::model::WeatherAlerts::default());
+        n.other_locations_poll(&mut rec, &[lyon], now);
+        assert_eq!(rec.toasts.len(), 1);
+        assert_eq!(rec.toasts[0]["title"], "Air quality alert: Lyon");
     }
 
     #[test]

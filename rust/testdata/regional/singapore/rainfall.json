@@ -1,0 +1,29 @@
+{
+  "code": 0,
+  "errorMsg": "",
+  "data": {
+    "stations": [
+      {"id": "S77", "deviceId": "S77", "name": "Alexandra Road", "location": {"latitude": 1.2937, "longitude": 103.8125}},
+      {"id": "S109", "deviceId": "S109", "name": "Ang Mo Kio Avenue 5", "location": {"latitude": 1.3764, "longitude": 103.8492}},
+      {"id": "S111", "deviceId": "S111", "name": "Scotts Road", "location": {"latitude": 1.31055, "longitude": 103.8365}},
+      {"id": "S24", "deviceId": "S24", "name": "Upper Changi Road North", "location": {"latitude": 1.3678, "longitude": 103.9826}},
+      {"id": "S107", "deviceId": "S107", "name": "East Coast Parkway", "location": {"latitude": 1.3135, "longitude": 103.9625}},
+      {"id": "S50", "deviceId": "S50", "name": "Clementi Road", "location": {"latitude": 1.3337, "longitude": 103.7768}}
+    ],
+    "readings": [
+      {
+        "timestamp": "2026-10-20T15:05:00+08:00",
+        "data": [
+          {"stationId": "S77", "value": 0},
+          {"stationId": "S109", "value": 0.4},
+          {"stationId": "S111", "value": 0},
+          {"stationId": "S24", "value": 0.2},
+          {"stationId": "S107", "value": 0},
+          {"stationId": "S50", "value": 1.6}
+        ]
+      }
+    ],
+    "readingType": "TB1 Rainfall 5 Minute Total F",
+    "readingUnit": "mm"
+  }
+}

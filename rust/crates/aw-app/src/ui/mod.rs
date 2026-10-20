@@ -13,6 +13,7 @@ pub(crate) mod display;
 mod explanation_dialog;
 mod forecast_products;
 pub(crate) mod guidance;
+mod local_readings_dialog;
 mod location_dialog;
 mod locations;
 mod main_window;

@@ -12,12 +12,21 @@ All notable changes to this project will be documented in this file.
 - The iPhone app now checks for alerts in the background and notifies you, merges NWS, Open-Meteo and Pirate Weather in Automatic mode, and adds marine mode, national products, AirNow, aviation advisories and a Weather Assistant.
 - You can now get alert notifications for all saved locations, not just the selected one, and each names its location. Turn it on in Settings, Alerts tab.
 - You can now have the weather read aloud on a schedule, such as every half hour, from Tools > Scheduled Readings.
+- Add Location now has a Country to search in filter, starting on your computer's region, and results show each place's region and country.
+- You can now add a location by typing its coordinates, such as 1.35, 103.82, into Add Location.
+- View > Local Readings shows official readings from the nearest stations worldwide, plus Singapore NEA rain, haze and forecasts and German DWD observations.
+- First-run setup now asks which units you want, and new installs show units that match each location instead of Fahrenheit first.
+- Air quality now uses the European AQI for European locations, with a Settings choice to always use US or European AQI.
+- The Air Quality window lists each pollutant's level and index category, and says whether each reading is observed or modelled, with its source.
+- Add a free OpenAQ API key in Settings to see measured readings from the nearest air monitor, with AirNow or the forecast model as a fallback.
+- You can now get a notification when air quality reaches a level you choose; turn it on in Settings, Alerts tab.
 
 ### Changed
 - AccessiWeather is now rebuilt in Rust as a native app for Windows, macOS and Linux, and updating keeps your saved locations and settings.
 - The OpenRouter model picker drops the retired Llama 3.3 70B option; choose the free router, the paid auto router, or browse models.
 
 ### Fixed
+- Searching a 5-digit postcode outside the US, such as 50000 for Kuala Lumpur, no longer gets turned into a US ZIP code.
 - Sounds now follow your default output device when you switch between headphones and speakers, instead of staying on the old one.
 - AccessiWeather no longer opens a terminal window alongside the app on Windows.
 - Portable updates on Windows no longer open a command window while they install.
