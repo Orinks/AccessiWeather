@@ -738,6 +738,7 @@ You can turn these details on or off:
 - UV index
 - pressure trend
 - impact summaries for outdoor, driving, and allergy conditions
+- local official readings (View > Local Readings), on by default
 
 Use these options when a detail changes real decisions for you.
 
@@ -1251,6 +1252,27 @@ Use the View menu to open dedicated air quality and UV windows.
 These windows can show current values, categories, forecasts, and guidance when the underlying weather data includes them.
 
 For US locations, current AQI comes from EPA AirNow when an AirNow API key is configured in Settings > Data Sources. AirNow observations are preliminary. If no key is configured or AirNow is temporarily unavailable, AccessiWeather continues using its existing air-quality source.
+
+### Local Readings
+
+Use View > Local Readings to see official readings from the weather stations and forecast areas nearest the current location. Forecasts for a whole country or a grid point can miss what's happening down the road; these readings tell you what a real station near you measured, and exactly where.
+
+Each line is complete on its own, so you can arrow through them with a screen reader. A line gives:
+
+- the value, such as 0.4 mm of rain or a PM2.5 level, and its averaging period, such as a 5-minute total, a 1-hour average or a 24-hour average
+- what it covers: a named station and how far away it is, a forecast area, or a region
+- when it was observed, and how long ago, or the time a forecast is valid for
+- the source
+
+Coverage today:
+
+- Everywhere: the nearest airport weather report (METAR), with temperature, dew point, wind, visibility, pressure and conditions. Airport reports come from each country's weather or aviation service and are fetched from the NOAA Aviation Weather Center.
+- Singapore: the National Environment Agency (NEA), with 5-minute rainfall from the nearest rain gauge, air temperature, the 2-hour forecast for your area (including thundery showers), and PM2.5 and PSI haze readings for your region.
+- Germany: Deutscher Wetterdienst (DWD) station observations through Bright Sky, with temperature, humidity, past-hour precipitation, wind, pressure and visibility. Each reading names the DWD station it came from.
+
+A country source is used only for locations in that country, decided by the location's country, or by its coordinates when no country is saved. If a source can't be reached, the window says so and shows the readings it did get.
+
+Readings are fetched when you open the window and when you press Refresh Readings. To turn the feature off, clear Show local official readings from nearby weather stations in Settings > Display, under Extra weather details.
 
 ### Aviation Weather
 

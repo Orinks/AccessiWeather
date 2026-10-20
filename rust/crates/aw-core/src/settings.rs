@@ -304,6 +304,9 @@ pub struct AppSettings {
     pub round_values: bool,
     #[serde(default)]
     pub show_impact_summaries: bool,
+    /// Official station readings near each location (View > Local Readings).
+    #[serde(default = "d_true")]
+    pub show_local_official_readings: bool,
     #[serde(default = "d_parallel_timeout")]
     pub parallel_fetch_timeout: f64,
     #[serde(default = "d_max_coverage")]

@@ -33,6 +33,7 @@ pub(crate) const ID_DEBUG_SIMULATE_ALERT: Id = ID_HIGHEST + 20;
 pub(crate) const ID_DEBUG_DIAGNOSTICS: Id = ID_HIGHEST + 21;
 pub(crate) const ID_REPORT_ISSUE: Id = ID_HIGHEST + 22;
 pub(crate) const ID_SCHEDULED_READINGS: Id = ID_HIGHEST + 23;
+pub(crate) const ID_LOCAL_READINGS: Id = ID_HIGHEST + 24;
 
 pub(crate) fn build_menu_bar(update_channel: &str, debug_mode: bool) -> MenuBar {
     let file = Menu::builder()
@@ -100,6 +101,11 @@ pub(crate) fn build_menu_bar(update_channel: &str, debug_mode: bool) -> MenuBar 
             "View air quality information",
         )
         .append_item(ID_UV_INDEX, "&UV Index...", "View UV index information")
+        .append_item(
+            ID_LOCAL_READINGS,
+            "&Local Readings...",
+            "View official readings from the weather stations nearest this location",
+        )
         .append_item(
             ID_NOAA_RADIO,
             "NOAA Weather &Radio...\tCtrl+N",
@@ -205,6 +211,7 @@ pub(crate) fn on_menu(id: Id) {
         ID_AVIATION => commands::on_aviation(),
         ID_AIR_QUALITY => commands::on_air_quality(),
         ID_UV_INDEX => commands::on_uv_index(),
+        ID_LOCAL_READINGS => commands::on_local_readings(),
         ID_NOAA_RADIO => commands::on_noaa_radio(),
         ID_WEATHER_CHAT => commands::on_weather_chat(),
         ID_SOUNDPACK_MANAGER => commands::on_soundpack_manager(),

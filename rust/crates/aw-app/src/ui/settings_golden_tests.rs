@@ -18,11 +18,15 @@ use super::tray_text_format_dialog::{supported_placeholders_help, validate_forma
 /// the Python goldens were generated, with the default every golden case
 /// expects.
 /// Rust-only settings the Settings form collects.
-const RUST_ONLY_SETTINGS: &[(&str, bool)] = &[("alert_notifications_all_locations", false)];
+const RUST_ONLY_SETTINGS: &[(&str, bool)] = &[
+    ("alert_notifications_all_locations", false),
+    ("show_local_official_readings", true),
+];
 
 fn rust_only_default(key: &str) -> Option<Value> {
     match key {
         "alert_notifications_all_locations" => Some(Value::Bool(false)),
+        "show_local_official_readings" => Some(Value::Bool(true)),
         "location_search_country" => Some(Value::String(String::new())),
         // New installs follow each location's units instead of showing both.
         "temperature_unit" => Some(Value::String("auto".into())),
