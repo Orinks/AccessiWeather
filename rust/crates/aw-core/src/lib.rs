@@ -3,8 +3,10 @@
 //! Everything here is pure Rust with no I/O so it can be unit tested and
 //! shared by the providers, the storage layer and the UI.
 
+pub mod air_quality;
 pub mod alert_aggregator;
 pub mod alert_lifecycle;
+pub mod countries;
 pub mod display;
 pub mod forecast_confidence;
 pub mod fusion;
@@ -15,6 +17,7 @@ pub mod location_sorting;
 pub mod model;
 pub mod provider_normalization;
 pub mod py;
+pub mod scheduled_reading;
 pub mod settings;
 pub mod shortcut_preferences;
 pub mod shortcuts;

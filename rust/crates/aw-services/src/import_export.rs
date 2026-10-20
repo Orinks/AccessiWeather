@@ -282,8 +282,14 @@ pub fn import_settings(config: &mut AppConfig, path: &Path, config_file: Option<
     }
     let field_count = settings_data.len();
     let present: Vec<String> = settings_data.keys().cloned().collect();
+    // Files exported before scheduled readings existed (or with none set
+    // up) have no list; keep the readings already here.
+    let has_readings = settings_data.contains_key("scheduled_readings");
     let mut imported = AppSettings::from_python_dict(settings_data);
     keep_api_keys(&mut imported, &mut config.settings);
+    if !has_readings {
+        imported.scheduled_readings = std::mem::take(&mut config.settings.scheduled_readings);
+    }
     config.settings = imported;
     if let Some((n, _)) = merge_locations(&data, &mut config.locations).filter(|(n, _)| *n > 0) {
         tracing::info!("Imported {n} locations from settings file");
@@ -676,6 +682,30 @@ mod tests {
         let path = dir.join(name);
         std::fs::write(&path, value.to_string()).unwrap();
         path
+    }
+
+    #[test]
+    fn importing_a_file_without_readings_keeps_the_current_ones() {
+        use aw_core::scheduled_reading::ScheduledReading;
+        let dir = tempfile::tempdir().unwrap();
+        let mut config = config_with(&["Home"]);
+        config.settings.scheduled_readings = vec![ScheduledReading::new("Home")];
+        let old = write(
+            dir.path(),
+            "old.json",
+            serde_json::json!({"settings": {"temperature_unit": "c"}}),
+        );
+        assert!(import_settings(&mut config, &old, None));
+        assert_eq!(config.settings.temperature_unit, "c");
+        assert_eq!(config.settings.scheduled_readings.len(), 1);
+        let new = write(
+            dir.path(),
+            "new.json",
+            serde_json::json!({"settings": {"scheduled_readings": [
+                {"location": "Home", "interval_minutes": 15}]}}),
+        );
+        assert!(import_settings(&mut config, &new, None));
+        assert_eq!(config.settings.scheduled_readings[0].interval_minutes, 15);
     }
 
     #[test]

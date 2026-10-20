@@ -153,24 +153,56 @@ fn pre_warm_other_locations(
 }
 
 /// `refresh_notification_events_async`: alerts, AFD and minutely data only,
-/// without redrawing the window. Skipped during a full refresh.
+/// without redrawing the window. Skipped during a full refresh. With alert
+/// notifications for all locations and air quality alerts both on, the
+/// other locations' polls also carry their air quality.
 pub(crate) fn refresh_notification_events_async() {
     let Some(state) = with_state() else { return };
-    let (location, client) = {
+    let (location, others, client, air_quality_alerts) = {
         let st = state.borrow();
         if st.is_updating {
             tracing::debug!("Skipping event check while full weather refresh is in progress");
             return;
         }
-        (st.config.current_location.clone(), st.client.clone())
+        let others: Vec<aw_core::model::Location> = match &st.config.current_location {
+            Some(current) if st.config.settings.alert_notifications_all_locations => st
+                .config
+                .locations
+                .iter()
+                .filter(|l| l.name != current.name)
+                .cloned()
+                .collect(),
+            _ => Vec::new(),
+        };
+        (
+            st.config.current_location.clone(),
+            others,
+            st.client.clone(),
+            st.config.settings.air_quality_alerts_enabled,
+        )
     };
     let Some(location) = location else { return };
     spawn("aw-event-poll", move || {
         let weather_data = client.get_notification_event_data(&location);
+        let other_polls: Vec<_> = others
+            .iter()
+            .map(|l| {
+                let mut poll = client.get_alert_poll_data(l);
+                if air_quality_alerts {
+                    poll.environmental = client.get_air_quality_poll(l);
+                }
+                poll
+            })
+            .collect();
         post_to_ui(move || {
             weather_updated(WeatherUpdate::EventPoll {
                 weather_data: &weather_data,
-            })
+            });
+            if !other_polls.is_empty() {
+                weather_updated(WeatherUpdate::OtherLocationsPoll {
+                    polls: &other_polls,
+                });
+            }
         });
     });
 }

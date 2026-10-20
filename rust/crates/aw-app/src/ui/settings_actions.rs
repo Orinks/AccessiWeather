@@ -14,6 +14,7 @@ use aw_core::model::WeatherData;
 use aw_core::sound_events::LEGACY_SOUND_EVENT_KEYS;
 use aw_core::Location;
 use aw_providers::environmental::airnow::AirNowClient;
+use aw_providers::environmental::openaq::OpenAqClient;
 use aw_providers::pirateweather::PirateWeatherClient;
 use aw_providers::{HttpClient, ReqwestClient};
 use aw_services::import_export::{self, KeyStore, SystemKeyring};
@@ -232,6 +233,14 @@ fn check_pirate_weather_key(http: Arc<dyn HttpClient>, key: &str) -> Result<(), 
 /// `AirNowClient.validate_api_key`. Runs on a worker thread.
 pub(crate) fn validate_airnow_key(key: &str) -> Result<(), String> {
     match AirNowClient::new(http_client()?, key, "AccessiWeather/2.0").validate_api_key() {
+        (true, _) => Ok(()),
+        (false, error) => Err(error.unwrap_or_else(|| "None".into())),
+    }
+}
+
+/// `OpenAqClient::validate_api_key`. Runs on a worker thread.
+pub(crate) fn validate_openaq_key(key: &str) -> Result<(), String> {
+    match OpenAqClient::new(http_client()?, key, "AccessiWeather/2.0").validate_api_key() {
         (true, _) => Ok(()),
         (false, error) => Err(error.unwrap_or_else(|| "None".into())),
     }

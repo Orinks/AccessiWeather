@@ -1,0 +1,65 @@
+{
+  "weather": {
+    "source_id": 6007,
+    "timestamp": "2026-10-20T09:30:00+02:00",
+    "cloud_cover": 63,
+    "condition": "dry",
+    "dew_point": 10.4,
+    "icon": "partly-cloudy-day",
+    "precipitation_10": 0.0,
+    "precipitation_30": 0.1,
+    "precipitation_60": 0.3,
+    "pressure_msl": 1012.9,
+    "relative_humidity": 67,
+    "visibility": 35000,
+    "wind_direction_10": 250,
+    "wind_direction_30": 250,
+    "wind_direction_60": 240,
+    "wind_speed_10": 13.0,
+    "wind_speed_30": 12.6,
+    "wind_speed_60": 12.2,
+    "wind_gust_direction_10": 260,
+    "wind_gust_direction_30": 260,
+    "wind_gust_direction_60": 250,
+    "wind_gust_speed_10": 29.2,
+    "wind_gust_speed_30": 31.0,
+    "wind_gust_speed_60": 31.0,
+    "sunshine_30": 12.0,
+    "sunshine_60": 25.0,
+    "solar_10": 0.041,
+    "solar_30": 0.118,
+    "solar_60": 0.225,
+    "temperature": 16.7,
+    "fallback_source_ids": {
+      "visibility": 6008
+    }
+  },
+  "sources": [
+    {
+      "id": 6007,
+      "dwd_station_id": "00433",
+      "observation_type": "synop",
+      "lat": 52.4675,
+      "lon": 13.4021,
+      "height": 48.0,
+      "station_name": "Berlin-Tempelhof",
+      "wmo_station_id": "10384",
+      "first_record": "2026-10-18T10:00:00+00:00",
+      "last_record": "2026-10-20T07:30:00+00:00",
+      "distance": 4430.0
+    },
+    {
+      "id": 6008,
+      "dwd_station_id": "00427",
+      "observation_type": "synop",
+      "lat": 52.3807,
+      "lon": 13.5306,
+      "height": 46.0,
+      "station_name": "Berlin-Schoenefeld",
+      "wmo_station_id": "10385",
+      "first_record": "2026-10-18T10:00:00+00:00",
+      "last_record": "2026-10-20T07:30:00+00:00",
+      "distance": 17790.0
+    }
+  ]
+}

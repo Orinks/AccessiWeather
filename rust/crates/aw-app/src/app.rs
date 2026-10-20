@@ -140,7 +140,18 @@ pub fn run(args: Args) -> Result<(), AppError> {
         .clone()
         .or_else(|| aw_services::update::build_tag().map(str::to_string));
     let channel = aw_services::update::default_update_channel(build_tag.as_deref());
+    let is_new_config = !paths.config_file().exists();
     let (mut config, channel_defaulted) = aw_store::load_config(&paths.config_file(), channel)?;
+    if is_new_config && !offline {
+        // First run: match the clock to the computer's region settings.
+        if let Some(twelve_hour) = aw_services::region::prefers_12_hour_clock() {
+            config.settings.time_format_12hour = twelve_hour;
+            tracing::info!(
+                "using a {}-hour clock from system settings",
+                if twelve_hour { 12 } else { 24 }
+            );
+        }
+    }
     if channel_defaulted && !offline {
         let _ = aw_store::save_config(&paths.config_file(), &config)
             .inspect_err(|e| tracing::error!("saving config: {e}"));

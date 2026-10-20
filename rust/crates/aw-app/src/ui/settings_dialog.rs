@@ -47,7 +47,7 @@ struct SettingsDialog {
     form: RefCell<SettingsForm>,
     /// `_pw_key_cleared` and friends, in `GUARDED_API_KEYS` order: the user
     /// edited that key field since the last load.
-    cleared: [Cell<bool>; 4],
+    cleared: [Cell<bool>; 5],
     /// `_loaded_tab_values`.
     loaded_values: RefCell<Option<Map<String, Value>>>,
 }
@@ -159,6 +159,8 @@ impl SettingsDialog {
 
         c.taskbar_icon_text_enabled
             .on_toggled(move |e| c.update_taskbar_text_controls_state(e.is_checked()));
+        c.aq_alerts_enabled
+            .on_toggled(move |e| c.update_air_quality_alert_controls_state(e.is_checked()));
         c.taskbar_icon_text_format_dialog
             .on_click(call(self, Self::on_edit_taskbar_text_format));
         c.advanced_timing
@@ -181,6 +183,7 @@ impl SettingsDialog {
             c.airnow_key,
             c.openrouter_key,
             c.venice_key,
+            c.openaq_key,
         ]
         .into_iter()
         .enumerate()
@@ -199,6 +202,11 @@ impl SettingsDialog {
         });
         c.validate_airnow_key
             .on_click(call(self, Self::on_validate_airnow_api_key));
+        c.get_openaq_key.on_click(|_| {
+            actions::open_url("https://explore.openaq.org/register");
+        });
+        c.validate_openaq_key
+            .on_click(call(self, Self::on_validate_openaq_api_key));
 
         c.ai_provider.on_selection_changed(move |_| {
             c.apply_provider_visibility(c.ai_provider.get_selection().map_or(0, |i| i as usize));
@@ -365,7 +373,7 @@ impl SettingsDialog {
         control.select_all();
     }
 
-    fn cleared_flags(&self) -> [bool; 4] {
+    fn cleared_flags(&self) -> [bool; 5] {
         std::array::from_fn(|i| self.cleared[i].get())
     }
 
@@ -963,6 +971,11 @@ impl SettingsDialog {
     fn on_validate_airnow_api_key(&self) {
         let key = self.c.airnow_key.get_value();
         self.validate_provider_key(key, "AirNow", actions::validate_airnow_key);
+    }
+
+    fn on_validate_openaq_api_key(&self) {
+        let key = self.c.openaq_key.get_value();
+        self.validate_provider_key(key, "OpenAQ", actions::validate_openaq_key);
     }
 
     /// `_on_validate_openrouter_key` / `_on_validate_venice_key`: validate

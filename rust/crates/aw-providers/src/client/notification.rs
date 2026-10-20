@@ -5,7 +5,8 @@ use std::collections::HashSet;
 
 use aw_core::alert_aggregator::AlertAggregator;
 use aw_core::alert_lifecycle::diff_alerts;
-use aw_core::model::{Location, WeatherAlerts, WeatherData};
+use aw_core::model::{EnvironmentalConditions, Location, WeatherAlerts, WeatherData};
+use chrono::{Duration, Utc};
 
 use super::sources::SourceResult;
 use super::{joined, location_key, WeatherClient};
@@ -17,7 +18,7 @@ impl WeatherClient {
     pub fn get_notification_event_data(&self, location: &Location) -> WeatherData {
         tracing::info!("Fetching notification event data for {}", location.name);
         let mut weather = WeatherData::new(location.clone());
-        if let Err(e) = self.notification_poll(location, &mut weather) {
+        if let Err(e) = self.notification_poll(location, &mut weather, false) {
             tracing::error!(
                 "Failed to fetch notification event data for {}: {e}",
                 location.name
@@ -29,10 +30,69 @@ impl WeatherClient {
         weather
     }
 
+    /// Alerts only (with the lifecycle diff), for saved locations other than
+    /// the selected one when `alert_notifications_all_locations` is on.
+    pub fn get_alert_poll_data(&self, location: &Location) -> WeatherData {
+        let mut weather = WeatherData::new(location.clone());
+        if let Err(e) = self.notification_poll(location, &mut weather, true) {
+            tracing::error!("Failed to fetch alerts for {}: {e}", location.name);
+            if weather.alerts.is_none() {
+                weather.alerts = Some(WeatherAlerts::default());
+            }
+        }
+        weather
+    }
+
+    /// Air quality for an air quality alert check on a saved location
+    /// other than the selected one: the cached refresh's reading while it
+    /// is younger than the update interval, otherwise an air-quality-only
+    /// fetch (no pollen, no hourly), at most once per update interval per
+    /// location. `None` when air quality is off or nothing came back.
+    pub fn get_air_quality_poll(&self, location: &Location) -> Option<EnvironmentalConditions> {
+        let cfg = self.cfg();
+        if !cfg.settings.air_quality_enabled {
+            return None;
+        }
+        let source = cfg.sources.environmental.clone()?;
+        let now = self.now();
+        let interval = Duration::minutes(cfg.settings.update_interval_minutes.max(1));
+        let has_index = |env: &EnvironmentalConditions| {
+            env.air_quality_index.is_some() || env.air_quality_category.is_some()
+        };
+
+        if let Some(cached) = self.get_cached_weather(location) {
+            let fresh = cached
+                .stale_since
+                .is_some_and(|saved| now - saved.with_timezone(&Utc) < interval);
+            if let Some(env) = cached.environmental.filter(|e| fresh && has_index(e)) {
+                return Some(env);
+            }
+        }
+        let key = location_key(location);
+        if let Some((at, env)) = self.state().last_air_quality_poll.get(&key) {
+            if now - *at < interval {
+                return env.clone();
+            }
+        }
+        let is_us = self.is_us(location);
+        let env = match source.fetch(location, true, false, false, is_us) {
+            Ok(env) => env.filter(has_index),
+            Err(e) => {
+                tracing::debug!("Air quality poll failed for {}: {e}", location.name);
+                None
+            }
+        };
+        self.state()
+            .last_air_quality_poll
+            .insert(key, (now, env.clone()));
+        env
+    }
+
     fn notification_poll(
         &self,
         location: &Location,
         weather: &mut WeatherData,
+        alerts_only: bool,
     ) -> SourceResult<()> {
         let cfg = self.cfg();
         let settings = &cfg.settings;
@@ -41,7 +101,13 @@ impl WeatherClient {
         let pirate_like = matches!(source, "auto" | "pirateweather");
         let pirate = cfg.sources.pirate_weather.clone().filter(|_| pirate_like);
 
-        if nws_like && self.is_us(location) {
+        if nws_like && self.is_us(location) && alerts_only {
+            let alerts = cfg
+                .sources
+                .nws
+                .get_alerts(location, &settings.alert_radius_type);
+            weather.alerts = Some(alerts?.unwrap_or_default());
+        } else if nws_like && self.is_us(location) {
             // Discussion-only so a forecast outage cannot hide AFD updates.
             let radius = &settings.alert_radius_type;
             let (discussion, alerts) = std::thread::scope(|scope| {
@@ -54,6 +120,9 @@ impl WeatherClient {
             weather.discussion = discussion;
             weather.discussion_issuance_time = issuance;
             weather.alerts = Some(alerts.unwrap_or_default());
+        } else if let Some(pirate) = pirate.as_ref().filter(|_| alerts_only) {
+            let alerts = pirate.get_alerts(location, Self::pirate_units(settings, location));
+            weather.alerts = Some(alerts?.unwrap_or_default());
         } else if let Some(pirate) = &pirate {
             let units = Self::pirate_units(settings, location);
             let (current, alerts) = std::thread::scope(|scope| {
@@ -70,9 +139,10 @@ impl WeatherClient {
 
         // Minutely data only when the user wants precipitation notifications,
         // and no more often than the polling cadence allows.
-        let wants_minutely = settings.notify_minutely_precipitation_start
-            || settings.notify_minutely_precipitation_stop
-            || settings.notify_precipitation_likelihood;
+        let wants_minutely = !alerts_only
+            && (settings.notify_minutely_precipitation_start
+                || settings.notify_minutely_precipitation_stop
+                || settings.notify_precipitation_likelihood);
         if let Some(pirate) = &pirate {
             if wants_minutely && self.should_fetch_minutely_precipitation(location) {
                 weather.minutely_precipitation =

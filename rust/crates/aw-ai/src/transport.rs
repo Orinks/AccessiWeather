@@ -486,7 +486,7 @@ mod tests {
         steps.push(Step::Send(sse_chunk(None, None, Some(usage))));
         steps.push(Step::Send(b"data: [DONE]\n\n".to_vec()));
         let server = TestServer::start(vec![Reply::sse(steps)]);
-        let result = stream(&server, limits(0.5, 0.5, 10.0)).unwrap();
+        let result = stream(&server, limits(0.5, 1.0, 10.0)).unwrap();
         assert_eq!(
             result,
             ChatStream {

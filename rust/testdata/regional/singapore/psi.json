@@ -1,0 +1,28 @@
+{
+  "code": 0,
+  "errorMsg": "",
+  "data": {
+    "regionMetadata": [
+      {"name": "west", "labelLocation": {"latitude": 1.35735, "longitude": 103.7}},
+      {"name": "national", "labelLocation": {"latitude": 0, "longitude": 0}},
+      {"name": "east", "labelLocation": {"latitude": 1.35735, "longitude": 103.94}},
+      {"name": "central", "labelLocation": {"latitude": 1.35735, "longitude": 103.82}},
+      {"name": "south", "labelLocation": {"latitude": 1.29587, "longitude": 103.82}},
+      {"name": "north", "labelLocation": {"latitude": 1.41803, "longitude": 103.82}}
+    ],
+    "items": [
+      {
+        "date": "2026-10-20",
+        "updatedTimestamp": "2026-10-20T15:08:10+08:00",
+        "timestamp": "2026-10-20T15:00:00+08:00",
+        "readings": {
+          "o3_sub_index": {"west": 9, "east": 7, "central": 8, "south": 10, "north": 8},
+          "pm10_twenty_four_hourly": {"west": 38, "east": 30, "central": 35, "south": 33, "north": 36},
+          "pm25_sub_index": {"west": 59, "east": 50, "central": 57, "south": 55, "north": 58},
+          "pm25_twenty_four_hourly": {"west": 19, "east": 15, "central": 17, "south": 16, "north": 18},
+          "psi_twenty_four_hourly": {"west": 59, "east": 50, "central": 57, "south": 55, "north": 58}
+        }
+      }
+    ]
+  }
+}

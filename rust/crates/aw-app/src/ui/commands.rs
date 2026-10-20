@@ -59,6 +59,11 @@ pub(crate) fn on_uv_index() {
     super::data_dialogs::show_uv_index();
 }
 
+/// View > Local Readings.
+pub(crate) fn on_local_readings() {
+    super::local_readings_dialog::show_local_readings_dialog();
+}
+
 /// View > NOAA Weather Radio (Ctrl+N).
 pub(crate) fn on_noaa_radio() {
     super::noaa_radio_dialog::show_noaa_radio_dialog();
@@ -73,6 +78,13 @@ pub(crate) fn on_weather_chat() {
 pub(crate) fn on_soundpack_manager() {
     if let Some(w) = window() {
         super::soundpack_manager::open_soundpack_manager(&w.frame);
+    }
+}
+
+/// Tools > Scheduled Readings.
+pub(crate) fn on_scheduled_readings() {
+    if let Some(w) = window() {
+        super::scheduled_readings::show_scheduled_readings_dialog(&w.frame);
     }
 }
 

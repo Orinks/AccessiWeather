@@ -6,6 +6,7 @@
 //! against Python goldens; `settings_dialog.rs` copies it to and from the
 //! widgets.
 
+use aw_core::air_quality::{EUROPEAN_ALERT_THRESHOLDS, US_ALERT_THRESHOLDS};
 use aw_core::settings::AppSettings;
 use aw_core::shortcut_preferences::{
     normalize_hotkey, normalize_shortcut_text, py_repr, reserved_shortcut_use,
@@ -70,8 +71,25 @@ const VERBOSITY_VALUES: [&str; 3] = ["minimal", "standard", "detailed"];
 pub(crate) const ALERT_DISPLAY_CHOICES: [&str; 2] =
     ["Separate fields (default)", "Single combined view"];
 const ALERT_DISPLAY_VALUES: [&str; 2] = ["separate", "combined"];
+pub(crate) const AIR_QUALITY_INDEX_CHOICES: [&str; 3] = [
+    "Automatic (European AQI in Europe, US AQI elsewhere)",
+    "US AQI (EPA)",
+    "European AQI (EEA)",
+];
+const AIR_QUALITY_INDEX_VALUES: [&str; 3] = ["auto", "us", "european"];
 
 // --- Alerts tab (`settings_tabs/notifications.py`) ---
+
+/// Air quality alert levels: categories of each index, mildest first.
+pub(crate) const AQ_THRESHOLD_US_CHOICES: [&str; 5] = [
+    "Moderate",
+    "Unhealthy for Sensitive Groups",
+    "Unhealthy",
+    "Very Unhealthy",
+    "Hazardous",
+];
+pub(crate) const AQ_THRESHOLD_EUROPEAN_CHOICES: [&str; 5] =
+    ["Fair", "Moderate", "Poor", "Very poor", "Extremely poor"];
 
 pub(crate) const RADIUS_TYPE_CHOICES: [&str; 4] = [
     "County (recommended)",
@@ -147,11 +165,12 @@ pub(crate) const UPDATE_CHANNEL_CHOICES: [&str; 2] = [
 
 /// The API key fields guarded against accidental blanking on save, in
 /// `_save_settings` order: (setting, control).
-pub(crate) const GUARDED_API_KEYS: [(&str, &str); 4] = [
+pub(crate) const GUARDED_API_KEYS: [(&str, &str); 5] = [
     ("pirate_weather_api_key", "pw_key"),
     ("airnow_api_key", "airnow_key"),
     ("openrouter_api_key", "openrouter_key"),
     ("venice_api_key", "venice_key"),
+    ("openaq_api_key", "openaq_key"),
 ];
 
 fn position<T: PartialEq>(values: &[T], value: &T) -> Option<usize> {
@@ -312,7 +331,7 @@ pub(crate) struct DialogState {
     /// `GeneralTab._saved_hotkey`.
     pub saved_hotkey: String,
     /// `_original_*_key`, in `GUARDED_API_KEYS` order.
-    pub original_keys: [String; 4],
+    pub original_keys: [String; 5],
     /// `_loaded_startup_enabled`.
     pub loaded_startup_enabled: bool,
 }
@@ -340,6 +359,7 @@ pub(crate) struct SettingsForm {
     pub show_uv_index: bool,
     pub show_pressure_trend: bool,
     pub show_impact_summaries: bool,
+    pub show_local_official_readings: bool,
     pub forecast_time_reference: usize,
     pub time_display_mode: usize,
     pub time_format_12hour: bool,
@@ -348,6 +368,7 @@ pub(crate) struct SettingsForm {
     pub verbosity_level: usize,
     pub severe_weather_override: bool,
     pub alert_display_style: usize,
+    pub air_quality_index: usize,
     pub location_buttons_on_top: bool,
     // Alerts
     pub enable_alerts: bool,
@@ -361,6 +382,10 @@ pub(crate) struct SettingsForm {
     pub notify_moderate: bool,
     pub notify_minor: bool,
     pub notify_unknown: bool,
+    pub alerts_all_locations: bool,
+    pub aq_alerts_enabled: bool,
+    pub aq_threshold_us: usize,
+    pub aq_threshold_european: usize,
     pub notify_discussion_update: bool,
     pub notify_daily_climate_report_update: bool,
     pub notify_hwo_update: bool,
@@ -385,6 +410,7 @@ pub(crate) struct SettingsForm {
     pub data_source: usize,
     pub pw_key: String,
     pub airnow_key: String,
+    pub openaq_key: String,
     // AI
     pub ai_provider: usize,
     pub openrouter_key: String,
@@ -476,6 +502,7 @@ impl SettingsForm {
         self.show_uv_index = s.show_uv_index;
         self.show_pressure_trend = s.show_pressure_trend;
         self.show_impact_summaries = s.show_impact_summaries;
+        self.show_local_official_readings = s.show_local_official_readings;
         self.round_values = s.round_values;
         self.forecast_duration_days =
             position(&FORECAST_DURATION_VALUES, &s.forecast_duration_days).unwrap_or(2);
@@ -490,6 +517,7 @@ impl SettingsForm {
         self.verbosity_level = index_of(&VERBOSITY_VALUES, &s.verbosity_level, 1);
         self.severe_weather_override = s.severe_weather_override;
         self.alert_display_style = index_of(&ALERT_DISPLAY_VALUES, &s.alert_display_style, 0);
+        self.air_quality_index = index_of(&AIR_QUALITY_INDEX_VALUES, &s.air_quality_index, 0);
         self.location_sort_order = index_of(&LOCATION_SORT_VALUES, &s.location_sort_order, 0);
         self.location_buttons_on_top = s.location_buttons_on_top;
     }
@@ -503,6 +531,14 @@ impl SettingsForm {
         self.notify_moderate = s.alert_notify_moderate;
         self.notify_minor = s.alert_notify_minor;
         self.notify_unknown = s.alert_notify_unknown;
+        self.alerts_all_locations = s.alert_notifications_all_locations;
+        self.aq_alerts_enabled = s.air_quality_alerts_enabled;
+        self.aq_threshold_us = index_of(&US_ALERT_THRESHOLDS, &s.air_quality_alert_threshold_us, 1);
+        self.aq_threshold_european = index_of(
+            &EUROPEAN_ALERT_THRESHOLDS,
+            &s.air_quality_alert_threshold_european,
+            2,
+        );
         self.immediate_alert_details_popups = s.immediate_alert_details_popups;
         self.auto_tune_weather_radio_alerts = s.auto_tune_weather_radio_alerts;
         self.auto_tune_weather_radio_duration_minutes =
@@ -547,6 +583,8 @@ impl SettingsForm {
         self.airnow_key = s.airnow_api_key.clone();
         self.state.original_keys[0] = s.pirate_weather_api_key.clone();
         self.state.original_keys[1] = s.airnow_api_key.clone();
+        self.openaq_key = s.openaq_api_key.clone();
+        self.state.original_keys[4] = s.openaq_api_key.clone();
         let strategy = index_of(&STATION_STRATEGY_VALUES, &s.station_selection_strategy, 0);
         let budget = position(&AUTO_MODE_BUDGET_VALUES, &s.auto_mode_api_budget.as_str())
             .map_or(DEFAULT_BUDGET_INDEX, |i| i as i32);
@@ -792,6 +830,7 @@ impl SettingsForm {
                 "show_uv_index": self.show_uv_index,
                 "show_pressure_trend": self.show_pressure_trend,
                 "show_impact_summaries": self.show_impact_summaries,
+                "show_local_official_readings": self.show_local_official_readings,
                 "round_values": self.round_values,
                 "forecast_duration_days": FORECAST_DURATION_VALUES[self.forecast_duration_days],
                 "hourly_forecast_hours": self.hourly_forecast_hours,
@@ -804,6 +843,7 @@ impl SettingsForm {
                 "verbosity_level": VERBOSITY_VALUES[self.verbosity_level],
                 "severe_weather_override": self.severe_weather_override,
                 "alert_display_style": ALERT_DISPLAY_VALUES[self.alert_display_style],
+                "air_quality_index": AIR_QUALITY_INDEX_VALUES[self.air_quality_index],
                 "location_sort_order": LOCATION_SORT_VALUES[self.location_sort_order],
                 "location_buttons_on_top": self.location_buttons_on_top,
             }),
@@ -817,6 +857,11 @@ impl SettingsForm {
                 "alert_notify_moderate": self.notify_moderate,
                 "alert_notify_minor": self.notify_minor,
                 "alert_notify_unknown": self.notify_unknown,
+                "alert_notifications_all_locations": self.alerts_all_locations,
+                "air_quality_alerts_enabled": self.aq_alerts_enabled,
+                "air_quality_alert_threshold_us": US_ALERT_THRESHOLDS[self.aq_threshold_us],
+                "air_quality_alert_threshold_european":
+                    EUROPEAN_ALERT_THRESHOLDS[self.aq_threshold_european],
                 "immediate_alert_details_popups": self.immediate_alert_details_popups,
                 "auto_tune_weather_radio_alerts": self.auto_tune_weather_radio_alerts,
                 "auto_tune_weather_radio_duration_minutes": self.auto_tune_weather_radio_duration_minutes,
@@ -849,6 +894,7 @@ impl SettingsForm {
                 "data_source": SOURCE_VALUES[self.data_source],
                 "pirate_weather_api_key": self.pw_key,
                 "airnow_api_key": self.airnow_key,
+                "openaq_api_key": self.openaq_key,
                 "source_priority_us": us,
                 "source_priority_international": international,
                 "auto_mode_api_budget": budget,
@@ -898,7 +944,7 @@ impl SettingsForm {
     /// The API key guard in `_save_settings`: a key that loaded non-empty and
     /// is now blank is only dropped when the user edited that field
     /// (`cleared`); otherwise the stored key is kept.
-    pub fn guard_api_keys(&self, values: &mut Map<String, Value>, cleared: [bool; 4]) {
+    pub fn guard_api_keys(&self, values: &mut Map<String, Value>, cleared: [bool; 5]) {
         for (i, (setting, _)) in GUARDED_API_KEYS.iter().enumerate() {
             let blank = values
                 .get(*setting)

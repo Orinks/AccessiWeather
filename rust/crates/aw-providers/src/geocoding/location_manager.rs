@@ -28,6 +28,12 @@ static STREET_ADDRESS_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
     )
     .expect("valid street address regex")
 });
+static COORDINATE_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(
+        r"^\s*([+-]?\d{1,3}(?:\.\d+)?)\s*°?\s*([NSns])?\s*([,;]|\s)\s*([+-]?\d{1,3}(?:\.\d+)?)\s*°?\s*([EWew])?\s*$",
+    )
+    .expect("valid coordinate regex")
+});
 static STARTS_WITH_NUMBER_PATTERN: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^\s*\d+\b").expect("valid number regex"));
 
@@ -39,9 +45,28 @@ pub struct LocationManager<'a> {
     pub nws_points_base_url: String,
 }
 
+/// A search match with its region (state or province) and country kept for
+/// display.
+#[derive(Debug, Clone, PartialEq)]
+pub struct LocationSearchResult {
+    pub location: Location,
+    pub region: String,
+    pub country: String,
+}
+
+/// A two-letter ISO 639-1 code for Open-Meteo, defaulting to English.
+fn normalize_language(language: Option<&str>) -> String {
+    let value = language.unwrap_or("").trim().to_lowercase();
+    if value.len() == 2 && value.chars().all(|c| c.is_ascii_alphabetic()) {
+        value
+    } else {
+        "en".into()
+    }
+}
+
 /// Python's search wraps every failure: retryable ones propagate (after its
 /// retry decorator), everything else becomes an empty result.
-fn swallow(e: HttpError) -> Result<Vec<Location>, HttpError> {
+fn swallow<T>(e: HttpError) -> Result<Vec<T>, HttpError> {
     tracing::error!("Failed to search locations: {e}");
     if e.is_retryable() {
         Err(e)
@@ -72,28 +97,67 @@ impl<'a> LocationManager<'a> {
     /// Search by name, ZIP or US street address (queries under two
     /// characters return nothing).
     pub fn search_locations(&self, query: &str, limit: usize) -> Result<Vec<Location>, HttpError> {
+        Ok(self
+            .search_location_results(query, limit, None, None)?
+            .into_iter()
+            .map(|r| r.location)
+            .collect())
+    }
+
+    /// Search by place name, postcode or address, keeping each match's
+    /// region and country for display. `country_code` (ISO 3166-1 alpha-2)
+    /// limits matches to one country; `language` (ISO 639-1) picks the
+    /// language of place names and defaults to English.
+    pub fn search_location_results(
+        &self,
+        query: &str,
+        limit: usize,
+        country_code: Option<&str>,
+        language: Option<&str>,
+    ) -> Result<Vec<LocationSearchResult>, HttpError> {
         let query = query.trim();
         if query.chars().count() < 2 {
             tracing::info!("Query too short for geocoding");
             return Ok(Vec::new());
         }
-        if Self::looks_like_street_address(query) {
+        // Coordinates name one place anywhere, so the country filter doesn't apply.
+        if let Some((latitude, longitude)) = parse_coordinates(query) {
+            return Ok(vec![self.coordinate_result(latitude, longitude)]);
+        }
+        let country_code = country_code
+            .map(|c| c.trim().to_uppercase())
+            .filter(|c| !c.is_empty());
+        let language = normalize_language(language);
+
+        // The Census geocoder only knows US addresses.
+        let us_or_any = country_code.as_deref().is_none_or(|c| c == "US");
+        if us_or_any && Self::looks_like_street_address(query) {
             match self.search_us_street_address(query, limit) {
-                Ok(found) if !found.is_empty() => return Ok(found),
+                Ok(found) if !found.is_empty() => {
+                    return Ok(found
+                        .into_iter()
+                        .map(|location| LocationSearchResult {
+                            location,
+                            region: String::new(),
+                            country: "United States".into(),
+                        })
+                        .collect())
+                }
                 Ok(_) => {}
                 Err(e) => return swallow(e),
             }
         }
 
-        let url = build_url(
-            &format!("{}/search", self.geocoding_base_url),
-            &[
-                ("name", query.to_string()),
-                ("count", limit.min(100).to_string()),
-                ("language", "en".into()),
-                ("format", "json".into()),
-            ],
-        );
+        let mut params = vec![
+            ("name", query.to_string()),
+            ("count", limit.min(100).to_string()),
+            ("language", language.clone()),
+            ("format", "json".into()),
+        ];
+        if let Some(code) = &country_code {
+            params.push(("countryCode", code.clone()));
+        }
+        let url = build_url(&format!("{}/search", self.geocoding_base_url), &params);
         let data = match self.http.get_json(&url) {
             Ok(d) => d,
             Err(e) => return swallow(e),
@@ -104,7 +168,15 @@ impl<'a> LocationManager<'a> {
             .cloned()
             .unwrap_or_default();
         if results.is_empty() {
-            return self.unicode_fallback(query, limit);
+            let found = self.unicode_fallback(query, limit, &language, country_code.as_deref())?;
+            return match &country_code {
+                // Open-Meteo doesn't index every country's postcodes
+                // (Germany's, for one), so ask Nominatim for the postcode.
+                Some(code) if found.is_empty() && query.chars().any(|c| c.is_ascii_digit()) => {
+                    Ok(self.search_postcode_with_nominatim(query, code, &language, limit))
+                }
+                _ => Ok(found),
+            };
         }
 
         let population = |item: &Value| {
@@ -117,12 +189,16 @@ impl<'a> LocationManager<'a> {
         };
         results.sort_by(|a, b| population(b).total_cmp(&population(a)));
 
-        let mut unique: Vec<Location> = Vec::new();
+        let mut unique: Vec<LocationSearchResult> = Vec::new();
         for item in &results {
             let location = parse_geocoding_result(item);
             let key = location.name.to_lowercase();
-            if !unique.iter().any(|l| l.name.to_lowercase() == key) {
-                unique.push(location);
+            if !unique.iter().any(|r| r.location.name.to_lowercase() == key) {
+                unique.push(LocationSearchResult {
+                    location,
+                    region: text_or_empty(item.get("admin1")),
+                    country: text_or_empty(item.get("country")),
+                });
             }
             if unique.len() >= limit {
                 break;
@@ -133,9 +209,15 @@ impl<'a> LocationManager<'a> {
 
     /// Accent/country retries; their errors are not retryable in Python, so
     /// any failure is an empty result.
-    fn unicode_fallback(&self, query: &str, limit: usize) -> Result<Vec<Location>, HttpError> {
+    fn unicode_fallback(
+        &self,
+        query: &str,
+        limit: usize,
+        language: &str,
+        country_code: Option<&str>,
+    ) -> Result<Vec<LocationSearchResult>, HttpError> {
         let client = OpenMeteoGeocodingClient::new(self.http);
-        match client.search(query, limit, "en") {
+        match client.search_in(query, limit, language, country_code) {
             Ok(results) => Ok(results
                 .into_iter()
                 .take(limit)
@@ -148,7 +230,11 @@ impl<'a> LocationManager<'a> {
                     let mut location = Location::new(name, r.latitude, r.longitude);
                     // Python keeps "" rather than None for a missing code here.
                     location.country_code = Some(r.country_code.to_uppercase());
-                    location
+                    LocationSearchResult {
+                        location,
+                        region: r.admin1.unwrap_or_default(),
+                        country: r.country,
+                    }
                 })
                 .collect()),
             Err(e) => {
@@ -212,6 +298,31 @@ impl<'a> LocationManager<'a> {
 
     /// A friendly label for coordinates (NWS first, then Nominatim); `None`
     /// when neither source can name the point.
+    /// A typed latitude and longitude, named by reverse geocoding when it can
+    /// be, otherwise by the coordinates themselves.
+    fn coordinate_result(&self, latitude: f64, longitude: f64) -> LocationSearchResult {
+        let location = self
+            .reverse_geocode_coordinates(latitude, longitude)
+            .unwrap_or_else(|| {
+                Location::new(
+                    Self::format_coordinates(latitude, longitude, 4),
+                    latitude,
+                    longitude,
+                )
+            });
+        let country = location
+            .country_code
+            .as_deref()
+            .and_then(aw_core::countries::country_name)
+            .unwrap_or("")
+            .to_string();
+        LocationSearchResult {
+            location,
+            region: String::new(),
+            country,
+        }
+    }
+
     pub fn reverse_geocode_coordinates(&self, latitude: f64, longitude: f64) -> Option<Location> {
         self.reverse_geocode_with_nws(latitude, longitude)
             .or_else(|| self.reverse_geocode_with_nominatim(latitude, longitude))
@@ -259,6 +370,70 @@ impl<'a> LocationManager<'a> {
             .map(py::value_str);
         location.country_code = Some("US".into());
         Some(location)
+    }
+
+    /// Places with `postcode` in `country_code`, from Nominatim's structured
+    /// search. Empty when Nominatim can't be reached or knows no such code.
+    fn search_postcode_with_nominatim(
+        &self,
+        postcode: &str,
+        country_code: &str,
+        language: &str,
+        limit: usize,
+    ) -> Vec<LocationSearchResult> {
+        let url = build_url(
+            &format!("{}/search", self.nominatim_base_url),
+            &[
+                ("postalcode", postcode.to_string()),
+                ("countrycodes", country_code.to_lowercase()),
+                ("format", "jsonv2".into()),
+                ("addressdetails", "1".into()),
+                ("limit", limit.clamp(1, 10).to_string()),
+                ("accept-language", language.to_string()),
+            ],
+        );
+        let data = match self.http.get_json_with_headers(
+            &url,
+            &[
+                ("User-Agent", REVERSE_USER_AGENT),
+                ("Accept", "application/json"),
+            ],
+        ) {
+            Ok(d) => d,
+            Err(e) => {
+                tracing::debug!("Nominatim postcode search failed: {e}");
+                return Vec::new();
+            }
+        };
+        let mut unique: Vec<LocationSearchResult> = Vec::new();
+        for item in data.as_array().into_iter().flatten() {
+            let coordinate = |key: &str| text_or_empty(item.get(key)).parse::<f64>().ok();
+            let (Some(latitude), Some(longitude)) = (coordinate("lat"), coordinate("lon")) else {
+                continue;
+            };
+            let Some(place) = format_nominatim_location_name(item) else {
+                continue;
+            };
+            let address = item.get("address");
+            let field = |key: &str| text_or_empty(address.and_then(|a| a.get(key)));
+            let code = field("country_code").to_uppercase();
+            let mut location = Location::new(format!("{postcode} {place}"), latitude, longitude);
+            location.country_code = Some(if code.is_empty() {
+                country_code.to_uppercase()
+            } else {
+                code
+            });
+            let key = location.name.to_lowercase();
+            if !unique.iter().any(|r| r.location.name.to_lowercase() == key) {
+                unique.push(LocationSearchResult {
+                    location,
+                    region: field("state"),
+                    country: field("country"),
+                });
+            }
+        }
+        unique.truncate(limit);
+        unique
     }
 
     fn reverse_geocode_with_nominatim(&self, latitude: f64, longitude: f64) -> Option<Location> {
@@ -323,6 +498,36 @@ impl<'a> LocationManager<'a> {
             longitude.abs()
         )
     }
+}
+
+/// A typed latitude and longitude such as `1.3521, 103.8198`,
+/// `-33.87 151.21` or `40.71°N, 74.01°W`. A space alone separates them only
+/// when both have decimals or compass letters, so postcodes like `110 00`
+/// stay postcodes.
+pub fn parse_coordinates(text: &str) -> Option<(f64, f64)> {
+    let caps = COORDINATE_PATTERN.captures(text)?;
+    let (lat_text, lon_text) = (&caps[1], &caps[4]);
+    let (lat_dir, lon_dir) = (caps.get(2), caps.get(5));
+    if lat_dir.is_some() != lon_dir.is_some() {
+        return None;
+    }
+    let signed = |value: &str, dir: Option<regex::Match>, negative: char| -> Option<f64> {
+        let number: f64 = value.parse().ok()?;
+        match dir {
+            Some(_) if value.starts_with(['+', '-']) => None,
+            Some(d) if d.as_str().eq_ignore_ascii_case(&negative.to_string()) => Some(-number),
+            _ => Some(number),
+        }
+    };
+    if caps[3].trim().is_empty() {
+        let decimals = lat_text.contains('.') && lon_text.contains('.');
+        if !decimals && lat_dir.is_none() {
+            return None;
+        }
+    }
+    let latitude = signed(lat_text, lat_dir, 'S')?;
+    let longitude = signed(lon_text, lon_dir, 'W')?;
+    LocationManager::validate_coordinates(latitude, longitude).then_some((latitude, longitude))
 }
 
 /// Editable label from a Nominatim reverse response: locality, region and
@@ -421,6 +626,57 @@ mod tests {
     use serde_json::json;
 
     #[test]
+    fn coordinates_are_recognised() {
+        assert_eq!(
+            parse_coordinates("1.3521, 103.8198"),
+            Some((1.3521, 103.8198))
+        );
+        assert_eq!(parse_coordinates("-33.87 151.21"), Some((-33.87, 151.21)));
+        assert_eq!(parse_coordinates("40.71°N, 74.01°W"), Some((40.71, -74.01)));
+        assert_eq!(parse_coordinates("33.9 S 18.4 E"), Some((-33.9, 18.4)));
+        assert_eq!(parse_coordinates("51;0"), Some((51.0, 0.0)));
+        // Postcodes and other searches are left alone.
+        assert_eq!(parse_coordinates("50000"), None);
+        assert_eq!(parse_coordinates("110 00"), None);
+        assert_eq!(parse_coordinates("10 Main Street"), None);
+        assert_eq!(parse_coordinates("95, 10"), None);
+        assert_eq!(parse_coordinates("40.7N, 74.0"), None);
+        assert_eq!(parse_coordinates("-40.7S, 74.0E"), None);
+    }
+
+    #[test]
+    fn coordinate_search_reverse_geocodes_and_ignores_the_country_filter() {
+        let nominatim = json!({"address": {"city": "Singapore", "country": "Singapore",
+            "country_code": "sg"}});
+        let http = FixtureClient::new().with(NOMINATIM_BASE_URL, nominatim);
+        let found = LocationManager::new(&http)
+            .search_location_results("1.3521, 103.8198", 10, Some("US"), None)
+            .unwrap();
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].location.name, "Singapore");
+        assert_eq!(found[0].location.country_code.as_deref(), Some("SG"));
+        assert_eq!(found[0].country, "Singapore");
+        assert_eq!(
+            (found[0].location.latitude, found[0].location.longitude),
+            (1.3521, 103.8198)
+        );
+        assert!(http
+            .request_log()
+            .iter()
+            .all(|url| !url.starts_with(GEOCODING_BASE_URL)));
+    }
+
+    #[test]
+    fn coordinate_search_without_a_place_name_uses_the_coordinates() {
+        let http = FixtureClient::new();
+        let found = LocationManager::new(&http)
+            .search_location_results("-10.5, -150.25", 10, None, None)
+            .unwrap();
+        assert_eq!(found[0].location.name, "10.5000°S, 150.2500°W");
+        assert_eq!(found[0].country, "");
+    }
+
+    #[test]
     fn street_address_detection() {
         assert!(LocationManager::looks_like_street_address(
             "1600 Pennsylvania Ave NW, Washington"
@@ -474,6 +730,96 @@ mod tests {
             .search_locations("S", 5)
             .unwrap()
             .is_empty());
+    }
+
+    #[test]
+    fn country_filter_language_and_region_columns() {
+        let http = FixtureClient::new().with(
+            GEOCODING_BASE_URL,
+            json!({"results": [
+                {"name": "Petaling Jaya", "admin1": "Selangor", "country": "Malaysia",
+                 "country_code": "MY", "latitude": 3.1, "longitude": 101.6, "population": 520000},
+                {"name": "Kuala Lumpur", "admin1": "Kuala Lumpur", "country": "Malaysia",
+                 "country_code": "MY", "latitude": 3.1478, "longitude": 101.69, "population": 1450000}]}),
+        );
+        let found = LocationManager::new(&http)
+            .search_location_results("Kuala", 10, Some("my"), Some("ms"))
+            .unwrap();
+        assert_eq!(
+            http.request_log()[0],
+            format!("{GEOCODING_BASE_URL}/search?name=Kuala&count=10&language=ms&format=json&countryCode=MY")
+        );
+        assert_eq!(found[0].location.name, "Kuala Lumpur, Malaysia");
+        assert_eq!(found[0].country, "Malaysia");
+        assert_eq!(found[1].region, "Selangor");
+        assert_eq!(found[1].location.country_code.as_deref(), Some("MY"));
+    }
+
+    #[test]
+    fn no_country_means_no_filter_and_english_names() {
+        let http = FixtureClient::new().with(GEOCODING_BASE_URL, json!({"results": []}));
+        let _ = LocationManager::new(&http).search_location_results("Paris", 5, None, Some("xyz"));
+        assert_eq!(
+            http.request_log()[0],
+            format!("{GEOCODING_BASE_URL}/search?name=Paris&count=5&language=en&format=json")
+        );
+    }
+
+    #[test]
+    fn postcode_open_meteo_lacks_comes_from_nominatim_in_that_country() {
+        // Open-Meteo answers German postcodes with no "results" at all.
+        let http = FixtureClient::new()
+            .with(GEOCODING_BASE_URL, json!({"generationtime_ms": 0.5}))
+            .with(
+                NOMINATIM_BASE_URL,
+                json!([{"lat": "52.5323", "lon": "13.3846", "display_name": "10115, Mitte, Berlin, Deutschland",
+                        "address": {"postcode": "10115", "suburb": "Mitte", "city": "Berlin",
+                                    "state": "Berlin", "country": "Deutschland", "country_code": "de"}}]),
+            );
+        let found = LocationManager::new(&http)
+            .search_location_results("10115", 10, Some("DE"), Some("de"))
+            .unwrap();
+        let log = http.request_log();
+        assert_eq!(
+            log.last().unwrap(),
+            &format!(
+                "{NOMINATIM_BASE_URL}/search?postalcode=10115&countrycodes=de&format=jsonv2\
+                 &addressdetails=1&limit=10&accept-language=de"
+            )
+        );
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].location.name, "10115 Berlin, Deutschland");
+        assert_eq!(found[0].location.country_code.as_deref(), Some("DE"));
+        assert_eq!(found[0].region, "Berlin");
+        assert!((found[0].location.latitude - 52.5323).abs() < 1e-9);
+    }
+
+    #[test]
+    fn place_names_never_go_to_nominatim() {
+        let http = FixtureClient::new().with(GEOCODING_BASE_URL, json!({"results": []}));
+        let found = LocationManager::new(&http)
+            .search_location_results("Nowhereville", 10, Some("DE"), None)
+            .unwrap();
+        assert!(found.is_empty());
+        assert!(http
+            .request_log()
+            .iter()
+            .all(|u| !u.starts_with(NOMINATIM_BASE_URL)));
+    }
+
+    #[test]
+    fn census_is_skipped_when_another_country_is_selected() {
+        let http = FixtureClient::new().with(GEOCODING_BASE_URL, json!({"results": []}));
+        let _ = LocationManager::new(&http).search_location_results(
+            "12 Jalan Ampang, Kuala Lumpur",
+            5,
+            Some("MY"),
+            None,
+        );
+        assert!(http
+            .request_log()
+            .iter()
+            .all(|url| !url.starts_with(CENSUS_GEOCODING_BASE_URL)));
     }
 
     #[test]

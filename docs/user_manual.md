@@ -36,10 +36,13 @@ When you start AccessiWeather for the first time, it shows a short onboarding wi
 The wizard walks you through these steps:
 
 1. Add your first location, or skip it for now.
-2. Enter an OpenRouter API key if you want AI features.
-3. Enter a Pirate Weather API key if you want that provider.
+2. Choose your units: match each location (Fahrenheit in the US, Celsius elsewhere), metric, imperial, or both.
+3. Enter an OpenRouter API key if you want AI features.
+4. Enter a Pirate Weather API key if you want that provider.
 
 At the end, AccessiWeather shows a readiness summary.
+
+On a first run, AccessiWeather also follows your computer's region for the 12-hour or 24-hour clock. You can change units and the clock later in Settings, Display tab.
 
 You can safely skip any optional key step. The app works without paid services, and you can add keys later in Settings. When a provider needs a key, AccessiWeather includes a button that takes you to the place to get one.
 
@@ -60,15 +63,20 @@ To add a location:
 
 1. Open Location > Add Location, or press Ctrl+L.
 2. Enter a friendly name in Location Name.
-3. Search by city name, ZIP/postal code, or US street address.
-4. Select one result from the results list.
-5. Save the location.
+3. Check Country to search in. It starts on your computer's region; choose Any country to search worldwide.
+4. Search by city or town name, postal code, coordinates such as 1.35, 103.82, or US street address.
+5. Select one result from the results list. Each result shows its state or region and country.
+6. Save the location.
 
 Important things to know:
 
 - The name must be unique in your saved list.
 - You cannot save the location until you choose a search result.
 - Double-clicking a search result also saves it.
+- If nothing matches in the chosen country, AccessiWeather searches every country and says so.
+- AccessiWeather remembers the country you last searched in.
+- Place names come back in your computer's language when the search service supports it.
+- Coordinates can be decimal degrees (use a minus sign for south and west) or carry N, S, E and W letters. They ignore the country filter.
 - US street addresses use a precise address lookup first, then fall back to the normal place search if there is no address match.
 
 ### Edit a location
@@ -602,6 +610,21 @@ Use minutely precipitation notifications when short outdoor trips matter and a f
 
 Leave these alone if you want the app to notify you only for formal alerts. That simpler setup is usually enough for everyday use.
 
+### Air quality notifications
+
+AccessiWeather can tell you when air quality gets bad enough that you'd want to know. Turn on "Notify when air quality reaches my alert level" in Settings, Alerts tab, then pick a level for each index:
+
+- US AQI alert level: Moderate, Unhealthy for Sensitive Groups (the default), Unhealthy, Very Unhealthy or Hazardous
+- European AQI alert level: Fair, Moderate, Poor (the default), Very poor or Extremely poor
+
+There are two levels because the Automatic index setting can use the European AQI for some saved locations and the US AQI for others. Each location is checked against the level for the index it uses.
+
+You get one notification when a location's air quality reaches your level or goes past it, such as "European AQI 65 (Poor) in Paris, at or above your alert level of Poor. Modelled by Open-Meteo." You won't hear about that location again while it stays at or above the level. Once it drops below and later rises back, you get a new notification. The notification also goes into the Event Center.
+
+The selected location is checked after every refresh. Your other saved locations are checked too when "Send alert notifications for all saved locations" is on.
+
+Air quality notifications count toward the same hourly limit and cooldown as weather alert notifications, and they follow the Send alert notifications switch. If the limit holds one back, AccessiWeather tries again on the next check.
+
 ### Cooldowns and notification limits
 
 Cooldown settings help prevent repeated notifications from becoming overwhelming.
@@ -693,7 +716,7 @@ This tab matters most if the weather is readable but not yet comfortable for you
 
 Choices are:
 
-- Auto based on location
+- Auto based on location (the default for new installs)
 - Imperial (Fahrenheit)
 - Metric (Celsius)
 - Both
@@ -730,6 +753,7 @@ You can turn these details on or off:
 - UV index
 - pressure trend
 - impact summaries for outdoor, driving, and allergy conditions
+- local official readings (View > Local Readings), on by default
 
 Use these options when a detail changes real decisions for you.
 
@@ -775,6 +799,20 @@ Detailed verbosity is helpful if you do not want to open extra windows just to g
 Automatically prioritize severe weather details is helpful if you want hazardous conditions moved closer to the front when they matter.
 
 Leave this alone if Standard verbosity already feels balanced.
+
+#### Air quality
+
+The Air quality index choice sets which scale air quality numbers use:
+
+- Automatic (European AQI in Europe, US AQI elsewhere), the default
+- US AQI (EPA), on a 0 to 500 scale: Good, Moderate, Unhealthy for Sensitive Groups, Unhealthy, Very Unhealthy, Hazardous
+- European AQI (EEA), where 0 to 20 is Good, then Fair, Moderate, Poor, Very poor, and above 100 Extremely poor
+
+Automatic uses the European AQI for locations in the European Union, the wider European Economic Area, the United Kingdom, Switzerland and other European countries, going by the location's country. When the country is not known, it keeps the US AQI.
+
+The index name is always shown next to the number, such as US AQI 52 (Moderate) or European AQI 35 (Fair), so you never have to guess which scale you're hearing.
+
+AirNow only reports the US AQI, so choosing European AQI for a US location uses the forecast model's European AQI instead of AirNow.
 
 ### Alerts
 
@@ -823,6 +861,16 @@ Controls include:
 Change these if formal alerts are not enough for your needs.
 
 Leave them off if you want a simpler alert experience.
+
+#### Air quality notifications
+
+Controls include:
+
+- Notify when air quality reaches my alert level (off by default)
+- US AQI alert level
+- European AQI alert level
+
+The two level choices are only available while the checkbox is ticked. See "Air quality notifications" in section 7 for how the checks work.
 
 #### Rate limiting and advanced timing
 
@@ -932,16 +980,18 @@ Start here with no keys unless you already know you need more. AccessiWeather wo
 The Data Sources tab includes API key fields for:
 
 - AirNow
+- OpenAQ
 - Pirate Weather
 
 Each provider includes:
 
 - an API key field
 - a button to get a key
+- a button to validate the key
 
-Pirate Weather also includes a button to validate its key.
+AirNow is optional and supplies official current US Air Quality Index observations. Create your own public AirNow API account, enter its key here, and AccessiWeather will use AirNow for current US AQI while retaining its existing hourly air-quality forecast and fallback source. AirNow is only used when the location's air quality index is the US AQI.
 
-AirNow is optional and supplies official current US Air Quality Index observations. Create your own public AirNow API account, enter its key here, and AccessiWeather will use AirNow for current US AQI while retaining its existing hourly air-quality forecast and fallback source.
+OpenAQ is optional and adds official station readings worldwide. Create a free account with the Get OpenAQ key button, paste the key into OpenAQ API key, and use Validate OpenAQ key to check it. AccessiWeather then looks for the nearest official monitoring station within 25 km that has reported in the last three hours, and shows its latest pollutant concentrations in the Air Quality window. If no official monitor is in range, it uses the nearest low-cost community sensor instead, and says so. OpenAQ gives concentrations but no index, so the headline air quality index still comes from AirNow or the forecast model. If OpenAQ has no station nearby or can't be reached, AccessiWeather uses AirNow in the US and the forecast model elsewhere.
 
 Pirate Weather is the optional weather-provider key worth adding. Use it when you want worldwide alert coverage in many regions, minutely precipitation timing, moon phase, or Dark Sky-style summary text. This can be worth it if short-term rain timing matters to you or if you need alerts outside the US.
 
@@ -1244,6 +1294,42 @@ These windows can show current values, categories, forecasts, and guidance when 
 
 For US locations, current AQI comes from EPA AirNow when an AirNow API key is configured in Settings > Data Sources. AirNow observations are preliminary. If no key is configured or AirNow is temporarily unavailable, AccessiWeather continues using its existing air-quality source.
 
+Air quality uses the index set in Settings > Display > Air quality index. By default, European locations show the European AQI and its categories (Good, Fair, Moderate, Poor, Very poor, Extremely poor), and everywhere else shows the US AQI. The current reading, its health guidance and each line of the hourly forecast name the index they use.
+
+Under Current Pollutant Levels, the Air Quality window has a Pollutant readings list with one row per pollutant: PM2.5, PM10, ozone, nitrogen dioxide, sulphur dioxide and carbon monoxide, when the source reports them. Use the Up and Down arrow keys to move between rows. Each row has these columns:
+
+- Pollutant: the pollutant's name.
+- Concentration: the amount in the air, such as 12.3 μg/m³, and the period it is averaged over, such as a 1-hour average. AirNow reports only index values, so the Concentration column says Not measured for its rows, and Not available for a modelled pollutant that has an index but no amount.
+- Index: the pollutant's own value and category on the AQI in use, and the averaging period that index uses, for example a 24-hour average for particles, an 8-hour average for ozone on the US AQI, or NowCast for AirNow. Not rated means the source gives no index for that pollutant.
+- Type: Observed when a monitoring station measured it, Modelled when it comes from a forecast model.
+- Source: who supplied it. Observed readings name the provider and the station or reporting area. Modelled readings from Open-Meteo name the CAMS model and its approximate resolution: the European model, about 11 km, across Europe, and the global model, about 45 km, everywhere else. A modelled value is an estimate for the surrounding area, not a measurement at your street.
+- Time: when it was observed, or the forecast hour a modelled value is for.
+
+With an OpenAQ key, readings from the nearest OpenAQ station come first. Their Source column names the station, whether it's a reference monitor or a low-cost sensor, and how far away it is, for example "OpenAQ, reference monitor at Del Norte, Albuquerque, 1.8 km away". OpenAQ doesn't say what period its latest values cover, so their Concentration column reads "latest reading" rather than naming an average. In the US, AirNow adds its index to the pollutants OpenAQ reported and fills in the ones it didn't.
+
+Observed readings come first, and the model fills in any pollutant no station reported, so each pollutant appears once. The Reading source field under the list sums up which pollutants came from which source; press Tab from the list to read it. Times in the window follow your 12-hour or 24-hour clock setting. The current air quality summary also has a Reading line saying whether the headline index was observed or modelled, by whom, and for what time.
+
+### Local Readings
+
+Use View > Local Readings to see official readings from the weather stations and forecast areas nearest the current location. Forecasts for a whole country or a grid point can miss what's happening down the road; these readings tell you what a real station near you measured, and exactly where.
+
+Each line is complete on its own, so you can arrow through them with a screen reader. A line gives:
+
+- the value, such as 0.4 mm of rain or a PM2.5 level, and its averaging period, such as a 5-minute total, a 1-hour average or a 24-hour average
+- what it covers: a named station and how far away it is, a forecast area, or a region
+- when it was observed, and how long ago, or the time a forecast is valid for
+- the source
+
+Coverage today:
+
+- Everywhere: the nearest airport weather report (METAR), with temperature, dew point, wind, visibility, pressure and conditions. Airport reports come from each country's weather or aviation service and are fetched from the NOAA Aviation Weather Center.
+- Singapore: the National Environment Agency (NEA), with 5-minute rainfall from the nearest rain gauge, air temperature, the 2-hour forecast for your area (including thundery showers), and PM2.5 and PSI haze readings for your region.
+- Germany: Deutscher Wetterdienst (DWD) station observations through Bright Sky, with temperature, humidity, past-hour precipitation, wind, pressure and visibility. Each reading names the DWD station it came from.
+
+A country source is used only for locations in that country, decided by the location's country, or by its coordinates when no country is saved. If a source can't be reached, the window says so and shows the readings it did get.
+
+Readings are fetched when you open the window and when you press Refresh Readings. To turn the feature off, clear Show local official readings from nearby weather stations in Settings > Display, under Extra weather details.
+
 ### Aviation Weather
 
 Use View > Aviation Weather to fetch decoded aviation weather by four-letter ICAO airport code, such as KJFK.
@@ -1265,6 +1351,23 @@ An optional AVWX key can improve international aviation support. Leave it alone 
 Use View > NOAA Weather Radio to open the radio player for the current location.
 
 This feature is most useful in NOAA coverage areas and depends on online station streams being available.
+
+### Scheduled Readings
+
+Use Tools > Scheduled Readings to have AccessiWeather read the weather aloud on a schedule, the way the old WeatherAloud program did. You can set up to five readings, each for one of your saved locations.
+
+For each reading, choose:
+
+- the location to read
+- how often: every 15 or 30 minutes, every hour, or every 2, 3, 6 or 12 hours
+- what to read: current conditions, the forecast for the next two periods (such as Today and Tonight), and active alerts
+- whether the reading is turned on, so you can pause one without deleting it
+
+Readings land on the clock: every 30 minutes means on the hour and the half hour, and every 2 hours means midnight, 2:00, 4:00 and so on. A new or changed schedule waits for its next time rather than speaking right away. Use Read Now to hear a reading immediately.
+
+Readings use your screen reader when one is running. Otherwise they use your computer's built-in voice (Windows OneCore or SAPI voices, the macOS system voice, or Speech Dispatcher on Linux). AccessiWeather has to be running for readings to play, including when it is minimized to the tray. If your computer was asleep at a reading's time, that reading is skipped.
+
+If you rename a location, its readings follow the new name; removing a location removes its readings.
 
 ### Explain Weather
 

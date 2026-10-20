@@ -14,6 +14,39 @@ use super::settings_actions;
 use super::settings_form::*;
 use super::tray_text_format_dialog::{supported_placeholders_help, validate_format_string};
 
+/// Settings added to (or whose default changed in) the Rust edition after
+/// the Python goldens were generated, with the default every golden case
+/// expects.
+/// Rust-only settings the Settings form collects.
+/// Every golden case collects their `rust_only_default`.
+const RUST_ONLY_SETTINGS: &[&str] = &[
+    "alert_notifications_all_locations",
+    "air_quality_index",
+    "openaq_api_key",
+    "air_quality_alerts_enabled",
+    "air_quality_alert_threshold_us",
+    "air_quality_alert_threshold_european",
+    "show_local_official_readings",
+];
+
+fn rust_only_default(key: &str) -> Option<Value> {
+    match key {
+        "alert_notifications_all_locations" => Some(Value::Bool(false)),
+        "show_local_official_readings" => Some(Value::Bool(true)),
+        "location_search_country" => Some(Value::String(String::new())),
+        "air_quality_index" => Some(Value::String("auto".into())),
+        "openaq_api_key" => Some(Value::String(String::new())),
+        "air_quality_alerts_enabled" => Some(Value::Bool(false)),
+        "air_quality_alert_threshold_us" => {
+            Some(Value::String("unhealthy_for_sensitive_groups".into()))
+        }
+        "air_quality_alert_threshold_european" => Some(Value::String("poor".into())),
+        // New installs follow each location's units instead of showing both.
+        "temperature_unit" => Some(Value::String("auto".into())),
+        _ => None,
+    }
+}
+
 fn golden() -> Value {
     serde_json::from_str(include_str!(
         "../../../../testdata/golden/settings/cases.json"
@@ -122,7 +155,18 @@ fn assert_snapshot(form: &SettingsForm, snap: &Value, label: &str) {
     for (key, value) in &expected {
         assert_eq!(values.get(key), Some(value), "{label}: collected {key}");
     }
-    assert_eq!(values.len(), expected.len(), "{label}: collected keys");
+    for key in RUST_ONLY_SETTINGS {
+        assert_eq!(
+            values.get(*key),
+            rust_only_default(key).as_ref(),
+            "{label}: collected {key}"
+        );
+    }
+    assert_eq!(
+        values.len(),
+        expected.len() + RUST_ONLY_SETTINGS.len(),
+        "{label}: collected keys"
+    );
 
     // Python shows the hotkey warning on every collect: once when the
     // snapshot was taken, once more for any collect during the step.
@@ -144,6 +188,10 @@ fn defaults_match_python() {
     let python = g["defaults"].as_object().unwrap();
     let rust = serde_json::to_value(AppSettings::default()).unwrap();
     for (key, value) in rust.as_object().unwrap() {
+        if let Some(default) = rust_only_default(key) {
+            assert_eq!(value, &default, "default for {key}");
+            continue;
+        }
         assert_eq!(python.get(key), Some(value), "default for {key}");
     }
     for key in python.keys() {
@@ -244,11 +292,18 @@ fn save_guard_keeps_keys_unless_cleared() {
                 _ => form.venice_key = value,
             }
         }
-        let cleared = fields.map(|f| case["cleared"][f].as_bool().unwrap());
+        let [pw, airnow, openrouter, venice] =
+            fields.map(|f| case["cleared"][f].as_bool().unwrap());
+        // OpenAQ is Rust-only: never loaded, edited or cleared here.
+        let cleared = [pw, airnow, openrouter, venice, false];
         let (mut values, _) = form.collect();
         form.guard_api_keys(&mut values, cleared);
         let expected = case["saved_keys"].as_object().unwrap();
         for (setting, _) in GUARDED_API_KEYS {
+            if setting == "openaq_api_key" {
+                assert_eq!(values.get(setting), Some(&Value::String(String::new())));
+                continue;
+            }
             assert_eq!(values.get(setting), expected.get(setting), "{setting}");
         }
     }

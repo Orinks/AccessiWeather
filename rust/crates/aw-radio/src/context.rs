@@ -25,7 +25,7 @@ use crate::stations::StationDatabase;
 use crate::stream_url::StreamUrlProvider;
 use crate::thread_spawner;
 use crate::toggle::{NotifyCallback, RadioToggleController};
-use crate::weatherindex::WeatherIndexClient;
+use crate::weatherindex::{WeatherIndexClient, DIRECTORY_FILE_NAME};
 use crate::wxradio::WxRadioClient;
 
 /// Create once at startup and keep for the life of the app.
@@ -48,14 +48,29 @@ impl RadioContext {
         backend: Arc<dyn AudioBackend>,
     ) -> Self {
         let preferences = RadioPreferences::in_config_dir(config_dir).shared();
+        let weatherindex = Arc::new(
+            WeatherIndexClient::new(http.clone())
+                .with_directory_cache_path(config_dir.join(DIRECTORY_FILE_NAME)),
+        );
         Self {
             session: RadioSession::new(backend, Some(preferences.clone())),
             preferences,
-            stations: Arc::new(StationDatabase::new()),
-            weatherindex: Arc::new(WeatherIndexClient::new(http.clone())),
+            // The WeatherIndex directory is the station list; the bundled
+            // list is only a fallback when it can't be loaded.
+            stations: Arc::new(StationDatabase::with_directory(weatherindex.clone())),
+            weatherindex,
             wxradio: Arc::new(WxRadioClient::new(http)),
             config_dir: config_dir.to_path_buf(),
         }
+    }
+
+    /// Download the station directory in the background so the finder's
+    /// state list and first search don't wait on it.
+    pub fn prewarm_station_directory(&self) {
+        let weatherindex = self.weatherindex.clone();
+        thread_spawner("RadioStationDirectory")(Box::new(move || {
+            weatherindex.get_all_stations();
+        }));
     }
 
     /// Real network client and audio output.

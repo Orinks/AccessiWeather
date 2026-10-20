@@ -222,9 +222,14 @@ fn has_saved_api_key(state: &Shared, name: &str) -> bool {
 }
 
 fn facts(state: &Shared) -> Facts {
-    let (portable, has_locations) = {
+    let (portable, has_locations, temperature_unit, wind_speed_unit) = {
         let st = state.borrow();
-        (st.paths.portable, !st.config.locations.is_empty())
+        (
+            st.paths.portable,
+            !st.config.locations.is_empty(),
+            st.config.settings.temperature_unit.clone(),
+            st.config.settings.wind_speed_unit.clone(),
+        )
     };
     Facts {
         has_locations,
@@ -233,6 +238,8 @@ fn facts(state: &Shared) -> Facts {
         has_openrouter_key: has_saved_api_key(state, "openrouter_api_key"),
         has_pirate_weather_key: has_saved_api_key(state, "pirate_weather_api_key"),
         portable_keys_imported_this_session: portable_keys::keys_imported_this_session(),
+        temperature_unit,
+        wind_speed_unit,
     }
 }
 
@@ -246,6 +253,27 @@ fn perform(frame: &Frame, state: &Shared, step: Step) -> Response {
         Step::ChooseFile { title, wildcard } => Response::File(choose_file(frame, title, wildcard)),
         Step::AddLocation => {
             locations::on_add_location();
+            Response::Done
+        }
+        Step::Choose {
+            title,
+            message,
+            choices,
+            selection,
+        } => Response::Choice(choose_one(frame, title, &message, &choices, selection)),
+        Step::SaveUnits {
+            temperature_unit,
+            wind_speed_unit,
+        } => {
+            let mut st = state.borrow_mut();
+            st.config.settings.temperature_unit = temperature_unit.into();
+            st.config.settings.wind_speed_unit = wind_speed_unit.into();
+            if let Err(e) = save(&st) {
+                tracing::error!("saving units: {e}");
+            }
+            drop(st);
+            // Re-render the weather in the chosen units.
+            refresh_after_onboarding_import(state);
             Response::Done
         }
         Step::ImportSettings(path) => Response::Success(import_settings(state, &path)),
@@ -271,6 +299,22 @@ fn perform(frame: &Frame, state: &Shared, step: Step) -> Response {
         }
         Step::Finished => Response::Done,
     }
+}
+
+/// A `wx.SingleChoiceDialog`: the chosen index, or `None` when dismissed.
+fn choose_one(
+    frame: &Frame,
+    title: &str,
+    message: &str,
+    choices: &[&str],
+    selection: usize,
+) -> Option<usize> {
+    let dialog = SingleChoiceDialog::builder(frame, message, title, choices).build();
+    dialog.set_selection(i32::try_from(selection).unwrap_or(0));
+    if dialog.show_modal() != ID_OK {
+        return None;
+    }
+    usize::try_from(dialog.get_selection()).ok()
 }
 
 fn message_style(buttons: Buttons, icon: Icon) -> MessageDialogStyle {

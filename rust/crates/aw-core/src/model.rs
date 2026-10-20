@@ -14,6 +14,7 @@ use chrono::{DateTime, FixedOffset, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+pub use crate::air_quality::AqiStandard;
 pub use crate::location::Location;
 
 /// A point in time with the offset it was reported in (NWS and Open-Meteo
@@ -228,6 +229,16 @@ pub struct EnvironmentalConditions {
     pub air_quality_updated_at: Option<Timestamp>,
     pub air_quality_reporting_area: Option<String>,
     pub air_quality_source: Option<String>,
+    /// The scale of `air_quality_index` and `air_quality_category`. `None`
+    /// for data from before standards were tracked (shown as plain "AQI").
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub air_quality_index_standard: Option<AqiStandard>,
+    /// Where the headline index came from; `None` for legacy data.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub air_quality_provenance: Option<AirQualityProvenance>,
+    /// One reading per pollutant, observed readings before modelled ones.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub pollutant_readings: Vec<PollutantReading>,
     pub hourly_air_quality: Vec<HourlyAirQuality>,
     pub uv_index: Option<f64>,
     pub uv_category: Option<String>,
@@ -242,6 +253,61 @@ pub struct EnvironmentalConditions {
     pub sources: Vec<String>,
 }
 
+/// Whether an air quality value was measured or comes from a model.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ReadingKind {
+    /// Measured at a monitoring station.
+    Observed,
+    /// From a forecast model (no station involved).
+    Modelled,
+}
+
+/// Where an air quality value came from.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct AirQualityProvenance {
+    pub kind: ReadingKind,
+    /// "AirNow", "Open-Meteo", "OpenAQ".
+    pub provider: String,
+    /// The model and its resolution, or the kind of monitor.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub detail: Option<String>,
+    /// The station or reporting area of an observation.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub station_name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub station_distance_km: Option<f64>,
+    /// The observation time, or the forecast hour of a model value.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub time: Option<Timestamp>,
+}
+
+/// One pollutant's current level and its index sub-value.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct PollutantReading {
+    /// `pm2_5`, `pm10`, `o3`, `no2`, `so2` or `co`.
+    pub code: String,
+    /// `None` when only an index is reported (AirNow).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub concentration: Option<f64>,
+    /// "μg/m³", "ppm", "ppb".
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    /// The concentration's averaging period: "1-hour", "24-hour".
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub averaging: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub index_value: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub index_category: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub index_standard: Option<AqiStandard>,
+    /// The averaging period the index uses: "NowCast", "8-hour".
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub index_averaging: Option<String>,
+    pub provenance: AirQualityProvenance,
+}
+
 impl EnvironmentalConditions {
     pub fn has_data(&self) -> bool {
         self.air_quality_index.is_some()
@@ -252,6 +318,7 @@ impl EnvironmentalConditions {
             || !self.hourly_air_quality.is_empty()
             || self.uv_index.is_some()
             || !self.hourly_uv_index.is_empty()
+            || !self.pollutant_readings.is_empty()
     }
 }
 
@@ -606,6 +673,9 @@ pub struct HourlyAirQuality {
     pub timestamp: Timestamp,
     pub aqi: i64,
     pub category: String,
+    /// The scale of `aqi` and `category`; `None` for legacy data.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub aqi_standard: Option<AqiStandard>,
     #[serde(default)]
     pub pm2_5: Option<f64>,
     #[serde(default)]

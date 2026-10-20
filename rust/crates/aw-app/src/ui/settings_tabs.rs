@@ -205,6 +205,7 @@ pub(crate) struct Controls {
     pub show_uv_index: CheckBox,
     pub show_pressure_trend: CheckBox,
     pub show_impact_summaries: CheckBox,
+    pub show_local_official_readings: CheckBox,
     pub forecast_time_reference: Choice,
     pub time_display_mode: Choice,
     pub time_format_12hour: CheckBox,
@@ -213,6 +214,7 @@ pub(crate) struct Controls {
     pub verbosity_level: Choice,
     pub severe_weather_override: CheckBox,
     pub alert_display_style: Choice,
+    pub air_quality_index: Choice,
     pub location_buttons_on_top: CheckBox,
     // Alerts
     pub enable_alerts: CheckBox,
@@ -226,6 +228,10 @@ pub(crate) struct Controls {
     pub notify_moderate: CheckBox,
     pub notify_minor: CheckBox,
     pub notify_unknown: CheckBox,
+    pub alerts_all_locations: CheckBox,
+    pub aq_alerts_enabled: CheckBox,
+    pub aq_threshold_us: Choice,
+    pub aq_threshold_european: Choice,
     pub notify_discussion_update: CheckBox,
     pub notify_daily_climate_report_update: CheckBox,
     pub notify_hwo_update: CheckBox,
@@ -255,6 +261,9 @@ pub(crate) struct Controls {
     pub airnow_key: TextCtrl,
     pub get_airnow_key: Button,
     pub validate_airnow_key: Button,
+    pub openaq_key: TextCtrl,
+    pub get_openaq_key: Button,
+    pub validate_openaq_key: Button,
     // AI
     pub ai_provider: Choice,
     pub openrouter_panel: Panel,
@@ -432,6 +441,11 @@ pub(crate) fn build(notebook: &Notebook, sound_pack_names: &[String], portable: 
         "Show impact summaries for outdoor, driving, and allergy conditions",
     );
     details_section.add(&show_impact_summaries, 0, LRBE, 10);
+    let show_local_official_readings = check(
+        &display,
+        "Show local official readings from nearby weather stations",
+    );
+    details_section.add(&show_local_official_readings, 0, LRBE, 10);
     let time_section = create_section(&display, &sizer, "Time display");
     let (_, forecast_time_reference) = labeled(
         &display,
@@ -475,6 +489,15 @@ pub(crate) fn build(notebook: &Notebook, sound_pack_names: &[String], portable: 
         false,
         8,
         |p| choice(p, &ALERT_DISPLAY_CHOICES),
+    );
+    let air_quality_section = create_section(&display, &sizer, "Air quality");
+    let (_, air_quality_index) = labeled(
+        &display,
+        &air_quality_section,
+        "Air quality index:",
+        false,
+        8,
+        |p| choice(p, &AIR_QUALITY_INDEX_CHOICES),
     );
     let layout_section = create_section(&display, &sizer, "Location buttons");
     let location_buttons_on_top = check(
@@ -530,6 +553,11 @@ pub(crate) fn build(notebook: &Notebook, sound_pack_names: &[String], portable: 
     coverage_section.add(&notify_minor, 0, LRB, 10);
     let notify_unknown = check(&alerts, "Uncategorized alerts");
     coverage_section.add(&notify_unknown, 0, LRB, 10);
+    let alerts_all_locations = check(
+        &alerts,
+        "Send alert notifications for all saved locations, not just the selected one",
+    );
+    coverage_section.add(&alerts_all_locations, 0, LRBE, 10);
     let event_section = create_section(&alerts, &sizer, "Extra weather event notifications");
     let event_intro = text(
         &alerts,
@@ -569,6 +597,27 @@ pub(crate) fn build(notebook: &Notebook, sound_pack_names: &[String], portable: 
     );
     // Python also creates three hidden timing spin controls here; their
     // values live in the form and are edited in "Advanced timing...".
+    let aq_section = create_section(&alerts, &sizer, "Air quality notifications");
+    let aq_alerts_enabled = check(&alerts, "Notify when air quality reaches my alert level");
+    aq_section.add(&aq_alerts_enabled, 0, LRBE, 10);
+    let (_, aq_threshold_us) =
+        labeled(&alerts, &aq_section, "US AQI alert level:", false, 8, |p| {
+            choice(p, &AQ_THRESHOLD_US_CHOICES)
+        });
+    let (_, aq_threshold_european) = labeled(
+        &alerts,
+        &aq_section,
+        "European AQI alert level:",
+        false,
+        8,
+        |p| choice(p, &AQ_THRESHOLD_EUROPEAN_CHOICES),
+    );
+    add_help_text(
+        &alerts,
+        &aq_section,
+        "Checks the selected location after each refresh, and all saved locations when alert notifications for all locations are on. You get one notification each time the level is reached.",
+        10,
+    );
     let rate_section = create_section(&alerts, &sizer, "Rate limiting");
     let (_, max_notifications) = labeled(
         &alerts,
@@ -691,6 +740,25 @@ pub(crate) fn build(notebook: &Notebook, sound_pack_names: &[String], portable: 
         10,
     );
     keys_section.add_sizer(&airnow_sizer, 0, SizerFlag::Expand, 0);
+
+    let openaq_sizer = BoxSizer::builder(Orientation::Vertical).build();
+    openaq_sizer.add(&text(&sources, "OpenAQ"), 0, LRBE, 10);
+    let (_, openaq_key) = labeled(&sources, &openaq_sizer, "OpenAQ API key:", true, 8, |p| {
+        text_ctrl(p, 280, TextCtrlStyle::Password)
+    });
+    let openaq_buttons = BoxSizer::builder(Orientation::Horizontal).build();
+    let get_openaq_key = button(&sources, "Get OpenAQ key");
+    openaq_buttons.add(&get_openaq_key, 0, SizerFlag::Right, 10);
+    let validate_openaq_key = button(&sources, "Validate OpenAQ key");
+    openaq_buttons.add(&validate_openaq_key, 0, SizerFlag::empty(), 0);
+    openaq_sizer.add_sizer(&openaq_buttons, 0, LRB, 10);
+    add_help_text(
+        &sources,
+        &openaq_sizer,
+        "Optional: adds official station readings worldwide from the nearest monitor within 25 km, or a low-cost sensor when no monitor is nearby. Your API key is stored securely.",
+        10,
+    );
+    keys_section.add_sizer(&openaq_sizer, 0, SizerFlag::Expand, 0);
     finish_page(notebook, sources, sizer, TAB_LABELS[4]);
 
     // --- AI (`settings_tabs/ai.py`) ---
@@ -910,6 +978,7 @@ pub(crate) fn build(notebook: &Notebook, sound_pack_names: &[String], portable: 
         show_uv_index,
         show_pressure_trend,
         show_impact_summaries,
+        show_local_official_readings,
         forecast_time_reference,
         time_display_mode,
         time_format_12hour,
@@ -918,6 +987,7 @@ pub(crate) fn build(notebook: &Notebook, sound_pack_names: &[String], portable: 
         verbosity_level,
         severe_weather_override,
         alert_display_style,
+        air_quality_index,
         location_buttons_on_top,
         enable_alerts,
         alert_notif,
@@ -930,6 +1000,10 @@ pub(crate) fn build(notebook: &Notebook, sound_pack_names: &[String], portable: 
         notify_moderate,
         notify_minor,
         notify_unknown,
+        alerts_all_locations,
+        aq_alerts_enabled,
+        aq_threshold_us,
+        aq_threshold_european,
         notify_discussion_update,
         notify_daily_climate_report_update,
         notify_hwo_update,
@@ -964,6 +1038,9 @@ pub(crate) fn build(notebook: &Notebook, sound_pack_names: &[String], portable: 
         airnow_key,
         get_airnow_key,
         validate_airnow_key,
+        openaq_key,
+        get_openaq_key,
+        validate_openaq_key,
         ai_provider,
         openrouter_panel,
         openrouter_key,
@@ -1034,6 +1111,7 @@ impl Controls {
             (&self.show_uv_index, "Show UV index"),
             (&self.show_pressure_trend, "Show pressure trend"),
             (&self.show_impact_summaries, "Show impact summaries for outdoor driving and allergy conditions"),
+            (&self.show_local_official_readings, "Show local official readings from nearby stations"),
             (&self.round_values, "Show values as whole numbers when possible"),
             (&self.forecast_duration_days, "Daily forecast range"),
             (&self.hourly_forecast_hours, "Hourly forecast range in hours"),
@@ -1046,6 +1124,7 @@ impl Controls {
             (&self.verbosity_level, "Verbosity level"),
             (&self.severe_weather_override, "Automatically prioritize severe weather details"),
             (&self.alert_display_style, "Alert display style"),
+            (&self.air_quality_index, "Air quality index standard"),
             (&self.location_sort_order, "Saved location order"),
             (&self.location_buttons_on_top, "Show Add, Edit, and Remove Location buttons next to the location dropdown (restart required)"),
             (&self.enable_alerts, "Monitor weather alerts"),
@@ -1056,6 +1135,10 @@ impl Controls {
             (&self.notify_moderate, "Moderate severity alerts"),
             (&self.notify_minor, "Minor severity alerts"),
             (&self.notify_unknown, "Uncategorized alerts"),
+            (&self.alerts_all_locations, "Send alert notifications for all saved locations, not just the selected one"),
+            (&self.aq_alerts_enabled, "Notify when air quality reaches my alert level"),
+            (&self.aq_threshold_us, "US AQI alert level"),
+            (&self.aq_threshold_european, "European AQI alert level"),
             (&self.immediate_alert_details_popups, "Open alert details immediately while AccessiWeather is running"),
             (&self.auto_tune_weather_radio_alerts, "Automatically tune NOAA Weather Radio for qualifying Specific Area Message Encoding (SAME) alerts"),
             (&self.auto_tune_weather_radio_duration_minutes, "Play weather radio for this many minutes"),
@@ -1081,6 +1164,9 @@ impl Controls {
             (&self.airnow_key, "AirNow API key"),
             (&self.get_airnow_key, "Get AirNow key"),
             (&self.validate_airnow_key, "Validate AirNow key"),
+            (&self.openaq_key, "OpenAQ API key"),
+            (&self.get_openaq_key, "Get OpenAQ key, opens browser"),
+            (&self.validate_openaq_key, "Validate OpenAQ key"),
             (&self.source_settings_summary, "Automatic mode source summary"),
             (&self.configure_source_settings, "Configure automatic mode budget and sources"),
             (&self.ai_provider, "AI provider"),
@@ -1129,6 +1215,8 @@ impl Controls {
         self.show_pressure_trend.set_value(f.show_pressure_trend);
         self.show_impact_summaries
             .set_value(f.show_impact_summaries);
+        self.show_local_official_readings
+            .set_value(f.show_local_official_readings);
         self.round_values.set_value(f.round_values);
         self.forecast_duration_days
             .set_selection(f.forecast_duration_days as u32);
@@ -1147,6 +1235,8 @@ impl Controls {
             .set_value(f.severe_weather_override);
         self.alert_display_style
             .set_selection(f.alert_display_style as u32);
+        self.air_quality_index
+            .set_selection(f.air_quality_index as u32);
         self.location_sort_order
             .set_selection(f.location_sort_order as u32);
         self.location_buttons_on_top
@@ -1161,6 +1251,12 @@ impl Controls {
         self.notify_moderate.set_value(f.notify_moderate);
         self.notify_minor.set_value(f.notify_minor);
         self.notify_unknown.set_value(f.notify_unknown);
+        self.alerts_all_locations.set_value(f.alerts_all_locations);
+        self.aq_alerts_enabled.set_value(f.aq_alerts_enabled);
+        self.aq_threshold_us.set_selection(f.aq_threshold_us as u32);
+        self.aq_threshold_european
+            .set_selection(f.aq_threshold_european as u32);
+        self.update_air_quality_alert_controls_state(f.aq_alerts_enabled);
         self.immediate_alert_details_popups
             .set_value(f.immediate_alert_details_popups);
         self.auto_tune_weather_radio_alerts
@@ -1200,6 +1296,7 @@ impl Controls {
         self.data_source.set_selection(f.data_source as u32);
         self.pirate_weather.key.change_value(&f.pw_key);
         self.airnow_key.change_value(&f.airnow_key);
+        self.openaq_key.change_value(&f.openaq_key);
         self.push_source_settings_summary(f);
         self.update_api_key_visibility(f);
 
@@ -1247,6 +1344,7 @@ impl Controls {
         f.show_uv_index = self.show_uv_index.is_checked();
         f.show_pressure_trend = self.show_pressure_trend.is_checked();
         f.show_impact_summaries = self.show_impact_summaries.is_checked();
+        f.show_local_official_readings = self.show_local_official_readings.is_checked();
         f.forecast_time_reference = selection(&self.forecast_time_reference);
         f.time_display_mode = selection(&self.time_display_mode);
         f.time_format_12hour = self.time_format_12hour.is_checked();
@@ -1255,6 +1353,7 @@ impl Controls {
         f.verbosity_level = selection(&self.verbosity_level);
         f.severe_weather_override = self.severe_weather_override.is_checked();
         f.alert_display_style = selection(&self.alert_display_style);
+        f.air_quality_index = selection(&self.air_quality_index);
         f.location_buttons_on_top = self.location_buttons_on_top.is_checked();
 
         f.enable_alerts = self.enable_alerts.is_checked();
@@ -1269,6 +1368,10 @@ impl Controls {
         f.notify_moderate = self.notify_moderate.is_checked();
         f.notify_minor = self.notify_minor.is_checked();
         f.notify_unknown = self.notify_unknown.is_checked();
+        f.alerts_all_locations = self.alerts_all_locations.is_checked();
+        f.aq_alerts_enabled = self.aq_alerts_enabled.is_checked();
+        f.aq_threshold_us = selection(&self.aq_threshold_us);
+        f.aq_threshold_european = selection(&self.aq_threshold_european);
         f.notify_discussion_update = self.notify_discussion_update.is_checked();
         f.notify_daily_climate_report_update = self.notify_daily_climate_report_update.is_checked();
         f.notify_hwo_update = self.notify_hwo_update.is_checked();
@@ -1291,6 +1394,7 @@ impl Controls {
         f.data_source = selection(&self.data_source);
         f.pw_key = self.pirate_weather.key.get_value();
         f.airnow_key = self.airnow_key.get_value();
+        f.openaq_key = self.openaq_key.get_value();
 
         f.ai_provider = selection(&self.ai_provider);
         f.openrouter_key = self.openrouter_key.get_value();
@@ -1312,6 +1416,12 @@ impl Controls {
         f.shortcut_show_main_window = self.shortcut_show_main_window.get_value();
         f.shortcut_hide_main_window = self.shortcut_hide_main_window.get_value();
         f.shortcut_read_tray_info = self.shortcut_read_tray_info.get_value();
+    }
+
+    /// The alert level choices only apply while air quality alerts are on.
+    pub fn update_air_quality_alert_controls_state(&self, enabled: bool) {
+        self.aq_threshold_us.enable(enabled);
+        self.aq_threshold_european.enable(enabled);
     }
 
     /// `_update_taskbar_text_controls_state`.
