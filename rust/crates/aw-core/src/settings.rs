@@ -22,7 +22,6 @@ macro_rules! default_fn {
     };
 }
 
-default_fn!(d_both, String, s("both"));
 default_fn!(d_auto, String, s("auto"));
 default_fn!(d_10, i64, 10);
 default_fn!(d_true, bool, true);
@@ -104,7 +103,8 @@ default_fn!(
 /// settings it does not understand yet.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AppSettings {
-    #[serde(default = "d_both")]
+    /// "auto" (the default) picks units from each location's country.
+    #[serde(default = "d_auto")]
     pub temperature_unit: String,
     #[serde(default = "d_auto")]
     pub wind_speed_unit: String,
@@ -250,6 +250,10 @@ pub struct AppSettings {
     pub location_buttons_on_top: bool,
     #[serde(default = "d_alphabetical")]
     pub location_sort_order: String,
+    /// Add Location's country filter: "" follows the computer's region,
+    /// "ANY" searches worldwide, otherwise an ISO 3166-1 alpha-2 code.
+    #[serde(default)]
+    pub location_search_country: String,
     #[serde(default = "d_iso")]
     pub date_format: String,
     #[serde(default)]
@@ -731,7 +735,7 @@ mod tests {
     #[test]
     fn defaults_match_python() {
         let s = AppSettings::default();
-        assert_eq!(s.temperature_unit, "both");
+        assert_eq!(s.temperature_unit, "auto");
         assert_eq!(s.update_interval_minutes, 10);
         assert!(s.enable_alerts);
         assert_eq!(s.forecast_duration_days, 7);
@@ -772,7 +776,7 @@ mod tests {
         let s = &cfg.settings;
         assert_eq!(
             (s.update_interval_minutes, s.temperature_unit.as_str()),
-            (10, "both")
+            (10, "auto")
         );
         assert_eq!(s.sound_pack, "chimes");
         assert_eq!(s.specific_alert_sound_packs, ["chimes"]);

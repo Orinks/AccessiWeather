@@ -87,8 +87,12 @@ fn presentations_match_python() {
         let clock = Clock::fixed(now, doc["local_tz"].as_str().unwrap().parse().unwrap());
 
         for variant in doc["variants"].as_array().unwrap() {
-            let settings: AppSettings =
-                serde_json::from_value(variant["settings"].clone()).unwrap();
+            // The goldens were recorded when "both" was the default unit.
+            let mut variant_settings = variant["settings"].clone();
+            if let Some(map) = variant_settings.as_object_mut() {
+                map.entry("temperature_unit").or_insert("both".into());
+            }
+            let settings: AppSettings = serde_json::from_value(variant_settings).unwrap();
             let label = format!("[{case} {}] ", variant["settings"]);
             let presenter = WeatherPresenter::with_clock(&settings, clock);
 

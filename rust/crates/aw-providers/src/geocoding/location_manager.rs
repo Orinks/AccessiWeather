@@ -39,9 +39,28 @@ pub struct LocationManager<'a> {
     pub nws_points_base_url: String,
 }
 
+/// A search match with its region (state or province) and country kept for
+/// display.
+#[derive(Debug, Clone, PartialEq)]
+pub struct LocationSearchResult {
+    pub location: Location,
+    pub region: String,
+    pub country: String,
+}
+
+/// A two-letter ISO 639-1 code for Open-Meteo, defaulting to English.
+fn normalize_language(language: Option<&str>) -> String {
+    let value = language.unwrap_or("").trim().to_lowercase();
+    if value.len() == 2 && value.chars().all(|c| c.is_ascii_alphabetic()) {
+        value
+    } else {
+        "en".into()
+    }
+}
+
 /// Python's search wraps every failure: retryable ones propagate (after its
 /// retry decorator), everything else becomes an empty result.
-fn swallow(e: HttpError) -> Result<Vec<Location>, HttpError> {
+fn swallow<T>(e: HttpError) -> Result<Vec<T>, HttpError> {
     tracing::error!("Failed to search locations: {e}");
     if e.is_retryable() {
         Err(e)
@@ -72,28 +91,63 @@ impl<'a> LocationManager<'a> {
     /// Search by name, ZIP or US street address (queries under two
     /// characters return nothing).
     pub fn search_locations(&self, query: &str, limit: usize) -> Result<Vec<Location>, HttpError> {
+        Ok(self
+            .search_location_results(query, limit, None, None)?
+            .into_iter()
+            .map(|r| r.location)
+            .collect())
+    }
+
+    /// Search by place name, postcode or address, keeping each match's
+    /// region and country for display. `country_code` (ISO 3166-1 alpha-2)
+    /// limits matches to one country; `language` (ISO 639-1) picks the
+    /// language of place names and defaults to English.
+    pub fn search_location_results(
+        &self,
+        query: &str,
+        limit: usize,
+        country_code: Option<&str>,
+        language: Option<&str>,
+    ) -> Result<Vec<LocationSearchResult>, HttpError> {
         let query = query.trim();
         if query.chars().count() < 2 {
             tracing::info!("Query too short for geocoding");
             return Ok(Vec::new());
         }
-        if Self::looks_like_street_address(query) {
+        let country_code = country_code
+            .map(|c| c.trim().to_uppercase())
+            .filter(|c| !c.is_empty());
+        let language = normalize_language(language);
+
+        // The Census geocoder only knows US addresses.
+        let us_or_any = country_code.as_deref().is_none_or(|c| c == "US");
+        if us_or_any && Self::looks_like_street_address(query) {
             match self.search_us_street_address(query, limit) {
-                Ok(found) if !found.is_empty() => return Ok(found),
+                Ok(found) if !found.is_empty() => {
+                    return Ok(found
+                        .into_iter()
+                        .map(|location| LocationSearchResult {
+                            location,
+                            region: String::new(),
+                            country: "United States".into(),
+                        })
+                        .collect())
+                }
                 Ok(_) => {}
                 Err(e) => return swallow(e),
             }
         }
 
-        let url = build_url(
-            &format!("{}/search", self.geocoding_base_url),
-            &[
-                ("name", query.to_string()),
-                ("count", limit.min(100).to_string()),
-                ("language", "en".into()),
-                ("format", "json".into()),
-            ],
-        );
+        let mut params = vec![
+            ("name", query.to_string()),
+            ("count", limit.min(100).to_string()),
+            ("language", language.clone()),
+            ("format", "json".into()),
+        ];
+        if let Some(code) = &country_code {
+            params.push(("countryCode", code.clone()));
+        }
+        let url = build_url(&format!("{}/search", self.geocoding_base_url), &params);
         let data = match self.http.get_json(&url) {
             Ok(d) => d,
             Err(e) => return swallow(e),
@@ -104,7 +158,7 @@ impl<'a> LocationManager<'a> {
             .cloned()
             .unwrap_or_default();
         if results.is_empty() {
-            return self.unicode_fallback(query, limit);
+            return self.unicode_fallback(query, limit, &language, country_code.as_deref());
         }
 
         let population = |item: &Value| {
@@ -117,12 +171,16 @@ impl<'a> LocationManager<'a> {
         };
         results.sort_by(|a, b| population(b).total_cmp(&population(a)));
 
-        let mut unique: Vec<Location> = Vec::new();
+        let mut unique: Vec<LocationSearchResult> = Vec::new();
         for item in &results {
             let location = parse_geocoding_result(item);
             let key = location.name.to_lowercase();
-            if !unique.iter().any(|l| l.name.to_lowercase() == key) {
-                unique.push(location);
+            if !unique.iter().any(|r| r.location.name.to_lowercase() == key) {
+                unique.push(LocationSearchResult {
+                    location,
+                    region: text_or_empty(item.get("admin1")),
+                    country: text_or_empty(item.get("country")),
+                });
             }
             if unique.len() >= limit {
                 break;
@@ -133,9 +191,15 @@ impl<'a> LocationManager<'a> {
 
     /// Accent/country retries; their errors are not retryable in Python, so
     /// any failure is an empty result.
-    fn unicode_fallback(&self, query: &str, limit: usize) -> Result<Vec<Location>, HttpError> {
+    fn unicode_fallback(
+        &self,
+        query: &str,
+        limit: usize,
+        language: &str,
+        country_code: Option<&str>,
+    ) -> Result<Vec<LocationSearchResult>, HttpError> {
         let client = OpenMeteoGeocodingClient::new(self.http);
-        match client.search(query, limit, "en") {
+        match client.search_in(query, limit, language, country_code) {
             Ok(results) => Ok(results
                 .into_iter()
                 .take(limit)
@@ -148,7 +212,11 @@ impl<'a> LocationManager<'a> {
                     let mut location = Location::new(name, r.latitude, r.longitude);
                     // Python keeps "" rather than None for a missing code here.
                     location.country_code = Some(r.country_code.to_uppercase());
-                    location
+                    LocationSearchResult {
+                        location,
+                        region: r.admin1.unwrap_or_default(),
+                        country: r.country,
+                    }
                 })
                 .collect()),
             Err(e) => {
@@ -474,6 +542,54 @@ mod tests {
             .search_locations("S", 5)
             .unwrap()
             .is_empty());
+    }
+
+    #[test]
+    fn country_filter_language_and_region_columns() {
+        let http = FixtureClient::new().with(
+            GEOCODING_BASE_URL,
+            json!({"results": [
+                {"name": "Petaling Jaya", "admin1": "Selangor", "country": "Malaysia",
+                 "country_code": "MY", "latitude": 3.1, "longitude": 101.6, "population": 520000},
+                {"name": "Kuala Lumpur", "admin1": "Kuala Lumpur", "country": "Malaysia",
+                 "country_code": "MY", "latitude": 3.1478, "longitude": 101.69, "population": 1450000}]}),
+        );
+        let found = LocationManager::new(&http)
+            .search_location_results("Kuala", 10, Some("my"), Some("ms"))
+            .unwrap();
+        assert_eq!(
+            http.request_log()[0],
+            format!("{GEOCODING_BASE_URL}/search?name=Kuala&count=10&language=ms&format=json&countryCode=MY")
+        );
+        assert_eq!(found[0].location.name, "Kuala Lumpur, Malaysia");
+        assert_eq!(found[0].country, "Malaysia");
+        assert_eq!(found[1].region, "Selangor");
+        assert_eq!(found[1].location.country_code.as_deref(), Some("MY"));
+    }
+
+    #[test]
+    fn no_country_means_no_filter_and_english_names() {
+        let http = FixtureClient::new().with(GEOCODING_BASE_URL, json!({"results": []}));
+        let _ = LocationManager::new(&http).search_location_results("Paris", 5, None, Some("xyz"));
+        assert_eq!(
+            http.request_log()[0],
+            format!("{GEOCODING_BASE_URL}/search?name=Paris&count=5&language=en&format=json")
+        );
+    }
+
+    #[test]
+    fn census_is_skipped_when_another_country_is_selected() {
+        let http = FixtureClient::new().with(GEOCODING_BASE_URL, json!({"results": []}));
+        let _ = LocationManager::new(&http).search_location_results(
+            "12 Jalan Ampang, Kuala Lumpur",
+            5,
+            Some("MY"),
+            None,
+        );
+        assert!(http
+            .request_log()
+            .iter()
+            .all(|url| !url.starts_with(CENSUS_GEOCODING_BASE_URL)));
     }
 
     #[test]

@@ -36,10 +36,13 @@ When you start AccessiWeather for the first time, it shows a short onboarding wi
 The wizard walks you through these steps:
 
 1. Add your first location, or skip it for now.
-2. Enter an OpenRouter API key if you want AI features.
-3. Enter a Pirate Weather API key if you want that provider.
+2. Choose your units: match each location (Fahrenheit in the US, Celsius elsewhere), metric, imperial, or both.
+3. Enter an OpenRouter API key if you want AI features.
+4. Enter a Pirate Weather API key if you want that provider.
 
 At the end, AccessiWeather shows a readiness summary.
+
+On a first run, AccessiWeather also follows your computer's region for the 12-hour or 24-hour clock. You can change units and the clock later in Settings, Display tab.
 
 You can safely skip any optional key step. The app works without paid services, and you can add keys later in Settings. When a provider needs a key, AccessiWeather includes a button that takes you to the place to get one.
 
@@ -60,15 +63,19 @@ To add a location:
 
 1. Open Location > Add Location, or press Ctrl+L.
 2. Enter a friendly name in Location Name.
-3. Search by city name, ZIP/postal code, or US street address.
-4. Select one result from the results list.
-5. Save the location.
+3. Check Country to search in. It starts on your computer's region; choose Any country to search worldwide.
+4. Search by city or town name, postal code, or US street address.
+5. Select one result from the results list. Each result shows its state or region and country.
+6. Save the location.
 
 Important things to know:
 
 - The name must be unique in your saved list.
 - You cannot save the location until you choose a search result.
 - Double-clicking a search result also saves it.
+- If nothing matches in the chosen country, AccessiWeather searches every country and says so.
+- AccessiWeather remembers the country you last searched in.
+- Place names come back in your computer's language when the search service supports it.
 - US street addresses use a precise address lookup first, then fall back to the normal place search if there is no address match.
 
 ### Edit a location
@@ -693,7 +700,7 @@ This tab matters most if the weather is readable but not yet comfortable for you
 
 Choices are:
 
-- Auto based on location
+- Auto based on location (the default for new installs)
 - Imperial (Fahrenheit)
 - Metric (Celsius)
 - Both

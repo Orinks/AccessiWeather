@@ -14,15 +14,20 @@ use super::settings_actions;
 use super::settings_form::*;
 use super::tray_text_format_dialog::{supported_placeholders_help, validate_format_string};
 
-/// Settings added to the Rust edition after the Python goldens were
-/// generated, with the default every golden case expects.
+/// Settings added to (or whose default changed in) the Rust edition after
+/// the Python goldens were generated, with the default every golden case
+/// expects.
+/// Rust-only settings the Settings form collects.
 const RUST_ONLY_SETTINGS: &[(&str, bool)] = &[("alert_notifications_all_locations", false)];
 
 fn rust_only_default(key: &str) -> Option<Value> {
-    RUST_ONLY_SETTINGS
-        .iter()
-        .find(|(k, _)| *k == key)
-        .map(|(_, d)| Value::Bool(*d))
+    match key {
+        "alert_notifications_all_locations" => Some(Value::Bool(false)),
+        "location_search_country" => Some(Value::String(String::new())),
+        // New installs follow each location's units instead of showing both.
+        "temperature_unit" => Some(Value::String("auto".into())),
+        _ => None,
+    }
 }
 
 fn golden() -> Value {

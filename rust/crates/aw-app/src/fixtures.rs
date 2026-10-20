@@ -190,6 +190,8 @@ impl HttpClient for OfflineHttp {
 /// The settings the case ran with: defaults plus its overrides.
 fn case_settings(case: &Value) -> AppSettings {
     let mut value = serde_json::to_value(AppSettings::default()).expect("settings serialize");
+    // The cases were recorded when "both" was the default unit.
+    value["temperature_unit"] = "both".into();
     for (key, v) in case["settings"].as_object().into_iter().flatten() {
         value[key] = v.clone();
     }

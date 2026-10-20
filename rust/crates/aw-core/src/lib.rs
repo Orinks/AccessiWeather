@@ -5,6 +5,7 @@
 
 pub mod alert_aggregator;
 pub mod alert_lifecycle;
+pub mod countries;
 pub mod display;
 pub mod forecast_confidence;
 pub mod fusion;

@@ -336,6 +336,16 @@ fn assert_json_eq(a: &Value, b: &Value, context: &str) {
     }
 }
 
+/// The goldens were recorded when "both" was the default `temperature_unit`;
+/// a config that never set it now loads as "auto".
+fn unit_default(key: &str, expected: &Value, input: &str) -> Value {
+    if key == "temperature_unit" && expected == "both" && !input.contains("temperature_unit") {
+        json!("auto")
+    } else {
+        expected.clone()
+    }
+}
+
 #[test]
 fn settings_and_locations_export_documents() {
     let g = golden("import_export.json");
@@ -349,6 +359,14 @@ fn settings_and_locations_export_documents() {
         exported.remove("alert_notifications_all_locations"),
         Some(json!(false))
     );
+    assert_eq!(exported.remove("location_search_country"), Some(json!("")));
+    if !g["config"]["settings"]
+        .as_object()
+        .is_some_and(|m| m.contains_key("temperature_unit"))
+    {
+        assert_eq!(exported["temperature_unit"], "auto");
+        exported.insert("temperature_unit".into(), json!("both"));
+    }
     assert_json_eq(&doc, &g["settings_export"], "settings export");
     let mut doc = import_export::locations_export(&config, "now");
     doc.as_object_mut().unwrap().remove("exported_at");
@@ -384,6 +402,7 @@ fn imports_match_python() {
             if let Some(expected) = case["settings"].as_object() {
                 let settings = serde_json::to_value(&config.settings).unwrap();
                 for (key, value) in expected {
+                    let value = &unit_default(key, value, &case["input"].to_string());
                     assert_json_eq(&settings[key], value, &format!("{context} {key}"));
                 }
             }
@@ -472,6 +491,7 @@ struct Driver<'a> {
     keyring: BTreeMap<String, String>,
     memory: BTreeMap<String, String>,
     imported_this_session: bool,
+    units: (String, String),
 }
 
 impl<'a> Driver<'a> {
@@ -494,6 +514,7 @@ impl<'a> Driver<'a> {
             keyring,
             memory: BTreeMap::new(),
             imported_this_session: false,
+            units: ("auto".into(), "auto".into()),
         }
     }
 
@@ -525,6 +546,8 @@ impl<'a> Driver<'a> {
             has_openrouter_key: self.has_key("openrouter_api_key"),
             has_pirate_weather_key: self.has_key("pirate_weather_api_key"),
             portable_keys_imported_this_session: self.imported_this_session,
+            temperature_unit: self.units.0.clone(),
+            wind_speed_unit: self.units.1.clone(),
         }
     }
 
@@ -618,6 +641,32 @@ impl<'a> Driver<'a> {
                     }
                 }
                 Response::Success(ok)
+            }
+            // The units step is Rust-only: these scenario events were added
+            // by hand, not recorded from the Python app.
+            Step::Choose {
+                title,
+                message,
+                choices,
+                selection,
+            } => {
+                self.events
+                    .push(json!(["choose", title, message, choices, selection]));
+                match self.next_answer() {
+                    Value::Object(m) => Response::Choice(m["choice"].as_u64().map(|i| i as usize)),
+                    _ => Response::Choice(None),
+                }
+            }
+            Step::SaveUnits {
+                temperature_unit,
+                wind_speed_unit,
+            } => {
+                self.events.push(json!(["update_settings", {
+                    "temperature_unit": temperature_unit,
+                    "wind_speed_unit": wind_speed_unit,
+                }]));
+                self.units = (temperature_unit.into(), wind_speed_unit.into());
+                Response::Done
             }
             Step::OpenUrl(url) => {
                 self.events.push(json!(["open_url", url]));
@@ -734,7 +783,7 @@ fn config_loading_matches_python() {
         for (key, value) in want["settings"].as_object().unwrap() {
             assert_json_eq(
                 &got["settings"][key],
-                value,
+                &unit_default(key, value, s(&case["input"])),
                 &format!("{name}.settings.{key}"),
             );
         }

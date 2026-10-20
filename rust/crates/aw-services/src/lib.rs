@@ -11,6 +11,7 @@ pub mod import_export;
 pub mod logging;
 pub mod onboarding;
 pub mod pep440;
+pub mod region;
 pub mod report_issue;
 pub mod single_instance;
 pub mod startup;
