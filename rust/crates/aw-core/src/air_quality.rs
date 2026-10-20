@@ -127,19 +127,24 @@ impl AqiPreference {
         }
     }
 
-    /// The standard to use for `location`. Automatic picks European only
-    /// when the location's country code is European; an unknown country
-    /// keeps the US index.
+    /// The standard to use for `location`. Automatic picks European when the
+    /// location's country code is European. A location saved without a
+    /// country code falls back to [`roughly_in_europe`] on its coordinates.
     pub fn resolve(self, location: &Location) -> AqiStandard {
         match self {
             Self::Us => AqiStandard::Us,
             Self::European => AqiStandard::European,
             Self::Auto => {
-                if location
+                let european = match location
                     .country_code
                     .as_deref()
-                    .is_some_and(countries::is_european)
+                    .map(str::trim)
+                    .filter(|c| !c.is_empty())
                 {
+                    Some(code) => countries::is_european(code),
+                    None => roughly_in_europe(location.latitude, location.longitude),
+                };
+                if european {
                     AqiStandard::European
                 } else {
                     AqiStandard::Us
@@ -147,6 +152,56 @@ impl AqiPreference {
             }
         }
     }
+}
+
+/// A coarse coordinate test for the countries in
+/// [`countries::EUROPEAN_COUNTRY_CODES`], used only when a location has no
+/// country code. It leaves out North Africa, Turkey and Russia; points close
+/// to those borders can land on the wrong side.
+pub fn roughly_in_europe(latitude: f64, longitude: f64) -> bool {
+    let (lat, lon) = (latitude, longitude);
+    let within = |lat_lo: f64, lat_hi: f64, lon_lo: f64, lon_hi: f64| {
+        (lat_lo..=lat_hi).contains(&lat) && (lon_lo..=lon_hi).contains(&lon)
+    };
+    // Islands south or west of the mainland band, as
+    // (south, north, west, east).
+    const ISLANDS: [(f64, f64, f64, f64); 6] = [
+        (27.5, 29.5, -18.2, -13.3), // Canary Islands
+        (32.3, 33.2, -17.4, -16.2), // Madeira
+        (36.8, 39.8, -31.5, -24.9), // Azores
+        (35.7, 36.2, 14.0, 14.7),   // Malta
+        (34.8, 35.8, 23.0, 26.5),   // Crete
+        (34.5, 35.8, 32.0, 34.7),   // Cyprus
+    ];
+    if ISLANDS.iter().any(|&(s, n, w, e)| within(s, n, w, e)) {
+        return true;
+    }
+    if !(36.0..=81.0).contains(&lat) || lon < -25.0 {
+        return false;
+    }
+    // The Algerian and Tunisian coast, Greenland and Kaliningrad.
+    if (lat < 37.4 && (-1.5..=11.5).contains(&lon))
+        || (lat > 67.5 && lon < -10.0)
+        || within(54.3, 55.3, 19.6, 22.9)
+    {
+        return false;
+    }
+    // The eastern edge, band by band: Turkey, the Black Sea, Ukraine,
+    // Belarus, the Baltic states and Finland.
+    let eastern_edge = if lat < 41.2 {
+        26.7
+    } else if lat < 44.0 {
+        29.7
+    } else if lat < 52.3 {
+        39.0
+    } else if lat < 56.0 {
+        31.5
+    } else if lat < 59.5 {
+        28.2
+    } else {
+        30.0
+    };
+    lon <= eastern_edge
 }
 
 /// [`AqiPreference::resolve`] for a raw setting value.
@@ -347,10 +402,15 @@ fn format_amount(value: f64) -> String {
     }
 }
 
-/// "12.3 μg/m³, 1-hour average", or "Not measured".
+/// "12.3 μg/m³, 1-hour average". Without a concentration, an observed row
+/// says "Not measured" and a modelled one "Not available".
 pub fn concentration_text(reading: &PollutantReading) -> String {
     let Some(value) = reading.concentration else {
-        return "Not measured".into();
+        return match reading.provenance.kind {
+            ReadingKind::Observed => "Not measured",
+            ReadingKind::Modelled => "Not available",
+        }
+        .into();
     };
     let mut text = format_amount(value);
     if let Some(unit) = reading
@@ -585,20 +645,60 @@ mod tests {
                 "{code}"
             );
         }
-        for code in [Some("US"), Some("BR"), Some("RU"), Some("TR"), None] {
+        for code in [Some("US"), Some("BR"), Some("RU"), Some("TR")] {
             assert_eq!(
                 resolve_standard("auto", &at(code)),
                 AqiStandard::Us,
                 "{code:?}"
             );
         }
-        // Coordinates in Paris but no country: stays US AQI.
-        assert_eq!(resolve_standard("", &at(None)), AqiStandard::Us);
+        // Coordinates in Paris but no country: the coordinates decide.
+        assert_eq!(resolve_standard("", &at(None)), AqiStandard::European);
+        assert_eq!(resolve_standard("", &at(Some(" "))), AqiStandard::European);
+        let mut nyc = Location::new("x", 40.7, -74.0);
+        assert_eq!(resolve_standard("auto", &nyc), AqiStandard::Us);
+        nyc.country_code = Some("FR".into());
+        assert_eq!(resolve_standard("auto", &nyc), AqiStandard::European);
         assert_eq!(resolve_standard("us", &at(Some("FR"))), AqiStandard::Us);
         assert_eq!(
             resolve_standard("european", &at(Some("US"))),
             AqiStandard::European
         );
+    }
+
+    #[test]
+    fn coarse_europe_box() {
+        for (name, lat, lon) in [
+            ("Paris", 48.85, 2.35),
+            ("Lisbon", 38.72, -9.14),
+            ("Reykjavik", 64.15, -21.94),
+            ("Helsinki", 60.17, 24.94),
+            ("Kyiv", 50.45, 30.52),
+            ("Athens", 37.98, 23.73),
+            ("Malaga", 36.72, -4.42),
+            ("Palermo", 38.12, 13.36),
+            ("Valletta", 35.9, 14.51),
+            ("Nicosia", 35.17, 33.36),
+            ("Las Palmas", 28.12, -15.43),
+            ("Varna", 43.21, 27.91),
+        ] {
+            assert!(roughly_in_europe(lat, lon), "{name}");
+        }
+        for (name, lat, lon) in [
+            ("New York", 40.7, -74.0),
+            ("Algiers", 36.75, 3.06),
+            ("Tunis", 36.81, 10.18),
+            ("Istanbul", 41.01, 28.98),
+            ("Ankara", 39.93, 32.86),
+            ("Moscow", 55.75, 37.62),
+            ("St Petersburg", 59.94, 30.31),
+            ("Kaliningrad", 54.71, 20.51),
+            ("Cairo", 30.04, 31.24),
+            ("Nuuk", 64.18, -51.72),
+            ("Sydney", -33.87, 151.2),
+        ] {
+            assert!(!roughly_in_europe(lat, lon), "{name}");
+        }
     }
 
     #[test]
@@ -722,14 +822,19 @@ mod tests {
             index_category: None,
             concentration: Some(0.0312),
             unit: Some("ppm".into()),
-            averaging: Some("Latest sensor reading".into()),
-            ..airnow
+            averaging: Some("latest reading".into()),
+            ..airnow.clone()
         };
         assert_eq!(index_text(&unrated), "Not rated");
-        assert_eq!(
-            concentration_text(&unrated),
-            "0.031 ppm, Latest sensor reading"
-        );
+        assert_eq!(concentration_text(&unrated), "0.031 ppm, latest reading");
+        let modelled_index_only = PollutantReading {
+            provenance: AirQualityProvenance {
+                kind: ReadingKind::Modelled,
+                ..airnow.provenance.clone()
+            },
+            ..airnow.clone()
+        };
+        assert_eq!(concentration_text(&modelled_index_only), "Not available");
         let category_only = PollutantReading {
             index_value: None,
             index_averaging: None,

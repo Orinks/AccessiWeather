@@ -8,7 +8,7 @@
 
 use aw_core::air_quality::{self, AqiStandard};
 use aw_core::display::pyfmt::round_int;
-use aw_core::display::time::location_zone;
+use aw_core::display::time::{format_display_time, location_zone, PyDateTime};
 use aw_core::model::{
     EnvironmentalConditions, HourlyAirQuality, MinutelyPrecipitationForecast,
     MinutelyPrecipitationPoint, Timestamp, WeatherData,
@@ -62,6 +62,8 @@ struct ListSpec {
     /// `SetName`: what screen readers call the list.
     name: &'static str,
     columns: Vec<&'static str>,
+    /// Column widths in pixels, one per column.
+    widths: Vec<i32>,
     /// Cells in `columns` order; each must make sense read on its own.
     rows: Vec<Vec<String>>,
     gap: i32,
@@ -135,13 +137,17 @@ fn clock_time(dt: &Timestamp) -> String {
         .to_string()
 }
 
+/// Formats a time of day; the Python dialogs use [`clock_time`].
+type Clock<'a> = &'a dyn Fn(&Timestamp) -> String;
+
 /// "Last updated: 9:05 AM on September 25, 2026".
 fn last_updated(dt: &Timestamp) -> String {
-    format!(
-        "Last updated: {} on {}",
-        clock_time(dt),
-        dt.format("%B %d, %Y")
-    )
+    last_updated_with(dt, &clock_time)
+}
+
+/// [`last_updated`] with the time of day from `clock`.
+fn last_updated_with(dt: &Timestamp, clock: Clock<'_>) -> String {
+    format!("Last updated: {} on {}", clock(dt), dt.format("%B %d, %Y"))
 }
 
 fn non_empty(s: Option<&str>) -> Option<&str> {
@@ -405,7 +411,7 @@ fn join_unique(items: &[&str]) -> String {
 }
 
 /// `_build_summary_section`: the "Current air quality summary" text.
-fn air_quality_summary(env: &EnvironmentalConditions) -> String {
+fn air_quality_summary(env: &EnvironmentalConditions, clock: Clock<'_>) -> String {
     let category = non_empty(env.air_quality_category.as_deref());
     let standard = env.air_quality_index_standard;
     let index_name = standard.map_or("AQI", AqiStandard::name);
@@ -439,7 +445,7 @@ fn air_quality_summary(env: &EnvironmentalConditions) -> String {
             .as_ref()
             .or(env.updated_at.as_ref())
         {
-            Some(updated) => last_updated(updated),
+            Some(updated) => last_updated_with(updated, clock),
             None => "Last updated: Not available".into(),
         },
     );
@@ -447,7 +453,7 @@ fn air_quality_summary(env: &EnvironmentalConditions) -> String {
         lines.push(format!("Reporting area: {area}"));
     }
     if let Some(provenance) = &env.air_quality_provenance {
-        lines.push(air_quality::provenance_line(provenance, &clock_time));
+        lines.push(air_quality::provenance_line(provenance, clock));
     }
 
     let current_source = non_empty(env.air_quality_source.as_deref().map(str::trim));
@@ -514,14 +520,17 @@ fn pollutant_levels(env: &EnvironmentalConditions) -> Option<String> {
 }
 
 /// The "Pollutant readings" list: one row per pollutant.
-fn pollutant_list(env: &EnvironmentalConditions) -> ListSpec {
+fn pollutant_list(env: &EnvironmentalConditions, clock: Clock<'_>) -> ListSpec {
     ListSpec {
         name: "Pollutant readings",
         columns: air_quality::POLLUTANT_COLUMNS.to_vec(),
+        // Pollutant, Concentration, Index, Type, Source, Time: 930 px, which
+        // fits the 980 px dialog without a horizontal scrollbar.
+        widths: vec![130, 180, 210, 90, 200, 120],
         rows: env
             .pollutant_readings
             .iter()
-            .map(|r| air_quality::pollutant_row(r, &clock_time).to_vec())
+            .map(|r| air_quality::pollutant_row(r, clock).to_vec())
             .collect(),
         gap: 8,
         height: 170,
@@ -530,8 +539,8 @@ fn pollutant_list(env: &EnvironmentalConditions) -> ListSpec {
 
 /// One "Hourly Forecast" line: "2:00 PM: European AQI 35 (Fair)", or the
 /// Python "2:00 PM: AQI 52" for data without a known standard.
-fn hourly_air_quality_line(hour: &HourlyAirQuality) -> String {
-    let time = clock_time(&hour.timestamp);
+fn hourly_air_quality_line(hour: &HourlyAirQuality, clock: Clock<'_>) -> String {
+    let time = clock(&hour.timestamp);
     match hour.aqi_standard {
         Some(standard) => {
             let category = hour.category.trim();
@@ -545,8 +554,13 @@ fn hourly_air_quality_line(hour: &HourlyAirQuality) -> String {
     }
 }
 
-/// `AirQualityDialog`.
-fn air_quality_dialog(location_name: &str, env: Option<&EnvironmentalConditions>) -> InfoDialog {
+/// `AirQualityDialog`. `clock` formats times of day; the Python dialog's
+/// is [`clock_time`].
+fn air_quality_dialog(
+    location_name: &str,
+    env: Option<&EnvironmentalConditions>,
+    clock: Clock<'_>,
+) -> InfoDialog {
     let title = format!("Air Quality - {location_name}");
     let Some(env) = env.filter(|e| e.has_data()) else {
         return InfoDialog {
@@ -564,7 +578,7 @@ fn air_quality_dialog(location_name: &str, env: Option<&EnvironmentalConditions>
         .hourly_air_quality
         .iter()
         .take(12)
-        .map(hourly_air_quality_line)
+        .map(|hour| hourly_air_quality_line(hour, clock))
         .collect();
     let section_text = |value: Option<String>, name, missing| match value {
         Some(value) => Item::Text(Text {
@@ -580,7 +594,10 @@ fn air_quality_dialog(location_name: &str, env: Option<&EnvironmentalConditions>
             height: 150,
             grow: false,
             gap: 8,
-            ..text(air_quality_summary(env), "Current air quality summary")
+            ..text(
+                air_quality_summary(env, clock),
+                "Current air quality summary",
+            )
         }),
         heading("Hourly Forecast", 1.1),
         section_text(
@@ -594,12 +611,13 @@ fn air_quality_dialog(location_name: &str, env: Option<&EnvironmentalConditions>
     // data without them (and the Python app's) keeps the text section.
     match air_quality::readings_source_line(&env.pollutant_readings) {
         Some(source_line) => {
-            items.push(Item::List(pollutant_list(env)));
-            items.push(Item::Label(Label {
-                name: Some("Reading source"),
-                wrap: Some(740),
+            items.push(Item::List(pollutant_list(env, clock)));
+            // A read-only text field, so keyboard users tab onto it.
+            items.push(Item::Text(Text {
+                height: 50,
+                grow: false,
                 gap: 6,
-                ..label(source_line)
+                ..text(source_line, "Reading source")
             }));
         }
         None => items.push(section_text(
@@ -611,7 +629,7 @@ fn air_quality_dialog(location_name: &str, env: Option<&EnvironmentalConditions>
     let size = if env.pollutant_readings.is_empty() {
         (600, 500)
     } else {
-        (800, 640)
+        (980, 660)
     };
     InfoDialog {
         title,
@@ -848,7 +866,7 @@ fn show(parent: &dyn WxWidget, spec: &InfoDialog) {
                     .with_size(Size::new(-1, l.height))
                     .build();
                 for (col, heading) in l.columns.iter().enumerate() {
-                    let width = if col == 0 { 170 } else { 210 };
+                    let width = l.widths.get(col).copied().unwrap_or(150);
                     list.insert_column(col as i64, heading, ListColumnFormat::Left, width);
                 }
                 for row in &l.rows {
@@ -966,7 +984,24 @@ pub(crate) fn show_air_quality() {
         return;
     };
     let env = weather.and_then(|w| w.environmental);
-    show(&frame, &air_quality_dialog(&location.name, env.as_ref()));
+    let Some(settings) = with_state().map(|state| state.borrow().config.settings.clone()) else {
+        return;
+    };
+    // The user's clock settings, in the location's time zone, as on the
+    // main window's air quality panel.
+    let zone = location_zone(location.timezone.as_deref());
+    let clock = |t: &Timestamp| {
+        format_display_time(
+            Some(&PyDateTime::aware(*t, zone)),
+            &settings.time_display_mode,
+            settings.time_format_12hour,
+            settings.show_timezone_suffix,
+        )
+    };
+    show(
+        &frame,
+        &air_quality_dialog(&location.name, env.as_ref(), &clock),
+    );
 }
 
 /// View > UV Index: `show_uv_index_dialog`.
@@ -1098,7 +1133,7 @@ mod tests {
             }],
             ..Default::default()
         };
-        let summary = air_quality_summary(&env);
+        let summary = air_quality_summary(&env, &clock_time);
         let lines: Vec<&str> = summary.lines().collect();
         assert_eq!(lines[0], "European AQI: 35 (Fair)");
         assert_eq!(lines[1], "Dominant pollutant: Nitrogen Dioxide");
@@ -1107,17 +1142,20 @@ mod tests {
             "Health guidance: Enjoy your usual outdoor activities."
         );
         assert_eq!(
-            hourly_air_quality_line(&env.hourly_air_quality[0]),
+            hourly_air_quality_line(&env.hourly_air_quality[0], &clock_time),
             "2:00 PM: European AQI 35 (Fair)"
         );
         let legacy = EnvironmentalConditions {
             air_quality_index_standard: None,
             ..env.clone()
         };
-        assert!(air_quality_summary(&legacy).starts_with("AQI: 35 (Fair)\n"));
+        assert!(air_quality_summary(&legacy, &clock_time).starts_with("AQI: 35 (Fair)\n"));
         let mut hour = env.hourly_air_quality[0].clone();
         hour.aqi_standard = None;
-        assert_eq!(hourly_air_quality_line(&hour), "2:00 PM: AQI 35");
+        assert_eq!(
+            hourly_air_quality_line(&hour, &clock_time),
+            "2:00 PM: AQI 35"
+        );
     }
 
     fn modelled_reading(code: &str, concentration: f64, index: Option<f64>) -> PollutantReading {
@@ -1165,7 +1203,7 @@ mod tests {
             pollutant_readings: readings,
             ..Default::default()
         };
-        let spec = air_quality_dialog("Paris", Some(&env));
+        let spec = air_quality_dialog("Paris", Some(&env), &clock_time);
         assert_eq!(spec.focus, Some(1));
         let Item::List(list) = &spec.items[5] else {
             panic!("expected a list: {:?}", spec.items[5]);
@@ -1198,14 +1236,16 @@ mod tests {
         assert_eq!(list.rows[5][0], "Carbon monoxide (CO)");
         assert_eq!(list.rows[5][1], "180 μg/m³, 1-hour average");
         assert_eq!(list.rows[5][2], "Not rated");
-        let Item::Label(source) = &spec.items[6] else {
+        assert_eq!(list.widths.len(), list.columns.len());
+        assert!(list.widths.iter().sum::<i32>() <= spec.size.0 - 40);
+        let Item::Text(source) = &spec.items[6] else {
             panic!("expected the reading source line");
         };
         assert_eq!(source.name, Some("Reading source"));
         assert!(source
-            .text
+            .value
             .ends_with("None of these readings come from a monitoring station."));
-        assert!(air_quality_summary(&env).contains(
+        assert!(air_quality_summary(&env, &clock_time).contains(
             "\nReading: Modelled by Open-Meteo, CAMS European model, about 11 km grid, \
              forecast for 2:00 PM\n"
         ));
@@ -1214,12 +1254,24 @@ mod tests {
         let legacy = EnvironmentalConditions {
             pollutant_readings: Vec::new(),
             air_quality_provenance: None,
-            ..env
+            ..env.clone()
         };
-        let spec = air_quality_dialog("Paris", Some(&legacy));
+        let spec = air_quality_dialog("Paris", Some(&legacy), &clock_time);
         assert_eq!(spec.items.len(), 6);
         assert!(!spec.items.iter().any(|i| matches!(i, Item::List(_))));
-        assert!(!air_quality_summary(&legacy).contains("Reading:"));
+        assert!(!air_quality_summary(&legacy, &clock_time).contains("Reading:"));
+
+        // The user's 24-hour clock reaches every time in the dialog.
+        let clock_24 = |t: &Timestamp| t.format("%H:%M").to_string();
+        let spec = air_quality_dialog("Paris", Some(&env), &clock_24);
+        let Item::List(list) = &spec.items[5] else {
+            panic!("expected a list");
+        };
+        assert_eq!(list.rows[0][5], "Forecast for 14:00");
+        let Item::Text(summary) = &spec.items[1] else {
+            panic!("expected the summary");
+        };
+        assert!(summary.value.contains("forecast for 14:00"));
     }
 
     #[test]
@@ -1229,7 +1281,7 @@ mod tests {
             let env: Option<EnvironmentalConditions> = from(&case["environmental"]);
             let location = case["location"].as_str().unwrap();
             assert_dialog(
-                &air_quality_dialog(location, env.as_ref()),
+                &air_quality_dialog(location, env.as_ref(), &clock_time),
                 &case["air_quality"],
                 name,
             );

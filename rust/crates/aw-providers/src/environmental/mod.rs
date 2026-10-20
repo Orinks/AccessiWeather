@@ -236,6 +236,13 @@ fn airnow_provenance(observation: &AirNowObservation) -> AirQualityProvenance {
     }
 }
 
+/// One spelling for micrograms per cubic metre: OpenAQ writes MICRO SIGN
+/// (U+00B5) where Open-Meteo writes GREEK SMALL LETTER MU (U+03BC), and
+/// screen readers can announce the two differently.
+fn normalize_unit(unit: &str) -> String {
+    unit.trim().replace('\u{00B5}', "\u{03BC}")
+}
+
 fn append_source(environmental: &mut EnvironmentalConditions, source: &str) {
     if !environmental.sources.iter().any(|s| s == source) {
         environmental.sources.push(source.to_string());
@@ -494,11 +501,14 @@ impl EnvironmentalDataClient {
             }
         };
         let station_name = station.display_name();
-        let (detail, averaging) = if station.is_monitor {
-            ("reference monitor", "1-hour")
+        let detail = if station.is_monitor {
+            "reference monitor"
         } else {
-            ("low-cost sensor", "Latest sensor reading")
+            "low-cost sensor"
         };
+        // OpenAQ's latest values carry no averaging period, and networks
+        // report over different intervals, so none is claimed.
+        let averaging = "latest reading";
         let mut added = false;
         for reading in &station.readings {
             if environmental
@@ -511,7 +521,7 @@ impl EnvironmentalDataClient {
             environmental.pollutant_readings.push(PollutantReading {
                 code: reading.code.into(),
                 concentration: Some(reading.value),
-                unit: reading.unit.clone(),
+                unit: reading.unit.as_deref().map(normalize_unit),
                 averaging: Some(averaging.into()),
                 index_value: None,
                 index_category: None,
@@ -570,11 +580,22 @@ impl EnvironmentalDataClient {
                 let Some(code) = airnow::pollutant_code(&o.pollutant) else {
                     continue;
                 };
-                if environmental
+                // AirNow's current particulate and ozone values are NowCast.
+                let index_averaging =
+                    matches!(code, "pm2_5" | "pm10" | "o3").then(|| "NowCast".to_string());
+                // A station concentration (OpenAQ, usually the same AirNow
+                // monitor) keeps its row and gains AirNow's index.
+                if let Some(existing) = environmental
                     .pollutant_readings
-                    .iter()
-                    .any(|r| r.code == code)
+                    .iter_mut()
+                    .find(|r| r.code == code)
                 {
+                    if existing.index_value.is_none() && existing.index_category.is_none() {
+                        existing.index_value = Some(o.aqi as f64);
+                        existing.index_category = Some(o.category.clone());
+                        existing.index_standard = Some(AqiStandard::Us);
+                        existing.index_averaging = index_averaging;
+                    }
                     continue;
                 }
                 environmental.pollutant_readings.push(PollutantReading {
@@ -585,9 +606,7 @@ impl EnvironmentalDataClient {
                     index_value: Some(o.aqi as f64),
                     index_category: Some(o.category.clone()),
                     index_standard: Some(AqiStandard::Us),
-                    // AirNow's current particulate and ozone values are NowCast.
-                    index_averaging: matches!(code, "pm2_5" | "pm10" | "o3")
-                        .then(|| "NowCast".to_string()),
+                    index_averaging,
                     provenance: airnow_provenance(o),
                 });
             }
@@ -737,7 +756,7 @@ impl EnvironmentalDataClient {
             environmental.pollutant_readings.push(PollutantReading {
                 code: code.into(),
                 concentration: concentration.map(|v| py::round_to(v, 1)),
-                unit: concentration.map(|_| unit.to_string()),
+                unit: concentration.map(|_| normalize_unit(unit)),
                 averaging: concentration.map(|_| "1-hour".to_string()),
                 index_value: index,
                 index_category: index.map(|v| standard.category(v).to_string()),
@@ -1250,8 +1269,9 @@ mod tests {
         );
         let pm = &env.pollutant_readings[0];
         assert_eq!(pm.concentration, Some(14.2));
-        assert_eq!(pm.unit.as_deref(), Some("µg/m³"));
-        assert_eq!(pm.averaging.as_deref(), Some("1-hour"));
+        // MICRO SIGN from OpenAQ reads the same as Open-Meteo's mu.
+        assert_eq!(pm.unit.as_deref(), Some(OPENMETEO_DEFAULT_UNIT));
+        assert_eq!(pm.averaging.as_deref(), Some("latest reading"));
         assert_eq!((pm.index_value, pm.index_category.as_deref()), (None, None));
         assert_eq!(pm.provenance.detail.as_deref(), Some("reference monitor"));
         assert_eq!(pm.provenance.station_name.as_deref(), Some("Paris 18e"));
@@ -1302,6 +1322,61 @@ mod tests {
         assert_eq!(rows, [("pm2_5", "AirNow"), ("pm10", "Open-Meteo")]);
         assert!(!env.sources.iter().any(|s| s == "OpenAQ"));
         assert_eq!(env.air_quality_source.as_deref(), Some(AIRNOW_SOURCE));
+    }
+
+    #[test]
+    fn airnow_index_joins_the_openaq_row_for_the_same_pollutant() {
+        let airnow = json!([
+            {"AQI": 61, "ParameterName": "PM2.5", "Category": {"Number": 2, "Name": "Moderate"},
+             "DateObserved": "2025-06-01", "HourObserved": 9, "LocalTimeZone": "EDT",
+             "ReportingArea": "Metro"},
+            {"AQI": 40, "ParameterName": "O3", "Category": {"Number": 1, "Name": "Good"},
+             "DateObserved": "2025-06-01", "HourObserved": 9, "LocalTimeZone": "EDT",
+             "ReportingArea": "Metro"}
+        ]);
+        let aq = json!({"utc_offset_seconds": -14400, "hourly": {"time": times(8, 4),
+            "us_aqi": [50, 55, 60, 65]}});
+        let station = openaq::tests::station(
+            77,
+            "Queens",
+            1500.0,
+            "2025-06-01T14:00:00Z",
+            &[(771, "pm25", "µg/m³")],
+        );
+        let http = Arc::new(
+            FixtureClient::new()
+                .with(airnow::ENDPOINT, airnow)
+                .with(AIR_QUALITY_ENDPOINT, aq)
+                .with(
+                    openaq::LOCATIONS_ENDPOINT,
+                    openaq::tests::search(vec![station]),
+                )
+                .with(
+                    &openaq_latest_url(77),
+                    openaq::tests::latest(77, &[(771, 18.5, "2025-06-01T14:00:00Z")]),
+                ),
+        );
+        let client = EnvironmentalDataClient::new(http.clone(), "AccessiWeather/2.0", "key")
+            .with_openaq_key("oaq");
+        let nyc = Location::new("NYC", 40.7, -74.0).with_country("US");
+        let options = FetchOptions {
+            prefer_airnow: true,
+            include_hourly_air_quality: false,
+            ..aq_only()
+        };
+        let env = client.fetch(&nyc, options, now()).unwrap();
+        let rows: Vec<(&str, &str)> = env
+            .pollutant_readings
+            .iter()
+            .map(|r| (r.code.as_str(), r.provenance.provider.as_str()))
+            .collect();
+        assert_eq!(rows, [("pm2_5", "OpenAQ"), ("o3", "AirNow")]);
+        let pm = &env.pollutant_readings[0];
+        assert_eq!(pm.concentration, Some(18.5));
+        assert_eq!(pm.index_value, Some(61.0));
+        assert_eq!(pm.index_category.as_deref(), Some("Moderate"));
+        assert_eq!(pm.index_standard, Some(AqiStandard::Us));
+        assert_eq!(pm.index_averaging.as_deref(), Some("NowCast"));
     }
 
     #[test]

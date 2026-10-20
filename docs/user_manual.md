@@ -614,7 +614,7 @@ Leave these alone if you want the app to notify you only for formal alerts. That
 
 AccessiWeather can tell you when air quality gets bad enough that you'd want to know. Turn on "Notify when air quality reaches my alert level" in Settings, Alerts tab, then pick a level for each index:
 
-- US AQI alert level: Moderate, Unhealthy for sensitive groups (the default), Unhealthy, Very unhealthy or Hazardous
+- US AQI alert level: Moderate, Unhealthy for Sensitive Groups (the default), Unhealthy, Very Unhealthy or Hazardous
 - European AQI alert level: Fair, Moderate, Poor (the default), Very poor or Extremely poor
 
 There are two levels because the Automatic index setting can use the European AQI for some saved locations and the US AQI for others. Each location is checked against the level for the index it uses.
@@ -623,7 +623,7 @@ You get one notification when a location's air quality reaches your level or goe
 
 The selected location is checked after every refresh. Your other saved locations are checked too when "Send alert notifications for all saved locations" is on.
 
-Air quality notifications count toward the same hourly limit and cooldown as weather alert notifications, and they follow the Send alert notifications switch. If the limit holds one back, AccessiWeather tries again on the next check. Air quality must be turned on for these notifications to work.
+Air quality notifications count toward the same hourly limit and cooldown as weather alert notifications, and they follow the Send alert notifications switch. If the limit holds one back, AccessiWeather tries again on the next check.
 
 ### Cooldowns and notification limits
 
@@ -990,7 +990,7 @@ Each provider includes:
 
 AirNow is optional and supplies official current US Air Quality Index observations. Create your own public AirNow API account, enter its key here, and AccessiWeather will use AirNow for current US AQI while retaining its existing hourly air-quality forecast and fallback source. AirNow is only used when the location's air quality index is the US AQI.
 
-OpenAQ is optional and adds official station readings worldwide. Create a free account with the Get OpenAQ key button, paste the key into OpenAQ API key, and use Validate OpenAQ key to check it. AccessiWeather then looks for the nearest fixed monitoring station within 25 km that has reported in the last three hours, and shows its latest pollutant concentrations in the Air Quality window. OpenAQ gives concentrations but no index, so the headline air quality index still comes from AirNow or the forecast model. If OpenAQ has no station nearby or can't be reached, AccessiWeather uses AirNow in the US and the forecast model elsewhere.
+OpenAQ is optional and adds official station readings worldwide. Create a free account with the Get OpenAQ key button, paste the key into OpenAQ API key, and use Validate OpenAQ key to check it. AccessiWeather then looks for the nearest official monitoring station within 25 km that has reported in the last three hours, and shows its latest pollutant concentrations in the Air Quality window. If no official monitor is in range, it uses the nearest low-cost community sensor instead, and says so. OpenAQ gives concentrations but no index, so the headline air quality index still comes from AirNow or the forecast model. If OpenAQ has no station nearby or can't be reached, AccessiWeather uses AirNow in the US and the forecast model elsewhere.
 
 Pirate Weather is the optional weather-provider key worth adding. Use it when you want worldwide alert coverage in many regions, minutely precipitation timing, moon phase, or Dark Sky-style summary text. This can be worth it if short-term rain timing matters to you or if you need alerts outside the US.
 
@@ -1298,15 +1298,15 @@ Air quality uses the index set in Settings > Display > Air quality index. By def
 Under Current Pollutant Levels, the Air Quality window has a Pollutant readings list with one row per pollutant: PM2.5, PM10, ozone, nitrogen dioxide, sulphur dioxide and carbon monoxide, when the source reports them. Use the Up and Down arrow keys to move between rows. Each row has these columns:
 
 - Pollutant: the pollutant's name.
-- Concentration: the amount in the air, such as 12.3 μg/m³, and the period it is averaged over, such as a 1-hour average. AirNow reports only index values, so its rows say Not measured here.
+- Concentration: the amount in the air, such as 12.3 μg/m³, and the period it is averaged over, such as a 1-hour average. AirNow reports only index values, so the Concentration column says Not measured for its rows, and Not available for a modelled pollutant that has an index but no amount.
 - Index: the pollutant's own value and category on the AQI in use, and the averaging period that index uses, for example a 24-hour average for particles, an 8-hour average for ozone on the US AQI, or NowCast for AirNow. Not rated means the source gives no index for that pollutant.
 - Type: Observed when a monitoring station measured it, Modelled when it comes from a forecast model.
 - Source: who supplied it. Observed readings name the provider and the station or reporting area. Modelled readings from Open-Meteo name the CAMS model and its approximate resolution: the European model, about 11 km, across Europe, and the global model, about 45 km, everywhere else. A modelled value is an estimate for the surrounding area, not a measurement at your street.
 - Time: when it was observed, or the forecast hour a modelled value is for.
 
-With an OpenAQ key, readings from the nearest OpenAQ station come first. Their Source column names the station, whether it's a reference monitor or a low-cost sensor, and how far away it is, for example "OpenAQ, reference monitor at Del Norte, Albuquerque, 1.8 km away". Reference monitors report 1-hour averages; low-cost sensors show their latest reading. In the US, AirNow fills in pollutants OpenAQ didn't report.
+With an OpenAQ key, readings from the nearest OpenAQ station come first. Their Source column names the station, whether it's a reference monitor or a low-cost sensor, and how far away it is, for example "OpenAQ, reference monitor at Del Norte, Albuquerque, 1.8 km away". OpenAQ doesn't say what period its latest values cover, so their Concentration column reads "latest reading" rather than naming an average. In the US, AirNow adds its index to the pollutants OpenAQ reported and fills in the ones it didn't.
 
-Observed readings come first, and the model fills in any pollutant no station reported, so each pollutant appears once. The line under the list sums up which pollutants came from which source. The current air quality summary also has a Reading line saying whether the headline index was observed or modelled, by whom, and for what time.
+Observed readings come first, and the model fills in any pollutant no station reported, so each pollutant appears once. The Reading source field under the list sums up which pollutants came from which source; press Tab from the list to read it. Times in the window follow your 12-hour or 24-hour clock setting. The current air quality summary also has a Reading line saying whether the headline index was observed or modelled, by whom, and for what time.
 
 ### Aviation Weather
 

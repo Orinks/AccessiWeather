@@ -136,7 +136,7 @@ fn haversine_km(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
 
 /// Stations from a `/locations` search worth asking for values: fixed,
 /// reporting within [`MAX_AGE`], with a sensor for a shown pollutant.
-/// Nearest first.
+/// Reference monitors first, then low-cost sensors, each nearest first.
 fn candidates(payload: &Value, location: &Location, now: Timestamp) -> Vec<Candidate> {
     let Some(results) = payload.get("results").and_then(Value::as_array) else {
         return Vec::new();
@@ -196,10 +196,14 @@ fn candidates(payload: &Value, location: &Location, now: Timestamp) -> Vec<Candi
             sensors,
         });
     }
+    // Reference monitors first, so a nearer low-cost sensor is used only
+    // when no monitor in range has recent values.
     found.sort_by(|a, b| {
-        a.distance_km
-            .unwrap_or(f64::INFINITY)
-            .total_cmp(&b.distance_km.unwrap_or(f64::INFINITY))
+        b.is_monitor.cmp(&a.is_monitor).then_with(|| {
+            a.distance_km
+                .unwrap_or(f64::INFINITY)
+                .total_cmp(&b.distance_km.unwrap_or(f64::INFINITY))
+        })
     });
     found
 }
@@ -621,6 +625,31 @@ pub(crate) mod tests {
         );
         assert!(matches!(c.fetch_nearest(&albuquerque(), now()), Ok(None)));
         assert_eq!(http.request_log().len(), 1 + MAX_LATEST_REQUESTS);
+    }
+
+    #[test]
+    fn monitors_come_before_nearer_sensors() {
+        let mut sensor = station(
+            7,
+            "Backyard",
+            300.0,
+            "2025-06-01T14:00:00Z",
+            &[(71, "pm25", "µg/m³")],
+        );
+        sensor["isMonitor"] = json!(false);
+        let far_sensor = {
+            let mut s = sensor.clone();
+            s["id"] = json!(8);
+            s["distance"] = json!(5000.0);
+            s
+        };
+        let found = candidates(
+            &search(vec![far_sensor, sensor, del_norte()]),
+            &albuquerque(),
+            now(),
+        );
+        let ids: Vec<i64> = found.iter().map(|c| c.id).collect();
+        assert_eq!(ids, [2178, 7, 8]);
     }
 
     #[test]

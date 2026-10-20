@@ -83,9 +83,9 @@ const AIR_QUALITY_INDEX_VALUES: [&str; 3] = ["auto", "us", "european"];
 /// Air quality alert levels: categories of each index, mildest first.
 pub(crate) const AQ_THRESHOLD_US_CHOICES: [&str; 5] = [
     "Moderate",
-    "Unhealthy for sensitive groups",
+    "Unhealthy for Sensitive Groups",
     "Unhealthy",
-    "Very unhealthy",
+    "Very Unhealthy",
     "Hazardous",
 ];
 pub(crate) const AQ_THRESHOLD_EUROPEAN_CHOICES: [&str; 5] =

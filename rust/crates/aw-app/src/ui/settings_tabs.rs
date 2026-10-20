@@ -749,7 +749,7 @@ pub(crate) fn build(notebook: &Notebook, sound_pack_names: &[String], portable: 
     add_help_text(
         &sources,
         &openaq_sizer,
-        "Optional: adds official station readings worldwide from the nearest monitor within 25 km. Your API key is stored securely.",
+        "Optional: adds official station readings worldwide from the nearest monitor within 25 km, or a low-cost sensor when no monitor is nearby. Your API key is stored securely.",
         10,
     );
     keys_section.add_sizer(&openaq_sizer, 0, SizerFlag::Expand, 0);
