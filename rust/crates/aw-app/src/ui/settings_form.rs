@@ -70,6 +70,12 @@ const VERBOSITY_VALUES: [&str; 3] = ["minimal", "standard", "detailed"];
 pub(crate) const ALERT_DISPLAY_CHOICES: [&str; 2] =
     ["Separate fields (default)", "Single combined view"];
 const ALERT_DISPLAY_VALUES: [&str; 2] = ["separate", "combined"];
+pub(crate) const AIR_QUALITY_INDEX_CHOICES: [&str; 3] = [
+    "Automatic (European AQI in Europe, US AQI elsewhere)",
+    "US AQI (EPA)",
+    "European AQI (EEA)",
+];
+const AIR_QUALITY_INDEX_VALUES: [&str; 3] = ["auto", "us", "european"];
 
 // --- Alerts tab (`settings_tabs/notifications.py`) ---
 
@@ -348,6 +354,7 @@ pub(crate) struct SettingsForm {
     pub verbosity_level: usize,
     pub severe_weather_override: bool,
     pub alert_display_style: usize,
+    pub air_quality_index: usize,
     pub location_buttons_on_top: bool,
     // Alerts
     pub enable_alerts: bool,
@@ -491,6 +498,7 @@ impl SettingsForm {
         self.verbosity_level = index_of(&VERBOSITY_VALUES, &s.verbosity_level, 1);
         self.severe_weather_override = s.severe_weather_override;
         self.alert_display_style = index_of(&ALERT_DISPLAY_VALUES, &s.alert_display_style, 0);
+        self.air_quality_index = index_of(&AIR_QUALITY_INDEX_VALUES, &s.air_quality_index, 0);
         self.location_sort_order = index_of(&LOCATION_SORT_VALUES, &s.location_sort_order, 0);
         self.location_buttons_on_top = s.location_buttons_on_top;
     }
@@ -806,6 +814,7 @@ impl SettingsForm {
                 "verbosity_level": VERBOSITY_VALUES[self.verbosity_level],
                 "severe_weather_override": self.severe_weather_override,
                 "alert_display_style": ALERT_DISPLAY_VALUES[self.alert_display_style],
+                "air_quality_index": AIR_QUALITY_INDEX_VALUES[self.air_quality_index],
                 "location_sort_order": LOCATION_SORT_VALUES[self.location_sort_order],
                 "location_buttons_on_top": self.location_buttons_on_top,
             }),

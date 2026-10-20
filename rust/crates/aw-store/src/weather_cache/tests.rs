@@ -146,6 +146,40 @@ fn store_and_load_round_trip() {
 }
 
 #[test]
+fn air_quality_standard_round_trips_only_when_known() {
+    use aw_core::model::{AqiStandard, EnvironmentalConditions};
+    let dir = tempfile::tempdir().unwrap();
+    let cache = cache_in(&dir, 60);
+    let now = Utc::now();
+    let mut weather = test_weather();
+    let env = EnvironmentalConditions {
+        air_quality_index: Some(35.0),
+        air_quality_category: Some("Fair".into()),
+        ..Default::default()
+    };
+    weather.environmental = Some(env.clone());
+    let legacy = serialize_environmental(&env);
+    assert!(legacy.get("air_quality_index_standard").is_none());
+    cache.store(&test_location(), &weather, now);
+    let loaded = cache.load(&test_location(), true, now).unwrap();
+    assert_eq!(
+        loaded.environmental.unwrap().air_quality_index_standard,
+        None
+    );
+
+    weather.environmental = Some(EnvironmentalConditions {
+        air_quality_index_standard: Some(AqiStandard::European),
+        ..env
+    });
+    cache.store(&test_location(), &weather, now);
+    let loaded = cache.load(&test_location(), true, now).unwrap();
+    assert_eq!(
+        loaded.environmental.unwrap().air_quality_index_standard,
+        Some(AqiStandard::European)
+    );
+}
+
+#[test]
 fn missing_and_invalidated_entries_load_nothing() {
     let dir = tempfile::tempdir().unwrap();
     let cache = cache_in(&dir, 60);

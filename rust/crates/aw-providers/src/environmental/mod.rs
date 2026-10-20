@@ -6,6 +6,7 @@ pub mod airnow;
 
 use std::sync::{Arc, RwLock};
 
+use aw_core::air_quality::{AqiPreference, AqiStandard};
 use aw_core::model::{
     EnvironmentalConditions, HourlyAirQuality, HourlyUVIndex, Location, Timestamp,
 };
@@ -32,7 +33,11 @@ pub struct FetchOptions {
     pub include_hourly_air_quality: bool,
     pub include_hourly_uv: bool,
     pub hourly_hours: usize,
+    /// Ask AirNow first; only honoured when the resolved standard is the US
+    /// AQI, so one location never mixes indexes.
     pub prefer_airnow: bool,
+    /// The "Air quality index" setting.
+    pub aqi_preference: AqiPreference,
 }
 
 impl Default for FetchOptions {
@@ -44,6 +49,7 @@ impl Default for FetchOptions {
             include_hourly_uv: true,
             hourly_hours: 48,
             prefer_airnow: false,
+            aqi_preference: AqiPreference::Auto,
         }
     }
 }
@@ -165,6 +171,26 @@ pub fn pollen_category(value: f64) -> &'static str {
     }
 }
 
+/// The Open-Meteo hourly variables for the headline index of `standard`:
+/// the index, then its per-pollutant sub-indices.
+fn index_variables(standard: AqiStandard) -> &'static [(&'static str, &'static str)] {
+    match standard {
+        AqiStandard::Us => &[
+            ("", "us_aqi"),
+            ("pm2_5", "us_aqi_pm2_5"),
+            ("pm10", "us_aqi_pm10"),
+        ],
+        AqiStandard::European => &[
+            ("", "european_aqi"),
+            ("pm2_5", "european_aqi_pm2_5"),
+            ("pm10", "european_aqi_pm10"),
+            ("no2", "european_aqi_nitrogen_dioxide"),
+            ("o3", "european_aqi_ozone"),
+            ("so2", "european_aqi_sulphur_dioxide"),
+        ],
+    }
+}
+
 fn append_source(environmental: &mut EnvironmentalConditions, source: &str) {
     if !environmental.sources.iter().any(|s| s == source) {
         environmental.sources.push(source.to_string());
@@ -215,13 +241,16 @@ impl EnvironmentalDataClient {
         ]
     }
 
-    /// Hourly air quality from the current hour on, at most `hours` entries.
+    /// Hourly air quality on the `standard` index from the current hour on,
+    /// at most `hours` entries.
     pub fn fetch_hourly_air_quality(
         &self,
         location: &Location,
         hours: usize,
         now: Timestamp,
+        standard: AqiStandard,
     ) -> Option<Vec<HourlyAirQuality>> {
+        let index_key = index_variables(standard)[0].1;
         let url = build_url(
             AIR_QUALITY_ENDPOINT,
             &[
@@ -229,15 +258,17 @@ impl EnvironmentalDataClient {
                 ("longitude", py::float_repr(location.longitude)),
                 (
                     "hourly",
-                    "us_aqi,pm2_5,pm10,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide"
-                        .into(),
+                    format!(
+                        "{index_key},pm2_5,pm10,ozone,nitrogen_dioxide,sulphur_dioxide,\
+                         carbon_monoxide"
+                    ),
                 ),
                 ("timezone", "auto".into()),
             ],
         );
         let payload = self.get(&url)?;
         let hourly = payload.get("hourly").filter(|h| h.is_object())?;
-        let (times, aqi_values) = (hourly.get("time"), hourly.get("us_aqi"));
+        let (times, aqi_values) = (hourly.get("time"), hourly.get(index_key));
         if !is_sequence(times) || !is_sequence(aqi_values) {
             return None;
         }
@@ -260,7 +291,8 @@ impl EnvironmentalDataClient {
             let mut entry = HourlyAirQuality {
                 timestamp,
                 aqi: py::round(aqi) as i64,
-                category: airnow::air_quality_category(aqi).into(),
+                category: standard.category(aqi).into(),
+                aqi_standard: Some(standard),
                 pm2_5: None,
                 pm10: None,
                 ozone: None,
@@ -325,20 +357,23 @@ impl EnvironmentalDataClient {
         {
             return None;
         }
+        let standard = options.aqi_preference.resolve(location);
         let mut environmental = EnvironmentalConditions::default();
         let mut airnow_supplied_current = false;
-        if options.include_air_quality && options.prefer_airnow {
+        // AirNow only reports the US AQI.
+        if options.include_air_quality && options.prefer_airnow && standard == AqiStandard::Us {
             airnow_supplied_current =
                 self.populate_airnow_air_quality(location, &mut environmental);
         }
         if options.include_air_quality && !airnow_supplied_current {
-            self.populate_air_quality(location, &mut environmental, now);
+            self.populate_air_quality(location, &mut environmental, now, standard);
         }
         if options.include_pollen {
             self.populate_pollen(location, &mut environmental, now);
         }
         if options.include_hourly_air_quality {
-            if let Some(hourly) = self.fetch_hourly_air_quality(location, options.hourly_hours, now)
+            if let Some(hourly) =
+                self.fetch_hourly_air_quality(location, options.hourly_hours, now, standard)
             {
                 append_source(&mut environmental, OPENMETEO_AQ_SOURCE);
                 environmental.hourly_air_quality = hourly;
@@ -367,6 +402,7 @@ impl EnvironmentalDataClient {
         };
         environmental.air_quality_index = Some(observation.aqi as f64);
         environmental.air_quality_category = Some(observation.category);
+        environmental.air_quality_index_standard = Some(AqiStandard::Us);
         environmental.air_quality_pollutant = Some(observation.pollutant);
         environmental.air_quality_updated_at = observation.observed_at;
         environmental.air_quality_reporting_area = observation.reporting_area;
@@ -383,9 +419,13 @@ impl EnvironmentalDataClient {
         location: &Location,
         environmental: &mut EnvironmentalConditions,
         now: Timestamp,
+        standard: AqiStandard,
     ) {
+        let variables = index_variables(standard);
+        let index_key = variables[0].1;
         let mut params = Self::base_params(location);
-        params.push(("hourly", "us_aqi,us_aqi_pm2_5,us_aqi_pm10".into()));
+        let hourly_list: Vec<&str> = variables.iter().map(|(_, key)| *key).collect();
+        params.push(("hourly", hourly_list.join(",")));
         let Some(payload) = self.get(&build_url(AIR_QUALITY_ENDPOINT, &params)) else {
             return;
         };
@@ -393,16 +433,17 @@ impl EnvironmentalDataClient {
             return;
         };
         let times = hourly.get("time");
-        if !is_sequence(times) || !is_sequence(hourly.get("us_aqi")) {
+        if !is_sequence(times) || !is_sequence(hourly.get(index_key)) {
             return;
         }
         let offset = payload.get("utc_offset_seconds");
         let current = current_hour_index(times, offset, now);
-        let Some(index) = value_near(hourly.get("us_aqi"), current) else {
+        let Some(index) = value_near(hourly.get(index_key), current) else {
             return;
         };
         environmental.air_quality_index = Some(index);
-        environmental.air_quality_category = Some(airnow::air_quality_category(index).into());
+        environmental.air_quality_category = Some(standard.category(index).into());
+        environmental.air_quality_index_standard = Some(standard);
         let timestamp = parse_local_aware(times.and_then(|t| t.get(current)), offset);
         environmental.air_quality_updated_at = timestamp;
         environmental.air_quality_source = Some(OPENMETEO_AQ_SOURCE.into());
@@ -411,7 +452,7 @@ impl EnvironmentalDataClient {
 
         let mut dominant: Option<&str> = None;
         let mut dominant_value = -1.0;
-        for (name, key) in [("pm2_5", "us_aqi_pm2_5"), ("pm10", "us_aqi_pm10")] {
+        for (name, key) in &variables[1..] {
             if let Some(value) = value_near(hourly.get(key), current) {
                 if value > dominant_value {
                     dominant_value = value;
@@ -579,5 +620,105 @@ mod tests {
         assert_eq!(env.hourly_air_quality[0].pm2_5, Some(3.1));
         assert_eq!(env.hourly_uv_index.len(), 2);
         assert!(http.request_log()[3].ends_with("hourly=uv_index&timezone=auto&forecast_days=3"));
+    }
+
+    fn aq_only() -> FetchOptions {
+        FetchOptions {
+            include_pollen: false,
+            include_hourly_uv: false,
+            hourly_hours: 2,
+            ..FetchOptions::default()
+        }
+    }
+
+    #[test]
+    fn european_location_uses_the_european_index() {
+        let aq = json!({"utc_offset_seconds": 0, "hourly": {"time": times(12, 4),
+            "european_aqi": [10, 20, 35, 70], "european_aqi_pm2_5": [1, 2, 20, 3],
+            "european_aqi_pm10": [1, 2, 10, 3], "european_aqi_nitrogen_dioxide": [1, 2, 35, 3],
+            "european_aqi_ozone": [1, 2, 30, 3], "european_aqi_sulphur_dioxide": [1, 2, 5, 3]}});
+        let http = Arc::new(FixtureClient::new().with(AIR_QUALITY_ENDPOINT, aq));
+        let client = EnvironmentalDataClient::new(http.clone(), "AccessiWeather/2.0", "key");
+        let paris = Location::new("Paris", 48.8566, 2.3522).with_country("FR");
+        let options = FetchOptions {
+            prefer_airnow: true,
+            ..aq_only()
+        };
+        let env = client.fetch(&paris, options, now()).unwrap();
+        assert_eq!(env.air_quality_index, Some(35.0));
+        assert_eq!(env.air_quality_category.as_deref(), Some("Fair"));
+        assert_eq!(env.air_quality_index_standard, Some(AqiStandard::European));
+        assert_eq!(env.air_quality_pollutant.as_deref(), Some("NO2"));
+        assert_eq!(env.hourly_air_quality[0].category, "Fair");
+        assert_eq!(env.hourly_air_quality[1].category, "Poor");
+        assert_eq!(
+            env.hourly_air_quality[0].aqi_standard,
+            Some(AqiStandard::European)
+        );
+        let log = http.request_log();
+        assert_eq!(
+            log.len(),
+            2,
+            "no AirNow request outside the US AQI: {log:?}"
+        );
+        assert!(log[0].contains(
+            "hourly=european_aqi%2Ceuropean_aqi_pm2_5%2Ceuropean_aqi_pm10%2C\
+             european_aqi_nitrogen_dioxide%2Ceuropean_aqi_ozone%2Ceuropean_aqi_sulphur_dioxide"
+        ));
+        assert!(log[1].contains(
+            "hourly=european_aqi%2Cpm2_5%2Cpm10%2Cozone%2Cnitrogen_dioxide%2C\
+             sulphur_dioxide%2Ccarbon_monoxide"
+        ));
+    }
+
+    #[test]
+    fn forced_european_index_skips_airnow_in_the_us() {
+        let aq = json!({"utc_offset_seconds": 0, "hourly": {"time": times(12, 4),
+            "european_aqi": [10, 20, 65, 70]}});
+        let http = Arc::new(FixtureClient::new().with(AIR_QUALITY_ENDPOINT, aq));
+        let client = EnvironmentalDataClient::new(http.clone(), "AccessiWeather/2.0", "key");
+        let options = FetchOptions {
+            prefer_airnow: true,
+            aqi_preference: AqiPreference::European,
+            include_hourly_air_quality: false,
+            ..aq_only()
+        };
+        let nyc = Location::new("NYC", 40.7, -74.0).with_country("US");
+        let env = client.fetch(&nyc, options, now()).unwrap();
+        assert_eq!(env.air_quality_category.as_deref(), Some("Poor"));
+        assert_eq!(env.air_quality_index_standard, Some(AqiStandard::European));
+        assert!(http
+            .request_log()
+            .iter()
+            .all(|u| u.starts_with(AIR_QUALITY_ENDPOINT)));
+    }
+
+    #[test]
+    fn us_location_requests_are_unchanged() {
+        let aq = json!({"utc_offset_seconds": 0, "hourly": {"time": times(12, 4),
+            "us_aqi": [10, 20, 55, 70]}});
+        let http = Arc::new(FixtureClient::new().with(AIR_QUALITY_ENDPOINT, aq));
+        let client = EnvironmentalDataClient::new(http.clone(), "AccessiWeather/2.0", "");
+        let nyc = Location::new("NYC", 40.7, -74.0).with_country("US");
+        let env = client.fetch(&nyc, aq_only(), now()).unwrap();
+        assert_eq!(env.air_quality_index_standard, Some(AqiStandard::Us));
+        assert_eq!(
+            env.hourly_air_quality[0].aqi_standard,
+            Some(AqiStandard::Us)
+        );
+        assert_eq!(
+            http.request_log(),
+            vec![
+                format!(
+                    "{AIR_QUALITY_ENDPOINT}?latitude=40.7&longitude=-74.0&timezone=auto\
+                     &hourly=us_aqi%2Cus_aqi_pm2_5%2Cus_aqi_pm10"
+                ),
+                format!(
+                    "{AIR_QUALITY_ENDPOINT}?latitude=40.7&longitude=-74.0&hourly=us_aqi%2Cpm2_5\
+                     %2Cpm10%2Cozone%2Cnitrogen_dioxide%2Csulphur_dioxide%2Ccarbon_monoxide\
+                     &timezone=auto"
+                ),
+            ]
+        );
     }
 }

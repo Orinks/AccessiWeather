@@ -14,6 +14,7 @@ use chrono::{DateTime, FixedOffset, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+pub use crate::air_quality::AqiStandard;
 pub use crate::location::Location;
 
 /// A point in time with the offset it was reported in (NWS and Open-Meteo
@@ -228,6 +229,10 @@ pub struct EnvironmentalConditions {
     pub air_quality_updated_at: Option<Timestamp>,
     pub air_quality_reporting_area: Option<String>,
     pub air_quality_source: Option<String>,
+    /// The scale of `air_quality_index` and `air_quality_category`. `None`
+    /// for data from before standards were tracked (shown as plain "AQI").
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub air_quality_index_standard: Option<AqiStandard>,
     pub hourly_air_quality: Vec<HourlyAirQuality>,
     pub uv_index: Option<f64>,
     pub uv_category: Option<String>,
@@ -606,6 +611,9 @@ pub struct HourlyAirQuality {
     pub timestamp: Timestamp,
     pub aqi: i64,
     pub category: String,
+    /// The scale of `aqi` and `category`; `None` for legacy data.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub aqi_standard: Option<AqiStandard>,
     #[serde(default)]
     pub pm2_5: Option<f64>,
     #[serde(default)]

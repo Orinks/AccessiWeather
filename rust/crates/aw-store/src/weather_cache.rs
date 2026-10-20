@@ -476,7 +476,16 @@ fn serialize_alert(a: &WeatherAlert) -> Value {
 }
 
 fn serialize_environmental(e: &EnvironmentalConditions) -> Value {
-    obj(vec![
+    let mut pairs = environmental_pairs(e);
+    // Only when known, keeping legacy entries' shape.
+    if let Some(standard) = e.air_quality_index_standard {
+        pairs.insert(6, ("air_quality_index_standard", json!(standard)));
+    }
+    obj(pairs)
+}
+
+fn environmental_pairs(e: &EnvironmentalConditions) -> Vec<(&'static str, Value)> {
+    vec![
         ("air_quality_index", json!(e.air_quality_index)),
         ("air_quality_category", json!(e.air_quality_category)),
         ("air_quality_pollutant", json!(e.air_quality_pollutant)),
@@ -494,7 +503,7 @@ fn serialize_environmental(e: &EnvironmentalConditions) -> Value {
         ("pollen_primary_allergen", json!(e.pollen_primary_allergen)),
         ("updated_at", ts(&e.updated_at)),
         ("sources", json!(e.sources)),
-    ])
+    ]
 }
 
 fn serialize_trend(t: &TrendInsight) -> Value {
@@ -731,6 +740,10 @@ fn deserialize_environmental(d: &Fields) -> Option<EnvironmentalConditions> {
         air_quality_updated_at: d.time("air_quality_updated_at"),
         air_quality_reporting_area: d.string("air_quality_reporting_area"),
         air_quality_source: d.string("air_quality_source"),
+        air_quality_index_standard: d
+            .0
+            .get("air_quality_index_standard")
+            .and_then(|v| serde_json::from_value(v.clone()).ok()),
         pollen_index: d.f64("pollen_index"),
         pollen_category: d.string("pollen_category"),
         pollen_tree_index: d.f64("pollen_tree_index"),

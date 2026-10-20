@@ -273,6 +273,27 @@ pub fn known_country(code: &str) -> Option<&'static str> {
         .map(|(c, _)| *c)
 }
 
+/// Countries that use the European Air Quality Index under the automatic
+/// setting: the EU, the EEA, the UK and Switzerland, plus the other European
+/// states and territories. Russia, Turkey and the Caucasus are left out.
+pub const EUROPEAN_COUNTRY_CODES: &[&str] = &[
+    // EU
+    "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV",
+    "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", // EEA
+    "IS", "LI", "NO", // UK and Switzerland
+    "GB", "CH", // Other European states and territories
+    "AD", "AL", "AX", "BA", "BY", "FO", "GG", "GI", "IM", "JE", "MC", "MD", "ME", "MK", "RS", "SJ",
+    "SM", "UA", "VA",
+];
+
+/// Whether `code` (any case) is in [`EUROPEAN_COUNTRY_CODES`].
+pub fn is_european(code: &str) -> bool {
+    let code = code.trim();
+    EUROPEAN_COUNTRY_CODES
+        .iter()
+        .any(|c| c.eq_ignore_ascii_case(code))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -285,5 +306,15 @@ mod tests {
         assert_eq!(known_country("gb"), Some("GB"));
         assert_eq!(known_country("XX"), None);
         assert_eq!(known_country(""), None);
+    }
+
+    #[test]
+    fn european_codes_are_known_countries() {
+        for code in EUROPEAN_COUNTRY_CODES {
+            assert_eq!(known_country(code), Some(*code), "{code}");
+        }
+        assert!(is_european("fr") && is_european(" GB "));
+        assert!(!is_european("RU") && !is_european("TR") && !is_european("GE"));
+        assert!(!is_european("US") && !is_european(""));
     }
 }

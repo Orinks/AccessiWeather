@@ -784,6 +784,20 @@ Automatically prioritize severe weather details is helpful if you want hazardous
 
 Leave this alone if Standard verbosity already feels balanced.
 
+#### Air quality
+
+The Air quality index choice sets which scale air quality numbers use:
+
+- Automatic (European AQI in Europe, US AQI elsewhere), the default
+- US AQI (EPA), on a 0 to 500 scale: Good, Moderate, Unhealthy for Sensitive Groups, Unhealthy, Very Unhealthy, Hazardous
+- European AQI (EEA), where 0 to 20 is Good, then Fair, Moderate, Poor, Very poor, and above 100 Extremely poor
+
+Automatic uses the European AQI for locations in the European Union, the wider European Economic Area, the United Kingdom, Switzerland and other European countries, going by the location's country. When the country is not known, it keeps the US AQI.
+
+The index name is always shown next to the number, such as US AQI 52 (Moderate) or European AQI 35 (Fair), so you never have to guess which scale you're hearing.
+
+AirNow only reports the US AQI, so choosing European AQI for a US location uses the forecast model's European AQI instead of AirNow.
+
 ### Alerts
 
 Use the Alerts tab to control alert handling, event notifications, and rate limiting.
@@ -949,7 +963,7 @@ Each provider includes:
 
 Pirate Weather also includes a button to validate its key.
 
-AirNow is optional and supplies official current US Air Quality Index observations. Create your own public AirNow API account, enter its key here, and AccessiWeather will use AirNow for current US AQI while retaining its existing hourly air-quality forecast and fallback source.
+AirNow is optional and supplies official current US Air Quality Index observations. Create your own public AirNow API account, enter its key here, and AccessiWeather will use AirNow for current US AQI while retaining its existing hourly air-quality forecast and fallback source. AirNow is only used when the location's air quality index is the US AQI.
 
 Pirate Weather is the optional weather-provider key worth adding. Use it when you want worldwide alert coverage in many regions, minutely precipitation timing, moon phase, or Dark Sky-style summary text. This can be worth it if short-term rain timing matters to you or if you need alerts outside the US.
 
@@ -1251,6 +1265,8 @@ Use the View menu to open dedicated air quality and UV windows.
 These windows can show current values, categories, forecasts, and guidance when the underlying weather data includes them.
 
 For US locations, current AQI comes from EPA AirNow when an AirNow API key is configured in Settings > Data Sources. AirNow observations are preliminary. If no key is configured or AirNow is temporarily unavailable, AccessiWeather continues using its existing air-quality source.
+
+Air quality uses the index set in Settings > Display > Air quality index. By default, European locations show the European AQI and its categories (Good, Fair, Moderate, Poor, Very poor, Extremely poor), and everywhere else shows the US AQI. The current reading, its health guidance and each line of the hourly forecast name the index they use.
 
 ### Aviation Weather
 

@@ -62,21 +62,7 @@ fn timezone_offset_hours(name: &str) -> Option<i32> {
 }
 
 /// AQI category by EPA breakpoints.
-pub fn air_quality_category(value: f64) -> &'static str {
-    if value <= 50.0 {
-        "Good"
-    } else if value <= 100.0 {
-        "Moderate"
-    } else if value <= 150.0 {
-        "Unhealthy for Sensitive Groups"
-    } else if value <= 200.0 {
-        "Unhealthy"
-    } else if value <= 300.0 {
-        "Very Unhealthy"
-    } else {
-        "Hazardous"
-    }
-}
+pub use aw_core::air_quality::air_quality_category;
 
 /// First present field among the documented (PascalCase) and live
 /// (camelCase) spellings.

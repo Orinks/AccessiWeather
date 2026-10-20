@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Add Location now has a Country to search in filter, starting on your computer's region, and results show each place's region and country.
 - You can now add a location by typing its coordinates, such as 1.35, 103.82, into Add Location.
 - First-run setup now asks which units you want, and new installs show units that match each location instead of Fahrenheit first.
+- Air quality now uses the European AQI for European locations, with a Settings choice to always use US or European AQI.
 
 ### Changed
 - AccessiWeather is now rebuilt in Rust as a native app for Windows, macOS and Linux, and updating keeps your saved locations and settings.

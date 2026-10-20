@@ -18,12 +18,14 @@ use super::tray_text_format_dialog::{supported_placeholders_help, validate_forma
 /// the Python goldens were generated, with the default every golden case
 /// expects.
 /// Rust-only settings the Settings form collects.
-const RUST_ONLY_SETTINGS: &[(&str, bool)] = &[("alert_notifications_all_locations", false)];
+/// Every golden case collects their `rust_only_default`.
+const RUST_ONLY_SETTINGS: &[&str] = &["alert_notifications_all_locations", "air_quality_index"];
 
 fn rust_only_default(key: &str) -> Option<Value> {
     match key {
         "alert_notifications_all_locations" => Some(Value::Bool(false)),
         "location_search_country" => Some(Value::String(String::new())),
+        "air_quality_index" => Some(Value::String("auto".into())),
         // New installs follow each location's units instead of showing both.
         "temperature_unit" => Some(Value::String("auto".into())),
         _ => None,
@@ -138,10 +140,10 @@ fn assert_snapshot(form: &SettingsForm, snap: &Value, label: &str) {
     for (key, value) in &expected {
         assert_eq!(values.get(key), Some(value), "{label}: collected {key}");
     }
-    for (key, default) in RUST_ONLY_SETTINGS {
+    for key in RUST_ONLY_SETTINGS {
         assert_eq!(
             values.get(*key),
-            Some(&Value::Bool(*default)),
+            rust_only_default(key).as_ref(),
             "{label}: collected {key}"
         );
     }

@@ -224,6 +224,10 @@ pub struct AppSettings {
     pub show_seasonal_data: bool,
     #[serde(default = "d_true")]
     pub air_quality_enabled: bool,
+    /// AQI scale: "auto" (European AQI in Europe, US AQI elsewhere), "us"
+    /// or "european".
+    #[serde(default = "d_auto")]
+    pub air_quality_index: String,
     #[serde(default = "d_true")]
     pub pollen_enabled: bool,
     #[serde(default = "d_true")]
@@ -479,6 +483,11 @@ impl AppSettings {
             "iso",
         );
         keep_valid(&mut s.data_source, &VALID_DATA_SOURCES, "auto");
+        keep_valid(
+            &mut s.air_quality_index,
+            &["auto", "us", "european"],
+            "auto",
+        );
         let defaults = AppSettings::default();
         for (list, default) in [
             (&mut s.source_priority_us, &defaults.source_priority_us),
@@ -733,9 +742,26 @@ mod tests {
     use super::*;
 
     #[test]
+    fn air_quality_index_falls_back_to_auto() {
+        for (value, expected) in [
+            (Value::from("european"), "european"),
+            (Value::from("us"), "us"),
+            (Value::from("eaqi"), "auto"),
+            (Value::from(3), "auto"),
+        ] {
+            let data = Map::from_iter([("air_quality_index".to_string(), value)]);
+            assert_eq!(
+                AppSettings::from_python_dict(data).air_quality_index,
+                expected
+            );
+        }
+    }
+
+    #[test]
     fn defaults_match_python() {
         let s = AppSettings::default();
         assert_eq!(s.temperature_unit, "auto");
+        assert_eq!(s.air_quality_index, "auto");
         assert_eq!(s.update_interval_minutes, 10);
         assert!(s.enable_alerts);
         assert_eq!(s.forecast_duration_days, 7);

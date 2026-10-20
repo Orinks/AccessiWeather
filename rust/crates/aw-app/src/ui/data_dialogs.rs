@@ -6,11 +6,12 @@
 //! (tab) order, golden-tested against the real Python dialogs
 //! (`rust/tools/golden/dataui.py`), and then built by [`show`].
 
+use aw_core::air_quality::{self, AqiStandard};
 use aw_core::display::pyfmt::round_int;
 use aw_core::display::time::location_zone;
 use aw_core::model::{
-    EnvironmentalConditions, MinutelyPrecipitationForecast, MinutelyPrecipitationPoint, Timestamp,
-    WeatherData,
+    EnvironmentalConditions, HourlyAirQuality, MinutelyPrecipitationForecast,
+    MinutelyPrecipitationPoint, Timestamp, WeatherData,
 };
 use aw_core::py::casefold;
 use aw_core::py::float_repr as repr_f64;
@@ -393,9 +394,11 @@ fn join_unique(items: &[&str]) -> String {
 /// `_build_summary_section`: the "Current air quality summary" text.
 fn air_quality_summary(env: &EnvironmentalConditions) -> String {
     let category = non_empty(env.air_quality_category.as_deref());
+    let standard = env.air_quality_index_standard;
+    let index_name = standard.map_or("AQI", AqiStandard::name);
     let aqi = env
         .air_quality_index
-        .map(|aqi| format!("AQI: {}", round_int(aqi)));
+        .map(|aqi| format!("{index_name}: {}", round_int(aqi)));
     let mut lines = vec![match (aqi, category) {
         (Some(aqi), Some(category)) => format!("{aqi} ({category})"),
         (Some(aqi), None) => aqi,
@@ -410,10 +413,13 @@ fn air_quality_summary(env: &EnvironmentalConditions) -> String {
         ),
         None => "Dominant pollutant: Not available".into(),
     });
-    lines.push(format!(
-        "Health guidance: {}",
-        air_quality_guidance(category.unwrap_or(""))
-    ));
+    let guidance = match standard {
+        Some(AqiStandard::European) => {
+            air_quality::guidance(AqiStandard::European, category.unwrap_or(""))
+        }
+        _ => air_quality_guidance(category.unwrap_or("")),
+    };
+    lines.push(format!("Health guidance: {guidance}"));
     lines.push(
         match env
             .air_quality_updated_at
@@ -491,6 +497,23 @@ fn pollutant_levels(env: &EnvironmentalConditions) -> Option<String> {
     })
 }
 
+/// One "Hourly Forecast" line: "2:00 PM: European AQI 35 (Fair)", or the
+/// Python "2:00 PM: AQI 52" for data without a known standard.
+fn hourly_air_quality_line(hour: &HourlyAirQuality) -> String {
+    let time = clock_time(&hour.timestamp);
+    match hour.aqi_standard {
+        Some(standard) => {
+            let category = hour.category.trim();
+            if category.is_empty() {
+                format!("{time}: {} {}", standard.name(), hour.aqi)
+            } else {
+                format!("{time}: {} {} ({category})", standard.name(), hour.aqi)
+            }
+        }
+        None => format!("{time}: AQI {}", hour.aqi),
+    }
+}
+
 /// `AirQualityDialog`.
 fn air_quality_dialog(location_name: &str, env: Option<&EnvironmentalConditions>) -> InfoDialog {
     let title = format!("Air Quality - {location_name}");
@@ -510,7 +533,7 @@ fn air_quality_dialog(location_name: &str, env: Option<&EnvironmentalConditions>
         .hourly_air_quality
         .iter()
         .take(12)
-        .map(|hour| format!("{}: AQI {}", clock_time(&hour.timestamp), hour.aqi))
+        .map(hourly_air_quality_line)
         .collect();
     let section_text = |value: Option<String>, name, missing| match value {
         Some(value) => Item::Text(Text {
@@ -960,6 +983,51 @@ mod tests {
                 precipitation_timeline_dialog(case["location"].as_str().unwrap(), &forecast, tz);
             assert_dialog(&spec, case, name);
         }
+    }
+
+    #[test]
+    fn air_quality_names_the_european_index() {
+        let at = chrono::DateTime::parse_from_rfc3339("2025-06-01T14:00:00+02:00").unwrap();
+        let env = EnvironmentalConditions {
+            air_quality_index: Some(35.0),
+            air_quality_category: Some("Fair".into()),
+            air_quality_index_standard: Some(AqiStandard::European),
+            air_quality_pollutant: Some("NO2".into()),
+            air_quality_source: Some("Open-Meteo Air Quality".into()),
+            hourly_air_quality: vec![HourlyAirQuality {
+                timestamp: at,
+                aqi: 35,
+                category: "Fair".into(),
+                aqi_standard: Some(AqiStandard::European),
+                pm2_5: None,
+                pm10: None,
+                ozone: None,
+                nitrogen_dioxide: None,
+                sulphur_dioxide: None,
+                carbon_monoxide: None,
+            }],
+            ..Default::default()
+        };
+        let summary = air_quality_summary(&env);
+        let lines: Vec<&str> = summary.lines().collect();
+        assert_eq!(lines[0], "European AQI: 35 (Fair)");
+        assert_eq!(lines[1], "Dominant pollutant: Nitrogen Dioxide");
+        assert_eq!(
+            lines[2],
+            "Health guidance: Enjoy your usual outdoor activities."
+        );
+        assert_eq!(
+            hourly_air_quality_line(&env.hourly_air_quality[0]),
+            "2:00 PM: European AQI 35 (Fair)"
+        );
+        let legacy = EnvironmentalConditions {
+            air_quality_index_standard: None,
+            ..env.clone()
+        };
+        assert!(air_quality_summary(&legacy).starts_with("AQI: 35 (Fair)\n"));
+        let mut hour = env.hourly_air_quality[0].clone();
+        hour.aqi_standard = None;
+        assert_eq!(hourly_air_quality_line(&hour), "2:00 PM: AQI 35");
     }
 
     #[test]

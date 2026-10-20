@@ -213,6 +213,7 @@ pub(crate) struct Controls {
     pub verbosity_level: Choice,
     pub severe_weather_override: CheckBox,
     pub alert_display_style: Choice,
+    pub air_quality_index: Choice,
     pub location_buttons_on_top: CheckBox,
     // Alerts
     pub enable_alerts: CheckBox,
@@ -476,6 +477,15 @@ pub(crate) fn build(notebook: &Notebook, sound_pack_names: &[String], portable: 
         false,
         8,
         |p| choice(p, &ALERT_DISPLAY_CHOICES),
+    );
+    let air_quality_section = create_section(&display, &sizer, "Air quality");
+    let (_, air_quality_index) = labeled(
+        &display,
+        &air_quality_section,
+        "Air quality index:",
+        false,
+        8,
+        |p| choice(p, &AIR_QUALITY_INDEX_CHOICES),
     );
     let layout_section = create_section(&display, &sizer, "Location buttons");
     let location_buttons_on_top = check(
@@ -924,6 +934,7 @@ pub(crate) fn build(notebook: &Notebook, sound_pack_names: &[String], portable: 
         verbosity_level,
         severe_weather_override,
         alert_display_style,
+        air_quality_index,
         location_buttons_on_top,
         enable_alerts,
         alert_notif,
@@ -1053,6 +1064,7 @@ impl Controls {
             (&self.verbosity_level, "Verbosity level"),
             (&self.severe_weather_override, "Automatically prioritize severe weather details"),
             (&self.alert_display_style, "Alert display style"),
+            (&self.air_quality_index, "Air quality index standard"),
             (&self.location_sort_order, "Saved location order"),
             (&self.location_buttons_on_top, "Show Add, Edit, and Remove Location buttons next to the location dropdown (restart required)"),
             (&self.enable_alerts, "Monitor weather alerts"),
@@ -1155,6 +1167,8 @@ impl Controls {
             .set_value(f.severe_weather_override);
         self.alert_display_style
             .set_selection(f.alert_display_style as u32);
+        self.air_quality_index
+            .set_selection(f.air_quality_index as u32);
         self.location_sort_order
             .set_selection(f.location_sort_order as u32);
         self.location_buttons_on_top
@@ -1264,6 +1278,7 @@ impl Controls {
         f.verbosity_level = selection(&self.verbosity_level);
         f.severe_weather_override = self.severe_weather_override.is_checked();
         f.alert_display_style = selection(&self.alert_display_style);
+        f.air_quality_index = selection(&self.air_quality_index);
         f.location_buttons_on_top = self.location_buttons_on_top.is_checked();
 
         f.enable_alerts = self.enable_alerts.is_checked();
