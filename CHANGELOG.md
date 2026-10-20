@@ -14,10 +14,11 @@ All notable changes to this project will be documented in this file.
 - You can now have the weather read aloud on a schedule, such as every half hour, from Tools > Scheduled Readings.
 - Add Location now has a Country to search in filter, starting on your computer's region, and results show each place's region and country.
 - You can now add a location by typing its coordinates, such as 1.35, 103.82, into Add Location.
+- View > Local Readings shows official readings from the nearest stations worldwide, plus Singapore NEA rain, haze and forecasts and German DWD observations.
 - First-run setup now asks which units you want, and new installs show units that match each location instead of Fahrenheit first.
 - Air quality now uses the European AQI for European locations, with a Settings choice to always use US or European AQI.
 - The Air Quality window lists each pollutant's level and index category, and says whether each reading is observed or modelled, with its source.
-- Add an OpenAQ API key in Settings to see official station readings worldwide, with AirNow or the forecast model as a fallback.
+- Add a free OpenAQ API key in Settings to see measured readings from the nearest air monitor, with AirNow or the forecast model as a fallback.
 - You can now get a notification when air quality reaches a level you choose; turn it on in Settings, Alerts tab.
 
 ### Changed

@@ -753,6 +753,7 @@ You can turn these details on or off:
 - UV index
 - pressure trend
 - impact summaries for outdoor, driving, and allergy conditions
+- local official readings (View > Local Readings), on by default
 
 Use these options when a detail changes real decisions for you.
 
@@ -1307,6 +1308,27 @@ Under Current Pollutant Levels, the Air Quality window has a Pollutant readings 
 With an OpenAQ key, readings from the nearest OpenAQ station come first. Their Source column names the station, whether it's a reference monitor or a low-cost sensor, and how far away it is, for example "OpenAQ, reference monitor at Del Norte, Albuquerque, 1.8 km away". OpenAQ doesn't say what period its latest values cover, so their Concentration column reads "latest reading" rather than naming an average. In the US, AirNow adds its index to the pollutants OpenAQ reported and fills in the ones it didn't.
 
 Observed readings come first, and the model fills in any pollutant no station reported, so each pollutant appears once. The Reading source field under the list sums up which pollutants came from which source; press Tab from the list to read it. Times in the window follow your 12-hour or 24-hour clock setting. The current air quality summary also has a Reading line saying whether the headline index was observed or modelled, by whom, and for what time.
+
+### Local Readings
+
+Use View > Local Readings to see official readings from the weather stations and forecast areas nearest the current location. Forecasts for a whole country or a grid point can miss what's happening down the road; these readings tell you what a real station near you measured, and exactly where.
+
+Each line is complete on its own, so you can arrow through them with a screen reader. A line gives:
+
+- the value, such as 0.4 mm of rain or a PM2.5 level, and its averaging period, such as a 5-minute total, a 1-hour average or a 24-hour average
+- what it covers: a named station and how far away it is, a forecast area, or a region
+- when it was observed, and how long ago, or the time a forecast is valid for
+- the source
+
+Coverage today:
+
+- Everywhere: the nearest airport weather report (METAR), with temperature, dew point, wind, visibility, pressure and conditions. Airport reports come from each country's weather or aviation service and are fetched from the NOAA Aviation Weather Center.
+- Singapore: the National Environment Agency (NEA), with 5-minute rainfall from the nearest rain gauge, air temperature, the 2-hour forecast for your area (including thundery showers), and PM2.5 and PSI haze readings for your region.
+- Germany: Deutscher Wetterdienst (DWD) station observations through Bright Sky, with temperature, humidity, past-hour precipitation, wind, pressure and visibility. Each reading names the DWD station it came from.
+
+A country source is used only for locations in that country, decided by the location's country, or by its coordinates when no country is saved. If a source can't be reached, the window says so and shows the readings it did get.
+
+Readings are fetched when you open the window and when you press Refresh Readings. To turn the feature off, clear Show local official readings from nearby weather stations in Settings > Display, under Extra weather details.
 
 ### Aviation Weather
 

@@ -298,7 +298,7 @@ fn lookup(table: &[(&'static str, &'static str)], code: &str) -> Option<&'static
 }
 
 /// `_decode_weather`.
-fn decode_weather(token: &str) -> Option<String> {
+pub(crate) fn decode_weather(token: &str) -> Option<String> {
     if token.is_empty() {
         return None;
     }
@@ -397,7 +397,7 @@ fn thousands(n: u32) -> String {
 }
 
 /// `_decode_cloud` (`CLOUD_RE`: `(FEW|SCT|BKN|OVC|NSC|SKC|CLR|VV)(\d{3}|///)?(CB|TCU|///)?`).
-fn decode_cloud(token: &str) -> Option<String> {
+pub(crate) fn decode_cloud(token: &str) -> Option<String> {
     if token.is_empty() {
         return None;
     }

@@ -59,6 +59,11 @@ pub(crate) fn on_uv_index() {
     super::data_dialogs::show_uv_index();
 }
 
+/// View > Local Readings.
+pub(crate) fn on_local_readings() {
+    super::local_readings_dialog::show_local_readings_dialog();
+}
+
 /// View > NOAA Weather Radio (Ctrl+N).
 pub(crate) fn on_noaa_radio() {
     super::noaa_radio_dialog::show_noaa_radio_dialog();

@@ -26,11 +26,13 @@ const RUST_ONLY_SETTINGS: &[&str] = &[
     "air_quality_alerts_enabled",
     "air_quality_alert_threshold_us",
     "air_quality_alert_threshold_european",
+    "show_local_official_readings",
 ];
 
 fn rust_only_default(key: &str) -> Option<Value> {
     match key {
         "alert_notifications_all_locations" => Some(Value::Bool(false)),
+        "show_local_official_readings" => Some(Value::Bool(true)),
         "location_search_country" => Some(Value::String(String::new())),
         "air_quality_index" => Some(Value::String("auto".into())),
         "openaq_api_key" => Some(Value::String(String::new())),

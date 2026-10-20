@@ -359,6 +359,7 @@ pub(crate) struct SettingsForm {
     pub show_uv_index: bool,
     pub show_pressure_trend: bool,
     pub show_impact_summaries: bool,
+    pub show_local_official_readings: bool,
     pub forecast_time_reference: usize,
     pub time_display_mode: usize,
     pub time_format_12hour: bool,
@@ -501,6 +502,7 @@ impl SettingsForm {
         self.show_uv_index = s.show_uv_index;
         self.show_pressure_trend = s.show_pressure_trend;
         self.show_impact_summaries = s.show_impact_summaries;
+        self.show_local_official_readings = s.show_local_official_readings;
         self.round_values = s.round_values;
         self.forecast_duration_days =
             position(&FORECAST_DURATION_VALUES, &s.forecast_duration_days).unwrap_or(2);
@@ -828,6 +830,7 @@ impl SettingsForm {
                 "show_uv_index": self.show_uv_index,
                 "show_pressure_trend": self.show_pressure_trend,
                 "show_impact_summaries": self.show_impact_summaries,
+                "show_local_official_readings": self.show_local_official_readings,
                 "round_values": self.round_values,
                 "forecast_duration_days": FORECAST_DURATION_VALUES[self.forecast_duration_days],
                 "hourly_forecast_hours": self.hourly_forecast_hours,

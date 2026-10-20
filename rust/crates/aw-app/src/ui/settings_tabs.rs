@@ -205,6 +205,7 @@ pub(crate) struct Controls {
     pub show_uv_index: CheckBox,
     pub show_pressure_trend: CheckBox,
     pub show_impact_summaries: CheckBox,
+    pub show_local_official_readings: CheckBox,
     pub forecast_time_reference: Choice,
     pub time_display_mode: Choice,
     pub time_format_12hour: CheckBox,
@@ -440,6 +441,11 @@ pub(crate) fn build(notebook: &Notebook, sound_pack_names: &[String], portable: 
         "Show impact summaries for outdoor, driving, and allergy conditions",
     );
     details_section.add(&show_impact_summaries, 0, LRBE, 10);
+    let show_local_official_readings = check(
+        &display,
+        "Show local official readings from nearby weather stations",
+    );
+    details_section.add(&show_local_official_readings, 0, LRBE, 10);
     let time_section = create_section(&display, &sizer, "Time display");
     let (_, forecast_time_reference) = labeled(
         &display,
@@ -972,6 +978,7 @@ pub(crate) fn build(notebook: &Notebook, sound_pack_names: &[String], portable: 
         show_uv_index,
         show_pressure_trend,
         show_impact_summaries,
+        show_local_official_readings,
         forecast_time_reference,
         time_display_mode,
         time_format_12hour,
@@ -1104,6 +1111,7 @@ impl Controls {
             (&self.show_uv_index, "Show UV index"),
             (&self.show_pressure_trend, "Show pressure trend"),
             (&self.show_impact_summaries, "Show impact summaries for outdoor driving and allergy conditions"),
+            (&self.show_local_official_readings, "Show local official readings from nearby stations"),
             (&self.round_values, "Show values as whole numbers when possible"),
             (&self.forecast_duration_days, "Daily forecast range"),
             (&self.hourly_forecast_hours, "Hourly forecast range in hours"),
@@ -1207,6 +1215,8 @@ impl Controls {
         self.show_pressure_trend.set_value(f.show_pressure_trend);
         self.show_impact_summaries
             .set_value(f.show_impact_summaries);
+        self.show_local_official_readings
+            .set_value(f.show_local_official_readings);
         self.round_values.set_value(f.round_values);
         self.forecast_duration_days
             .set_selection(f.forecast_duration_days as u32);
@@ -1334,6 +1344,7 @@ impl Controls {
         f.show_uv_index = self.show_uv_index.is_checked();
         f.show_pressure_trend = self.show_pressure_trend.is_checked();
         f.show_impact_summaries = self.show_impact_summaries.is_checked();
+        f.show_local_official_readings = self.show_local_official_readings.is_checked();
         f.forecast_time_reference = selection(&self.forecast_time_reference);
         f.time_display_mode = selection(&self.time_display_mode);
         f.time_format_12hour = self.time_format_12hour.is_checked();

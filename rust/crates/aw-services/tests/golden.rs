@@ -360,6 +360,10 @@ fn settings_and_locations_export_documents() {
         Some(json!(false))
     );
     assert_eq!(exported.remove("location_search_country"), Some(json!("")));
+    assert_eq!(
+        exported.remove("show_local_official_readings"),
+        Some(json!(true))
+    );
     assert_eq!(exported.remove("air_quality_index"), Some(json!("auto")));
     assert_eq!(
         exported.remove("air_quality_alerts_enabled"),
