@@ -6,6 +6,7 @@
 //! against Python goldens; `settings_dialog.rs` copies it to and from the
 //! widgets.
 
+use aw_core::air_quality::{EUROPEAN_ALERT_THRESHOLDS, US_ALERT_THRESHOLDS};
 use aw_core::settings::AppSettings;
 use aw_core::shortcut_preferences::{
     normalize_hotkey, normalize_shortcut_text, py_repr, reserved_shortcut_use,
@@ -78,6 +79,17 @@ pub(crate) const AIR_QUALITY_INDEX_CHOICES: [&str; 3] = [
 const AIR_QUALITY_INDEX_VALUES: [&str; 3] = ["auto", "us", "european"];
 
 // --- Alerts tab (`settings_tabs/notifications.py`) ---
+
+/// Air quality alert levels: categories of each index, mildest first.
+pub(crate) const AQ_THRESHOLD_US_CHOICES: [&str; 5] = [
+    "Moderate",
+    "Unhealthy for sensitive groups",
+    "Unhealthy",
+    "Very unhealthy",
+    "Hazardous",
+];
+pub(crate) const AQ_THRESHOLD_EUROPEAN_CHOICES: [&str; 5] =
+    ["Fair", "Moderate", "Poor", "Very poor", "Extremely poor"];
 
 pub(crate) const RADIUS_TYPE_CHOICES: [&str; 4] = [
     "County (recommended)",
@@ -370,6 +382,9 @@ pub(crate) struct SettingsForm {
     pub notify_minor: bool,
     pub notify_unknown: bool,
     pub alerts_all_locations: bool,
+    pub aq_alerts_enabled: bool,
+    pub aq_threshold_us: usize,
+    pub aq_threshold_european: usize,
     pub notify_discussion_update: bool,
     pub notify_daily_climate_report_update: bool,
     pub notify_hwo_update: bool,
@@ -515,6 +530,13 @@ impl SettingsForm {
         self.notify_minor = s.alert_notify_minor;
         self.notify_unknown = s.alert_notify_unknown;
         self.alerts_all_locations = s.alert_notifications_all_locations;
+        self.aq_alerts_enabled = s.air_quality_alerts_enabled;
+        self.aq_threshold_us = index_of(&US_ALERT_THRESHOLDS, &s.air_quality_alert_threshold_us, 1);
+        self.aq_threshold_european = index_of(
+            &EUROPEAN_ALERT_THRESHOLDS,
+            &s.air_quality_alert_threshold_european,
+            2,
+        );
         self.immediate_alert_details_popups = s.immediate_alert_details_popups;
         self.auto_tune_weather_radio_alerts = s.auto_tune_weather_radio_alerts;
         self.auto_tune_weather_radio_duration_minutes =
@@ -833,6 +855,10 @@ impl SettingsForm {
                 "alert_notify_minor": self.notify_minor,
                 "alert_notify_unknown": self.notify_unknown,
                 "alert_notifications_all_locations": self.alerts_all_locations,
+                "air_quality_alerts_enabled": self.aq_alerts_enabled,
+                "air_quality_alert_threshold_us": US_ALERT_THRESHOLDS[self.aq_threshold_us],
+                "air_quality_alert_threshold_european":
+                    EUROPEAN_ALERT_THRESHOLDS[self.aq_threshold_european],
                 "immediate_alert_details_popups": self.immediate_alert_details_popups,
                 "auto_tune_weather_radio_alerts": self.auto_tune_weather_radio_alerts,
                 "auto_tune_weather_radio_duration_minutes": self.auto_tune_weather_radio_duration_minutes,

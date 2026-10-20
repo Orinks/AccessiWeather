@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, Condvar, Mutex, PoisonError, RwLock};
 
 use aw_core::location::is_us_location;
-use aw_core::model::{Location, WeatherAlerts, WeatherData};
+use aw_core::model::{EnvironmentalConditions, Location, WeatherAlerts, WeatherData};
 use aw_core::settings::AppSettings;
 use aw_core::source_selection::{self, normalize_data_source};
 use aw_store::weather_cache::WeatherDataCache;
@@ -56,6 +56,9 @@ struct ClientState {
     previous_alerts: HashMap<String, WeatherAlerts>,
     latest_weather: HashMap<String, WeatherData>,
     last_minutely_poll: HashMap<String, DateTime<Utc>>,
+    /// Air quality polls for alert checks on other saved locations: when,
+    /// and what came back (`None` for a failed or empty poll).
+    last_air_quality_poll: HashMap<String, (DateTime<Utc>, Option<EnvironmentalConditions>)>,
     cache_purged: bool,
 }
 

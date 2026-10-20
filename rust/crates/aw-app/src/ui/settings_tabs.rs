@@ -228,6 +228,9 @@ pub(crate) struct Controls {
     pub notify_minor: CheckBox,
     pub notify_unknown: CheckBox,
     pub alerts_all_locations: CheckBox,
+    pub aq_alerts_enabled: CheckBox,
+    pub aq_threshold_us: Choice,
+    pub aq_threshold_european: Choice,
     pub notify_discussion_update: CheckBox,
     pub notify_daily_climate_report_update: CheckBox,
     pub notify_hwo_update: CheckBox,
@@ -588,6 +591,27 @@ pub(crate) fn build(notebook: &Notebook, sound_pack_names: &[String], portable: 
     );
     // Python also creates three hidden timing spin controls here; their
     // values live in the form and are edited in "Advanced timing...".
+    let aq_section = create_section(&alerts, &sizer, "Air quality notifications");
+    let aq_alerts_enabled = check(&alerts, "Notify when air quality reaches my alert level");
+    aq_section.add(&aq_alerts_enabled, 0, LRBE, 10);
+    let (_, aq_threshold_us) =
+        labeled(&alerts, &aq_section, "US AQI alert level:", false, 8, |p| {
+            choice(p, &AQ_THRESHOLD_US_CHOICES)
+        });
+    let (_, aq_threshold_european) = labeled(
+        &alerts,
+        &aq_section,
+        "European AQI alert level:",
+        false,
+        8,
+        |p| choice(p, &AQ_THRESHOLD_EUROPEAN_CHOICES),
+    );
+    add_help_text(
+        &alerts,
+        &aq_section,
+        "Checks the selected location after each refresh, and all saved locations when alert notifications for all locations are on. You get one notification each time the level is reached.",
+        10,
+    );
     let rate_section = create_section(&alerts, &sizer, "Rate limiting");
     let (_, max_notifications) = labeled(
         &alerts,
@@ -970,6 +994,9 @@ pub(crate) fn build(notebook: &Notebook, sound_pack_names: &[String], portable: 
         notify_minor,
         notify_unknown,
         alerts_all_locations,
+        aq_alerts_enabled,
+        aq_threshold_us,
+        aq_threshold_european,
         notify_discussion_update,
         notify_daily_climate_report_update,
         notify_hwo_update,
@@ -1101,6 +1128,9 @@ impl Controls {
             (&self.notify_minor, "Minor severity alerts"),
             (&self.notify_unknown, "Uncategorized alerts"),
             (&self.alerts_all_locations, "Send alert notifications for all saved locations, not just the selected one"),
+            (&self.aq_alerts_enabled, "Notify when air quality reaches my alert level"),
+            (&self.aq_threshold_us, "US AQI alert level"),
+            (&self.aq_threshold_european, "European AQI alert level"),
             (&self.immediate_alert_details_popups, "Open alert details immediately while AccessiWeather is running"),
             (&self.auto_tune_weather_radio_alerts, "Automatically tune NOAA Weather Radio for qualifying Specific Area Message Encoding (SAME) alerts"),
             (&self.auto_tune_weather_radio_duration_minutes, "Play weather radio for this many minutes"),
@@ -1212,6 +1242,11 @@ impl Controls {
         self.notify_minor.set_value(f.notify_minor);
         self.notify_unknown.set_value(f.notify_unknown);
         self.alerts_all_locations.set_value(f.alerts_all_locations);
+        self.aq_alerts_enabled.set_value(f.aq_alerts_enabled);
+        self.aq_threshold_us.set_selection(f.aq_threshold_us as u32);
+        self.aq_threshold_european
+            .set_selection(f.aq_threshold_european as u32);
+        self.update_air_quality_alert_controls_state(f.aq_alerts_enabled);
         self.immediate_alert_details_popups
             .set_value(f.immediate_alert_details_popups);
         self.auto_tune_weather_radio_alerts
@@ -1323,6 +1358,9 @@ impl Controls {
         f.notify_minor = self.notify_minor.is_checked();
         f.notify_unknown = self.notify_unknown.is_checked();
         f.alerts_all_locations = self.alerts_all_locations.is_checked();
+        f.aq_alerts_enabled = self.aq_alerts_enabled.is_checked();
+        f.aq_threshold_us = selection(&self.aq_threshold_us);
+        f.aq_threshold_european = selection(&self.aq_threshold_european);
         f.notify_discussion_update = self.notify_discussion_update.is_checked();
         f.notify_daily_climate_report_update = self.notify_daily_climate_report_update.is_checked();
         f.notify_hwo_update = self.notify_hwo_update.is_checked();
@@ -1367,6 +1405,12 @@ impl Controls {
         f.shortcut_show_main_window = self.shortcut_show_main_window.get_value();
         f.shortcut_hide_main_window = self.shortcut_hide_main_window.get_value();
         f.shortcut_read_tray_info = self.shortcut_read_tray_info.get_value();
+    }
+
+    /// The alert level choices only apply while air quality alerts are on.
+    pub fn update_air_quality_alert_controls_state(&self, enabled: bool) {
+        self.aq_threshold_us.enable(enabled);
+        self.aq_threshold_european.enable(enabled);
     }
 
     /// `_update_taskbar_text_controls_state`.

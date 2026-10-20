@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 - Air quality now uses the European AQI for European locations, with a Settings choice to always use US or European AQI.
 - The Air Quality window lists each pollutant's level and index category, and says whether each reading is observed or modelled, with its source.
 - Add an OpenAQ API key in Settings to see official station readings worldwide, with AirNow or the forecast model as a fallback.
+- You can now get a notification when air quality reaches a level you choose; turn it on in Settings, Alerts tab.
 
 ### Changed
 - AccessiWeather is now rebuilt in Rust as a native app for Windows, macOS and Linux, and updating keeps your saved locations and settings.

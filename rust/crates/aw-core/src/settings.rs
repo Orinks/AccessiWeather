@@ -23,6 +23,12 @@ macro_rules! default_fn {
 }
 
 default_fn!(d_auto, String, s("auto"));
+default_fn!(
+    d_aq_threshold_us,
+    String,
+    s("unhealthy_for_sensitive_groups")
+);
+default_fn!(d_aq_threshold_european, String, s("poor"));
 default_fn!(d_10, i64, 10);
 default_fn!(d_true, bool, true);
 default_fn!(
@@ -231,6 +237,17 @@ pub struct AppSettings {
     /// or "european".
     #[serde(default = "d_auto")]
     pub air_quality_index: String,
+    /// Notify when a location's air quality reaches the alert level below.
+    #[serde(default)]
+    pub air_quality_alerts_enabled: bool,
+    /// US AQI alert level: a key from
+    /// [`crate::air_quality::US_ALERT_THRESHOLDS`].
+    #[serde(default = "d_aq_threshold_us")]
+    pub air_quality_alert_threshold_us: String,
+    /// European AQI alert level: a key from
+    /// [`crate::air_quality::EUROPEAN_ALERT_THRESHOLDS`].
+    #[serde(default = "d_aq_threshold_european")]
+    pub air_quality_alert_threshold_european: String,
     #[serde(default = "d_true")]
     pub pollen_enabled: bool,
     #[serde(default = "d_true")]
@@ -490,6 +507,16 @@ impl AppSettings {
             &mut s.air_quality_index,
             &["auto", "us", "european"],
             "auto",
+        );
+        keep_valid(
+            &mut s.air_quality_alert_threshold_us,
+            &crate::air_quality::US_ALERT_THRESHOLDS,
+            "unhealthy_for_sensitive_groups",
+        );
+        keep_valid(
+            &mut s.air_quality_alert_threshold_european,
+            &crate::air_quality::EUROPEAN_ALERT_THRESHOLDS,
+            "poor",
         );
         let defaults = AppSettings::default();
         for (list, default) in [
@@ -758,6 +785,35 @@ mod tests {
                 expected
             );
         }
+    }
+
+    #[test]
+    fn air_quality_alert_settings_default_and_validate() {
+        let s = AppSettings::default();
+        assert!(!s.air_quality_alerts_enabled);
+        assert_eq!(
+            s.air_quality_alert_threshold_us,
+            "unhealthy_for_sensitive_groups"
+        );
+        assert_eq!(s.air_quality_alert_threshold_european, "poor");
+        let data = Map::from_iter([
+            (
+                "air_quality_alert_threshold_us".to_string(),
+                Value::from("very_poor"),
+            ),
+            (
+                "air_quality_alert_threshold_european".to_string(),
+                Value::from("very_poor"),
+            ),
+            ("air_quality_alerts_enabled".to_string(), Value::from(true)),
+        ]);
+        let s = AppSettings::from_python_dict(data);
+        assert!(s.air_quality_alerts_enabled);
+        assert_eq!(
+            s.air_quality_alert_threshold_us,
+            "unhealthy_for_sensitive_groups"
+        );
+        assert_eq!(s.air_quality_alert_threshold_european, "very_poor");
     }
 
     #[test]

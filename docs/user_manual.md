@@ -610,6 +610,21 @@ Use minutely precipitation notifications when short outdoor trips matter and a f
 
 Leave these alone if you want the app to notify you only for formal alerts. That simpler setup is usually enough for everyday use.
 
+### Air quality notifications
+
+AccessiWeather can tell you when air quality gets bad enough that you'd want to know. Turn on "Notify when air quality reaches my alert level" in Settings, Alerts tab, then pick a level for each index:
+
+- US AQI alert level: Moderate, Unhealthy for sensitive groups (the default), Unhealthy, Very unhealthy or Hazardous
+- European AQI alert level: Fair, Moderate, Poor (the default), Very poor or Extremely poor
+
+There are two levels because the Automatic index setting can use the European AQI for some saved locations and the US AQI for others. Each location is checked against the level for the index it uses.
+
+You get one notification when a location's air quality reaches your level or goes past it, such as "European AQI 65 (Poor) in Paris, at or above your alert level of Poor. Modelled by Open-Meteo." You won't hear about that location again while it stays at or above the level. Once it drops below and later rises back, you get a new notification. The notification also goes into the Event Center.
+
+The selected location is checked after every refresh. Your other saved locations are checked too when "Send alert notifications for all saved locations" is on.
+
+Air quality notifications count toward the same hourly limit and cooldown as weather alert notifications, and they follow the Send alert notifications switch. If the limit holds one back, AccessiWeather tries again on the next check. Air quality must be turned on for these notifications to work.
+
 ### Cooldowns and notification limits
 
 Cooldown settings help prevent repeated notifications from becoming overwhelming.
@@ -845,6 +860,16 @@ Controls include:
 Change these if formal alerts are not enough for your needs.
 
 Leave them off if you want a simpler alert experience.
+
+#### Air quality notifications
+
+Controls include:
+
+- Notify when air quality reaches my alert level (off by default)
+- US AQI alert level
+- European AQI alert level
+
+The two level choices are only available while the checkbox is ticked. See "Air quality notifications" in section 7 for how the checks work.
 
 #### Rate limiting and advanced timing
 

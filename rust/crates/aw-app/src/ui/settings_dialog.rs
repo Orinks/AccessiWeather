@@ -159,6 +159,8 @@ impl SettingsDialog {
 
         c.taskbar_icon_text_enabled
             .on_toggled(move |e| c.update_taskbar_text_controls_state(e.is_checked()));
+        c.aq_alerts_enabled
+            .on_toggled(move |e| c.update_air_quality_alert_controls_state(e.is_checked()));
         c.taskbar_icon_text_format_dialog
             .on_click(call(self, Self::on_edit_taskbar_text_format));
         c.advanced_timing

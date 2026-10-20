@@ -23,6 +23,9 @@ const RUST_ONLY_SETTINGS: &[&str] = &[
     "alert_notifications_all_locations",
     "air_quality_index",
     "openaq_api_key",
+    "air_quality_alerts_enabled",
+    "air_quality_alert_threshold_us",
+    "air_quality_alert_threshold_european",
 ];
 
 fn rust_only_default(key: &str) -> Option<Value> {
@@ -31,6 +34,11 @@ fn rust_only_default(key: &str) -> Option<Value> {
         "location_search_country" => Some(Value::String(String::new())),
         "air_quality_index" => Some(Value::String("auto".into())),
         "openaq_api_key" => Some(Value::String(String::new())),
+        "air_quality_alerts_enabled" => Some(Value::Bool(false)),
+        "air_quality_alert_threshold_us" => {
+            Some(Value::String("unhealthy_for_sensitive_groups".into()))
+        }
+        "air_quality_alert_threshold_european" => Some(Value::String("poor".into())),
         // New installs follow each location's units instead of showing both.
         "temperature_unit" => Some(Value::String("auto".into())),
         _ => None,

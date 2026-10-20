@@ -10,6 +10,7 @@ use crate::countries;
 use crate::display::pyfmt::round_int;
 use crate::location::Location;
 use crate::model::{AirQualityProvenance, PollutantReading, ReadingKind, Timestamp};
+use crate::settings::AppSettings;
 
 /// The scale an AQI value and its category belong to.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -196,6 +197,61 @@ pub fn guidance(standard: AqiStandard, category: &str) -> &'static str {
             }
             _ => "Monitor local guidance and limit exposure if you notice symptoms.",
         },
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Alert levels
+// ---------------------------------------------------------------------------
+
+/// The "US AQI alert level" setting values, lowest first. Each is a
+/// category of the US AQI, starting at Moderate.
+pub const US_ALERT_THRESHOLDS: [&str; 5] = [
+    "moderate",
+    "unhealthy_for_sensitive_groups",
+    "unhealthy",
+    "very_unhealthy",
+    "hazardous",
+];
+
+/// The "European AQI alert level" setting values, lowest first. Each is a
+/// category of the European AQI, starting at Fair.
+pub const EUROPEAN_ALERT_THRESHOLDS: [&str; 5] =
+    ["fair", "moderate", "poor", "very_poor", "extremely_poor"];
+
+/// The alert-level setting values for `standard`, lowest first.
+pub fn alert_thresholds(standard: AqiStandard) -> &'static [&'static str] {
+    match standard {
+        AqiStandard::Us => &US_ALERT_THRESHOLDS,
+        AqiStandard::European => &EUROPEAN_ALERT_THRESHOLDS,
+    }
+}
+
+/// The [`AqiStandard::rank`] an alert level stands for. The levels start
+/// at the second category, so an unknown key falls back to the default
+/// (Unhealthy for Sensitive Groups, or Poor).
+pub fn threshold_rank(standard: AqiStandard, key: &str) -> usize {
+    let key = key.trim();
+    match alert_thresholds(standard).iter().position(|k| *k == key) {
+        Some(i) => i + 1,
+        None => match standard {
+            AqiStandard::Us => 2,
+            AqiStandard::European => 3,
+        },
+    }
+}
+
+/// The category name an alert level stands for ("Unhealthy for Sensitive
+/// Groups", "Poor").
+pub fn threshold_label(standard: AqiStandard, key: &str) -> &'static str {
+    standard.categories()[threshold_rank(standard, key)]
+}
+
+/// The alert level setting in force for `standard`.
+pub fn alert_threshold_key(standard: AqiStandard, settings: &AppSettings) -> &str {
+    match standard {
+        AqiStandard::Us => &settings.air_quality_alert_threshold_us,
+        AqiStandard::European => &settings.air_quality_alert_threshold_european,
     }
 }
 
@@ -443,6 +499,36 @@ pub fn readings_source_line(readings: &[PollutantReading]) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn alert_thresholds_map_to_categories() {
+        let us = AqiStandard::Us;
+        let eu = AqiStandard::European;
+        assert_eq!(threshold_rank(us, "moderate"), 1);
+        assert_eq!(
+            threshold_label(us, "unhealthy_for_sensitive_groups"),
+            "Unhealthy for Sensitive Groups"
+        );
+        assert_eq!(threshold_label(us, "hazardous"), "Hazardous");
+        assert_eq!(threshold_rank(eu, "fair"), 1);
+        assert_eq!(threshold_label(eu, "poor"), "Poor");
+        assert_eq!(threshold_label(eu, "extremely_poor"), "Extremely poor");
+        // Unknown keys fall back to the defaults.
+        assert_eq!(
+            threshold_label(us, "bogus"),
+            "Unhealthy for Sensitive Groups"
+        );
+        assert_eq!(threshold_label(eu, "bogus"), "Poor");
+        // Every key lines up with the category it names.
+        for standard in [us, eu] {
+            for key in alert_thresholds(standard) {
+                let label = threshold_label(standard, key);
+                assert_eq!(label.to_lowercase().replace(' ', "_"), *key);
+            }
+        }
+        let settings = AppSettings::default();
+        assert_eq!(alert_threshold_key(eu, &settings), "poor");
+    }
 
     #[test]
     fn european_band_edges() {

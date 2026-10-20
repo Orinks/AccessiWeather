@@ -361,6 +361,18 @@ fn settings_and_locations_export_documents() {
     );
     assert_eq!(exported.remove("location_search_country"), Some(json!("")));
     assert_eq!(exported.remove("air_quality_index"), Some(json!("auto")));
+    assert_eq!(
+        exported.remove("air_quality_alerts_enabled"),
+        Some(json!(false))
+    );
+    assert_eq!(
+        exported.remove("air_quality_alert_threshold_us"),
+        Some(json!("unhealthy_for_sensitive_groups"))
+    );
+    assert_eq!(
+        exported.remove("air_quality_alert_threshold_european"),
+        Some(json!("poor"))
+    );
     // API keys, the Rust-only OpenAQ one included, never leave the keyring.
     assert!(!exported.contains_key("openaq_api_key"));
     let mut with_key = config.clone();

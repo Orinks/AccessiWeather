@@ -581,3 +581,84 @@ fn reconfigure_swaps_sources_but_keeps_alert_history() {
     let third = client.get_weather_data(&us(), true);
     assert!(third.alert_lifecycle_diff.unwrap().new_alerts.is_empty());
 }
+
+#[test]
+fn air_quality_poll_uses_fresh_cache_then_throttles_fetches() {
+    let dir = tempfile::tempdir().unwrap();
+    let cache = WeatherDataCache::new(dir.path(), 180).unwrap();
+    let t0 = Utc.with_ymd_and_hms(2026, 10, 20, 12, 0, 0).unwrap();
+    let now = Arc::new(Mutex::new(t0));
+    let clock_now = now.clone();
+    let location = us();
+    let cached_env = EnvironmentalConditions {
+        air_quality_index: Some(42.0),
+        air_quality_category: Some("Good".into()),
+        ..Default::default()
+    };
+    let stored = WeatherData {
+        environmental: Some(cached_env),
+        ..WeatherData::new(location.clone())
+    };
+    cache.store(&location, &stored, t0);
+    let fetched = json!({"air_quality_index": 160.0, "air_quality_category": "Unhealthy"});
+    let fakes = fakes_with(json!({"environmental": {"value": fetched}}));
+    let settings = AppSettings {
+        update_interval_minutes: 10,
+        ..AppSettings::default()
+    };
+    let client = WeatherClient::new(sources(&fakes, false, true), settings, "auto", Some(cache))
+        .with_clock(Arc::new(move || *clock_now.lock().unwrap()));
+    let env_calls = || {
+        fakes
+            .log
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|c| *c == "environmental")
+            .count()
+    };
+
+    // The refresh cached five minutes ago is fresh enough: no request.
+    *now.lock().unwrap() = t0 + Duration::minutes(5);
+    let env = client.get_air_quality_poll(&location).unwrap();
+    assert_eq!(env.air_quality_index, Some(42.0));
+    assert_eq!(env_calls(), 0);
+
+    // Once it is older than the update interval, fetch...
+    *now.lock().unwrap() = t0 + Duration::minutes(11);
+    let env = client.get_air_quality_poll(&location).unwrap();
+    assert_eq!(env.air_quality_category.as_deref(), Some("Unhealthy"));
+    assert_eq!(env_calls(), 1);
+    // ...and reuse that answer until the interval has passed again.
+    *now.lock().unwrap() = t0 + Duration::minutes(20);
+    assert!(client.get_air_quality_poll(&location).is_some());
+    assert_eq!(env_calls(), 1);
+
+    // A failed poll yields nothing and is throttled too.
+    *fakes.table.lock().unwrap() = json!({"environmental": {"error": "down"}});
+    *now.lock().unwrap() = t0 + Duration::minutes(22);
+    assert!(client.get_air_quality_poll(&location).is_none());
+    assert_eq!(env_calls(), 2);
+    *now.lock().unwrap() = t0 + Duration::minutes(25);
+    assert!(client.get_air_quality_poll(&location).is_none());
+    assert_eq!(env_calls(), 2);
+}
+
+#[test]
+fn air_quality_poll_needs_air_quality_on() {
+    let fakes = fakes_with(json!({"environmental": {"value": {"air_quality_index": 160.0}}}));
+    let settings = AppSettings {
+        air_quality_enabled: false,
+        ..AppSettings::default()
+    };
+    let client = WeatherClient::new(sources(&fakes, false, true), settings, "auto", None);
+    assert!(client.get_air_quality_poll(&us()).is_none());
+    let client = WeatherClient::new(
+        sources(&fakes, false, false),
+        AppSettings::default(),
+        "auto",
+        None,
+    );
+    assert!(client.get_air_quality_poll(&us()).is_none());
+    assert!(fakes.log.lock().unwrap().is_empty());
+}

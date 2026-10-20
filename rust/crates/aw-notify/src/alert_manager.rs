@@ -444,6 +444,22 @@ impl AlertManager {
         Ok(())
     }
 
+    /// Take one notification slot for something other than a weather alert
+    /// (air quality alerts): the token bucket and global cooldown apply, and
+    /// a granted slot counts toward the hour and restarts the cooldown.
+    pub fn reserve_notification(&mut self, now: DateTime<Utc>) -> Result<(), &'static str> {
+        self.ensure_state_loaded(now);
+        if !self.settings.notifications_enabled {
+            return Err("notifications_disabled");
+        }
+        self.can_notify_now(now)?;
+        self.last_global_notification = Some(now.fixed_offset());
+        self.reset_hourly_counter(now);
+        self.notifications_this_hour += 1;
+        self.save_state(now);
+        Ok(())
+    }
+
     /// `process_alerts`: the active alerts to notify about, with the reason
     /// (`new_alert`, `content_changed`, `escalation` or `fresh_alert`).
     pub fn process_alerts(
@@ -688,6 +704,47 @@ mod tests {
         );
         assert_eq!(sent.len(), 1);
         assert_eq!(sent[0].0.id.as_deref(), Some("NWS-2"));
+    }
+
+    #[test]
+    fn reservations_share_the_bucket_and_cooldown() {
+        let dir = tempfile::tempdir().unwrap();
+        let now = at("2026-09-25T12:00:00Z");
+        let settings = AlertSettings {
+            max_notifications_per_hour: 2,
+            global_cooldown: 5,
+            ..AlertSettings::default()
+        };
+        let mut m = AlertManager::new(RuntimeState::open(dir.path()), settings, now);
+        assert_eq!(m.reserve_notification(now), Ok(()));
+        assert_eq!(m.notifications_this_hour(), 1);
+        assert_eq!(m.last_global_notification(), Some(now.fixed_offset()));
+        // Inside the cooldown (this also spends the second token).
+        assert_eq!(
+            m.reserve_notification(now + Duration::minutes(1)),
+            Err("global_cooldown_active")
+        );
+        // Bucket empty, even after the cooldown.
+        assert_eq!(
+            m.reserve_notification(now + Duration::minutes(6)),
+            Err("rate_limit_exceeded")
+        );
+        // A weather alert in the same window is held back too.
+        let a = alert("NWS-1", "Severe", "Wind Advisory", now);
+        assert!(m
+            .process_alerts(
+                &WeatherAlerts { alerts: vec![a] },
+                now + Duration::minutes(6)
+            )
+            .is_empty());
+        // The reservation was persisted.
+        let restarted = manager(dir.path(), now);
+        let mut restarted = restarted;
+        restarted.ensure_state_loaded(now);
+        assert_eq!(
+            restarted.last_global_notification(),
+            Some(now.fixed_offset())
+        );
     }
 
     #[test]
