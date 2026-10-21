@@ -169,7 +169,7 @@ jobs:
           dist/AccessiWeather_dir/AccessiWeather.exe --check
           dist/AccessiWeather_dir/AccessiWeather.exe --smoke
 
-      - uses: actions/upload-artifact@v7.0.1
+      - uses: actions/upload-artifact@v7.0.2
         with:
           name: windows
           path: |
@@ -215,7 +215,7 @@ jobs:
           dist/AccessiWeather.app/Contents/MacOS/AccessiWeather --check
           dist/AccessiWeather.app/Contents/MacOS/AccessiWeather --smoke
 
-      - uses: actions/upload-artifact@v7.0.1
+      - uses: actions/upload-artifact@v7.0.2
         with:
           name: macos
           path: |
@@ -351,7 +351,7 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/upload-artifact@v7.0.1
+      - uses: actions/upload-artifact@v7.0.2
         with:
           name: linux
           path: |
