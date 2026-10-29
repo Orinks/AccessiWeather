@@ -44,6 +44,7 @@ final class SettingsStore: ObservableObject {
         showAirQuality = defaults.object(forKey: "showAirQuality") as? Bool ?? true
         roundValues = defaults.object(forKey: "roundValues") as? Bool ?? true
         alertNotificationsEnabled = defaults.bool(forKey: "alertNotificationsEnabled")
+        followCurrentLocation = defaults.bool(forKey: "followCurrentLocation")
         notifyExtreme = defaults.object(forKey: "notifyExtreme") as? Bool ?? true
         notifySevere = defaults.object(forKey: "notifySevere") as? Bool ?? true
         notifyModerate = defaults.object(forKey: "notifyModerate") as? Bool ?? true
@@ -82,6 +83,7 @@ final class SettingsStore: ObservableObject {
     @Published var showAirQuality: Bool { didSet { defaults.set(showAirQuality, forKey: "showAirQuality") } }
     @Published var roundValues: Bool { didSet { defaults.set(roundValues, forKey: "roundValues") } }
     @Published var alertNotificationsEnabled: Bool { didSet { defaults.set(alertNotificationsEnabled, forKey: "alertNotificationsEnabled") } }
+    @Published var followCurrentLocation: Bool { didSet { defaults.set(followCurrentLocation, forKey: "followCurrentLocation") } }
     @Published var notifyExtreme: Bool { didSet { defaults.set(notifyExtreme, forKey: "notifyExtreme") } }
     @Published var notifySevere: Bool { didSet { defaults.set(notifySevere, forKey: "notifySevere") } }
     @Published var notifyModerate: Bool { didSet { defaults.set(notifyModerate, forKey: "notifyModerate") } }

@@ -10,7 +10,7 @@ settings:
     SWIFT_VERSION: "5.9"
     SWIFT_STRICT_CONCURRENCY: minimal
     MARKETING_VERSION: "0.1.0"
-    CURRENT_PROJECT_VERSION: "3"
+    CURRENT_PROJECT_VERSION: "5"
     CODE_SIGN_STYLE: Automatic
     CODE_SIGN_IDENTITY: ""
     CODE_SIGNING_REQUIRED: "NO"
@@ -25,12 +25,19 @@ targets:
           - Resources/SoundPacks/**
       - path: AccessiWeather/Resources/SoundPacks
         type: folder
+    entitlements:
+      path: AccessiWeather/AccessiWeather.entitlements
+      properties:
+        aps-environment: development
+        com.apple.developer.usernotifications.time-sensitive: true
     info:
       path: AccessiWeather/Info.plist
       properties:
         UIBackgroundModes: [audio, fetch]
         BGTaskSchedulerPermittedIdentifiers: [net.orinks.AccessiWeather.refresh]
         ITSAppUsesNonExemptEncryption: false
+        # Push server base URL (push-server/); empty disables push registration.
+        AWPushServerURL: "https://accessiweather-push.orinks.workers.dev"
         # Volunteer NOAA relays often lack forward-secrecy ciphers; relax ATS for AVFoundation media only.
         NSAppTransportSecurity:
           NSAllowsArbitraryLoadsForMedia: true
@@ -39,7 +46,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: net.orinks.AccessiWeather
         GENERATE_INFOPLIST_FILE: "YES"
         INFOPLIST_KEY_CFBundleDisplayName: AccessiWeather
-        INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "AccessiWeather uses your location to find weather for where you are when you choose Use Current Location."
+        INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "AccessiWeather uses your location to show weather and alerts for where you are when you use your current location."
+        INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription: "AccessiWeather updates your current location while it's closed so weather alerts follow you when you travel. Only your latest approximate position is sent to the alert server, never a history."
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: "YES"
         INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
         INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
