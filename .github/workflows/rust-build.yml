@@ -246,13 +246,15 @@ jobs:
           save-if: ${{ env.SAVE_CACHE }}
           cache-on-failure: false
 
+      # wxdragon-sys links the system libjpeg and libtiff; since Ubuntu 26.04,
+      # libgtk-3-dev no longer pulls their -dev packages in.
       - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             cmake build-essential libclang-dev pkg-config \
             libglibmm-2.68-dev libgtk-3-dev libgl1-mesa-dev libglu1-mesa-dev \
-            libasound2-dev xvfb at-spi2-core
+            libjpeg-dev libtiff-dev libasound2-dev xvfb at-spi2-core
 
       - name: Build metadata
         run: cargo xtask build-meta "${{ needs.prepare.outputs.is_nightly == 'true' && needs.prepare.outputs.tag || '' }}" >> "$GITHUB_ENV"

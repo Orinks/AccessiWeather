@@ -7,13 +7,6 @@ All notable changes to this project will be documented in this file.
 ## [0.11.0] - 2026-10-28
 
 ### Added
-- A first native iPhone version of AccessiWeather, built for VoiceOver, with current conditions, forecasts, alerts, saved locations and settings.
-- The iPhone app now plays sound pack cues for refreshes and alerts, with a Sounds section in Settings to pick a pack and mute events.
-- The iPhone app can stream the nearest NOAA Weather Radio stations from the Weather tab, with Lock Screen controls.
-- The iPhone app now supports Pirate Weather, forecast explanations, forecaster notes, weather history, UV and air quality details, aviation reports, an Event Center, and warning radio auto-tune.
-- The iPhone app now checks for alerts in the background and notifies you, merges NWS, Open-Meteo and Pirate Weather in Automatic mode, and adds marine mode, national products, AirNow, aviation advisories and a Weather Assistant.
-- You can now turn on Follow my current location in the iPhone app's Locations tab, so weather and alerts follow you when you travel.
-- On iPhone, Extreme and Severe alert notifications are now Time Sensitive, so they come through Focus and Sleep unless you turn that off for AccessiWeather.
 - You can now get alert notifications for all saved locations, not just the selected one, and each names its location. Turn it on in Settings, Alerts tab.
 - You can now have the weather read aloud on a schedule, such as every half hour, from Tools > Scheduled Readings.
 - Add Location now has a Country to search in filter, starting on your computer's region, and results show each place's region and country.
@@ -30,8 +23,6 @@ All notable changes to this project will be documented in this file.
 - The OpenRouter model picker drops the retired Llama 3.3 70B option; choose the free router, the paid auto router, or browse models.
 
 ### Fixed
-- The iPhone app now asks to send notifications the first time you open it, and connects to push alerts as soon as you allow them.
-- The iPhone app no longer misses its first rain starting or stopping notification when the change was still more than 10 minutes away.
 - Searching a 5-digit postcode outside the US, such as 50000 for Kuala Lumpur, no longer gets turned into a US ZIP code.
 - Sounds now follow your default output device when you switch between headphones and speakers, instead of staying on the old one.
 - AccessiWeather no longer opens a terminal window alongside the app on Windows.
