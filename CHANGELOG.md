@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-10-28
+
 ### Added
 - A first native iPhone version of AccessiWeather, built for VoiceOver, with current conditions, forecasts, alerts, saved locations and settings.
 - The iPhone app now plays sound pack cues for refreshes and alerts, with a Sounds section in Settings to pick a pack and mute events.
