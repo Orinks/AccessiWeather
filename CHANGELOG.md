@@ -7,11 +7,6 @@ All notable changes to this project will be documented in this file.
 ## [0.11.0] - 2026-10-28
 
 ### Added
-- A first native iPhone version of AccessiWeather, built for VoiceOver, with current conditions, forecasts, alerts, saved locations and settings.
-- The iPhone app now plays sound pack cues for refreshes and alerts, with a Sounds section in Settings to pick a pack and mute events.
-- The iPhone app can stream the nearest NOAA Weather Radio stations from the Weather tab, with Lock Screen controls.
-- The iPhone app now supports Pirate Weather, forecast explanations, forecaster notes, weather history, UV and air quality details, aviation reports, an Event Center, and warning radio auto-tune.
-- The iPhone app now checks for alerts in the background and notifies you, merges NWS, Open-Meteo and Pirate Weather in Automatic mode, and adds marine mode, national products, AirNow, aviation advisories and a Weather Assistant.
 - You can now get alert notifications for all saved locations, not just the selected one, and each names its location. Turn it on in Settings, Alerts tab.
 - You can now have the weather read aloud on a schedule, such as every half hour, from Tools > Scheduled Readings.
 - Add Location now has a Country to search in filter, starting on your computer's region, and results show each place's region and country.
