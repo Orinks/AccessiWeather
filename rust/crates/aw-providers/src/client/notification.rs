@@ -5,7 +5,8 @@ use std::collections::HashSet;
 
 use aw_core::alert_aggregator::AlertAggregator;
 use aw_core::alert_lifecycle::diff_alerts;
-use aw_core::model::{Location, WeatherAlerts, WeatherData};
+use aw_core::model::{EnvironmentalConditions, Location, WeatherAlerts, WeatherData};
+use chrono::{Duration, Utc};
 
 use super::sources::SourceResult;
 use super::{joined, location_key, WeatherClient};
@@ -40,6 +41,51 @@ impl WeatherClient {
             }
         }
         weather
+    }
+
+    /// Air quality for an air quality alert check on a saved location
+    /// other than the selected one: the cached refresh's reading while it
+    /// is younger than the update interval, otherwise an air-quality-only
+    /// fetch (no pollen, no hourly), at most once per update interval per
+    /// location. `None` when air quality is off or nothing came back.
+    pub fn get_air_quality_poll(&self, location: &Location) -> Option<EnvironmentalConditions> {
+        let cfg = self.cfg();
+        if !cfg.settings.air_quality_enabled {
+            return None;
+        }
+        let source = cfg.sources.environmental.clone()?;
+        let now = self.now();
+        let interval = Duration::minutes(cfg.settings.update_interval_minutes.max(1));
+        let has_index = |env: &EnvironmentalConditions| {
+            env.air_quality_index.is_some() || env.air_quality_category.is_some()
+        };
+
+        if let Some(cached) = self.get_cached_weather(location) {
+            let fresh = cached
+                .stale_since
+                .is_some_and(|saved| now - saved.with_timezone(&Utc) < interval);
+            if let Some(env) = cached.environmental.filter(|e| fresh && has_index(e)) {
+                return Some(env);
+            }
+        }
+        let key = location_key(location);
+        if let Some((at, env)) = self.state().last_air_quality_poll.get(&key) {
+            if now - *at < interval {
+                return env.clone();
+            }
+        }
+        let is_us = self.is_us(location);
+        let env = match source.fetch(location, true, false, false, is_us) {
+            Ok(env) => env.filter(has_index),
+            Err(e) => {
+                tracing::debug!("Air quality poll failed for {}: {e}", location.name);
+                None
+            }
+        };
+        self.state()
+            .last_air_quality_poll
+            .insert(key, (now, env.clone()));
+        env
     }
 
     fn notification_poll(

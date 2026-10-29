@@ -17,6 +17,7 @@ use crate::weatherindex::WeatherIndexClient;
 
 pub const AVAILABILITY_FILE_NAME: &str = "noaa_radio_availability.json";
 pub const TEMPORARILY_UNAVAILABLE: &str = "temporarily unavailable";
+pub const OUT_OF_SERVICE: &str = "out of service";
 
 pub type Clock = Box<dyn Fn() -> f64 + Send + Sync>;
 
@@ -224,8 +225,8 @@ impl StationAvailabilityService {
         }
     }
 
-    /// Stations without WeatherIndex feeds are dropped; suppressed stations
-    /// are dropped unless `show_unavailable`.
+    /// Stations without WeatherIndex feeds are dropped; out-of-service and
+    /// suppressed stations are dropped unless `show_unavailable`.
     pub fn build_entries(
         &self,
         stations: &[Station],
@@ -241,6 +242,18 @@ impl StationAvailabilityService {
                 continue;
             }
             let label = base_label(station);
+            if station.is_out_of_service() {
+                if !show_unavailable {
+                    continue;
+                }
+                entries.push(StationAvailabilityEntry {
+                    station: station.clone(),
+                    available: false,
+                    label: format!("{label} - Out of service"),
+                    unavailable_reason: Some(OUT_OF_SERVICE.into()),
+                });
+                continue;
+            }
             if self.cache.lock().unwrap().is_suppressed(&station.call_sign) {
                 if !show_unavailable {
                     continue;
@@ -256,7 +269,11 @@ impl StationAvailabilityService {
             entries.push(StationAvailabilityEntry {
                 station: station.clone(),
                 available: true,
-                label: format!("{label} - Available"),
+                label: if station.is_degraded() {
+                    format!("{label} - Available, transmitter degraded")
+                } else {
+                    format!("{label} - Available")
+                },
                 unavailable_reason: None,
             });
         }
@@ -311,6 +328,59 @@ mod tests {
         std::fs::write(&path, "{nope").unwrap();
         let mut cache = StationAvailabilityCache::new(path);
         assert!(cache.get_suppressed_call_signs().is_empty());
+    }
+
+    #[test]
+    fn out_of_service_stations_show_only_with_unavailable() {
+        let dir = tempfile::tempdir().unwrap();
+        let http = Arc::new(FixtureClient::new().with(
+            "https://api.wxindex.org/v1/stations/WXK27",
+            json!({"feeds": [{"stream_url": "https://a"}]}),
+        ));
+        let service = StationAvailabilityService::new(
+            Arc::new(WeatherIndexClient::new(http)),
+            Arc::new(Mutex::new(StationAvailabilityCache::new(
+                dir.path().join(AVAILABILITY_FILE_NAME),
+            ))),
+        );
+        let mut station = Station::new("WXK27", 162.4, "Austin", 30.32, -97.8, "TX");
+        station.status = "OUT OF SERVICE".into();
+        assert!(service.build_entries(&[station.clone()], false).is_empty());
+        let entries = service.build_entries(&[station], true);
+        assert_eq!(entries.len(), 1);
+        assert!(!entries[0].available);
+        assert_eq!(
+            entries[0].label,
+            "WXK27 - Austin, TX - 162.400 MHz - Out of service"
+        );
+        assert_eq!(
+            entries[0].unavailable_reason.as_deref(),
+            Some(OUT_OF_SERVICE)
+        );
+    }
+
+    #[test]
+    fn degraded_stations_stay_playable_and_say_so() {
+        let dir = tempfile::tempdir().unwrap();
+        let http = Arc::new(FixtureClient::new().with(
+            "https://api.wxindex.org/v1/stations/WXK27",
+            json!({"feeds": [{"stream_url": "https://a"}]}),
+        ));
+        let service = StationAvailabilityService::new(
+            Arc::new(WeatherIndexClient::new(http)),
+            Arc::new(Mutex::new(StationAvailabilityCache::new(
+                dir.path().join(AVAILABILITY_FILE_NAME),
+            ))),
+        );
+        let mut station = Station::new("WXK27", 162.4, "Austin", 30.32, -97.8, "TX");
+        station.status = "degraded".into();
+        let entries = service.build_entries(&[station], false);
+        assert_eq!(entries.len(), 1);
+        assert!(entries[0].available);
+        assert_eq!(
+            entries[0].label,
+            "WXK27 - Austin, TX - 162.400 MHz - Available, transmitter degraded"
+        );
     }
 
     #[test]

@@ -23,12 +23,13 @@ pub const PORTABLE_PASSPHRASE_KEY: &str = "portable_bundle_passphrase";
 pub const BUNDLE_FILE_NAMES: [&str; 2] = ["api-keys.keys", "api-keys.awkeys"];
 
 /// API keys that travel in the portable bundle.
-pub const API_KEY_NAMES: [&str; 5] = [
+pub const API_KEY_NAMES: [&str; 6] = [
     "pirate_weather_api_key",
     "airnow_api_key",
     "openrouter_api_key",
     "venice_api_key",
     "avwx_api_key",
+    "openaq_api_key",
 ];
 
 const BUNDLE_VERSION: i64 = 1;
@@ -77,6 +78,7 @@ pub fn api_key_mut<'a>(settings: &'a mut AppSettings, name: &str) -> Option<&'a 
         "openrouter_api_key" => &mut settings.openrouter_api_key,
         "venice_api_key" => &mut settings.venice_api_key,
         "avwx_api_key" => &mut settings.avwx_api_key,
+        "openaq_api_key" => &mut settings.openaq_api_key,
         _ => return None,
     })
 }
@@ -424,6 +426,16 @@ mod tests {
             decrypt_bundle(&envelope, "nope"),
             Err(SecretsError::InvalidToken)
         ));
+    }
+
+    #[test]
+    fn every_api_key_name_maps_to_a_settings_field() {
+        let mut settings = AppSettings::default();
+        for name in API_KEY_NAMES {
+            *api_key_mut(&mut settings, name).expect(name) = format!("{name}-value");
+        }
+        assert_eq!(settings.openaq_api_key, "openaq_api_key-value");
+        assert!(api_key_mut(&mut settings, "unknown").is_none());
     }
 
     /// Envelope produced by the Python app's `encrypt_secret_bundle`

@@ -4,6 +4,7 @@ mod common;
 
 use std::sync::Arc;
 
+use aw_core::air_quality::AqiPreference;
 use aw_core::model::Location;
 use aw_providers::environmental::airnow::{parse_observations, AirNowClient, AirNowObservation};
 use aw_providers::environmental::{EnvironmentalDataClient, FetchOptions};
@@ -20,6 +21,10 @@ fn options(value: &Value) -> FetchOptions {
     options.include_hourly_air_quality = flag("include_hourly_air_quality", true);
     options.include_hourly_uv = flag("include_hourly_uv", true);
     options.prefer_airnow = flag("prefer_airnow", false);
+    // Python only knew the US AQI.
+    options.aqi_preference = AqiPreference::Us;
+    // Nor per-pollutant detail, which adds request variables.
+    options.pollutant_detail = false;
     if let Some(hours) = value.get("hourly_hours").and_then(Value::as_u64) {
         options.hourly_hours = hours as usize;
     }
@@ -42,7 +47,17 @@ fn fetch_matches_python() {
             timestamp(&case["now"]),
         );
         assert_requests(&case["exchanges"], &http, &name);
-        assert_matches(&case["output"], &to_value(result).unwrap(), &name, &[]);
+        assert_matches(
+            &case["output"],
+            &to_value(result).unwrap(),
+            &name,
+            &[
+                "air_quality_index_standard",
+                "aqi_standard",
+                "air_quality_provenance",
+                "pollutant_readings",
+            ],
+        );
     }
 }
 

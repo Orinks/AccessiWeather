@@ -101,6 +101,19 @@ pub enum Step {
     },
     /// Run the main window's Add Location flow; answer Done.
     AddLocation,
+    /// A single-choice list; answer `Choice(Some(index))`, or
+    /// `Choice(None)` / Cancel when dismissed.
+    Choose {
+        title: &'static str,
+        message: String,
+        choices: Vec<&'static str>,
+        selection: usize,
+    },
+    /// Save the unit settings; answer Done.
+    SaveUnits {
+        temperature_unit: &'static str,
+        wind_speed_unit: &'static str,
+    },
     /// Import a settings export, then refresh settings, the location list
     /// and (with locations) the weather; answer `Success`.
     ImportSettings(PathBuf),
@@ -135,6 +148,7 @@ pub enum Response {
     Text(String),
     File(Option<PathBuf>),
     Success(bool),
+    Choice(Option<usize>),
     Done,
 }
 
@@ -147,7 +161,23 @@ pub struct Facts {
     pub has_openrouter_key: bool,
     pub has_pirate_weather_key: bool,
     pub portable_keys_imported_this_session: bool,
+    /// The current `temperature_unit` and `wind_speed_unit`, to preselect
+    /// the units step.
+    pub temperature_unit: String,
+    pub wind_speed_unit: String,
 }
+
+/// The units step's choices: (label, temperature_unit, wind_speed_unit).
+pub const UNIT_CHOICES: [(&str, &str, &str); 4] = [
+    (
+        "Match each location: \u{b0}F in the US, \u{b0}C everywhere else (recommended)",
+        "auto",
+        "auto",
+    ),
+    ("Metric: \u{b0}C and km/h everywhere", "c", "km/h"),
+    ("Imperial: \u{b0}F and mph everywhere", "f", "mph"),
+    ("Both: \u{b0}F and \u{b0}C side by side", "both", "auto"),
+];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Key {
@@ -203,6 +233,8 @@ impl Key {
 enum State {
     Welcome,
     AddingLocation,
+    ChoosingUnits,
+    SavingUnits,
     AskImportSettings,
     ChoosingSettingsFile,
     ImportingSettings,
@@ -265,9 +297,9 @@ impl Onboarding {
 
     fn total_steps(&self) -> u32 {
         if self.portable {
-            4
+            5
         } else {
-            3
+            4
         }
     }
 
@@ -293,7 +325,18 @@ impl Onboarding {
         match (state, response) {
             (State::Welcome, R::Yes) => self.go(State::AddingLocation, Step::AddLocation),
             (State::Welcome, R::No) => self.ask_import_settings(),
-            (State::AddingLocation, _) => self.keyring_check(facts),
+            (State::AddingLocation, _) => self.units_step(facts),
+            (State::ChoosingUnits, R::Choice(Some(index))) if index < UNIT_CHOICES.len() => {
+                let (_, temperature_unit, wind_speed_unit) = UNIT_CHOICES[index];
+                self.go(
+                    State::SavingUnits,
+                    Step::SaveUnits {
+                        temperature_unit,
+                        wind_speed_unit,
+                    },
+                )
+            }
+            (State::SavingUnits, _) => self.keyring_check(facts),
 
             (State::AskImportSettings, R::Yes) => self.go(
                 State::ChoosingSettingsFile,
@@ -517,8 +560,33 @@ impl Onboarding {
         if self.imported_any && facts.has_locations {
             self.summary(facts)
         } else {
-            self.keyring_check(facts)
+            self.units_step(facts)
         }
+    }
+
+    /// Step 2: which units to show. Escape closes the wizard like the
+    /// other steps.
+    fn units_step(&mut self, facts: &Facts) -> Step {
+        let selection = UNIT_CHOICES
+            .iter()
+            .position(|(_, temp, wind)| {
+                facts.temperature_unit.eq_ignore_ascii_case(temp)
+                    && facts.wind_speed_unit.eq_ignore_ascii_case(wind)
+            })
+            .unwrap_or(0);
+        self.go(
+            State::ChoosingUnits,
+            Step::Choose {
+                title: "Choose units",
+                message: format!(
+                    "Step 2 of {}: Which units should AccessiWeather use?\n\n\
+                     You can change this later in Settings > Display.",
+                    self.total_steps()
+                ),
+                choices: UNIT_CHOICES.iter().map(|(label, _, _)| *label).collect(),
+                selection,
+            },
+        )
     }
 
     fn keyring_check(&mut self, facts: &Facts) -> Step {
@@ -543,8 +611,8 @@ impl Onboarding {
 
     fn key_message(&self, key: Key) -> String {
         let (step, what) = match key {
-            Key::OpenRouter => (2, "OpenRouter API key"),
-            Key::PirateWeather => (3, "Pirate Weather provider key"),
+            Key::OpenRouter => (3, "OpenRouter API key"),
+            Key::PirateWeather => (4, "Pirate Weather provider key"),
         };
         format!(
             "Step {step} of {}: Enter your {what} now, or leave blank to skip.",
@@ -660,6 +728,65 @@ mod tests {
         assert!(!should_show_portable_missing_keys_hint(
             true, false, true, false, false
         ));
+    }
+
+    fn add_location_then(w: &mut Onboarding, facts: &Facts) -> Step {
+        w.start(facts);
+        assert_eq!(w.advance(Response::Yes, facts), Step::AddLocation);
+        w.advance(Response::Done, facts)
+    }
+
+    #[test]
+    fn units_step_follows_add_location_and_saves_the_choice() {
+        let facts = Facts {
+            keyring_available: true,
+            temperature_unit: "auto".into(),
+            wind_speed_unit: "auto".into(),
+            ..Facts::default()
+        };
+        let mut w = Onboarding::new(false);
+        let Step::Choose {
+            message,
+            choices,
+            selection,
+            ..
+        } = add_location_then(&mut w, &facts)
+        else {
+            panic!("expected the units step");
+        };
+        assert!(message.starts_with("Step 2 of 4:"), "{message}");
+        assert_eq!(choices.len(), UNIT_CHOICES.len());
+        assert_eq!(selection, 0);
+        assert_eq!(
+            w.advance(Response::Choice(Some(1)), &facts),
+            Step::SaveUnits {
+                temperature_unit: "c",
+                wind_speed_unit: "km/h"
+            }
+        );
+        let Step::Dialog(next) = w.advance(Response::Done, &facts) else {
+            panic!("expected the OpenRouter step");
+        };
+        assert!(next.message.starts_with("Step 3 of 4:"), "{}", next.message);
+    }
+
+    #[test]
+    fn units_step_preselects_current_units_and_escape_closes() {
+        let facts = Facts {
+            temperature_unit: "f".into(),
+            wind_speed_unit: "mph".into(),
+            ..Facts::default()
+        };
+        let mut w = Onboarding::new(true);
+        let Step::Choose {
+            message, selection, ..
+        } = add_location_then(&mut w, &facts)
+        else {
+            panic!("expected the units step");
+        };
+        assert!(message.starts_with("Step 2 of 5:"), "{message}");
+        assert_eq!(selection, 2);
+        assert_eq!(w.advance(Response::Choice(None), &facts), Step::Finished);
     }
 
     #[test]

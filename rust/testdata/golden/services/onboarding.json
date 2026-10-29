@@ -10,7 +10,7 @@
         [
           "dialog",
           "Getting started",
-          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
           [
             "Add location",
             "Import existing",
@@ -34,6 +34,9 @@
       "portable": false,
       "script": [
         "yes",
+        {
+          "choice": 0
+        },
         "no",
         "no"
       ],
@@ -41,7 +44,7 @@
         [
           "dialog",
           "Getting started",
-          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
           [
             "Add location",
             "Import existing",
@@ -53,9 +56,28 @@
           "add_location"
         ],
         [
+          "choose",
+          "Choose units",
+          "Step 2 of 4: Which units should AccessiWeather use?\n\nYou can change this later in Settings > Display.",
+          [
+            "Match each location: °F in the US, °C everywhere else (recommended)",
+            "Metric: °C and km/h everywhere",
+            "Imperial: °F and mph everywhere",
+            "Both: °F and °C side by side"
+          ],
+          0
+        ],
+        [
+          "update_settings",
+          {
+            "temperature_unit": "auto",
+            "wind_speed_unit": "auto"
+          }
+        ],
+        [
           "dialog",
           "OpenRouter API key (optional)",
-          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          "Step 3 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
           [
             "Set up now",
             "Skip this key",
@@ -66,7 +88,7 @@
         [
           "dialog",
           "Pirate Weather provider key (optional)",
-          "Step 3 of 3: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          "Step 4 of 4: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
           [
             "Set up now",
             "Skip this key",
@@ -98,6 +120,9 @@
       "keyring_available": false,
       "script": [
         "yes",
+        {
+          "choice": 0
+        },
         "yes",
         "no",
         "yes",
@@ -115,7 +140,7 @@
         [
           "dialog",
           "Getting started",
-          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
           [
             "Add location",
             "Import existing",
@@ -127,6 +152,25 @@
           "add_location"
         ],
         [
+          "choose",
+          "Choose units",
+          "Step 2 of 4: Which units should AccessiWeather use?\n\nYou can change this later in Settings > Display.",
+          [
+            "Match each location: °F in the US, °C everywhere else (recommended)",
+            "Metric: °C and km/h everywhere",
+            "Imperial: °F and mph everywhere",
+            "Both: °F and °C side by side"
+          ],
+          0
+        ],
+        [
+          "update_settings",
+          {
+            "temperature_unit": "auto",
+            "wind_speed_unit": "auto"
+          }
+        ],
+        [
           "dialog",
           "Secure storage unavailable",
           "Your system keyring is not available.\n\nAPI keys you enter cannot be stored securely on this machine. On Linux, installing a keyring backend (e.g. gnome-keyring or KWallet) is recommended.\n\nYou can still enter keys now; if portable mode is enabled with an encrypted bundle they will be saved there — otherwise they will be lost on exit.",
@@ -136,7 +180,7 @@
         [
           "dialog",
           "OpenRouter API key (optional)",
-          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          "Step 3 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
           [
             "Set up now",
             "Skip this key",
@@ -147,7 +191,7 @@
         [
           "dialog",
           "OpenRouter API key (optional)",
-          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get OpenRouter API key, or Configure myself to close the wizard.",
+          "Step 3 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get OpenRouter API key, or Configure myself to close the wizard.",
           [
             "Enter key",
             "Get OpenRouter API key",
@@ -162,7 +206,7 @@
         [
           "dialog",
           "OpenRouter API key (optional)",
-          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get OpenRouter API key, or Configure myself to close the wizard.",
+          "Step 3 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get OpenRouter API key, or Configure myself to close the wizard.",
           [
             "Enter key",
             "Get OpenRouter API key",
@@ -173,7 +217,7 @@
         [
           "text",
           "OpenRouter API key (optional)",
-          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip."
+          "Step 3 of 4: Enter your OpenRouter API key now, or leave blank to skip."
         ],
         [
           "update_settings",
@@ -198,7 +242,7 @@
         [
           "dialog",
           "Pirate Weather provider key (optional)",
-          "Step 3 of 3: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          "Step 4 of 4: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
           [
             "Set up now",
             "Skip this key",
@@ -209,7 +253,7 @@
         [
           "dialog",
           "Pirate Weather provider key (optional)",
-          "Step 3 of 3: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get Pirate Weather provider key, or Configure myself to close the wizard.",
+          "Step 4 of 4: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get Pirate Weather provider key, or Configure myself to close the wizard.",
           [
             "Enter key",
             "Get Pirate Weather provider key",
@@ -220,7 +264,7 @@
         [
           "text",
           "Pirate Weather provider key (optional)",
-          "Step 3 of 3: Enter your Pirate Weather provider key now, or leave blank to skip."
+          "Step 4 of 4: Enter your Pirate Weather provider key now, or leave blank to skip."
         ],
         [
           "dialog",
@@ -259,7 +303,7 @@
         [
           "dialog",
           "Getting started",
-          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
           [
             "Add location",
             "Import existing",
@@ -336,6 +380,9 @@
           "file": "C:/backup.json"
         },
         "no",
+        {
+          "choice": 0
+        },
         "no",
         "no"
       ],
@@ -343,7 +390,7 @@
         [
           "dialog",
           "Getting started",
-          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
           [
             "Add location",
             "Import existing",
@@ -390,9 +437,28 @@
           "information"
         ],
         [
+          "choose",
+          "Choose units",
+          "Step 2 of 4: Which units should AccessiWeather use?\n\nYou can change this later in Settings > Display.",
+          [
+            "Match each location: °F in the US, °C everywhere else (recommended)",
+            "Metric: °C and km/h everywhere",
+            "Imperial: °F and mph everywhere",
+            "Both: °F and °C side by side"
+          ],
+          0
+        ],
+        [
+          "update_settings",
+          {
+            "temperature_unit": "auto",
+            "wind_speed_unit": "auto"
+          }
+        ],
+        [
           "dialog",
           "OpenRouter API key (optional)",
-          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          "Step 3 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
           [
             "Set up now",
             "Skip this key",
@@ -403,7 +469,7 @@
         [
           "dialog",
           "Pirate Weather provider key (optional)",
-          "Step 3 of 3: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          "Step 4 of 4: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
           [
             "Set up now",
             "Skip this key",
@@ -445,13 +511,16 @@
         {
           "text": "pw"
         },
+        {
+          "choice": 0
+        },
         "cancel"
       ],
       "events": [
         [
           "dialog",
           "Getting started",
-          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
           [
             "Add location",
             "Import existing",
@@ -504,9 +573,28 @@
           "error"
         ],
         [
+          "choose",
+          "Choose units",
+          "Step 2 of 4: Which units should AccessiWeather use?\n\nYou can change this later in Settings > Display.",
+          [
+            "Match each location: °F in the US, °C everywhere else (recommended)",
+            "Metric: °C and km/h everywhere",
+            "Imperial: °F and mph everywhere",
+            "Both: °F and °C side by side"
+          ],
+          0
+        ],
+        [
+          "update_settings",
+          {
+            "temperature_unit": "auto",
+            "wind_speed_unit": "auto"
+          }
+        ],
+        [
           "dialog",
           "OpenRouter API key (optional)",
-          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          "Step 3 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
           [
             "Set up now",
             "Skip this key",
@@ -543,7 +631,7 @@
         [
           "dialog",
           "Getting started",
-          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
           [
             "Add location",
             "Import existing",
@@ -613,6 +701,9 @@
         {
           "text": "  "
         },
+        {
+          "choice": 0
+        },
         "no",
         "no"
       ],
@@ -620,7 +711,7 @@
         [
           "dialog",
           "Getting started",
-          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
           [
             "Add location",
             "Import existing",
@@ -661,9 +752,28 @@
           "Enter the passphrase used when exporting this encrypted API key bundle."
         ],
         [
+          "choose",
+          "Choose units",
+          "Step 2 of 4: Which units should AccessiWeather use?\n\nYou can change this later in Settings > Display.",
+          [
+            "Match each location: °F in the US, °C everywhere else (recommended)",
+            "Metric: °C and km/h everywhere",
+            "Imperial: °F and mph everywhere",
+            "Both: °F and °C side by side"
+          ],
+          0
+        ],
+        [
+          "update_settings",
+          {
+            "temperature_unit": "auto",
+            "wind_speed_unit": "auto"
+          }
+        ],
+        [
           "dialog",
           "OpenRouter API key (optional)",
-          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          "Step 3 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
           [
             "Set up now",
             "Skip this key",
@@ -674,7 +784,7 @@
         [
           "dialog",
           "Pirate Weather provider key (optional)",
-          "Step 3 of 3: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          "Step 4 of 4: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
           [
             "Set up now",
             "Skip this key",
@@ -708,6 +818,9 @@
       },
       "script": [
         "yes",
+        {
+          "choice": 0
+        },
         "yes",
         "yes",
         {
@@ -726,7 +839,7 @@
         [
           "dialog",
           "Getting started",
-          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          "Welcome to AccessiWeather.\n\nStep 1 of 5: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
           [
             "Add location",
             "Import existing",
@@ -738,9 +851,28 @@
           "add_location"
         ],
         [
+          "choose",
+          "Choose units",
+          "Step 2 of 5: Which units should AccessiWeather use?\n\nYou can change this later in Settings > Display.",
+          [
+            "Match each location: °F in the US, °C everywhere else (recommended)",
+            "Metric: °C and km/h everywhere",
+            "Imperial: °F and mph everywhere",
+            "Both: °F and °C side by side"
+          ],
+          0
+        ],
+        [
+          "update_settings",
+          {
+            "temperature_unit": "auto",
+            "wind_speed_unit": "auto"
+          }
+        ],
+        [
           "dialog",
           "OpenRouter API key (optional)",
-          "Step 2 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          "Step 3 of 5: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
           [
             "Set up now",
             "Skip this key",
@@ -751,7 +883,7 @@
         [
           "dialog",
           "OpenRouter API key (optional)",
-          "Step 2 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get OpenRouter API key, or Configure myself to close the wizard.",
+          "Step 3 of 5: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get OpenRouter API key, or Configure myself to close the wizard.",
           [
             "Enter key",
             "Get OpenRouter API key",
@@ -762,12 +894,12 @@
         [
           "text",
           "OpenRouter API key (optional)",
-          "Step 2 of 4: Enter your OpenRouter API key now, or leave blank to skip."
+          "Step 3 of 5: Enter your OpenRouter API key now, or leave blank to skip."
         ],
         [
           "dialog",
           "Pirate Weather provider key (optional)",
-          "Step 3 of 4: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          "Step 4 of 5: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
           [
             "Set up now",
             "Skip this key",
@@ -778,7 +910,7 @@
         [
           "dialog",
           "Pirate Weather provider key (optional)",
-          "Step 3 of 4: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get Pirate Weather provider key, or Configure myself to close the wizard.",
+          "Step 4 of 5: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get Pirate Weather provider key, or Configure myself to close the wizard.",
           [
             "Enter key",
             "Get Pirate Weather provider key",
@@ -789,11 +921,11 @@
         [
           "text",
           "Pirate Weather provider key (optional)",
-          "Step 3 of 4: Enter your Pirate Weather provider key now, or leave blank to skip."
+          "Step 4 of 5: Enter your Pirate Weather provider key now, or leave blank to skip."
         ],
         [
           "text",
-          "Step 4 of 4: Secure your API keys",
+          "Step 5 of 5: Secure your API keys",
           "Enter a passphrase to encrypt your API keys into a portable bundle.\nThis bundle travels with the app so your keys work on any machine.\n\nLeave blank to skip (keys will not be saved)."
         ],
         [
@@ -839,6 +971,9 @@
       },
       "script": [
         "yes",
+        {
+          "choice": 0
+        },
         "yes",
         "yes",
         {
@@ -853,7 +988,7 @@
         [
           "dialog",
           "Getting started",
-          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          "Welcome to AccessiWeather.\n\nStep 1 of 5: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
           [
             "Add location",
             "Import existing",
@@ -865,9 +1000,28 @@
           "add_location"
         ],
         [
+          "choose",
+          "Choose units",
+          "Step 2 of 5: Which units should AccessiWeather use?\n\nYou can change this later in Settings > Display.",
+          [
+            "Match each location: °F in the US, °C everywhere else (recommended)",
+            "Metric: °C and km/h everywhere",
+            "Imperial: °F and mph everywhere",
+            "Both: °F and °C side by side"
+          ],
+          0
+        ],
+        [
+          "update_settings",
+          {
+            "temperature_unit": "auto",
+            "wind_speed_unit": "auto"
+          }
+        ],
+        [
           "dialog",
           "OpenRouter API key (optional)",
-          "Step 2 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          "Step 3 of 5: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
           [
             "Set up now",
             "Skip this key",
@@ -878,7 +1032,7 @@
         [
           "dialog",
           "OpenRouter API key (optional)",
-          "Step 2 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get OpenRouter API key, or Configure myself to close the wizard.",
+          "Step 3 of 5: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get OpenRouter API key, or Configure myself to close the wizard.",
           [
             "Enter key",
             "Get OpenRouter API key",
@@ -889,12 +1043,12 @@
         [
           "text",
           "OpenRouter API key (optional)",
-          "Step 2 of 4: Enter your OpenRouter API key now, or leave blank to skip."
+          "Step 3 of 5: Enter your OpenRouter API key now, or leave blank to skip."
         ],
         [
           "dialog",
           "Pirate Weather provider key (optional)",
-          "Step 3 of 4: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          "Step 4 of 5: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
           [
             "Set up now",
             "Skip this key",
@@ -904,7 +1058,7 @@
         ],
         [
           "text",
-          "Step 4 of 4: Secure your API keys",
+          "Step 5 of 5: Secure your API keys",
           "Enter a passphrase to encrypt your API keys into a portable bundle.\nThis bundle travels with the app so your keys work on any machine.\n\nLeave blank to skip (keys will not be saved)."
         ],
         [
@@ -942,6 +1096,9 @@
       "portable": true,
       "script": [
         "yes",
+        {
+          "choice": 0
+        },
         "no",
         "yes",
         "yes",
@@ -956,7 +1113,7 @@
         [
           "dialog",
           "Getting started",
-          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          "Welcome to AccessiWeather.\n\nStep 1 of 5: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
           [
             "Add location",
             "Import existing",
@@ -968,9 +1125,28 @@
           "add_location"
         ],
         [
+          "choose",
+          "Choose units",
+          "Step 2 of 5: Which units should AccessiWeather use?\n\nYou can change this later in Settings > Display.",
+          [
+            "Match each location: °F in the US, °C everywhere else (recommended)",
+            "Metric: °C and km/h everywhere",
+            "Imperial: °F and mph everywhere",
+            "Both: °F and °C side by side"
+          ],
+          0
+        ],
+        [
+          "update_settings",
+          {
+            "temperature_unit": "auto",
+            "wind_speed_unit": "auto"
+          }
+        ],
+        [
           "dialog",
           "OpenRouter API key (optional)",
-          "Step 2 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          "Step 3 of 5: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
           [
             "Set up now",
             "Skip this key",
@@ -981,7 +1157,7 @@
         [
           "dialog",
           "Pirate Weather provider key (optional)",
-          "Step 3 of 4: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          "Step 4 of 5: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
           [
             "Set up now",
             "Skip this key",
@@ -992,7 +1168,7 @@
         [
           "dialog",
           "Pirate Weather provider key (optional)",
-          "Step 3 of 4: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get Pirate Weather provider key, or Configure myself to close the wizard.",
+          "Step 4 of 5: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get Pirate Weather provider key, or Configure myself to close the wizard.",
           [
             "Enter key",
             "Get Pirate Weather provider key",
@@ -1003,11 +1179,11 @@
         [
           "text",
           "Pirate Weather provider key (optional)",
-          "Step 3 of 4: Enter your Pirate Weather provider key now, or leave blank to skip."
+          "Step 4 of 5: Enter your Pirate Weather provider key now, or leave blank to skip."
         ],
         [
           "text",
-          "Step 4 of 4: Secure your API keys",
+          "Step 5 of 5: Secure your API keys",
           "Enter a passphrase to encrypt your API keys into a portable bundle.\nThis bundle travels with the app so your keys work on any machine.\n\nLeave blank to skip (keys will not be saved)."
         ],
         [
@@ -1040,6 +1216,9 @@
       "portable": true,
       "script": [
         "yes",
+        {
+          "choice": 0
+        },
         "no",
         "yes",
         "yes",
@@ -1052,7 +1231,7 @@
         [
           "dialog",
           "Getting started",
-          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          "Welcome to AccessiWeather.\n\nStep 1 of 5: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
           [
             "Add location",
             "Import existing",
@@ -1064,9 +1243,28 @@
           "add_location"
         ],
         [
+          "choose",
+          "Choose units",
+          "Step 2 of 5: Which units should AccessiWeather use?\n\nYou can change this later in Settings > Display.",
+          [
+            "Match each location: °F in the US, °C everywhere else (recommended)",
+            "Metric: °C and km/h everywhere",
+            "Imperial: °F and mph everywhere",
+            "Both: °F and °C side by side"
+          ],
+          0
+        ],
+        [
+          "update_settings",
+          {
+            "temperature_unit": "auto",
+            "wind_speed_unit": "auto"
+          }
+        ],
+        [
           "dialog",
           "OpenRouter API key (optional)",
-          "Step 2 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          "Step 3 of 5: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
           [
             "Set up now",
             "Skip this key",
@@ -1077,7 +1275,7 @@
         [
           "dialog",
           "Pirate Weather provider key (optional)",
-          "Step 3 of 4: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          "Step 4 of 5: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
           [
             "Set up now",
             "Skip this key",
@@ -1088,7 +1286,7 @@
         [
           "dialog",
           "Pirate Weather provider key (optional)",
-          "Step 3 of 4: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get Pirate Weather provider key, or Configure myself to close the wizard.",
+          "Step 4 of 5: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get Pirate Weather provider key, or Configure myself to close the wizard.",
           [
             "Enter key",
             "Get Pirate Weather provider key",
@@ -1099,11 +1297,11 @@
         [
           "text",
           "Pirate Weather provider key (optional)",
-          "Step 3 of 4: Enter your Pirate Weather provider key now, or leave blank to skip."
+          "Step 4 of 5: Enter your Pirate Weather provider key now, or leave blank to skip."
         ],
         [
           "text",
-          "Step 4 of 4: Secure your API keys",
+          "Step 5 of 5: Secure your API keys",
           "Enter a passphrase to encrypt your API keys into a portable bundle.\nThis bundle travels with the app so your keys work on any machine.\n\nLeave blank to skip (keys will not be saved)."
         ],
         [
@@ -1125,13 +1323,16 @@
         "pirate_weather_api_key": "b"
       },
       "script": [
-        "yes"
+        "yes",
+        {
+          "choice": 0
+        }
       ],
       "events": [
         [
           "dialog",
           "Getting started",
-          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
           [
             "Add location",
             "Import existing",
@@ -1141,6 +1342,25 @@
         ],
         [
           "add_location"
+        ],
+        [
+          "choose",
+          "Choose units",
+          "Step 2 of 4: Which units should AccessiWeather use?\n\nYou can change this later in Settings > Display.",
+          [
+            "Match each location: °F in the US, °C everywhere else (recommended)",
+            "Metric: °C and km/h everywhere",
+            "Imperial: °F and mph everywhere",
+            "Both: °F and °C side by side"
+          ],
+          0
+        ],
+        [
+          "update_settings",
+          {
+            "temperature_unit": "auto",
+            "wind_speed_unit": "auto"
+          }
         ],
         [
           "dialog",
@@ -1179,13 +1399,16 @@
         {
           "text": " pw "
         },
+        {
+          "choice": 0
+        },
         "no"
       ],
       "events": [
         [
           "dialog",
           "Getting started",
-          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          "Welcome to AccessiWeather.\n\nStep 1 of 5: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
           [
             "Add location",
             "Import existing",
@@ -1248,9 +1471,28 @@
           "information"
         ],
         [
+          "choose",
+          "Choose units",
+          "Step 2 of 5: Which units should AccessiWeather use?\n\nYou can change this later in Settings > Display.",
+          [
+            "Match each location: °F in the US, °C everywhere else (recommended)",
+            "Metric: °C and km/h everywhere",
+            "Imperial: °F and mph everywhere",
+            "Both: °F and °C side by side"
+          ],
+          0
+        ],
+        [
+          "update_settings",
+          {
+            "temperature_unit": "auto",
+            "wind_speed_unit": "auto"
+          }
+        ],
+        [
           "dialog",
           "Pirate Weather provider key (optional)",
-          "Step 3 of 4: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          "Step 4 of 5: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
           [
             "Set up now",
             "Skip this key",
@@ -1305,7 +1547,7 @@
         [
           "dialog",
           "Getting started",
-          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
           [
             "Add location",
             "Import existing",
@@ -1402,7 +1644,7 @@
         [
           "dialog",
           "Getting started",
-          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
           [
             "Add location",
             "Import existing",
@@ -1444,7 +1686,7 @@
         [
           "dialog",
           "Getting started",
-          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
           [
             "Add location",
             "Import existing",
@@ -1492,7 +1734,7 @@
         [
           "dialog",
           "Getting started",
-          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
           [
             "Add location",
             "Import existing",
@@ -1543,6 +1785,9 @@
       "portable": false,
       "script": [
         "yes",
+        {
+          "choice": 0
+        },
         "yes",
         "cancel"
       ],
@@ -1550,7 +1795,7 @@
         [
           "dialog",
           "Getting started",
-          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
           [
             "Add location",
             "Import existing",
@@ -1562,9 +1807,28 @@
           "add_location"
         ],
         [
+          "choose",
+          "Choose units",
+          "Step 2 of 4: Which units should AccessiWeather use?\n\nYou can change this later in Settings > Display.",
+          [
+            "Match each location: °F in the US, °C everywhere else (recommended)",
+            "Metric: °C and km/h everywhere",
+            "Imperial: °F and mph everywhere",
+            "Both: °F and °C side by side"
+          ],
+          0
+        ],
+        [
+          "update_settings",
+          {
+            "temperature_unit": "auto",
+            "wind_speed_unit": "auto"
+          }
+        ],
+        [
           "dialog",
           "OpenRouter API key (optional)",
-          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          "Step 3 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
           [
             "Set up now",
             "Skip this key",
@@ -1575,7 +1839,7 @@
         [
           "dialog",
           "OpenRouter API key (optional)",
-          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get OpenRouter API key, or Configure myself to close the wizard.",
+          "Step 3 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get OpenRouter API key, or Configure myself to close the wizard.",
           [
             "Enter key",
             "Get OpenRouter API key",
@@ -1599,6 +1863,9 @@
       "portable": false,
       "script": [
         "yes",
+        {
+          "choice": 0
+        },
         "yes",
         "yes",
         "cancel"
@@ -1607,7 +1874,7 @@
         [
           "dialog",
           "Getting started",
-          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
           [
             "Add location",
             "Import existing",
@@ -1619,9 +1886,28 @@
           "add_location"
         ],
         [
+          "choose",
+          "Choose units",
+          "Step 2 of 4: Which units should AccessiWeather use?\n\nYou can change this later in Settings > Display.",
+          [
+            "Match each location: °F in the US, °C everywhere else (recommended)",
+            "Metric: °C and km/h everywhere",
+            "Imperial: °F and mph everywhere",
+            "Both: °F and °C side by side"
+          ],
+          0
+        ],
+        [
+          "update_settings",
+          {
+            "temperature_unit": "auto",
+            "wind_speed_unit": "auto"
+          }
+        ],
+        [
           "dialog",
           "OpenRouter API key (optional)",
-          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          "Step 3 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
           [
             "Set up now",
             "Skip this key",
@@ -1632,7 +1918,7 @@
         [
           "dialog",
           "OpenRouter API key (optional)",
-          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get OpenRouter API key, or Configure myself to close the wizard.",
+          "Step 3 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Enter key to type it now, Get OpenRouter API key, or Configure myself to close the wizard.",
           [
             "Enter key",
             "Get OpenRouter API key",
@@ -1643,7 +1929,7 @@
         [
           "text",
           "OpenRouter API key (optional)",
-          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip."
+          "Step 3 of 4: Enter your OpenRouter API key now, or leave blank to skip."
         ],
         [
           "update_settings",
@@ -1661,6 +1947,9 @@
       "portable": false,
       "script": [
         "yes",
+        {
+          "choice": 0
+        },
         "no",
         "cancel"
       ],
@@ -1668,7 +1957,7 @@
         [
           "dialog",
           "Getting started",
-          "Welcome to AccessiWeather.\n\nStep 1 of 3: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
           [
             "Add location",
             "Import existing",
@@ -1680,9 +1969,28 @@
           "add_location"
         ],
         [
+          "choose",
+          "Choose units",
+          "Step 2 of 4: Which units should AccessiWeather use?\n\nYou can change this later in Settings > Display.",
+          [
+            "Match each location: °F in the US, °C everywhere else (recommended)",
+            "Metric: °C and km/h everywhere",
+            "Imperial: °F and mph everywhere",
+            "Both: °F and °C side by side"
+          ],
+          0
+        ],
+        [
+          "update_settings",
+          {
+            "temperature_unit": "auto",
+            "wind_speed_unit": "auto"
+          }
+        ],
+        [
           "dialog",
           "OpenRouter API key (optional)",
-          "Step 2 of 3: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          "Step 3 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
           [
             "Set up now",
             "Skip this key",
@@ -1693,13 +2001,143 @@
         [
           "dialog",
           "Pirate Weather provider key (optional)",
-          "Step 3 of 3: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          "Step 4 of 4: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
           [
             "Set up now",
             "Skip this key",
             "Configure myself"
           ],
           "information"
+        ],
+        [
+          "update_settings",
+          {
+            "onboarding_wizard_shown": true
+          }
+        ],
+        [
+          "deferred_update_check"
+        ]
+      ]
+    },
+    {
+      "name": "units_metric_then_skip_keys",
+      "portable": false,
+      "script": [
+        "yes",
+        {
+          "choice": 1
+        },
+        "no",
+        "no"
+      ],
+      "events": [
+        [
+          "dialog",
+          "Getting started",
+          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          [
+            "Add location",
+            "Import existing",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "add_location"
+        ],
+        [
+          "choose",
+          "Choose units",
+          "Step 2 of 4: Which units should AccessiWeather use?\n\nYou can change this later in Settings > Display.",
+          [
+            "Match each location: °F in the US, °C everywhere else (recommended)",
+            "Metric: °C and km/h everywhere",
+            "Imperial: °F and mph everywhere",
+            "Both: °F and °C side by side"
+          ],
+          0
+        ],
+        [
+          "update_settings",
+          {
+            "temperature_unit": "c",
+            "wind_speed_unit": "km/h"
+          }
+        ],
+        [
+          "dialog",
+          "OpenRouter API key (optional)",
+          "Step 3 of 4: Enter your OpenRouter API key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          [
+            "Set up now",
+            "Skip this key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Pirate Weather provider key (optional)",
+          "Step 4 of 4: Enter your Pirate Weather provider key now, or leave blank to skip.\n\nChoose Set up now to enter or get a key, Skip this key to keep going, or Configure myself to close the wizard.",
+          [
+            "Set up now",
+            "Skip this key",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "dialog",
+          "Onboarding readiness",
+          "Setup summary:\n- Location configured: Yes\n- OpenRouter key set: No\n- Pirate Weather provider key set: No",
+          [],
+          "information"
+        ],
+        [
+          "update_settings",
+          {
+            "onboarding_wizard_shown": true
+          }
+        ],
+        [
+          "deferred_update_check"
+        ]
+      ]
+    },
+    {
+      "name": "units_escape_closes_wizard",
+      "portable": false,
+      "script": [
+        "yes",
+        "cancel"
+      ],
+      "events": [
+        [
+          "dialog",
+          "Getting started",
+          "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?\n\nIf you already have settings or API keys to bring over, choose Import existing.\n\nChoose Configure myself, or press Escape, to close this wizard and set things up later.",
+          [
+            "Add location",
+            "Import existing",
+            "Configure myself"
+          ],
+          "information"
+        ],
+        [
+          "add_location"
+        ],
+        [
+          "choose",
+          "Choose units",
+          "Step 2 of 4: Which units should AccessiWeather use?\n\nYou can change this later in Settings > Display.",
+          [
+            "Match each location: °F in the US, °C everywhere else (recommended)",
+            "Metric: °C and km/h everywhere",
+            "Imperial: °F and mph everywhere",
+            "Both: °F and °C side by side"
+          ],
+          0
         ],
         [
           "update_settings",

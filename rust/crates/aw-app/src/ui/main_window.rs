@@ -302,6 +302,7 @@ pub(crate) fn build_main_window(state: &Shared, smoke: bool) {
     // Defer AI model validation so it never delays startup.
     keep_timer(500, super::ai_model_check::validate_ai_model_deferred);
     start_background_updates();
+    super::scheduled_readings::start_scheduled_readings();
 
     if smoke {
         let smoke_state = state.clone();
@@ -395,6 +396,7 @@ fn on_close(e: &Event) {
         return;
     }
     // Stop timers and drop handles before wx tears the window down.
+    super::scheduled_readings::stop_scheduled_readings();
     for slot in [&UPDATE_TIMER, &EVENT_TIMER, &DEBOUNCE_TIMER] {
         slot.with(|t| {
             if let Some(timer) = t.borrow_mut().take() {

@@ -9,6 +9,7 @@ use std::collections::HashSet;
 use std::sync::{Arc, Mutex, PoisonError};
 use std::time::Duration;
 
+use aw_core::air_quality::AqiPreference;
 use aw_core::model::{
     AviationData, CurrentConditions, EnvironmentalConditions, Forecast, HourlyForecast, Location,
     MinutelyPrecipitationForecast, Timestamp, WeatherAlerts,
@@ -112,8 +113,10 @@ impl Live {
                     self.http.clone(),
                     USER_AGENT,
                     &settings.airnow_api_key,
-                ),
+                )
+                .with_openaq_key(&settings.openaq_api_key),
                 live: self.clone(),
+                aqi_preference: AqiPreference::from_setting(&settings.air_quality_index),
             }) as Arc<dyn EnvironmentalSource>
         });
         ClientSources {
@@ -429,6 +432,8 @@ impl PirateWeatherSource for Pirate {
 struct Environmental {
     client: EnvironmentalDataClient,
     live: Live,
+    /// The "Air quality index" setting; sources are rebuilt when it changes.
+    aqi_preference: AqiPreference,
 }
 
 impl EnvironmentalSource for Environmental {
@@ -445,6 +450,7 @@ impl EnvironmentalSource for Environmental {
             include_pollen,
             include_hourly_air_quality,
             prefer_airnow,
+            aqi_preference: self.aqi_preference,
             ..FetchOptions::default()
         };
         Ok(self.client.fetch(location, options, self.live.local_now()))
@@ -482,6 +488,57 @@ mod tests {
         settings.pollen_enabled = true;
         let sources = live.sources(&settings);
         assert!(sources.pirate_weather.is_some() && sources.environmental.is_some());
+    }
+
+    #[test]
+    fn environmental_source_follows_the_air_quality_index_setting() {
+        let endpoint = crate::environmental::AIR_QUALITY_ENDPOINT;
+        let (http, live) = fixture_live(FixtureClient::new().with(endpoint, json!({})));
+        let settings = AppSettings {
+            air_quality_index: "european".into(),
+            pollen_enabled: false,
+            airnow_api_key: "key".into(),
+            ..AppSettings::default()
+        };
+        let source = live.sources(&settings).environmental.unwrap();
+        let _ = source.fetch(&nyc(), true, false, false, true);
+        let log = http.request_log();
+        assert!(log[0].contains("hourly=european_aqi"), "{log:?}");
+        assert!(!log.iter().any(|u| u.contains("airnowapi")), "{log:?}");
+    }
+
+    #[test]
+    fn environmental_source_uses_the_openaq_key() {
+        let endpoint = crate::environmental::AIR_QUALITY_ENDPOINT;
+        let openaq = crate::environmental::openaq::LOCATIONS_ENDPOINT;
+        let (http, live) = fixture_live(
+            FixtureClient::new()
+                .with(endpoint, json!({}))
+                .with(openaq, json!({"results": []})),
+        );
+        let mut settings = AppSettings {
+            pollen_enabled: false,
+            ..AppSettings::default()
+        };
+        let _ =
+            live.sources(&settings)
+                .environmental
+                .unwrap()
+                .fetch(&nyc(), true, false, false, false);
+        assert!(!http.request_log().iter().any(|u| u.starts_with(openaq)));
+        settings.openaq_api_key = "oaq".into();
+        let _ =
+            live.sources(&settings)
+                .environmental
+                .unwrap()
+                .fetch(&nyc(), true, false, false, false);
+        let headers = http.header_log();
+        let log = http.request_log();
+        let i = log
+            .iter()
+            .position(|u| u.starts_with(openaq))
+            .expect("OpenAQ asked");
+        assert!(headers[i].contains(&("X-API-Key".into(), "oaq".into())));
     }
 
     #[test]

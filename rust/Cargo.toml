@@ -58,3 +58,9 @@ opt-level = 3
 
 [profile.dev.package.hmac]
 opt-level = 3
+
+# pbkdf2_hmac is generic, so its hot loop is compiled into aw-store at aw-store's
+# opt-level; the secrets tests took ~20 s unoptimised. aw-store is small, so
+# optimising it costs about a second of compile time.
+[profile.dev.package.aw-store]
+opt-level = 3

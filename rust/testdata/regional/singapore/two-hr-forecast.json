@@ -1,0 +1,35 @@
+{
+  "code": 0,
+  "errorMsg": "",
+  "data": {
+    "area_metadata": [
+      {"name": "Ang Mo Kio", "label_location": {"latitude": 1.375, "longitude": 103.839}},
+      {"name": "Bedok", "label_location": {"latitude": 1.321, "longitude": 103.924}},
+      {"name": "Bishan", "label_location": {"latitude": 1.350772, "longitude": 103.839}},
+      {"name": "Changi", "label_location": {"latitude": 1.357, "longitude": 103.987}},
+      {"name": "City", "label_location": {"latitude": 1.292, "longitude": 103.844}},
+      {"name": "Clementi", "label_location": {"latitude": 1.315, "longitude": 103.76}},
+      {"name": "Toa Payoh", "label_location": {"latitude": 1.334304, "longitude": 103.856327}}
+    ],
+    "items": [
+      {
+        "update_timestamp": "2026-10-20T14:59:00+08:00",
+        "timestamp": "2026-10-20T14:59:00+08:00",
+        "valid_period": {
+          "start": "2026-10-20T15:00:00+08:00",
+          "end": "2026-10-20T17:00:00+08:00",
+          "text": "3.00 pm to 5.00 pm"
+        },
+        "forecasts": [
+          {"area": "Ang Mo Kio", "forecast": "Thundery Showers"},
+          {"area": "Bedok", "forecast": "Cloudy"},
+          {"area": "Bishan", "forecast": "Thundery Showers"},
+          {"area": "Changi", "forecast": "Partly Cloudy (Day)"},
+          {"area": "City", "forecast": "Showers"},
+          {"area": "Clementi", "forecast": "Heavy Thundery Showers with Gusty Winds"},
+          {"area": "Toa Payoh", "forecast": "Thundery Showers"}
+        ]
+      }
+    ]
+  }
+}

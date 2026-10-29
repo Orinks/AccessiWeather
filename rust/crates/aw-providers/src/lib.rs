@@ -12,6 +12,7 @@ pub mod nws;
 pub mod openmeteo;
 pub mod pirateweather;
 pub mod products;
+pub mod regional;
 pub mod surf_conditions;
 
 pub use http::{HttpClient, HttpError, ReqwestClient};
