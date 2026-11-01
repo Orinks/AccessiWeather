@@ -227,7 +227,9 @@ jobs:
     name: Linux
     needs: prepare
     if: needs.prepare.outputs.should_build == 'true'
-    runs-on: ubuntu-latest
+    # Built on the oldest supported Ubuntu so the AppImage's glibc floor stays
+    # below Fedora's; ubuntu-latest (26.04, glibc 2.43) breaks the Fedora smoke test.
+    runs-on: ubuntu-24.04
     timeout-minutes: 75
     defaults:
       run:
@@ -242,7 +244,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: rust
-          shared-key: release-${{ runner.os }}
+          shared-key: release-${{ runner.os }}-ubuntu-24.04
           save-if: ${{ env.SAVE_CACHE }}
           cache-on-failure: false
 
