@@ -276,8 +276,8 @@ fn windows_portable_zip(staged: &Path, dist: &Path) -> Result<PathBuf> {
 
     let names: Vec<String> = zip::ZipArchive::new(fs::File::open(&out)?)?
         .file_names()
-        .map(str::to_string)
-        .collect();
+        .map(|name| name.map(|n| n.into_owned()))
+        .collect::<std::result::Result<_, _>>()?;
     let manifest = format!("{PORTABLE_SOUNDPACK_DIR}/pack.json");
     if !names
         .iter()
