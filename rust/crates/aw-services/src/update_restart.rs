@@ -75,31 +75,46 @@ start "" "%EXE_PATH%" --updated
     )
 }
 
-/// Python's `build_macos_update_script`: unzip (or copy from a DMG) next to
-/// the running `.app`, then reopen it with `--updated`.
-pub fn build_macos_update_script(update_path: &Path, app_path: &Path) -> String {
-    let app_dir = app_path.parent().unwrap_or(Path::new(""));
+/// Wait for `pid` to exit, replace the `.app` in place with the one in the
+/// zip or disk image, then reopen it with `--updated`. The disk image is
+/// mounted at a known private mount point, since `hdiutil attach -quiet`
+/// prints nothing to read a `/Volumes` path from. `rsync --delete` swaps the
+/// bundle's contents without needing write access to its parent folder, and
+/// the quarantine flag is cleared so Gatekeeper doesn't block the
+/// checksum-verified update as an unknown app.
+pub fn build_macos_update_script(update_path: &Path, app_path: &Path, pid: u32) -> String {
     let q_update = shlex_quote(&update_path.display().to_string());
-    let q_app_dir = shlex_quote(&app_dir.display().to_string());
     let q_app_path = shlex_quote(&app_path.display().to_string());
-    // The DMG pipeline is one line: Python's source has a backslash-newline
-    // inside a normal string literal, which joins the lines.
     format!(
         r#"#!/bin/bash
-sleep 2
+PID={pid}
 UPDATE_PATH={q_update}
-APP_DIR={q_app_dir}
 APP_PATH={q_app_path}
+while kill -0 "$PID" 2>/dev/null; do sleep 1; done
+STAGE_DIR=$(mktemp -d "${{TMPDIR:-/tmp}}/accessiweather_update.XXXXXX") || exit 1
+NEW_APP=""
+MOUNT_DIR=""
 if [[ "$UPDATE_PATH" == *.zip ]]; then
-    unzip -o "$UPDATE_PATH" -d "$APP_DIR"
+    ditto -x -k "$UPDATE_PATH" "$STAGE_DIR/extract"
+    NEW_APP=$(find "$STAGE_DIR/extract" -maxdepth 2 -type d -name '*.app' | head -1)
 elif [[ "$UPDATE_PATH" == *.dmg ]]; then
-    MOUNT_DIR=$(hdiutil attach "$UPDATE_PATH" -nobrowse -quiet                 | grep -oE '/Volumes/[^[:cntrl:]]+' | tail -1)
-    if [[ -n "$MOUNT_DIR" ]]; then
-        cp -R "$MOUNT_DIR"/*.app "$APP_DIR/"
-        hdiutil detach "$MOUNT_DIR" -quiet
+    MOUNT_DIR="$STAGE_DIR/mount"
+    mkdir -p "$MOUNT_DIR"
+    if hdiutil attach "$UPDATE_PATH" -nobrowse -noautoopen -readonly -quiet -mountpoint "$MOUNT_DIR"; then
+        NEW_APP=$(find "$MOUNT_DIR" -maxdepth 1 -type d -name '*.app' | head -1)
+    else
+        MOUNT_DIR=""
     fi
 fi
+if [[ -n "$NEW_APP" && -x "$NEW_APP/Contents/MacOS/AccessiWeather" ]]; then
+    rsync -a --delete "$NEW_APP/" "$APP_PATH/"
+    xattr -dr com.apple.quarantine "$APP_PATH" 2>/dev/null
+fi
+if [[ -n "$MOUNT_DIR" ]]; then
+    hdiutil detach "$MOUNT_DIR" -quiet || hdiutil detach "$MOUNT_DIR" -force -quiet
+fi
 open "$APP_PATH" --args --updated
+rm -rf "$STAGE_DIR"
 rm -f "$0" "$UPDATE_PATH""#
     )
 }
@@ -259,7 +274,8 @@ pub fn apply_update(update_path: &Path, portable: bool) -> std::io::Result<bool>
                 .nth(3)
                 .map(Path::to_path_buf)
                 .unwrap_or_default();
-            write_private_script(&script, &build_macos_update_script(update_path, &app_path))?;
+            let text = build_macos_update_script(update_path, &app_path, std::process::id());
+            write_private_script(&script, &text)?;
             Command::new("bash").arg(&script).spawn()?;
             std::process::exit(0);
         }
@@ -371,10 +387,14 @@ mod tests {
         let script = build_macos_update_script(
             Path::new("/tmp/it's here.zip"),
             Path::new("/Applications/AccessiWeather.app"),
+            42,
         );
         assert!(script.contains(r#"UPDATE_PATH='/tmp/it'"'"'s here.zip'"#));
-        assert!(script.contains("APP_DIR=/Applications\n"));
-        assert!(script.contains("unzip -o") && script.contains("hdiutil detach"));
+        assert!(script.contains("APP_PATH=/Applications/AccessiWeather.app\n"));
+        assert!(script.contains("PID=42") && script.contains("kill -0 \"$PID\""));
+        assert!(script.contains("ditto -x -k") && script.contains("hdiutil detach"));
+        // `hdiutil attach -quiet` prints no mount point, so it must be given one.
+        assert!(script.contains(r#"-quiet -mountpoint "$MOUNT_DIR""#));
         let bat = build_portable_update_script(
             Path::new("C:/t/u.zip"),
             Path::new("C:/A"),

@@ -97,13 +97,10 @@ fn label<W: WxWidget>(parent: &W, text: &str) -> StaticText {
     StaticText::builder(parent).with_label(text).build()
 }
 
-fn results_list<W: WxWidget>(parent: &W, first_column: (&str, i32), second_width: i32) -> ListCtrl {
-    let list = ListCtrl::builder(parent)
-        .with_style(ListCtrlStyle::Report | ListCtrlStyle::SingleSel)
-        .build();
-    list.insert_column(0, first_column.0, ListColumnFormat::Left, first_column.1);
-    list.insert_column(1, "Coordinates", ListColumnFormat::Left, second_width);
-    list
+// A native list box rather than a report ListCtrl: on macOS wxListCtrl is a
+// custom-drawn control that VoiceOver cannot see.
+fn results_list<W: WxWidget>(parent: &W) -> ListBox {
+    ListBox::builder(parent).build()
 }
 
 /// `location_manager.format_coordinates` (4 decimals).
@@ -156,26 +153,34 @@ fn search_in_country(
     })
 }
 
-fn fill_search_results(list: &ListCtrl, results: &[LocationSearchResult]) {
+/// One results row: the place, its region and country when the name leaves
+/// them out, then its coordinates.
+fn search_result_row(result: &LocationSearchResult) -> String {
+    let location = &result.location;
+    let country = if result.country.is_empty() {
+        location
+            .country_code
+            .as_deref()
+            .and_then(country_name)
+            .unwrap_or("")
+    } else {
+        result.country.as_str()
+    };
+    let coordinates = format_coordinates(location.latitude, location.longitude);
+    let name = location.name.to_lowercase();
+    let extra = [result.region.as_str(), country]
+        .into_iter()
+        .filter(|part| !part.is_empty() && !name.contains(&part.to_lowercase()));
+    std::iter::once(location.name.as_str())
+        .chain(extra)
+        .chain(std::iter::once(coordinates.as_str()))
+        .collect::<Vec<_>>()
+        .join(" - ")
+}
+
+fn fill_search_results(list: &ListBox, results: &[LocationSearchResult]) {
     for result in results {
-        let location = &result.location;
-        let index = list.insert_item(list.get_item_count() as i64, &location.name, None) as i64;
-        let country = if result.country.is_empty() {
-            location
-                .country_code
-                .as_deref()
-                .and_then(country_name)
-                .unwrap_or("")
-        } else {
-            result.country.as_str()
-        };
-        list.set_item_text_by_column(index, 1, &result.region);
-        list.set_item_text_by_column(index, 2, country);
-        list.set_item_text_by_column(
-            index,
-            3,
-            &format_coordinates(location.latitude, location.longitude),
-        );
+        list.append(&search_result_row(result));
     }
 }
 
@@ -194,14 +199,10 @@ fn detect_current_location(http: &dyn HttpClient) -> Result<Location, String> {
     }
 }
 
-fn fill_results(list: &ListCtrl, locations: &[Location]) {
+fn fill_results(list: &ListBox, locations: &[Location]) {
     for location in locations {
-        let index = list.insert_item(list.get_item_count() as i64, &location.name, None);
-        list.set_item_text_by_column(
-            index as i64,
-            1,
-            &format_coordinates(location.latitude, location.longitude),
-        );
+        let coordinates = format_coordinates(location.latitude, location.longitude);
+        list.append(&format!("{} - {coordinates}", location.name));
     }
 }
 
@@ -244,7 +245,7 @@ struct AddLocationDialog {
     search_input: TextCtrl,
     search_button: Button,
     current_location_button: Button,
-    results_list: ListCtrl,
+    results_list: ListBox,
     status_label: StaticText,
     search_results: RefCell<Vec<Location>>,
     selected_location: RefCell<Option<Location>>,
@@ -365,13 +366,10 @@ pub(crate) fn show_add_location_dialog(parent: &Frame) -> Option<String> {
         SizerFlag::Left | SizerFlag::Right | SizerFlag::Top,
         10,
     );
-    let results = ListCtrl::builder(&panel)
-        .with_style(ListCtrlStyle::Report | ListCtrlStyle::SingleSel)
-        .build();
-    results.insert_column(0, "Location", ListColumnFormat::Left, 220);
-    results.insert_column(1, "State or region", ListColumnFormat::Left, 140);
-    results.insert_column(2, "Country", ListColumnFormat::Left, 120);
-    results.insert_column(3, "Coordinates", ListColumnFormat::Left, 150);
+    let results = results_list(&panel);
+    // macOS controls are taller than Windows ones, and without a floor the
+    // list shrank to nothing there.
+    results.set_min_size(Size::new(-1, 150));
     main_sizer.add(&results, 1, SizerFlag::Expand | SizerFlag::All, 10);
 
     let status_label = label(&panel, "Ready to add location");
@@ -395,6 +393,8 @@ pub(crate) fn show_add_location_dialog(parent: &Frame) -> Option<String> {
     let dialog_sizer = BoxSizer::builder(Orientation::Vertical).build();
     dialog_sizer.add(&panel, 1, SizerFlag::Expand, 0);
     dialog.set_sizer(dialog_sizer, true);
+    dialog.set_min_size(Size::new(600, -1));
+    dialog.fit();
     name_input.set_focus();
 
     // `_setup_accessibility`.
@@ -432,10 +432,12 @@ pub(crate) fn show_add_location_dialog(parent: &Frame) -> Option<String> {
         let d2 = d.clone();
         current_location_button.on_click(move |_| d2.on_use_current_location());
         let d2 = d.clone();
-        results.on_item_selected(move |e| d2.on_result_selected(e.get_item_index()));
+        results.on_selection_changed(move |e| {
+            d2.on_result_selected(e.get_selection().unwrap_or(-1));
+        });
         let d2 = d.clone();
-        results.on_item_activated(move |e| {
-            d2.on_result_selected(e.get_item_index());
+        results.on_item_double_clicked(move |e| {
+            d2.on_result_selected(e.get_selection().unwrap_or(-1));
             d2.on_save();
         });
         let d2 = d.clone();
@@ -481,7 +483,7 @@ impl AddLocationDialog {
         self.is_searching.set(true);
         self.search_button.enable(false);
         self.update_status(&format!("Searching for '{query}'..."), false);
-        self.results_list.delete_all_items();
+        self.results_list.clear();
         self.search_results.borrow_mut().clear();
         let country = self.selected_country();
         let language = aw_services::region::detect_language();
@@ -564,7 +566,7 @@ impl AddLocationDialog {
     }
 
     fn apply_detected_location(&self, location: Location) {
-        self.results_list.delete_all_items();
+        self.results_list.clear();
         fill_search_results(
             &self.results_list,
             &[LocationSearchResult {
@@ -680,7 +682,7 @@ struct EditLocationDialog {
     address_input: TextCtrl,
     address_search_button: Button,
     current_location_button: Button,
-    address_results_list: ListCtrl,
+    address_results_list: ListBox,
     coordinate_comparison_label: StaticText,
     search_results: RefCell<Vec<Location>>,
     selected_location: RefCell<Option<Location>>,
@@ -777,7 +779,7 @@ pub(crate) fn show_edit_location_dialog(
         SizerFlag::Left | SizerFlag::Right | SizerFlag::Bottom,
         5,
     );
-    let address_results_list = results_list(&address_box, ("Matched Address", 320), 180);
+    let address_results_list = results_list(&address_box);
     address_results_list.set_min_size(Size::new(-1, 110));
     address_results_list.set_name("Address lookup results");
     address_sizer.add(
@@ -866,7 +868,9 @@ pub(crate) fn show_edit_location_dialog(
         let d2 = d.clone();
         current_location_button.on_click(move |_| d2.on_use_current_location());
         let d2 = d.clone();
-        address_results_list.on_item_selected(move |e| d2.on_address_selected(e.get_item_index()));
+        address_results_list.on_selection_changed(move |e| {
+            d2.on_address_selected(e.get_selection().unwrap_or(-1));
+        });
         let d2 = d.clone();
         ok_button.on_click(move |e| {
             e.event.skip(false);
@@ -904,7 +908,7 @@ impl EditLocationDialog {
         self.is_searching.set(true);
         self.address_search_button.enable(false);
         self.set_coordinate_comparison(&format!("Searching for '{query}'..."), false);
-        self.address_results_list.delete_all_items();
+        self.address_results_list.clear();
         self.search_results.borrow_mut().clear();
         *self.selected_location.borrow_mut() = None;
         in_background(
@@ -966,7 +970,7 @@ impl EditLocationDialog {
     }
 
     fn on_current_location_detected(&self, location: Location) {
-        self.address_results_list.delete_all_items();
+        self.address_results_list.clear();
         fill_results(&self.address_results_list, std::slice::from_ref(&location));
         self.name_input.set_value(&location.name);
         let coords = format_coordinates(location.latitude, location.longitude);
@@ -1207,6 +1211,31 @@ mod tests {
         assert_eq!(
             search_country_to_save("ANY", None, Some("FR")),
             Some("FR".into())
+        );
+    }
+
+    #[test]
+    fn search_result_row_names_place_region_country_and_coordinates() {
+        let result = LocationSearchResult {
+            location: Location::new("Carmel, Indiana", 39.9784, -86.118),
+            region: "Indiana".into(),
+            country: "United States".into(),
+        };
+        assert_eq!(
+            search_result_row(&result),
+            format!(
+                "Carmel, Indiana - United States - {}",
+                format_coordinates(39.9784, -86.118)
+            )
+        );
+        let bare = LocationSearchResult {
+            location: Location::new("Somewhere", 1.0, 2.0),
+            region: String::new(),
+            country: String::new(),
+        };
+        assert_eq!(
+            search_result_row(&bare),
+            format!("Somewhere - {}", format_coordinates(1.0, 2.0))
         );
     }
 }

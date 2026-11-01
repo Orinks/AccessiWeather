@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- Updating on macOS now actually installs the new version instead of reopening the old one and offering the same update again.
+- Add Location search results now show on macOS, so VoiceOver users can pick a result and save the location.
+
 ## [0.11.0] - 2026-10-28
 
 ### Added
