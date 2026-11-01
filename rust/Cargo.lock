@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "accessiweather"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "aw-ai",
  "aw-audio",
@@ -318,7 +318,7 @@ checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
 
 [[package]]
 name = "aw-ai"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "aw-core",
  "chrono",
@@ -334,7 +334,7 @@ dependencies = [
 
 [[package]]
 name = "aw-audio"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "aw-core",
  "aw-store",
@@ -352,7 +352,7 @@ dependencies = [
 
 [[package]]
 name = "aw-core"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "chrono",
  "chrono-tz",
@@ -365,7 +365,7 @@ dependencies = [
 
 [[package]]
 name = "aw-notify"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "aw-core",
  "aw-store",
@@ -382,7 +382,7 @@ dependencies = [
 
 [[package]]
 name = "aw-providers"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "aw-core",
  "aw-store",
@@ -407,7 +407,7 @@ dependencies = [
 
 [[package]]
 name = "aw-radio"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "aw-core",
  "aw-providers",
@@ -422,7 +422,7 @@ dependencies = [
 
 [[package]]
 name = "aw-services"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "aw-core",
  "aw-notify",
@@ -443,7 +443,7 @@ dependencies = [
 
 [[package]]
 name = "aw-store"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "aw-core",
  "base64 0.22.1",
@@ -4287,7 +4287,7 @@ dependencies = [
 
 [[package]]
 name = "xtask"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "aw-radio",
  "chrono",
