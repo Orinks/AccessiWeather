@@ -115,7 +115,8 @@ if [[ -n "$MOUNT_DIR" ]]; then
 fi
 open "$APP_PATH" --args --updated
 rm -rf "$STAGE_DIR"
-rm -f "$0" "$UPDATE_PATH""#
+rm -f "$0" "$UPDATE_PATH"
+rmdir "$(dirname "$0")" 2>/dev/null"#
     )
 }
 
