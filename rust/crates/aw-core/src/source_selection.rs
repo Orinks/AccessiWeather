@@ -20,6 +20,14 @@ pub fn normalize_data_source(data_source: &str) -> &str {
     }
 }
 
+/// Whether notifications may use NWS data (alerts, cancel references and the
+/// AFD/HWO/SPS/CLI text products): automatic mode and NWS only. A Pirate
+/// Weather selection notifies from Pirate Weather alone, and Open-Meteo has
+/// no notification data at all.
+pub fn uses_nws_notifications(data_source: &str) -> bool {
+    matches!(normalize_data_source(data_source), "auto" | NWS)
+}
+
 /// `_determine_api_choice`: the single API used outside automatic mode.
 /// Pirate Weather without a key falls back to NWS (US) or Open-Meteo.
 pub fn determine_api_choice(data_source: &str, has_pirate_key: bool, is_us: bool) -> &'static str {
@@ -341,5 +349,22 @@ mod tests {
             ..outcome
         };
         assert_eq!(auto_secondary_sources(&outcome), list(&["pirateweather"]));
+    }
+}
+
+#[cfg(test)]
+mod nws_notification_tests {
+    use super::uses_nws_notifications;
+
+    #[test]
+    fn only_auto_and_nws_notify_from_nws() {
+        assert!(uses_nws_notifications("auto"));
+        assert!(uses_nws_notifications("nws"));
+        assert!(
+            uses_nws_notifications("bogus"),
+            "unknown falls back to auto"
+        );
+        assert!(!uses_nws_notifications("pirateweather"));
+        assert!(!uses_nws_notifications("openmeteo"));
     }
 }

@@ -30,6 +30,8 @@ use aw_notify::{
 use aw_providers::products::{ForecastProductService, ProductResult};
 use chrono::{DateTime, FixedOffset, Local, Utc};
 
+use aw_core::source_selection::uses_nws_notifications;
+
 use super::main_window as mw;
 use crate::app::{post_to_ui, with_state};
 
@@ -492,7 +494,14 @@ pub(crate) fn weather_updated(update: WeatherUpdate<'_>) {
             play_refresh_sound,
         } => {
             tracing::debug!("Weather shown for {location_name}");
-            let products = CachedTextProducts::peek(&app.products, app.location.as_ref());
+            // HWO/SPS/CLI are NWS products; a Pirate Weather or Open-Meteo
+            // selection never notifies from them, even if an earlier
+            // automatic-mode refresh left them cached.
+            let products = if uses_nws_notifications(&app.settings.data_source) {
+                CachedTextProducts::peek(&app.products, app.location.as_ref())
+            } else {
+                CachedTextProducts::default()
+            };
             with_notifications(&app, |n| {
                 n.displayed(
                     &mut AppSinks,

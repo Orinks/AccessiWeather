@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 use aw_core::golden::{self, assert_json_eq, field};
 use aw_core::model::{
     AviationData, CurrentConditions, EnvironmentalConditions, Forecast, HourlyForecast,
-    HourlyForecastPeriod, MinutelyPrecipitationForecast, Timestamp,
+    HourlyForecastPeriod, MinutelyPrecipitationForecast, Timestamp, WeatherAlert,
 };
 use chrono::TimeZone;
 use serde::de::DeserializeOwned;
@@ -661,4 +661,155 @@ fn air_quality_poll_needs_air_quality_on() {
     );
     assert!(client.get_air_quality_poll(&us()).is_none());
     assert!(fakes.log.lock().unwrap().is_empty());
+}
+
+// ---------------------------------------------------------------------------
+// notification poll: which source each data_source notifies from
+// ---------------------------------------------------------------------------
+
+fn international() -> Location {
+    Location::new("London", 51.5074, -0.1278).with_country("GB")
+}
+
+fn one_alert(event: &str, source: &str) -> Value {
+    let mut alert = WeatherAlert::new(event.to_string(), format!("{event} in effect"));
+    alert.id = Some(format!("{source}-{event}"));
+    alert.event = Some(event.to_string());
+    alert.severity = "Severe".into();
+    alert.source = Some(source.to_string());
+    serde_json::to_value(WeatherAlerts {
+        alerts: vec![alert],
+    })
+    .unwrap()
+}
+
+/// A fake table where every notification call answers, so the request log
+/// shows exactly which sources a poll asked.
+fn notification_fakes() -> Arc<Fakes> {
+    fakes_with(json!({
+        "nws": {
+            "alerts": {"value": one_alert("Tornado Warning", "nws")},
+            "discussion_only": {"value": ["AFD text", null]},
+            "cancel_refs": {"value": []},
+        },
+        "pirateweather": {
+            "alerts": {"value": one_alert("Tornado Warning", "PirateWeather")},
+            "current": {"value": null},
+            "minutely": {"value": null},
+        },
+    }))
+}
+
+fn poll(data_source: &str, location: &Location, alerts_only: bool) -> (WeatherData, Vec<String>) {
+    let fakes = notification_fakes();
+    let client = WeatherClient::new(
+        sources(&fakes, true, false),
+        AppSettings::default(),
+        data_source,
+        None,
+    );
+    let weather = if alerts_only {
+        client.get_alert_poll_data(location)
+    } else {
+        client.get_notification_event_data(location)
+    };
+    let mut requests = fakes.log.lock().unwrap().clone();
+    requests.sort();
+    (weather, requests)
+}
+
+fn alert_sources(weather: &WeatherData) -> Vec<String> {
+    weather
+        .alerts
+        .as_ref()
+        .map(|a| {
+            a.alerts
+                .iter()
+                .map(|a| a.source.clone().unwrap_or_default())
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+#[test]
+fn pirate_weather_us_poll_notifies_from_pirate_weather_only() {
+    let (weather, requests) = poll("pirateweather", &us(), false);
+    assert_eq!(
+        requests,
+        [
+            "pirateweather.alerts",
+            "pirateweather.current",
+            "pirateweather.minutely"
+        ]
+    );
+    assert_eq!(alert_sources(&weather), ["PirateWeather"]);
+    let diff = weather.alert_lifecycle_diff.expect("lifecycle diff");
+    assert_eq!(diff.new_alerts.len(), 1, "PW alert is new on first poll");
+    assert!(weather.discussion_issuance_time.is_none());
+
+    let (weather, requests) = poll("pirateweather", &us(), true);
+    assert_eq!(requests, ["pirateweather.alerts"]);
+    assert_eq!(alert_sources(&weather), ["PirateWeather"]);
+}
+
+#[test]
+fn pirate_weather_international_poll_is_unchanged() {
+    let (weather, requests) = poll("pirateweather", &international(), false);
+    assert_eq!(
+        requests,
+        [
+            "pirateweather.alerts",
+            "pirateweather.current",
+            "pirateweather.minutely"
+        ]
+    );
+    assert_eq!(alert_sources(&weather), ["PirateWeather"]);
+
+    let (_, requests) = poll("pirateweather", &international(), true);
+    assert_eq!(requests, ["pirateweather.alerts"]);
+}
+
+#[test]
+fn open_meteo_poll_fetches_nothing() {
+    for location in [us(), international()] {
+        for alerts_only in [false, true] {
+            let (weather, requests) = poll("openmeteo", &location, alerts_only);
+            assert!(requests.is_empty(), "{}: {requests:?}", location.name);
+            assert!(weather.alerts.as_ref().is_some_and(|a| a.alerts.is_empty()));
+            assert!(weather.discussion.is_none());
+        }
+    }
+}
+
+#[test]
+fn auto_and_nws_us_polls_still_use_nws() {
+    for data_source in ["auto", "nws"] {
+        let (weather, requests) = poll(data_source, &us(), false);
+        let mut expected = vec!["nws.alerts", "nws.cancel_refs", "nws.discussion_only"];
+        if data_source == "auto" {
+            // Automatic mode's existing minutely precipitation poll.
+            expected.push("pirateweather.minutely");
+        }
+        assert_eq!(requests, expected, "{data_source}");
+        assert_eq!(weather.discussion.as_deref(), Some("AFD text"));
+        assert_eq!(alert_sources(&weather), ["nws"], "{data_source}");
+
+        let (_, requests) = poll(data_source, &us(), true);
+        assert_eq!(requests, ["nws.alerts", "nws.cancel_refs"], "{data_source}");
+    }
+}
+
+#[test]
+fn auto_international_poll_still_uses_pirate_weather() {
+    let (weather, requests) = poll("auto", &international(), false);
+    assert_eq!(
+        requests,
+        [
+            "nws.cancel_refs",
+            "pirateweather.alerts",
+            "pirateweather.current",
+            "pirateweather.minutely"
+        ]
+    );
+    assert_eq!(alert_sources(&weather), ["PirateWeather"]);
 }

@@ -9,6 +9,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use aw_core::alert_lifecycle::compute_lifecycle_labels;
 use aw_core::display::WeatherPresenter;
 use aw_core::model::WeatherData;
+use aw_core::source_selection::uses_nws_notifications;
 use aw_core::Location;
 use aw_providers::client::WeatherClient;
 use aw_providers::products::ForecastProductService;
@@ -56,7 +57,7 @@ pub(crate) fn refresh_weather_async(force_refresh: bool) {
         fetch_all_locations_data();
         return;
     }
-    let (location, locations, client, products) = {
+    let (location, locations, client, products, nws_products) = {
         let mut st = state.borrow_mut();
         if st.is_updating && !force_refresh {
             tracing::debug!("Already updating, skipping refresh");
@@ -68,6 +69,7 @@ pub(crate) fn refresh_weather_async(force_refresh: bool) {
             st.config.locations.clone(),
             st.client.clone(),
             st.products.clone(),
+            uses_nws_notifications(&st.config.settings.data_source),
         )
     };
     let generation = FETCH_GENERATION.fetch_add(1, Ordering::SeqCst) + 1;
@@ -87,11 +89,14 @@ pub(crate) fn refresh_weather_async(force_refresh: bool) {
             return;
         }
         // Warm AFD/HWO/SPS/SRF/CLI first so the notification checks run on
-        // the display update find them cached.
-        products.pre_warm_location(&location);
+        // the display update find them cached. Only sources that notify from
+        // NWS (auto, nws) fetch them.
+        if nws_products {
+            products.pre_warm_location(&location);
+        }
         post_to_ui(move || on_weather_data_received(weather_data, true));
         if !force_refresh {
-            pre_warm_other_locations(&client, &products, &location, &locations);
+            pre_warm_other_locations(&client, &products, &location, &locations, nws_products);
         }
     });
 }
@@ -132,6 +137,7 @@ fn pre_warm_other_locations(
     products: &ForecastProductService,
     current: &Location,
     locations: &[Location],
+    nws_products: bool,
 ) {
     let uncached: Vec<Location> = locations
         .iter()
@@ -146,6 +152,9 @@ fn pre_warm_other_locations(
     if !uncached.is_empty() {
         tracing::debug!("Pre-warming cache for {} locations", uncached.len());
         client.pre_warm_batch(&uncached);
+    }
+    if !nws_products {
+        return;
     }
     for location in locations.iter().filter(|l| l.name != current.name) {
         products.pre_warm_location(location);

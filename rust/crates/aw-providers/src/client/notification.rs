@@ -6,6 +6,7 @@ use std::collections::HashSet;
 use aw_core::alert_aggregator::AlertAggregator;
 use aw_core::alert_lifecycle::diff_alerts;
 use aw_core::model::{EnvironmentalConditions, Location, WeatherAlerts, WeatherData};
+use aw_core::source_selection as selection;
 use chrono::{Duration, Utc};
 
 use super::sources::SourceResult;
@@ -96,9 +97,12 @@ impl WeatherClient {
     ) -> SourceResult<()> {
         let cfg = self.cfg();
         let settings = &cfg.settings;
-        let source = cfg.data_source.as_str();
-        let nws_like = matches!(source, "auto" | "nws");
-        let pirate_like = matches!(source, "auto" | "pirateweather");
+        let source = selection::normalize_data_source(&cfg.data_source);
+        // auto/nws use NWS for US locations; pirateweather polls only Pirate
+        // Weather (US and international alike); openmeteo has no alerts, so
+        // it polls nothing.
+        let nws_like = selection::uses_nws_notifications(source);
+        let pirate_like = matches!(source, "auto" | selection::PIRATEWEATHER);
         let pirate = cfg.sources.pirate_weather.clone().filter(|_| pirate_like);
 
         if nws_like && self.is_us(location) && alerts_only {
