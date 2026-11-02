@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Location searches now focus the first result, and pressing Enter on a result saves the location.
 - Updating on macOS now actually installs the new version instead of reopening the old one and offering the same update again.
 - Add Location search results now show on macOS, so VoiceOver users can pick a result and save the location.
 

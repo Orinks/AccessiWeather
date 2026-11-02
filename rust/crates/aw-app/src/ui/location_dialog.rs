@@ -382,6 +382,7 @@ pub(crate) fn show_add_location_dialog(parent: &Frame) -> Option<String> {
         .with_id(ID_OK)
         .with_label("Save Location")
         .build();
+    save_button.set_default();
     button_sizer.add(&save_button, 0, SizerFlag::Right, 10);
     let cancel_button = Button::builder(&panel)
         .with_id(ID_CANCEL)
@@ -441,6 +442,17 @@ pub(crate) fn show_add_location_dialog(parent: &Frame) -> Option<String> {
             d2.on_save();
         });
         let d2 = d.clone();
+        results.bind_internal(EventType::CHAR_HOOK, move |e: Event| {
+            if matches!(e.get_key_code(), Some(WXK_RETURN | WXK_NUMPAD_ENTER)) {
+                // ListBox Enter handling differs between native ports. Use the
+                // same validation/save path as the default button exactly once.
+                e.skip(false);
+                d2.on_save();
+            } else {
+                e.skip(true);
+            }
+        });
+        let d2 = d.clone();
         save_button.on_click(move |e| {
             e.event.skip(false);
             d2.on_save();
@@ -485,6 +497,7 @@ impl AddLocationDialog {
         self.update_status(&format!("Searching for '{query}'..."), false);
         self.results_list.clear();
         self.search_results.borrow_mut().clear();
+        self.selected_location.borrow_mut().take();
         let country = self.selected_country();
         let language = aw_services::region::detect_language();
         in_background(
@@ -538,7 +551,14 @@ impl AddLocationDialog {
                 if self.name_input.get_value().trim().is_empty() {
                     self.name_input.set_value(&locations[0].name);
                 }
+                // Native programmatic selection does not emit a selection event.
+                // Keep the model in sync without replacing a custom location name.
+                *self.selected_location.borrow_mut() = Some(locations[0].clone());
                 *self.search_results.borrow_mut() = locations;
+                self.results_list.set_selection(0, true);
+                if self.search_input.has_focus() || self.search_button.has_focus() {
+                    self.results_list.set_focus();
+                }
             }
         }
     }
