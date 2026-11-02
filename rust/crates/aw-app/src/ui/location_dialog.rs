@@ -315,7 +315,13 @@ pub(crate) fn show_add_location_dialog(parent: &Frame) -> Option<String> {
         SizerFlag::Bottom,
         5,
     );
-    let country_choice = Choice::builder(&panel).with_choices(country_labels).build();
+    let country_choice = Choice::builder(&panel).build();
+    // wxMSW otherwise recalculates the dropdown size after every country.
+    country_choice.freeze();
+    for country in &country_labels {
+        country_choice.append(country);
+    }
+    country_choice.thaw();
     let initial_index = country_codes
         .iter()
         .position(|c| *c == initial_country)
@@ -427,7 +433,10 @@ pub(crate) fn show_add_location_dialog(parent: &Frame) -> Option<String> {
     });
     {
         let d2 = d.clone();
-        search_input.on_text_enter(move |_| d2.on_search());
+        search_input.on_text_enter(move |e| {
+            e.skip(false);
+            d2.on_search();
+        });
         let d2 = d.clone();
         search_button.on_click(move |_| d2.on_search());
         let d2 = d.clone();
@@ -480,6 +489,9 @@ impl AddLocationDialog {
         self.status_label.set_label(message);
         text_colour(&self.status_label, is_error);
         tracing::info!("Location dialog status: {message}");
+        if is_error {
+            crate::screen_reader::announce(message);
+        }
     }
 
     fn on_search(&self) {
