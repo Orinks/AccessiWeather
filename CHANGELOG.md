@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - Add Location opens faster on Windows, focuses search results, and announces validation errors. Enter searches from the search field and saves from the results list.
+- Pressing Enter in Edit Location's address search now searches instead of saving and closing the dialog on Linux.
 - Updating on macOS now actually installs the new version instead of reopening the old one and offering the same update again.
 - Add Location search results now show on macOS, so VoiceOver users can pick a result and save the location.
 

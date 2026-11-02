@@ -249,6 +249,9 @@ struct AddLocationDialog {
     status_label: StaticText,
     search_results: RefCell<Vec<Location>>,
     selected_location: RefCell<Option<Location>>,
+    /// Set while the first result is selected programmatically, so a port
+    /// that reports that selection (GTK) doesn't replace a custom name.
+    auto_selecting: Cell<bool>,
     is_searching: Cell<bool>,
     is_detecting_current_location: Cell<bool>,
     added_location: RefCell<Option<String>>,
@@ -427,6 +430,7 @@ pub(crate) fn show_add_location_dialog(parent: &Frame) -> Option<String> {
         status_label,
         search_results: RefCell::new(Vec::new()),
         selected_location: RefCell::new(None),
+        auto_selecting: Cell::new(false),
         is_searching: Cell::new(false),
         is_detecting_current_location: Cell::new(false),
         added_location: RefCell::new(None),
@@ -563,14 +567,16 @@ impl AddLocationDialog {
                 if self.name_input.get_value().trim().is_empty() {
                     self.name_input.set_value(&locations[0].name);
                 }
-                // Native programmatic selection does not emit a selection event.
-                // Keep the model in sync without replacing a custom location name.
+                // Only some ports report this selection (GTK does when the list
+                // takes focus), so set the model here and keep a custom name.
                 *self.selected_location.borrow_mut() = Some(locations[0].clone());
                 *self.search_results.borrow_mut() = locations;
+                self.auto_selecting.set(true);
                 self.results_list.set_selection(0, true);
                 if self.search_input.has_focus() || self.search_button.has_focus() {
                     self.results_list.set_focus();
                 }
+                self.auto_selecting.set(false);
             }
         }
     }
@@ -619,6 +625,9 @@ impl AddLocationDialog {
     }
 
     fn on_result_selected(&self, index: i32) {
+        if self.auto_selecting.get() {
+            return;
+        }
         let Some(location) = usize::try_from(index)
             .ok()
             .and_then(|i| self.search_results.borrow().get(i).cloned())
@@ -894,7 +903,10 @@ pub(crate) fn show_edit_location_dialog(
     });
     {
         let d2 = d.clone();
-        address_input.on_text_enter(move |_| d2.on_address_search());
+        address_input.on_text_enter(move |e| {
+            e.skip(false);
+            d2.on_address_search();
+        });
         let d2 = d.clone();
         address_search_button.on_click(move |_| d2.on_address_search());
         let d2 = d.clone();
