@@ -9,14 +9,9 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250101.0",
+    "@cloudflare/workers-types": "^5.20261102.1",
     "typescript": "^5.6.0",
     "vitest": "^4.1.12",
-    "wrangler": "^3.100.0"
-  },
-  "overrides": {
-    "sharp": "^0.35.5",
-    "undici": "^6.29.1",
-    "ws": "^8.21.0"
+    "wrangler": "^4.156.2"
   }
 }
