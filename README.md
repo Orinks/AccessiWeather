@@ -1,6 +1,6 @@
 # AccessiWeather
 
-A free desktop weather app. For the casual check-in or the deep dive.
+A free desktop weather app for forecasts, alerts, and detailed weather data.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
@@ -15,7 +15,6 @@ For setup instructions, everyday workflows, settings, troubleshooting, and weath
 
 ## Highlights
 
-- Accessible desktop weather designed for screen readers and keyboard use
 - Separate Current Conditions, Daily Forecast, Hourly Forecast, and Weather Alerts sections
 - Support for US and international locations
 - Forecast discussions, weather history, air quality, UV, aviation weather, and NOAA Weather Radio
