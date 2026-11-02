@@ -108,6 +108,15 @@ pub(crate) fn format_coordinates(latitude: f64, longitude: f64) -> String {
     LocationManager::format_coordinates(latitude, longitude, 4)
 }
 
+/// GTK leaves the dialog with no keyboard focus when the focused button is
+/// disabled, so hand focus to the search field first.
+fn disable_search_button(button: &Button, field: &TextCtrl) {
+    if button.has_focus() {
+        field.set_focus();
+    }
+    button.enable(false);
+}
+
 /// `location_manager.search_locations` (blocking).
 fn search_locations(
     http: &dyn HttpClient,
@@ -509,7 +518,7 @@ impl AddLocationDialog {
             return;
         }
         self.is_searching.set(true);
-        self.search_button.enable(false);
+        disable_search_button(&self.search_button, &self.search_input);
         self.update_status(&format!("Searching for '{query}'..."), false);
         self.results_list.clear();
         self.search_results.borrow_mut().clear();
@@ -950,7 +959,7 @@ impl EditLocationDialog {
             return;
         }
         self.is_searching.set(true);
-        self.address_search_button.enable(false);
+        disable_search_button(&self.address_search_button, &self.address_input);
         self.set_coordinate_comparison(&format!("Searching for '{query}'..."), false);
         self.address_results_list.clear();
         self.search_results.borrow_mut().clear();
