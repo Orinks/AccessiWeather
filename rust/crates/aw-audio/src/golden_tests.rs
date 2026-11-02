@@ -70,7 +70,7 @@ fn zip_listing(bytes: Vec<u8>) -> Value {
         let mut file = archive.by_index(i).unwrap();
         let mut text = String::new();
         std::io::Read::read_to_string(&mut file, &mut text).unwrap();
-        out.insert(file.name().to_string(), text);
+        out.insert(file.name().unwrap().into_owned(), text);
     }
     json!(out)
 }

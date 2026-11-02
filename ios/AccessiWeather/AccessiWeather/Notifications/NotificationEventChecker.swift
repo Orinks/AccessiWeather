@@ -115,7 +115,10 @@ struct NotificationEventState: Codable, Equatable {
         let precipType = (starting ? change : first).precipitationType
         let signature = "\(type):\(precipType ?? "")"
         let minutes = max(1, Int((change.time.timeIntervalSince(now) / 60).rounded()))
-        if minutes > Self.transitionLeadMinutes { return nil }
+        if minutes > Self.transitionLeadMinutes {
+            if minutelySignature == nil { minutelySignature = "none" }
+            return nil
+        }
         guard let last = minutelySignature else {
             minutelySignature = signature
             return nil

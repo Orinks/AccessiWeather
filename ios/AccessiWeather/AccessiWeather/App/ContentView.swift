@@ -26,6 +26,7 @@ struct ContentView: View {
                 .tag(AppTab.settings)
         }
         .task {
+            await model.requestNotificationsOnFirstLaunch()
             await model.refresh(announce: false)
         }
         .onChange(of: router.pendingAlert, initial: true) { _, request in

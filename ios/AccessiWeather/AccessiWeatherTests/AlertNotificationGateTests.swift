@@ -114,6 +114,12 @@ final class NotificationEventStateTests: XCTestCase {
         XCTAssertEqual(fresh?.body, body)
     }
 
+    func testFirstRainStartNotifiesWhenFirstSeenBeyondLeadTime() {
+        var state = NotificationEventState()
+        XCTAssertNil(state.checkMinutely(minutes(wetFrom: 30), locationName: "Home", settings: both, now: now))
+        XCTAssertEqual(state.checkMinutely(minutes(wetFrom: 5), locationName: "Home", settings: both, now: now)?.title, "Rain starting in 5 minutes")
+    }
+
     func testPrecipitationStartAndStopTransitions() {
         var state = NotificationEventState()
         XCTAssertNil(state.checkMinutely(minutes(wetFrom: nil), locationName: "Home", settings: both, now: now))

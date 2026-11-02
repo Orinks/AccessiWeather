@@ -7,6 +7,8 @@ struct SavedLocation: Identifiable, Codable, Hashable {
     var longitude: Double
     /// Adds the nearby NWS marine zone forecast and marine alerts (US only).
     var marineMode: Bool = false
+    /// Follows the device's position instead of staying put.
+    var isCurrentLocation: Bool = false
 
     init(id: UUID = UUID(), name: String, latitude: Double, longitude: Double) {
         self.id = id
@@ -34,7 +36,7 @@ struct SavedLocation: Identifiable, Codable, Hashable {
 
 extension SavedLocation {
     enum CodingKeys: String, CodingKey {
-        case id, name, latitude, longitude, marineMode
+        case id, name, latitude, longitude, marineMode, isCurrentLocation
     }
 
     init(from decoder: Decoder) throws {
@@ -46,5 +48,6 @@ extension SavedLocation {
             longitude: try c.decode(Double.self, forKey: .longitude)
         )
         marineMode = try c.decodeIfPresent(Bool.self, forKey: .marineMode) ?? false
+        isCurrentLocation = try c.decodeIfPresent(Bool.self, forKey: .isCurrentLocation) ?? false
     }
 }

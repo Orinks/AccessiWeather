@@ -3,12 +3,14 @@ import SwiftUI
 struct LocationsView: View {
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var locationStore: LocationStore
+    @EnvironmentObject private var settings: SettingsStore
+    @ObservedObject private var tracker = CurrentLocationTracker.shared
     @State private var showingAddSheet = false
 
     var body: some View {
         NavigationStack {
             Group {
-                if locationStore.locations.isEmpty {
+                if locationStore.locations.isEmpty && !settings.followCurrentLocation {
                     ContentUnavailableView {
                         Label {
                             Text("No Saved Locations")
@@ -22,9 +24,13 @@ struct LocationsView: View {
                     } actions: {
                         Button("Add Location") { showingAddSheet = true }
                             .buttonStyle(.borderedProminent)
+                        Button("Follow My Current Location") { model.setFollowsCurrentLocation(true) }
+                            .buttonStyle(.bordered)
                     }
                 } else {
                     List {
+                        currentLocationSection
+                        Section {
                         ForEach(locationStore.locations) { location in
                             Button {
                                 model.select(location)
@@ -33,7 +39,7 @@ struct LocationsView: View {
                                     VStack(alignment: .leading) {
                                         Text(location.name)
                                             .font(.headline)
-                                        Text(location.coordinateDescription)
+                                        Text(location.isCurrentLocation ? "Current location, \(location.coordinateDescription)" : location.coordinateDescription)
                                             .font(.caption)
                                             .foregroundStyle(.secondary)
                                     }
@@ -48,7 +54,11 @@ struct LocationsView: View {
                             .foregroundStyle(.primary)
                             .accessibilityLabel(location.name)
                             .accessibilityValue(
-                                [location.id == model.selectedLocation?.id ? "Selected" : nil, location.marineMode ? "Marine Mode" : nil]
+                                [
+                                    location.isCurrentLocation ? "Current location" : nil,
+                                    location.id == model.selectedLocation?.id ? "Selected" : nil,
+                                    location.marineMode ? "Marine Mode" : nil,
+                                ]
                                     .compactMap { $0 }.joined(separator: ", ")
                             )
                             .contextMenu {
@@ -63,10 +73,13 @@ struct LocationsView: View {
                             .accessibilityHint("Shows weather for this location")
                         }
                         .onDelete { offsets in
+                            let removesCurrent = offsets.contains { locationStore.locations[$0].isCurrentLocation }
                             model.removeLocations(atOffsets: offsets)
+                            if removesCurrent { model.setFollowsCurrentLocation(false) }
                         }
                         .onMove { source, destination in
                             locationStore.move(fromOffsets: source, toOffset: destination)
+                        }
                         }
                     }
                 }
@@ -89,6 +102,27 @@ struct LocationsView: View {
             }
             .sheet(isPresented: $showingAddSheet) {
                 AddLocationView()
+            }
+        }
+    }
+
+    private var currentLocationSection: some View {
+        Section {
+            Toggle("Follow my current location", isOn: Binding(
+                get: { settings.followCurrentLocation },
+                set: { model.setFollowsCurrentLocation($0) }
+            ))
+            if settings.followCurrentLocation, !tracker.updatesWhileClosed, !tracker.isDenied {
+                Button("Keep Updating While AccessiWeather Is Closed") { tracker.requestAlwaysPermission() }
+                    .accessibilityHint("Asks iOS to allow location access always, so alerts follow you when you travel")
+            }
+        } footer: {
+            if tracker.isDenied, settings.followCurrentLocation {
+                Text("Location access is off for AccessiWeather. Turn it on in the iPhone Settings app, under Privacy & Security, Location Services.")
+            } else if tracker.updatesWhileClosed {
+                Text("Your current location updates when you move about half a mile or more, even while AccessiWeather is closed.")
+            } else {
+                Text("Your current location updates each time you open AccessiWeather. Allow location access always to keep it updated while the app is closed.")
             }
         }
     }

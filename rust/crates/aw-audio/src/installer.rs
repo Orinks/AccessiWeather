@@ -43,7 +43,11 @@ pub fn safe_extractall<R: io::Read + io::Seek>(
     zip: &mut zip::ZipArchive<R>,
     target_dir: &Path,
 ) -> Result<(), String> {
-    let names: Vec<String> = zip.file_names().map(str::to_string).collect();
+    let names: Vec<String> = zip
+        .file_names()
+        .map(|name| name.map(|n| n.into_owned()))
+        .collect::<Result<_, _>>()
+        .map_err(|e| e.to_string())?;
     for name in &names {
         if contained_path(target_dir, name).is_none() {
             return Err(format!(
@@ -53,7 +57,8 @@ pub fn safe_extractall<R: io::Read + io::Seek>(
     }
     for i in 0..zip.len() {
         let mut member = zip.by_index(i).map_err(|e| e.to_string())?;
-        let Some(dest) = contained_path(target_dir, member.name()) else {
+        let name = member.name().map_err(|e| e.to_string())?.into_owned();
+        let Some(dest) = contained_path(target_dir, &name) else {
             continue;
         };
         if member.is_dir() {

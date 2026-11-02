@@ -29,6 +29,11 @@ final class LocationStore: ObservableObject {
         save()
     }
 
+    func insertFirst(_ location: SavedLocation) {
+        locations.insert(location, at: 0)
+        save()
+    }
+
     func update(_ location: SavedLocation) {
         guard let index = locations.firstIndex(where: { $0.id == location.id }) else { return }
         locations[index] = location

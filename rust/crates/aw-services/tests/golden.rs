@@ -223,7 +223,8 @@ fn restart_scripts() {
         assert_eq!(
             update_restart::build_macos_update_script(
                 Path::new(s(&case["update_path"])),
-                Path::new(s(&case["app_path"]))
+                Path::new(s(&case["app_path"])),
+                case["pid"].as_u64().unwrap() as u32,
             ),
             s(&case["text"])
         );
