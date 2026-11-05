@@ -1,13 +1,13 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
+# Dependabot version updates.
 # https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+# Python/pip was removed: the ship and test path is the Rust edition under rust/.
+# Development happens on dev; main only ever receives merges from it.
 
 version: 2
 updates:
-  - package-ecosystem: "pip"
-    directory: "/"
-    # Development happens on dev; main only ever receives merges from it.
+  - package-ecosystem: "cargo"
+    directory: "/rust"
     target-branch: "dev"
     schedule:
       interval: "weekly"

@@ -5,23 +5,9 @@ repos:
     rev: v4.5.0
     hooks:
     -   id: trailing-whitespace
-        exclude: ^src/accessiweather/weather_gov_api_client/
     -   id: end-of-file-fixer
-        exclude: ^src/accessiweather/weather_gov_api_client/
     -   id: check-yaml
     -   id: check-added-large-files
-    -   id: debug-statements
-
--   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.14
-    hooks:
-    -   id: ruff
-        args: [--fix]
-        files: ^(src/|tests/)
-        exclude: ^src/accessiweather/(weather_gov_api_client|weatherapi_client)/
-    -   id: ruff-format
-        files: ^(src/|tests/)
-        exclude: ^src/accessiweather/(weather_gov_api_client|weatherapi_client)/
 
 -   repo: local
     hooks:

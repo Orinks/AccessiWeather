@@ -1,3 +1,5 @@
+> **Maintained path:** Rust under `rust/`. No pytest / pip CI gates. See CONTRIBUTING.md and rust/README.md.
+
 <!-- This file mirrors AGENTS.md. Edit AGENTS.md as the primary source. -->
 
 # AI Agent Guidelines - AccessiWeather

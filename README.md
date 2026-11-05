@@ -3,8 +3,7 @@
 A free desktop weather app for forecasts, alerts, and detailed weather data.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
-[![Built with wxPython](https://img.shields.io/badge/Built%20with-wxPython-blue)](https://wxpython.org/)
+![Rust](https://img.shields.io/badge/Rust-edition-orange)
 ![Platforms](https://img.shields.io/badge/Platforms-Windows%20%7C%20macOS%20%7C%20Linux-informational)
 
 AccessiWeather brings forecasts, alerts, and detailed weather data into one open-source desktop app for Windows, macOS, and Linux. It keeps current conditions, daily forecast, hourly forecast, and alerts in clearly separated sections so you can jump straight to what you need with speech, braille, or the keyboard.
@@ -68,84 +67,32 @@ Download builds from:
 
 Packages currently include:
 
-- Windows: MSI installer or portable ZIP
-- macOS: DMG
-- Linux: run from source
+- Windows: installer `.exe` or portable ZIP
+- macOS: ZIP and DMG
+- Linux: tarball and AppImage
 
-### Run from source
+### Run or build from source
 
-Python 3.11 or newer is required. The recommended source setup uses `uv`.
-
-Recommended, using `uv`:
+AccessiWeather ships as a native Rust desktop app. See [rust/README.md](rust/README.md) for the full toolchain notes.
 
 ```bash
 git clone https://github.com/Orinks/AccessiWeather.git
-cd AccessiWeather
-uv sync
-uv run accessiweather
+cd AccessiWeather/rust
+cargo build --release -p accessiweather
+./target/release/accessiweather
 ```
 
-Alternative, using a virtual environment:
+Useful flags:
 
 ```bash
-git clone https://github.com/Orinks/AccessiWeather.git
-cd AccessiWeather
-python -m venv .venv
+./target/release/accessiweather --portable   # config beside the executable
+./target/release/accessiweather --offline    # recorded responses
+./target/release/accessiweather --check      # headless self-check
+./target/release/accessiweather --smoke      # open a window briefly
 ```
 
-Activate the environment:
+Release packaging uses `cargo xtask package` (same path as GitHub Actions).
 
-```powershell
-# Windows PowerShell
-.\.venv\Scripts\Activate.ps1
-```
-
-```bash
-# macOS/Linux
-source .venv/bin/activate
-```
-
-Then install and run:
-
-```bash
-pip install -e ".[dev]"
-accessiweather
-```
-
-Portable mode:
-
-```bash
-accessiweather --portable
-```
-
-### Build from source
-
-For release-style local builds, use the Nuitka build script. This is the path used by GitHub Actions.
-
-```bash
-uv sync --extra build
-uv run python installer/build_nuitka.py
-```
-
-Build outputs are written to `dist/`. Current outputs are:
-
-- Windows: installer `.exe` and portable `.zip`
-- macOS: app `.zip`
-- Linux: portable `.tar.gz`
-
-Platform notes:
-
-- Windows installer builds require Inno Setup 6.
-- macOS builds must be run on macOS.
-- Linux builds need the GTK/wxPython system packages for your distribution.
-
-For a simpler local PyInstaller build, `installer/build.py` is still available:
-
-```bash
-uv run python installer/build.py
-```
-
-More build options are documented in `installer/README.md`.
 
 ## Quick start
 

@@ -1593,9 +1593,9 @@
     "base"
    ],
    "expected": {
-    "code": 1,
-    "stdout": "",
-    "stderr": "User-facing paths changed without updating CHANGELOG.md:\n- installer/x.iss\n- tools/app.spec\n",
+    "code": 0,
+    "stdout": "No user-facing paths changed.\n",
+    "stderr": "",
     "output": null
    }
   },

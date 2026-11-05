@@ -8,11 +8,14 @@ pub const MANUAL_UNAVAILABLE_TITLE: &str = "User Manual Unavailable";
 pub const MANUAL_UNAVAILABLE: &str = "AccessiWeather could not open the user manual.";
 
 /// The repository root when running from source: the ancestor of this
-/// crate holding `pyproject.toml` (Python's `_find_project_root`).
+/// crate that holds both `rust/Cargo.toml` and `docs/user_manual.md`.
 pub(crate) fn source_project_root() -> Option<PathBuf> {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .ancestors()
-        .find(|dir| dir.join("pyproject.toml").exists())
+        .find(|dir| {
+            dir.join("rust").join("Cargo.toml").exists()
+                && dir.join("docs").join("user_manual.md").exists()
+        })
         .map(Path::to_path_buf)
 }
 
