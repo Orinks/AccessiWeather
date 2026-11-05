@@ -5,10 +5,14 @@ name: Rust native app
 # compiles wxWidgets once. Pushes to dev run the same checks and seed the
 # debug caches that pull requests restore. Release builds and packaging live
 # in rust-build.yml.
+#
+# Pull requests always enter this workflow so the required Linux/Windows/macOS
+# checks report a result even when the PR only touches non-rust paths (for
+# example push-server/). The expensive compile jobs still run only when rust/
+# or this workflow file changed.
 
 on:
   pull_request:
-    paths: ["rust/**", ".github/workflows/rust.yml"]
   push:
     branches: [dev]
     paths: ["rust/**", ".github/workflows/rust.yml"]
@@ -29,8 +33,34 @@ env:
   CARGO_PROFILE_DEV_DEBUG: "0"
 
 jobs:
+  changes:
+    name: Detect rust changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      rust: ${{ steps.set.outputs.rust }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v3
+        id: filter
+        if: github.event_name == 'pull_request'
+        with:
+          filters: |
+            rust:
+              - 'rust/**'
+              - '.github/workflows/rust.yml'
+      - id: set
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "rust=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "rust=${{ steps.filter.outputs.rust }}" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
     name: ${{ matrix.name }}
+    needs: changes
+    if: needs.changes.outputs.rust == 'true'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
     strategy:
@@ -127,3 +157,18 @@ jobs:
         if: runner.os == 'macOS'
         timeout-minutes: 3
         run: target/debug/accessiweather --smoke
+
+  # Satisfy branch protection when the PR does not touch rust/. Same check
+  # names as the compile jobs above; only one of build/skip runs per matrix name.
+  skip:
+    name: ${{ matrix.name }}
+    needs: changes
+    if: needs.changes.outputs.rust != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        name: [Linux, Windows, macOS]
+    steps:
+      - run: echo "No rust/ or rust.yml changes; ${{ matrix.name }} compile checks not required for this PR."
