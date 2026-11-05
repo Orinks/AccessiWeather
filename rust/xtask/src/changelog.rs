@@ -946,5 +946,8 @@ Changelog: none"
         assert!(!is_user_facing_path(
             "src/accessiweather/weather_gov_api_client/x.py"
         ));
+        // Python installer / PyInstaller specs are gone; they are not user-facing.
+        assert!(!is_user_facing_path("installer/x.iss"));
+        assert!(!is_user_facing_path("tools/app.spec"));
     }
 }
