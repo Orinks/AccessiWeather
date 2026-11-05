@@ -13,7 +13,7 @@ clap.workspace = true
 reqwest.workspace = true
 serde_json.workspace = true
 flate2 = "1"
-icns = "0.3"
+icns = "0.5"
 image = { version = "0.25", default-features = false, features = ["png", "ico"] }
 regex = "1"
 sha2 = "0.10"
