@@ -16,12 +16,8 @@ use regex::Regex;
 use crate::Result;
 
 const CHANGELOG_PATH: &str = "CHANGELOG.md";
-const USER_FACING_PATH_PREFIXES: [&str; 4] = [
-    "src/",
-    "soundpacks/",
-    "rust/crates/",
-    "rust/packaging/",
-];
+const USER_FACING_PATH_PREFIXES: [&str; 4] =
+    ["src/", "soundpacks/", "rust/crates/", "rust/packaging/"];
 /// Paths that ship inside the build surface but never warrant a release note.
 const EXCLUDED_PATH_PREFIXES: [&str; 1] = ["src/accessiweather/weather_gov_api_client/"];
 /// Exact paths that still count as user-facing (legacy / golden-test cases).
