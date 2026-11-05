@@ -1,3 +1,5 @@
+> **Current CI:** Rust workflows only (`rust.yml`, `rust-build.yml`, `rust-integration.yml`). There is no pytest or pip install gate. See [.github/workflows/README.md](../.github/workflows/README.md).
+
 # CI/CD Pipeline Setup Guide
 
 This guide explains how to set up and use the CI/CD pipeline for AccessiWeather.

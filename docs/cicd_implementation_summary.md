@@ -1,3 +1,5 @@
+> **Current CI:** Rust workflows only (`rust.yml`, `rust-build.yml`, `rust-integration.yml`). There is no pytest or pip install gate. See [.github/workflows/README.md](../.github/workflows/README.md).
+
 # CI/CD Pipeline Implementation Summary
 
 ## Subtask 61.1: Design CI/CD Pipeline Architecture - COMPLETED ✅
