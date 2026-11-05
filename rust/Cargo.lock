@@ -475,22 +475,20 @@ checksum = "ac07cdecf99051d9a5238b80f35af32cdeba5b336e55d957b318b50137e18da5"
 
 [[package]]
 name = "bindgen"
-version = "0.72.1"
+version = "0.73.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "993776b509cfb49c750f11b8f07a46fa23e0a1386ffc01fb1e7d343efc387895"
+checksum = "787ef8ef523575546b106a58213d6e6b06198a05c2f757258c68a74273670cfa"
 dependencies = [
  "bitflags 2.13.2",
  "cexpr",
  "clang-sys",
- "itertools",
  "log",
- "prettyplease",
  "proc-macro2",
  "quote",
  "regex",
  "rustc-hash",
- "shlex 1.3.0",
- "syn 2.0.119",
+ "shlex",
+ "syn 3.0.6",
 ]
 
 [[package]]
@@ -600,7 +598,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "54413ede23c2daf518f35156dfde027feb2374004d63bd497f983c8db9c0e313"
 dependencies = [
  "find-msvc-tools",
- "shlex 2.0.1",
+ "shlex",
 ]
 
 [[package]]
@@ -1012,12 +1010,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "either"
-version = "1.18.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "252afb9ae5eaa683babdc6a068b3f5726eb19e05070c731f9b2a23a7c3e8ed34"
-
-[[package]]
 name = "embed-manifest"
 version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1077,7 +1069,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -1656,15 +1648,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a6cb138bb79a146c1bd460005623e142ef0181e3d0219cb493e02f7d08a35695"
 
 [[package]]
-name = "itertools"
-version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
-dependencies = [
- "either",
-]
-
-[[package]]
 name = "itoa"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2027,7 +2010,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -2438,16 +2421,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "prettyplease"
-version = "0.2.37"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "479ca8adacdd7ce8f1fb39ce9ecccbfe93a3f1344b3d0d97f20bc0196208f62b"
-dependencies = [
- "proc-macro2",
- "syn 2.0.119",
-]
-
-[[package]]
 name = "prism-sys"
 version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2551,7 +2524,7 @@ dependencies = [
  "once_cell",
  "socket2",
  "tracing",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -2627,9 +2600,9 @@ dependencies = [
 
 [[package]]
 name = "rawzip"
-version = "0.4.4"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9d9575f44c8cf85bc843ad666dcdf20d05a7753772bef56eb2a5140282b32150"
+checksum = "ac9999039f74cd73c03158cddfe4362991703c74efe5ce5c8073026f80a5e48c"
 
 [[package]]
 name = "regex"
@@ -2779,7 +2752,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -3025,12 +2998,6 @@ checksum = "f40ca3c46823713e0d4209592e8d6e826aa57e928f09752619fc696c499637f6"
 dependencies = [
  "lazy_static",
 ]
-
-[[package]]
-name = "shlex"
-version = "1.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
 name = "shlex"
@@ -3319,7 +3286,7 @@ dependencies = [
  "getrandom 0.4.3",
  "once_cell",
  "rustix",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -3831,7 +3798,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -4226,9 +4193,9 @@ checksum = "3ad82d2a33cdc9674dc7465672f271e096168fcdbe0f799d9e6db8c5892679dc"
 
 [[package]]
 name = "wxdragon"
-version = "0.9.22"
+version = "0.9.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c35127e8548aed8ae04d163d359db1b520dad9f42f28ecf67bf0b27f7f47e63f"
+checksum = "e10bc93e4c8366136a9d1468c7bde5363be8386af52f77f133d7805e09031163"
 dependencies = [
  "bitflags 2.13.2",
  "log",
@@ -4239,9 +4206,9 @@ dependencies = [
 
 [[package]]
 name = "wxdragon-macros"
-version = "0.9.22"
+version = "0.9.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d14957ce8ba0c50e5686df98cde93e721caf329b22016cadd0d10d7f1172a432"
+checksum = "07d53c29add134e7f383ebc1a3ca4bbff5f3840fd2f2d5843168691c5d3648e9"
 dependencies = [
  "proc-macro2",
  "quick-xml",
@@ -4251,9 +4218,9 @@ dependencies = [
 
 [[package]]
 name = "wxdragon-sys"
-version = "0.9.22"
+version = "0.9.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3858369cb3c4611755ad643348f6d82063c0a3d8aae56b6a4479b46043e5eb1f"
+checksum = "1f46998e50d71680abec6360432fca9dd2953066a1f7b64b22b69261e3ce7bf9"
 dependencies = [
  "bindgen",
  "cmake",
