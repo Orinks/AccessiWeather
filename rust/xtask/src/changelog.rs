@@ -1,9 +1,8 @@
-//! `scripts/changelog_tools.py`: the CHANGELOG gate for pull requests,
-//! release notes from curated `CHANGELOG.md` entries, and the nightly
-//! should-build decision.
+//! CHANGELOG gate for pull requests, release notes from curated
+//! `CHANGELOG.md` entries, and the nightly should-build decision.
 //!
-//! The Rust edition's shipped trees (`rust/crates/`, `rust/packaging/`) count
-//! as user-facing too; everything else matches the Python tool.
+//! User-facing trees: `rust/crates/`, `rust/packaging/`, `soundpacks/`, and
+//! the legacy Python reference under `src/` (kept for golden generators).
 
 use std::collections::HashSet;
 use std::io::Write;
@@ -17,21 +16,13 @@ use regex::Regex;
 use crate::Result;
 
 const CHANGELOG_PATH: &str = "CHANGELOG.md";
-const USER_FACING_PATH_PREFIXES: [&str; 5] = [
-    "src/",
-    "installer/",
-    "soundpacks/",
-    "rust/crates/",
-    "rust/packaging/",
-];
+const USER_FACING_PATH_PREFIXES: [&str; 4] =
+    ["src/", "soundpacks/", "rust/crates/", "rust/packaging/"];
 /// Paths that ship inside the build surface but never warrant a release note.
 const EXCLUDED_PATH_PREFIXES: [&str; 1] = ["src/accessiweather/weather_gov_api_client/"];
-const USER_FACING_PATHS: [&str; 3] = [
-    "accessiweather.spec",
-    "pyproject.toml",
-    "scripts/generate_build_meta.py",
-];
-const USER_FACING_SUFFIXES: [&str; 1] = [".spec"];
+/// Exact paths that still count as user-facing (legacy / golden-test cases).
+const USER_FACING_PATHS: [&str; 1] = ["pyproject.toml"];
+const USER_FACING_SUFFIXES: [&str; 0] = [];
 const SKIP_CHANGELOG_MARKERS: [&str; 2] = ["changelog: none", "[skip changelog]"];
 const NIGHTLY_BUILD_MARKERS: [&str; 2] = ["nightly: build", "[nightly build]"];
 const SECTION_ORDER: [&str; 7] = [
@@ -955,5 +946,8 @@ Changelog: none"
         assert!(!is_user_facing_path(
             "src/accessiweather/weather_gov_api_client/x.py"
         ));
+        // Python installer / PyInstaller specs are gone; they are not user-facing.
+        assert!(!is_user_facing_path("installer/x.iss"));
+        assert!(!is_user_facing_path("tools/app.spec"));
     }
 }

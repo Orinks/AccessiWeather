@@ -136,8 +136,8 @@ Every release carries `checksums.txt`, which both updaters verify.
 Every window, dialog, menu, shortcut, setting and notification of the Python
 app is ported. Golden tests under `testdata/golden/` compare the Rust output
 with the Python app's own output for the same inputs; their generators are in
-`tools/golden/` and run against a checkout of the Python app
-(`uv run python rust/tools/golden/<area>.py` from its root).
+`tools/golden/` and read the legacy Python tree under `src/accessiweather/`.
+Regenerating them is optional maintainer work and is not part of CI.
 
 Both editions share the configuration, API keys, alert state, weather cache
 and NOAA radio preferences, and the same single-instance lock: while one is

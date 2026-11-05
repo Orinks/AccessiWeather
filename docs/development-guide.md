@@ -1,3 +1,5 @@
+> **Maintained path:** AccessiWeather ships and tests as the Rust edition under `rust/`. Use [rust/README.md](../rust/README.md), [CONTRIBUTING.md](../CONTRIBUTING.md), and [TESTING.md](../TESTING.md). The Python/pytest/Briefcase instructions below are historical and are not the CI gate.
+
 # Development Guide - AccessiWeather
 
 **Generated:** December 11, 2025

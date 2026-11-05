@@ -1,6 +1,6 @@
 # Contributing to AccessiWeather
 
-Thank you for your interest in contributing to AccessiWeather! This document provides guidelines and instructions for contributing to the beta release and beyond.
+Thank you for your interest in contributing to AccessiWeather.
 
 ## Code of Conduct
 
@@ -10,92 +10,50 @@ Please be respectful and considerate when interacting with other contributors. W
 
 1. Fork the repository
 2. Clone your fork locally
-3. Set up the development environment:
+3. Work in the Rust edition under `rust/` (see [rust/README.md](rust/README.md))
+4. Create a branch from `dev`:
    ```
-   pip install -e .
-   ```
-4. Create a new branch for your feature or bugfix:
-   ```
+   git checkout dev
+   git pull
    git checkout -b feature/your-feature-name
    ```
 
-## Development Process
+## Development process
 
-### Test-Driven Development
-
-This project follows test-driven development (TDD) principles:
-
-1. Write tests first that define the expected behavior
-2. Run the tests to ensure they fail initially
-3. Implement the feature to make the tests pass
-4. Refactor your code while keeping tests passing
-5. Commit your changes
-
-### Running Tests
-
-For a quick unit-only pass, use the helper script:
+The ship and test path is Rust only:
 
 ```bash
-scripts/run-unit-tests.sh
+cd rust
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets
+cargo test --workspace
+cargo build -p accessiweather
+./target/debug/accessiweather --check
 ```
 
-For the same validation CI enforces on pull requests, run:
+Packaging and release tooling live in `cargo xtask` (see [rust/README.md](rust/README.md)).
 
-```bash
-ruff format --check .
-ruff check .
-ACCESSIWEATHER_TEST_MODE=1 HYPOTHESIS_PROFILE=ci pytest tests/ -n 8 -v --tb=short -m "not integration"
-```
+Pull requests normally target `dev`. `rust.yml` validates formatting, Clippy, tests, the headless `--check`, and a windowed `--smoke` on Linux, Windows, and macOS.
 
-## Accessibility Requirements
+## Accessibility
 
-All UI components must be accessible to screen readers. Before submitting a pull request that includes UI changes:
+All UI components must stay accessible to screen readers. Before submitting a pull request that includes UI changes:
 
-1. Ensure all UI elements have appropriate labels and descriptions
-2. Test keyboard navigation for all new features
-3. Verify that screen readers can properly announce UI elements
-4. Follow the guidelines in the developer documentation
+1. Ensure controls have appropriate labels and descriptions
+2. Test keyboard navigation for new features
+3. Verify screen readers can announce new UI
+4. Follow [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md)
 
-## Pull Request Process
+## Changelog
 
-1. Update the documentation to reflect any changes
-2. Ensure all tests are passing
-3. Update the version number if applicable
-4. Submit a pull request with a clear description of your changes
+User-facing changes need a curated `CHANGELOG.md` bullet under `## [Unreleased]`. Internal-only work can use the `skip-changelog` PR label or `Changelog: none` / `[skip changelog]` in the commit message. See [.github/workflows/README.md](.github/workflows/README.md).
 
-## Style Guidelines
+## Style
 
-- Follow PEP 8 for Python code style with a 100 character line length
-- Use ruff for code formatting, linting, and import sorting
-- Run mypy for type checking
-- Include docstrings for all modules, classes, and functions
-- Use type hints where appropriate
-- Include meaningful commit messages
+- Conventional commits and conventional PR titles
+- No agent or staff names in commit subjects or bodies
+- Prefer `git --no-pager` for inspection commands on Windows
 
-You can check your code with:
-```bash
-ruff format --check .
-ruff check .
-python -m mypy src/accessiweather
-```
+## Feature requests and bug reports
 
-## Feature Requests and Bug Reports
-
-Please use the GitHub issue tracker to submit feature requests and bug reports. For bug reports, please include:
-
-- A clear description of the issue
-- Steps to reproduce
-- Expected behavior
-- Actual behavior
-- Screenshots if applicable
-- System information (OS, Python version, wxPython version)
-
-## Beta Testing
-
-During the beta phase, we especially appreciate feedback on:
-
-1. Accessibility issues with screen readers
-2. UI/UX improvements
-3. Weather data accuracy and presentation
-4. Performance on different systems
-5. Installation and setup experience
+Use the GitHub issue tracker. For bugs, include steps to reproduce, expected vs actual behavior, and your OS.
