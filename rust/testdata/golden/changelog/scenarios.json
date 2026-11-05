@@ -1594,7 +1594,7 @@
    ],
    "expected": {
     "code": 0,
-    "stdout": "",
+    "stdout": "No user-facing paths changed.\n",
     "stderr": "",
     "output": null
    }
