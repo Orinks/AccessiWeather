@@ -22,6 +22,14 @@ const SYSTEM_VOICES: [&str; 1] = ["AVSpeech"];
 #[cfg(not(any(windows, target_os = "macos")))]
 const SYSTEM_VOICES: [&str; 1] = ["SpeechDispatcher"];
 
+/// What prism calls those engines' backends once created.
+#[cfg(windows)]
+const SYSTEM_VOICE_NAMES: [&str; 2] = ["OneCore", "SAPI"];
+#[cfg(target_os = "macos")]
+const SYSTEM_VOICE_NAMES: [&str; 1] = ["AVSpeech"];
+#[cfg(not(any(windows, target_os = "macos")))]
+const SYSTEM_VOICE_NAMES: [&str; 1] = ["Speech Dispatcher"];
+
 fn prism() -> Option<&'static Prism> {
     if let Some(prism) = PRISM.with(Cell::get) {
         return Some(prism);
@@ -48,18 +56,50 @@ pub fn init() {
             return;
         }
     };
-    if !backend
-        .features()
-        .contains(Features::IS_SUPPORTED_AT_RUNTIME)
-    {
+    if !is_running(&backend) {
         tracing::debug!(
             "Screen reader backend found ({}) but not running at runtime",
             backend.name()
         );
         return;
     }
-    tracing::info!("Screen reader backend active: {}", backend.name());
+    let name = backend.name();
+    if BACKEND
+        .with(|b| b.borrow().as_ref().map(Backend::name))
+        .as_ref()
+        != Some(&name)
+    {
+        tracing::info!("Screen reader backend active: {name}");
+    }
     BACKEND.with(|b| *b.borrow_mut() = Some(backend));
+}
+
+fn is_running(backend: &Backend) -> bool {
+    backend
+        .features()
+        .contains(Features::IS_SUPPORTED_AT_RUNTIME)
+}
+
+/// Look for a screen reader again when none was found, the one found has
+/// stopped, or only a system voice was: VoiceOver can't be acquired before
+/// the first window opens, and screen readers start and stop while the app
+/// runs.
+fn refresh() {
+    let (found, stopped) = BACKEND.with(|b| match b.borrow().as_ref() {
+        None => (false, false),
+        Some(backend) if !is_running(backend) => (false, true),
+        Some(backend) => (
+            !SYSTEM_VOICE_NAMES.contains(&backend.name().as_str()),
+            false,
+        ),
+    });
+    if found {
+        return;
+    }
+    if stopped {
+        BACKEND.with(|b| b.borrow_mut().take());
+    }
+    init();
 }
 
 /// Speak `text` through the screen reader. No-op when none is available.
@@ -67,6 +107,7 @@ pub fn announce(text: &str) {
     if text.trim().is_empty() {
         return;
     }
+    refresh();
     BACKEND.with(|b| {
         if let Some(backend) = b.borrow().as_ref() {
             if let Err(e) = backend.speak(text, false) {
@@ -99,10 +140,7 @@ pub fn speak_aloud(text: &str) -> bool {
     if text.trim().is_empty() {
         return false;
     }
-    // A screen reader started after the app was opened is picked up here.
-    if BACKEND.with(|b| b.borrow().is_none()) {
-        init();
-    }
+    refresh();
     let spoken = BACKEND.with(|b| {
         b.borrow()
             .as_ref()
