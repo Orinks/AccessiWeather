@@ -6,6 +6,7 @@ mod icons;
 mod package;
 mod pages;
 mod streams;
+mod transmitters;
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode};
@@ -45,6 +46,9 @@ enum Cmd {
     Pages,
     /// Check NOAA Weather Radio stream URLs (`scripts/check_streams.py`).
     CheckStreams(streams::Args),
+    /// Regenerate the bundled NOAA Weather Radio transmitter table from
+    /// weather.gov (`crates/aw-radio/data/nwr_transmitters.json`).
+    NwrTransmitters,
 }
 
 fn main() -> ExitCode {
@@ -60,6 +64,7 @@ fn main() -> ExitCode {
         Cmd::Package { artifacts } => package::run(&artifacts).map(|()| 0),
         Cmd::Pages => pages::build().map(|()| 0),
         Cmd::CheckStreams(args) => streams::run(&args),
+        Cmd::NwrTransmitters => transmitters::run().map(|()| 0),
     };
     match result {
         Ok(code) => ExitCode::from(code),
