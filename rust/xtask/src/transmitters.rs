@@ -22,6 +22,9 @@ pub fn run() -> Result<()> {
     let date = chrono::Utc::now().format("%Y-%m-%d").to_string();
     let out = render(&transmitters, &date);
     let path = crate::rust_dir().join("crates/aw-radio/data/nwr_transmitters.json");
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
     std::fs::write(&path, out)?;
     eprintln!(
         "Wrote {} transmitters to {}",

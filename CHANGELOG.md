@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- Show unavailable stations in the NOAA Weather Radio finder now lists every weather.gov transmitter, so you can see which covers you, even with no stream.
+
 ### Fixed
 - Add Location opens faster on Windows, focuses search results, and announces validation errors. Enter searches from the search field and saves from the results list.
 - Pressing Enter in Edit Location's address search now searches instead of saving and closing the dialog on Linux.

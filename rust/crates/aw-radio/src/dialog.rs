@@ -808,11 +808,14 @@ impl RadioDialog {
                     .lock()
                     .unwrap()
                     .get_favorite_stations();
-                let candidates = find_candidates(&dialog.deps.station_database, &query);
-                let entries = dialog
-                    .deps
-                    .availability
-                    .build_entries(&candidates, show_unavailable);
+                let availability = &dialog.deps.availability;
+                let db = availability.finder_database(
+                    &dialog.deps.station_database,
+                    show_unavailable && query.mode != FinderMode::Favorites,
+                );
+                let candidates = find_candidates(&db, &query);
+                let entries =
+                    availability.build_finder_entries(&candidates, show_unavailable, true);
                 let stations: Vec<Station> = entries.iter().map(|e| e.station.clone()).collect();
                 let choices: Vec<String> = entries.into_iter().map(|e| e.label).collect();
                 let call_signs: Vec<String> =
