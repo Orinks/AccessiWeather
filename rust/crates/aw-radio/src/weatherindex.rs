@@ -190,16 +190,22 @@ impl WeatherIndexClient {
             .is_some_and(|d| !d.stations.is_empty())
     }
 
-    /// Feeds from the loaded directory; `None` when it doesn't list the
-    /// station (or nothing is loaded yet). Never touches the network.
+    /// Feeds from the loaded directory; `None` when nothing is loaded yet.
+    /// The directory lists every station with a feed, so a station it
+    /// doesn't list has none. Never touches the network.
     fn directory_stream_urls(&self, call_sign: &str) -> Option<Vec<String>> {
         let directory = self.directory.lock().unwrap();
-        directory
-            .as_ref()?
-            .stations
-            .iter()
-            .find(|s| s.call_sign == call_sign)
-            .map(|s| s.stream_urls.clone())
+        let stations = &directory.as_ref()?.stations;
+        if stations.is_empty() {
+            return None;
+        }
+        Some(
+            stations
+                .iter()
+                .find(|s| s.call_sign == call_sign)
+                .map(|s| s.stream_urls.clone())
+                .unwrap_or_default(),
+        )
     }
 
     fn load_directory_from_disk(&self) -> Option<Vec<WeatherIndexDirectoryStation>> {
