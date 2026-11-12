@@ -19,7 +19,7 @@ tempfile.workspace = true
 url.workspace = true
 regex = "1"
 sha2 = "0.10"
-md5 = "0.7"
+md5 = "0.8"
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.61", features = [

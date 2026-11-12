@@ -116,7 +116,7 @@ pub fn verify_file_checksum(
     let actual = match algorithm {
         "sha256" => hex(&sha256.finalize()),
         "sha512" => hex(&sha512.finalize()),
-        _ => format!("{:x}", md5.compute()),
+        _ => format!("{:x}", md5.finalize()),
     };
     Ok(actual == expected_hash.to_lowercase())
 }
