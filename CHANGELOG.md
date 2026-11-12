@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - Show unavailable stations in the NOAA Weather Radio finder now lists every weather.gov transmitter, so you can see which covers you, even with no stream.
 
 ### Fixed
+- On macOS, errors and other spoken messages now come through VoiceOver when it's running, and the system voice reads them when it isn't.
 - Add Location opens faster on Windows, focuses search results, and announces validation errors. Enter searches from the search field and saves from the results list.
 - Pressing Enter in Edit Location's address search now searches instead of saving and closing the dialog on Linux.
 - On Linux, pressing the Search button with the keyboard in Add Location now moves focus to the results instead of losing it.
