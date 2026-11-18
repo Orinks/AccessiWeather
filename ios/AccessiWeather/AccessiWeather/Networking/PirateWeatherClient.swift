@@ -149,6 +149,7 @@ struct PirateWeatherClient {
             timeZone: zone,
             fetchedAt: fetchedAt,
             forecastOfficeID: nil,
+            alertSource: .pirateWeather,
             minutely: minutely
         )
     }
