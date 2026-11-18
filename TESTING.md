@@ -31,7 +31,7 @@ cargo test -p aw-providers --test live -- --ignored
 
 ## Golden data
 
-Recorded golden fixtures live under `rust/testdata/golden/`. Regenerators are Python helpers in `rust/tools/golden/` that compare against the legacy Python reference tree in `src/accessiweather/` when you still have a historical checkout that can run it. Day-to-day development does not require regenerating them.
+Recorded golden fixtures live under `rust/testdata/golden/`. They were recorded from the former Python edition, which has been removed from the repository; the Python generators and source are in git history (before the Python removal commit) if a fixture ever needs re-recording. Treat the committed fixtures as the spec.
 
 ## CI
 

@@ -171,19 +171,35 @@ fn copy_default_soundpack(soundpacks: &Path) -> Result<()> {
     copy_dir(&source, &soundpacks.join("default"))
 }
 
+/// `out/lib` of every prism-sys build: `build/prism-sys-<hash>/out/lib`
+/// before Rust 1.100, `build/prism-sys/<hash>/out/lib` since.
+fn prism_lib_dirs(build: &Path) -> Result<Vec<PathBuf>> {
+    let mut dirs = Vec::new();
+    for entry in fs::read_dir(build)? {
+        let crate_dir = entry?.path();
+        let Some(name) = crate_dir
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+        else {
+            continue;
+        };
+        if name.starts_with("prism-sys-") {
+            dirs.push(crate_dir.join("out").join("lib"));
+        } else if name == "prism-sys" {
+            for hash in fs::read_dir(&crate_dir)? {
+                dirs.push(hash?.path().join("out").join("lib"));
+            }
+        }
+    }
+    dirs.retain(|lib| lib.is_dir());
+    Ok(dirs)
+}
+
 /// prism's shared library (Linux/macOS link it dynamically; Windows statically).
 fn copy_prism(dest: &Path) -> Result<()> {
     let build = target_dir()?.join("release").join("build");
     let mut copied = false;
-    for entry in fs::read_dir(&build)? {
-        let crate_dir = entry?.path();
-        let is_prism = crate_dir
-            .file_name()
-            .is_some_and(|n| n.to_string_lossy().starts_with("prism-sys-"));
-        let lib = crate_dir.join("out").join("lib");
-        if !is_prism || !lib.is_dir() {
-            continue;
-        }
+    for lib in prism_lib_dirs(&build)? {
         for file in fs::read_dir(&lib)? {
             let file = file?;
             let name = file.file_name().to_string_lossy().into_owned();

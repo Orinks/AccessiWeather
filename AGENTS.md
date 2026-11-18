@@ -38,7 +38,7 @@ AccessiWeather is a cross-platform accessible desktop weather application. The m
 | App binary / UI | `rust/crates/aw-app` |
 | Packaging / release | `rust/xtask` |
 
-`src/accessiweather/` is a legacy Python reference kept for optional golden regenerators under `rust/tools/golden/`. It is not the ship path.
+The former Python edition (`src/accessiweather/`, `rust/tools/golden/`) has been removed. Its recorded output lives on as golden fixtures in `rust/testdata/golden/`; the source is in git history if you need it.
 
 `ios/` and `push-server/` are separate surfaces; leave them alone unless the task names them.
 

@@ -140,7 +140,7 @@ jobs:
         if: runner.os != 'Windows'
         shell: bash
         run: |
-          find target/debug/build -path '*prism-sys-*/out/lib/*' -name 'libprism*' \
+          find target/debug/build -path '*/prism-sys*/out/lib/*' -name 'libprism*' \
             \( -name '*.so*' -o -name '*.dylib' \) -exec cp -P {} target/debug/ \;
       - name: Headless self-check
         shell: bash

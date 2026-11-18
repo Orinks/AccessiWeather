@@ -50,9 +50,12 @@ pub fn is_running_from_source() -> bool {
 }
 
 fn running_from_cargo_target(exe_dir: &Path) -> bool {
+    // Binaries sit in `<profile>/` or `<profile>/deps/`, and since Rust 1.100
+    // test binaries sit in `<profile>/build/<package>/<hash>/out/`, four levels
+    // below the profile directory.
     exe_dir
         .ancestors()
-        .take(2)
+        .take(5)
         .any(|dir| dir.join(".cargo-lock").is_file())
 }
 
@@ -158,6 +161,8 @@ mod tests {
         std::fs::write(dir.path().join("debug").join(".cargo-lock"), b"").unwrap();
         assert!(running_from_cargo_target(&deps));
         assert!(running_from_cargo_target(&dir.path().join("debug")));
+        let out = dir.path().join("debug/build/aw-services/0123abcd/out");
+        assert!(running_from_cargo_target(&out));
         // The test binary itself runs from target/<profile>/deps.
         assert!(is_running_from_source());
     }

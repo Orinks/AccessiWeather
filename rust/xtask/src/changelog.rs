@@ -2,7 +2,7 @@
 //! `CHANGELOG.md` entries, and the nightly should-build decision.
 //!
 //! User-facing trees: `rust/crates/`, `rust/packaging/`, `soundpacks/`, and
-//! the legacy Python reference under `src/` (kept for golden generators).
+//! `src/` (the removed Python edition; kept so the golden scenarios still match).
 
 use std::collections::HashSet;
 use std::io::Write;
