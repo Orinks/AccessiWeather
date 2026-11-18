@@ -136,6 +136,12 @@ struct WeatherAlert: Identifiable, Equatable, Hashable {
     }
 }
 
+enum AlertEmptyState: Equatable {
+    case unsupported
+    case unavailable
+    case noActiveAlerts(WeatherSource)
+}
+
 struct WeatherReport: Equatable {
     var location: SavedLocation
     var current: CurrentConditions
@@ -147,9 +153,15 @@ struct WeatherReport: Equatable {
     var fetchedAt: Date
     var forecastOfficeID: String?
     var observationStationID: String? = nil
+    var alertSource: WeatherSource? = nil
     var alertsAreCurrent: Bool = true
     var minutely: [MinutelyPoint]? = nil
     var marine: MarineForecast? = nil
+
+    var alertEmptyState: AlertEmptyState {
+        guard let alertSource else { return .unsupported }
+        return alertsAreCurrent ? .noActiveAlerts(alertSource) : .unavailable
+    }
 }
 
 enum WeatherError: LocalizedError {

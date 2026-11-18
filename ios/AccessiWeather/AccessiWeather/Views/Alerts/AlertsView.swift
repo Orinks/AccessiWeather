@@ -14,14 +14,11 @@ struct AlertsView: View {
                         systemImage: "mappin.slash",
                         description: "No location is selected. Add a location on the Locations tab to check for alerts."
                     )
+                } else if let message = model.errorMessage, model.report?.alerts.isEmpty != false {
+                    EmptyStateView(title: "Alerts Unavailable", systemImage: "exclamationmark.triangle", description: message)
                 } else if let report = model.report {
                     if report.alerts.isEmpty {
-                        EmptyStateView(
-                            title: "No active alerts",
-                            systemImage: "checkmark.shield",
-                            description: report.sourceDescription.hasPrefix("National")
-                                 ? "There are no active National Weather Service alerts for \(report.location.name)."
-                                 : "Alerts are only available for United States locations through the National Weather Service.")
+                        emptyAlerts(for: report)
                     } else {
                         List(report.alerts) { alert in
                             NavigationLink(value: alert) {
@@ -35,8 +32,6 @@ struct AlertsView: View {
                     }
                 } else if model.isLoading {
                     ProgressView("Loading alerts…")
-                } else if let message = model.errorMessage {
-                    EmptyStateView(title: "Alerts Unavailable", systemImage: "exclamationmark.triangle", description: message)
                 } else {
                     EmptyStateView(title: "No active alerts", systemImage: "checkmark.shield")
                 }
@@ -56,6 +51,29 @@ struct AlertsView: View {
                 path = []
                 AccessibilityNotification.Announcement("That alert is no longer active.").post()
             }
+        }
+    }
+
+    private func emptyAlerts(for report: WeatherReport) -> EmptyStateView {
+        switch report.alertEmptyState {
+        case .noActiveAlerts(let source):
+            EmptyStateView(
+                title: "No active alerts",
+                systemImage: "checkmark.shield",
+                description: "There are no active \(source.displayName) alerts for \(report.location.name)."
+            )
+        case .unavailable:
+            EmptyStateView(
+                title: "Alerts Unavailable",
+                systemImage: "exclamationmark.triangle",
+                description: "Couldn't check for alerts for \(report.location.name). Pull down to try again."
+            )
+        case .unsupported:
+            EmptyStateView(
+                title: "Alerts Not Supported",
+                systemImage: "shield.slash",
+                description: "The selected weather source doesn't provide alerts for \(report.location.name)."
+            )
         }
     }
 }
