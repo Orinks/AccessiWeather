@@ -23,7 +23,7 @@ sha1 = "0.10"
 
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.62", features = ["Devices_Geolocation", "Foundation"] }
-windows-future = "0.3"
+windows-future = "0.100"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"
