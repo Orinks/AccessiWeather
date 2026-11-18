@@ -85,7 +85,7 @@ PR is purely internal — refactors, CI, tooling, release plumbing — you have 
   passes only when *every* non-merge commit since `origin/dev` carries the marker, so a marker can't
   silently exempt a change set that also contains user-facing work.
 
-Note: `.github/`, `tests/`, and `docs/` are never gated, so CI and test-only changes need no marker.
+Note: `.github/`, `rust/testdata/`, and `docs/` are never gated, so changes limited to those trees need no marker.
 
 Scheduled nightlies build when there is at least one newly added Unreleased entry that has not
 already shipped in the previous nightly or latest stable notes. If the latest stable release already

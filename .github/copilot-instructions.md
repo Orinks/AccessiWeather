@@ -1,6 +1,6 @@
 # AccessiWeather agent notes
 
-- Maintained edition: `rust/` (Cargo). Do not add pytest, pip, or Nuitka gates.
+- Maintained edition: `rust/` (Cargo).
 - PRs target `dev`. Validation is `.github/workflows/rust.yml`.
 - Packaging / release: `cargo xtask` (see `rust/README.md`).
 - The Python edition has been removed; golden fixtures in `rust/testdata/golden/` are the reference.
