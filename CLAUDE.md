@@ -2,7 +2,7 @@
 
 # AI Agent Guidelines - AccessiWeather
 
-**Role:** You are working on AccessiWeather's native Rust desktop edition under `rust/`. The ship and test path is Cargo only — no pytest matrix and no `pip install` gates.
+**Role:** You are working on AccessiWeather's native Rust desktop edition under `rust/`. The ship and test path is Cargo only.
 
 ---
 
@@ -40,7 +40,7 @@ AccessiWeather is a cross-platform accessible desktop weather application. The m
 | App binary / UI | `rust/crates/aw-app` |
 | Packaging / release | `rust/xtask` |
 
-The former Python edition (`src/accessiweather/`, `rust/tools/golden/`) has been removed. Its recorded output lives on as golden fixtures in `rust/testdata/golden/`; the source is in git history if you need it.
+Recorded output from the former edition lives on as golden fixtures in `rust/testdata/golden/`; the source is in git history if you need it.
 
 `ios/` and `push-server/` are separate surfaces; leave them alone unless the task names them.
 

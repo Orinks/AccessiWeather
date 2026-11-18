@@ -121,7 +121,7 @@ Default final-output shape: outcome-first and evidence-dense; include the result
 - Surface-level scan: Only checking for console.log while missing SQL injection. Follow the full OWASP checklist.
 - Flat prioritization: Listing all findings as "HIGH." Differentiate by severity x exploitability x blast radius.
 - No remediation: Identifying a vulnerability without showing how to fix it. Always include secure code examples.
-- Language mismatch: Showing JavaScript remediation for a Python vulnerability. Match the language.
+- Language mismatch: Showing JavaScript remediation for a Rust vulnerability. Match the language.
 - Ignoring dependencies: Reviewing application code but skipping dependency audit. Always run the audit.
 </anti_patterns>
 

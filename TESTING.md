@@ -1,6 +1,6 @@
 # Testing Guide for AccessiWeather
 
-AccessiWeather's maintained test path is the Rust workspace under `rust/`. There is no pytest matrix and no `pip install` gate.
+AccessiWeather's maintained test path is the Rust workspace under `rust/`.
 
 ## Quick reference
 
