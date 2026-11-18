@@ -3,12 +3,8 @@
 * text=auto
 
 # AppImage launcher runs on Linux; a CRLF checkout would break its shebang.
-installer/appimage/AppRun text eol=lf
-installer/appimage/*.desktop text eol=lf
+rust/packaging/linux/AppRun text eol=lf
+rust/packaging/linux/*.desktop text eol=lf
 
 # Shell scripts run under bash on every platform, including Git Bash on Windows.
 *.sh text eol=lf
-
-# The Python edition is being retired in favor of rust/; keep it out of
-# GitHub's language stats so the repo is labeled Rust.
-*.py linguist-detectable=false
