@@ -1,4 +1,3 @@
-src/accessiweather/_build_meta.py
 progress.txt
 
 # Claude Code agent configs (local only — not for public repo)
@@ -7,29 +6,10 @@ progress.txt
 clawd/
 progress.txt
 
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-.venv/
-.venv-wsl/
-venv/
-*.egg-info/
-dist/
-build/
-
-# Test / coverage
+# Logs
 *.log
-.coverage
-.coverage.*
-htmlcov/
-.pytest_cache/
 
-# uv
-uv.lock
-reports/coverage.xml
 .worktrees/
-.hypothesis/
 .omx/
 .codex/*
 !.codex/agents/

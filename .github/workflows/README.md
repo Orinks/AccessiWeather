@@ -77,8 +77,7 @@ Every user-facing PR needs a `CHANGELOG.md` bullet under `## [Unreleased]`. Comm
 locally too: the `commit-msg` hook from `pre-commit install` rejects a user-facing commit when
 nothing since `origin/dev` (`origin/main` on `main`) adds one.
 
-**Skipping the gate for non-user-facing work.** The gate flags any change under `src/`, `soundpacks/`, `rust/crates/` or `rust/packaging/` (the generated
-`src/accessiweather/weather_gov_api_client/` client is excluded). When a
+**Skipping the gate for non-user-facing work.** The gate flags any change under `soundpacks/`, `rust/crates/` or `rust/packaging/`. When a
 PR is purely internal — refactors, CI, tooling, release plumbing — you have two escape hatches:
 
 - **PR:** add the `skip-changelog` label. The `Check CHANGELOG entry` step is skipped entirely.
@@ -86,7 +85,7 @@ PR is purely internal — refactors, CI, tooling, release plumbing — you have 
   passes only when *every* non-merge commit since `origin/dev` carries the marker, so a marker can't
   silently exempt a change set that also contains user-facing work.
 
-Note: `.github/`, `tests/`, and `docs/` are never gated, so CI and test-only changes need no marker.
+Note: `.github/`, `rust/testdata/`, and `docs/` are never gated, so changes limited to those trees need no marker.
 
 Scheduled nightlies build when there is at least one newly added Unreleased entry that has not
 already shipped in the previous nightly or latest stable notes. If the latest stable release already
@@ -131,4 +130,4 @@ Common issues:
 
 ---
 
-For detailed documentation, see: `/docs/cicd_setup.md`
+For release tooling, see [rust/README.md](../../rust/README.md).

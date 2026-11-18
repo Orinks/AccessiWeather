@@ -678,7 +678,7 @@
     {
      "write": {
       "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- first   FEATURE\n- Brand new thing – with an en dash\n- See [the docs](https://example.com/docs) for __details__\n\n### Fixed\n- A bug fix\n  that continues on the next line\n- Another fix with *emphasis* and _underscores_\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
-      "src/app.py": "x = 1\n"
+      "rust/crates/aw-app/src/main.rs": "x = 1\n"
      },
      "commit": "next"
     }
@@ -714,7 +714,7 @@
     {
      "write": {
       "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- first   FEATURE\n- Brand new thing – with an en dash\n- See [the docs](https://example.com/docs) for __details__\n\n### Fixed\n- A bug fix\n  that continues on the next line\n- Another fix with *emphasis* and _underscores_\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
-      "src/app.py": "x = 1\n"
+      "rust/crates/aw-app/src/main.rs": "x = 1\n"
      },
      "commit": "next"
     }
@@ -754,7 +754,7 @@
     {
      "write": {
       "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- first   FEATURE\n- Brand new thing – with an en dash\n- See [the docs](https://example.com/docs) for __details__\n\n### Fixed\n- A bug fix\n  that continues on the next line\n- Another fix with *emphasis* and _underscores_\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
-      "src/app.py": "x = 1\n"
+      "rust/crates/aw-app/src/main.rs": "x = 1\n"
      },
      "commit": "next"
     }
@@ -849,7 +849,7 @@
     },
     {
      "write": {
-      "src/app.py": "x = 1\n"
+      "rust/crates/aw-app/src/main.rs": "x = 1\n"
      },
      "commit": "internal change"
     }
@@ -911,7 +911,7 @@
     },
     {
      "write": {
-      "src/app.py": "x = 2\n"
+      "rust/crates/aw-app/src/main.rs": "x = 2\n"
      },
      "commit": "fix: packaged thing\n\nNightly: build"
     }
@@ -942,7 +942,7 @@
     },
     {
      "write": {
-      "src/app.py": "x = 3\n"
+      "rust/crates/aw-app/src/main.rs": "x = 3\n"
      },
      "commit": "fix: thing [Nightly Build]"
     }
@@ -1014,7 +1014,7 @@
     },
     {
      "write": {
-      "src/app.py": "x = 4\n"
+      "rust/crates/aw-app/src/main.rs": "x = 4\n"
      },
      "commit": "internal"
     }
@@ -1192,8 +1192,7 @@
     {
      "write": {
       "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
-      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
-      "src/app.py": "x = 0\n"
+      "rust/crates/aw-app/src/main.rs": "x = 0\n"
      },
      "commit": "base",
      "tag": "base"
@@ -1225,16 +1224,15 @@
     {
      "write": {
       "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
-      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
-      "src/app.py": "x = 0\n"
+      "rust/crates/aw-app/src/main.rs": "x = 0\n"
      },
      "commit": "base",
      "tag": "base"
     },
     {
      "write": {
-      "src/app.py": "x = 1\n",
-      "src/b.py": "b\n"
+      "rust/crates/aw-app/src/main.rs": "x = 1\n",
+      "rust/crates/aw-app/src/secondary.rs": "b\n"
      },
      "commit": "feat"
     }
@@ -1249,7 +1247,7 @@
    "expected": {
     "code": 1,
     "stdout": "",
-    "stderr": "User-facing paths changed without updating CHANGELOG.md:\n- src/app.py\n- src/b.py\n",
+    "stderr": "User-facing paths changed without updating CHANGELOG.md:\n- rust/crates/aw-app/src/main.rs\n- rust/crates/aw-app/src/secondary.rs\n",
     "output": null
    }
   },
@@ -1259,15 +1257,14 @@
     {
      "write": {
       "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
-      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
-      "src/app.py": "x = 0\n"
+      "rust/crates/aw-app/src/main.rs": "x = 0\n"
      },
      "commit": "base",
      "tag": "base"
     },
     {
      "write": {
-      "src/app.py": "x = 1\n",
+      "rust/crates/aw-app/src/main.rs": "x = 1\n",
       "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- first   FEATURE\n- Brand new thing – with an en dash\n- See [the docs](https://example.com/docs) for __details__\n\n### Fixed\n- A bug fix\n  that continues on the next line\n- Another fix with *emphasis* and _underscores_\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
      },
      "commit": "feat"
@@ -1293,15 +1290,14 @@
     {
      "write": {
       "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
-      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
-      "src/app.py": "x = 0\n"
+      "rust/crates/aw-app/src/main.rs": "x = 0\n"
      },
      "commit": "base",
      "tag": "base"
     },
     {
      "write": {
-      "src/app.py": "x = 1\n",
+      "rust/crates/aw-app/src/main.rs": "x = 1\n",
       "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- **First** feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
      },
      "commit": "feat"
@@ -1327,21 +1323,20 @@
     {
      "write": {
       "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
-      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
-      "src/app.py": "x = 0\n"
+      "rust/crates/aw-app/src/main.rs": "x = 0\n"
      },
      "commit": "base",
      "tag": "base"
     },
     {
      "write": {
-      "src/app.py": "x = 1\n"
+      "rust/crates/aw-app/src/main.rs": "x = 1\n"
      },
      "commit": "refactor: a\n\nChangelog: none"
     },
     {
      "write": {
-      "src/app.py": "x = 2\n"
+      "rust/crates/aw-app/src/main.rs": "x = 2\n"
      },
      "commit": "refactor: b [skip changelog]"
     }
@@ -1366,21 +1361,20 @@
     {
      "write": {
       "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
-      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
-      "src/app.py": "x = 0\n"
+      "rust/crates/aw-app/src/main.rs": "x = 0\n"
      },
      "commit": "base",
      "tag": "base"
     },
     {
      "write": {
-      "src/app.py": "x = 1\n"
+      "rust/crates/aw-app/src/main.rs": "x = 1\n"
      },
      "commit": "refactor: a\n\nChangelog: none"
     },
     {
      "write": {
-      "src/app.py": "x = 2\n"
+      "rust/crates/aw-app/src/main.rs": "x = 2\n"
      },
      "commit": "feat: b"
     }
@@ -1395,106 +1389,7 @@
    "expected": {
     "code": 1,
     "stdout": "",
-    "stderr": "User-facing paths changed without updating CHANGELOG.md:\n- src/app.py\n",
-    "output": null
-   }
-  },
-  {
-   "name": "pyproject version bump",
-   "steps": [
-    {
-     "write": {
-      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
-      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
-      "src/app.py": "x = 0\n"
-     },
-     "commit": "base",
-     "tag": "base"
-    },
-    {
-     "write": {
-      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.2.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n"
-     },
-     "commit": "bump"
-    }
-   ],
-   "worktree": {},
-   "aux": {},
-   "args": [
-    "check",
-    "--base",
-    "base"
-   ],
-   "expected": {
-    "code": 0,
-    "stdout": "No user-facing paths changed.\n",
-    "stderr": "",
-    "output": null
-   }
-  },
-  {
-   "name": "pyproject ruff bump",
-   "steps": [
-    {
-     "write": {
-      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
-      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
-      "src/app.py": "x = 0\n"
-     },
-     "commit": "base",
-     "tag": "base"
-    },
-    {
-     "write": {
-      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.1\",\n]\n"
-     },
-     "commit": "ruff"
-    }
-   ],
-   "worktree": {},
-   "aux": {},
-   "args": [
-    "check",
-    "--base",
-    "base"
-   ],
-   "expected": {
-    "code": 0,
-    "stdout": "No user-facing paths changed.\n",
-    "stderr": "",
-    "output": null
-   }
-  },
-  {
-   "name": "pyproject new dependency",
-   "steps": [
-    {
-     "write": {
-      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
-      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
-      "src/app.py": "x = 0\n"
-     },
-     "commit": "base",
-     "tag": "base"
-    },
-    {
-     "write": {
-      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n    \"rich>=13\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n"
-     },
-     "commit": "deps"
-    }
-   ],
-   "worktree": {},
-   "aux": {},
-   "args": [
-    "check",
-    "--base",
-    "base"
-   ],
-   "expected": {
-    "code": 1,
-    "stdout": "",
-    "stderr": "User-facing paths changed without updating CHANGELOG.md:\n- pyproject.toml\n",
+    "stderr": "User-facing paths changed without updating CHANGELOG.md:\n- rust/crates/aw-app/src/main.rs\n",
     "output": null
    }
   },
@@ -1504,15 +1399,14 @@
     {
      "write": {
       "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
-      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
-      "src/app.py": "x = 0\n"
+      "rust/crates/aw-app/src/main.rs": "x = 0\n"
      },
      "commit": "base",
      "tag": "base"
     },
     {
      "write": {
-      "src/app.py": "x = 1\n",
+      "rust/crates/aw-app/src/main.rs": "x = 1\n",
       "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n## [0.2.0] - 2026-02-01\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
      },
      "commit": "release 0.2.0"
@@ -1533,54 +1427,20 @@
    }
   },
   {
-   "name": "generated client only",
+   "name": "packaging and soundpack files",
    "steps": [
     {
      "write": {
       "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
-      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
-      "src/app.py": "x = 0\n"
+      "rust/crates/aw-app/src/main.rs": "x = 0\n"
      },
      "commit": "base",
      "tag": "base"
     },
     {
      "write": {
-      "src/accessiweather/weather_gov_api_client/models.py": "m\n"
-     },
-     "commit": "regen"
-    }
-   ],
-   "worktree": {},
-   "aux": {},
-   "args": [
-    "check",
-    "--base",
-    "base"
-   ],
-   "expected": {
-    "code": 0,
-    "stdout": "No user-facing paths changed.\n",
-    "stderr": "",
-    "output": null
-   }
-  },
-  {
-   "name": "installer and spec files",
-   "steps": [
-    {
-     "write": {
-      "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
-      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
-      "src/app.py": "x = 0\n"
-     },
-     "commit": "base",
-     "tag": "base"
-    },
-    {
-     "write": {
-      "installer/x.iss": "i\n",
-      "tools/app.spec": "s\n"
+      "rust/packaging/windows/accessiweather.iss": "i\n",
+      "soundpacks/default/pack.json": "{}\n"
      },
      "commit": "build"
     }
@@ -1593,9 +1453,9 @@
     "base"
    ],
    "expected": {
-    "code": 0,
-    "stdout": "No user-facing paths changed.\n",
-    "stderr": "",
+    "code": 1,
+    "stdout": "",
+    "stderr": "User-facing paths changed without updating CHANGELOG.md:\n- rust/packaging/windows/accessiweather.iss\n- soundpacks/default/pack.json\n",
     "output": null
    }
   },
@@ -1605,16 +1465,15 @@
     {
      "write": {
       "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
-      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
-      "src/app.py": "x = 0\n"
+      "rust/crates/aw-app/src/main.rs": "x = 0\n"
      },
      "commit": "base",
      "tag": "base"
     }
    ],
    "worktree": {
-    "src/app.py": "x = 9\n",
-    "src/new.py": "n\n"
+    "rust/crates/aw-app/src/main.rs": "x = 9\n",
+    "rust/crates/aw-app/src/new.rs": "n\n"
    },
    "aux": {},
    "args": [
@@ -1625,7 +1484,7 @@
    "expected": {
     "code": 1,
     "stdout": "",
-    "stderr": "User-facing paths changed without updating CHANGELOG.md:\n- src/app.py\n- src/new.py\n",
+    "stderr": "User-facing paths changed without updating CHANGELOG.md:\n- rust/crates/aw-app/src/main.rs\n- rust/crates/aw-app/src/new.rs\n",
     "output": null
    }
   },
@@ -1635,15 +1494,14 @@
     {
      "write": {
       "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
-      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
-      "src/app.py": "x = 0\n"
+      "rust/crates/aw-app/src/main.rs": "x = 0\n"
      },
      "commit": "base",
      "tag": "base"
     }
    ],
    "worktree": {
-    "src/app.py": "x = 9\n",
+    "rust/crates/aw-app/src/main.rs": "x = 9\n",
     "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- first   FEATURE\n- Brand new thing – with an en dash\n- See [the docs](https://example.com/docs) for __details__\n\n### Fixed\n- A bug fix\n  that continues on the next line\n- Another fix with *emphasis* and _underscores_\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
    },
    "aux": {},
@@ -1665,8 +1523,7 @@
     {
      "write": {
       "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
-      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
-      "src/app.py": "x = 0\n"
+      "rust/crates/aw-app/src/main.rs": "x = 0\n"
      },
      "commit": "base",
      "tag": "base"
@@ -1679,7 +1536,7 @@
     }
    ],
    "worktree": {
-    "src/app.py": "x = 9\n"
+    "rust/crates/aw-app/src/main.rs": "x = 9\n"
    },
    "aux": {},
    "args": [
@@ -1701,21 +1558,20 @@
     {
      "write": {
       "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
-      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
-      "src/app.py": "x = 0\n"
+      "rust/crates/aw-app/src/main.rs": "x = 0\n"
      },
      "commit": "base",
      "tag": "base"
     },
     {
      "write": {
-      "src/app.py": "x = 1\n"
+      "rust/crates/aw-app/src/main.rs": "x = 1\n"
      },
      "commit": "refactor\n\nChangelog: none"
     }
    ],
    "worktree": {
-    "src/other.py": "o\n"
+    "rust/crates/aw-app/src/other.rs": "o\n"
    },
    "aux": {},
    "args": [
@@ -1726,7 +1582,7 @@
    "expected": {
     "code": 1,
     "stdout": "",
-    "stderr": "User-facing paths changed without updating CHANGELOG.md:\n- src/app.py\n- src/other.py\n",
+    "stderr": "User-facing paths changed without updating CHANGELOG.md:\n- rust/crates/aw-app/src/main.rs\n- rust/crates/aw-app/src/other.rs\n",
     "output": null
    }
   },
@@ -1736,15 +1592,14 @@
     {
      "write": {
       "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
-      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
-      "src/app.py": "x = 0\n"
+      "rust/crates/aw-app/src/main.rs": "x = 0\n"
      },
      "commit": "base",
      "tag": "base"
     },
     {
      "write": {
-      "src/app.py": "x = 1\n",
+      "rust/crates/aw-app/src/main.rs": "x = 1\n",
       "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- first   FEATURE\n- Brand new thing – with an en dash\n- See [the docs](https://example.com/docs) for __details__\n\n### Fixed\n- A bug fix\n  that continues on the next line\n- Another fix with *emphasis* and _underscores_\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n"
      },
      "commit": "feat",
@@ -1752,7 +1607,7 @@
     }
    ],
    "worktree": {
-    "src/app.py": "x = 9\n"
+    "rust/crates/aw-app/src/main.rs": "x = 9\n"
    },
    "aux": {},
    "args": [
@@ -1775,8 +1630,7 @@
     {
      "write": {
       "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n### Added\n- First feature\n- Second feature with `code` and **bold**\n\n### Fixed\n- A bug fix\n  that continues on the next line\n\n## [0.1.0] - 2026-01-01\n\n### Added\n- Initial release\n",
-      "pyproject.toml": "[project]\nname = \"accessiweather\"\nversion = \"0.1.0\"\ndescription = \"Weather\"\ndependencies = [\n    \"httpx>=0.28\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"ruff>=0.16.0\",\n]\n",
-      "src/app.py": "x = 0\n"
+      "rust/crates/aw-app/src/main.rs": "x = 0\n"
      },
      "commit": "base",
      "tag": "base"
@@ -1790,7 +1644,7 @@
     },
     {
      "write": {
-      "src/app.py": "x = 1\n"
+      "rust/crates/aw-app/src/main.rs": "x = 1\n"
      },
      "commit": "feat"
     }
@@ -1805,7 +1659,7 @@
    "expected": {
     "code": 1,
     "stdout": "",
-    "stderr": "User-facing paths changed without updating CHANGELOG.md:\n- src/app.py\n",
+    "stderr": "User-facing paths changed without updating CHANGELOG.md:\n- rust/crates/aw-app/src/main.rs\n",
     "output": null
    }
   }
