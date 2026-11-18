@@ -16,7 +16,7 @@ tempfile.workspace = true
 base64 = "0.22"
 fernet = { version = "0.2", default-features = false, features = ["rustcrypto"] }
 getrandom = "0.2"
-pbkdf2 = { version = "0.12", default-features = false, features = ["hmac"] }
+pbkdf2 = { version = "0.13", default-features = false, features = ["hmac"] }
 sha2 = "0.10"
 
 [target.'cfg(windows)'.dependencies]
