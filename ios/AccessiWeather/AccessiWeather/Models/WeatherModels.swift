@@ -150,6 +150,19 @@ struct WeatherReport: Equatable {
     var alertsAreCurrent: Bool = true
     var minutely: [MinutelyPoint]? = nil
     var marine: MarineForecast? = nil
+
+    func dailyForecast(days: Int) -> [DailyPeriod] {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        var selectedDays: Set<Date> = []
+        return daily.filter { period in
+            let day = calendar.startOfDay(for: period.date)
+            if selectedDays.contains(day) { return true }
+            guard selectedDays.count < days else { return false }
+            selectedDays.insert(day)
+            return true
+        }
+    }
 }
 
 enum WeatherError: LocalizedError {
