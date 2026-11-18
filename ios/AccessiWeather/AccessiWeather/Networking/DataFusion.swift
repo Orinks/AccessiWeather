@@ -17,7 +17,8 @@ enum DataFusion {
         location: SavedLocation,
         nws: WeatherReport?,
         openMeteo: WeatherReport?,
-        pirateWeather: WeatherReport?
+        pirateWeather: WeatherReport?,
+        pirateWeatherConfigured: Bool = false
     ) -> WeatherReport? {
         let isUS = location.isInUnitedStates
         let reports: [Source: WeatherReport] = [.nws: nws, .openMeteo: openMeteo, .pirateWeather: pirateWeather]
@@ -66,6 +67,7 @@ enum DataFusion {
 
         // NWS is authoritative for US alerts; Pirate Weather's alerts cover the rest of the world.
         let alertReport = isUS ? (nws ?? pirateWeather) : pirateWeather
+        let expectedAlertSource: WeatherSource? = isUS ? .nws : (pirateWeatherConfigured ? .pirateWeather : nil)
         return WeatherReport(
             location: location,
             current: current,
@@ -77,6 +79,7 @@ enum DataFusion {
             fetchedAt: Date(),
             forecastOfficeID: nws?.forecastOfficeID,
             observationStationID: nws?.observationStationID,
+            alertSource: alertReport?.alertSource ?? expectedAlertSource,
             alertsAreCurrent: alertReport?.alertsAreCurrent ?? false,
             minutely: pirateWeather?.minutely,
             marine: nws?.marine

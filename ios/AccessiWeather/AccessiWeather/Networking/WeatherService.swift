@@ -295,7 +295,8 @@ actor WeatherService {
             location: location,
             nws: try? nws?.get(),
             openMeteo: try? openMeteo.get(),
-            pirateWeather: try? pirate?.get()
+            pirateWeather: try? pirate?.get(),
+            pirateWeatherConfigured: !key.isEmpty
         ) {
             return fused
         }
@@ -407,6 +408,7 @@ actor WeatherService {
             fetchedAt: Date(),
             forecastOfficeID: point.cwa ?? point.gridId,
             observationStationID: observationResult?.stationID,
+            alertSource: .nws,
             alertsAreCurrent: alertsResult != nil,
             marine: marine
         )

@@ -6,9 +6,11 @@ final class DataFusionTests: XCTestCase {
     private let london = SavedLocation(name: "London", latitude: 51.5, longitude: -0.12)
     private let start = Date(timeIntervalSince1970: 1_800_000_000)
 
-    private func report(_ source: String, _ current: CurrentConditions, hourly: [HourlyPeriod] = [], alerts: [WeatherAlert] = [], location: SavedLocation) -> WeatherReport {
+    private func report(_ source: String, _ current: CurrentConditions, hourly: [HourlyPeriod] = [], alerts: [WeatherAlert] = [],
+                        location: SavedLocation, alertSource: WeatherSource? = nil, alertsAreCurrent: Bool = true) -> WeatherReport {
         WeatherReport(location: location, current: current, hourly: hourly, daily: [], alerts: alerts,
-                      sourceDescription: source, timeZone: .gmt, fetchedAt: start, forecastOfficeID: source == "NWS" ? "PHI" : nil)
+                      sourceDescription: source, timeZone: .gmt, fetchedAt: start, forecastOfficeID: source == "NWS" ? "PHI" : nil,
+                      alertSource: alertSource, alertsAreCurrent: alertsAreCurrent)
     }
 
     func testUSFieldsFollowNWSThenOpenMeteoThenPirate() throws {
@@ -47,5 +49,36 @@ final class DataFusionTests: XCTestCase {
 
     func testNoSourcesIsNil() {
         XCTAssertNil(DataFusion.merge(location: london, nws: nil, openMeteo: nil, pirateWeather: nil))
+    }
+
+    func testAutomaticUSWithCurrentEmptyAlertsNamesNWS() throws {
+        let nws = report("NWS", CurrentConditions(), location: us, alertSource: .nws)
+        let fused = try XCTUnwrap(DataFusion.merge(location: us, nws: nws, openMeteo: nil, pirateWeather: nil))
+        XCTAssertEqual(fused.alertEmptyState, .noActiveAlerts(.nws))
+    }
+
+    func testFailedUSAlertFetchIsNotAnEmptySuccess() throws {
+        let nws = report("NWS", CurrentConditions(), location: us, alertSource: .nws, alertsAreCurrent: false)
+        let om = report("Open-Meteo", CurrentConditions(), location: us)
+        XCTAssertEqual(nws.alertEmptyState, .unavailable)
+
+        for nwsReport in [nws, nil] {
+            let fused = try XCTUnwrap(DataFusion.merge(location: us, nws: nwsReport, openMeteo: om, pirateWeather: nil))
+            XCTAssertEqual(fused.alertEmptyState, .unavailable)
+        }
+        XCTAssertEqual(om.alertEmptyState, .unsupported)
+    }
+
+    func testInternationalAlertStatusDistinguishesMissingAndFailedProvider() throws {
+        let om = report("Open-Meteo", CurrentConditions(), location: london)
+        let pw = report("Pirate Weather", CurrentConditions(), location: london, alertSource: .pirateWeather)
+        let noProvider = try XCTUnwrap(DataFusion.merge(location: london, nws: nil, openMeteo: om, pirateWeather: nil))
+        XCTAssertEqual(noProvider.alertEmptyState, .unsupported)
+
+        let failed = try XCTUnwrap(DataFusion.merge(location: london, nws: nil, openMeteo: om, pirateWeather: nil, pirateWeatherConfigured: true))
+        XCTAssertEqual(failed.alertEmptyState, .unavailable)
+
+        let current = try XCTUnwrap(DataFusion.merge(location: london, nws: nil, openMeteo: om, pirateWeather: pw, pirateWeatherConfigured: true))
+        XCTAssertEqual(current.alertEmptyState, .noActiveAlerts(.pirateWeather))
     }
 }
