@@ -19,6 +19,7 @@ pub mod session;
 pub mod stations;
 pub mod stream_url;
 pub mod toggle;
+pub mod transmitters;
 pub mod weatherindex;
 pub mod wxradio;
 

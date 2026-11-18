@@ -10,7 +10,7 @@ serde.workspace = true
 serde_json = { workspace = true, features = ["float_roundtrip"] }
 chrono.workspace = true
 chrono-tz.workspace = true
-md5 = "0.7"
+md5 = "0.8"
 iana-time-zone = "0.1"
 regex = "1"
 

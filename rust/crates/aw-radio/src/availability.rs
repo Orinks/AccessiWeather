@@ -12,12 +12,13 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde_json::{Map, Value};
 
-use crate::stations::Station;
+use crate::stations::{Station, StationDatabase};
 use crate::weatherindex::WeatherIndexClient;
 
 pub const AVAILABILITY_FILE_NAME: &str = "noaa_radio_availability.json";
 pub const TEMPORARILY_UNAVAILABLE: &str = "temporarily unavailable";
 pub const OUT_OF_SERVICE: &str = "out of service";
+pub const NO_ONLINE_STREAM: &str = "no online stream";
 
 pub type Clock = Box<dyn Fn() -> f64 + Send + Sync>;
 
@@ -232,16 +233,58 @@ impl StationAvailabilityService {
         stations: &[Station],
         show_unavailable: bool,
     ) -> Vec<StationAvailabilityEntry> {
+        self.build_finder_entries(stations, show_unavailable, false)
+    }
+
+    /// The finder's station list: `db`, plus (with `include_unstreamed`)
+    /// every weather.gov transmitter nobody streams. Those are only added
+    /// once the WeatherIndex directory is loaded, so telling them apart
+    /// never takes a request per station.
+    pub fn finder_database(
+        &self,
+        db: &Arc<StationDatabase>,
+        include_unstreamed: bool,
+    ) -> Arc<StationDatabase> {
+        if !include_unstreamed || !self.weatherindex.has_station_directory() {
+            return db.clone();
+        }
+        Arc::new(StationDatabase::with_stations(
+            crate::transmitters::with_unstreamed(db.get_all_stations()),
+        ))
+    }
+
+    /// [`Self::build_entries`], except that with `include_unstreamed` (and
+    /// `show_unavailable`) stations without a feed stay in the list as
+    /// "No online stream", so people can see which transmitter covers them.
+    pub fn build_finder_entries(
+        &self,
+        stations: &[Station],
+        show_unavailable: bool,
+        include_unstreamed: bool,
+    ) -> Vec<StationAvailabilityEntry> {
         let mut entries = Vec::new();
         for station in stations {
+            let label = base_label(station);
             if self
                 .weatherindex
                 .get_stream_urls(&station.call_sign)
                 .is_empty()
             {
+                if show_unavailable && include_unstreamed {
+                    let status = if station.is_out_of_service() {
+                        "Out of service"
+                    } else {
+                        "No online stream"
+                    };
+                    entries.push(StationAvailabilityEntry {
+                        station: station.clone(),
+                        available: false,
+                        label: format!("{label} - {status}"),
+                        unavailable_reason: Some(NO_ONLINE_STREAM.into()),
+                    });
+                }
                 continue;
             }
-            let label = base_label(station);
             if station.is_out_of_service() {
                 if !show_unavailable {
                     continue;
@@ -357,6 +400,61 @@ mod tests {
             entries[0].unavailable_reason.as_deref(),
             Some(OUT_OF_SERVICE)
         );
+    }
+
+    #[test]
+    fn unstreamed_transmitters_show_with_unavailable_once_the_directory_loads() {
+        let dir = tempfile::tempdir().unwrap();
+        let directory = json!([{
+            "callsign": "KID77", "city": "Kansas City", "state_slug": "MO",
+            "frequency": 162.55, "latitude": 39.0, "longitude": -94.5,
+            "status": "NORMAL", "feeds": [{"stream_url": "https://a"}]
+        }]);
+        let http = Arc::new(
+            FixtureClient::new().with(crate::weatherindex::WEATHERINDEX_DIRECTORY_URL, directory),
+        );
+        let weatherindex = Arc::new(WeatherIndexClient::new(http.clone()));
+        let service = StationAvailabilityService::new(
+            weatherindex.clone(),
+            Arc::new(Mutex::new(StationAvailabilityCache::new(
+                dir.path().join(AVAILABILITY_FILE_NAME),
+            ))),
+        );
+        let db = Arc::new(StationDatabase::with_directory(weatherindex.clone()));
+
+        // Not loaded yet: nothing is added.
+        assert!(Arc::ptr_eq(&service.finder_database(&db, true), &db));
+        weatherindex.get_all_stations();
+        assert!(Arc::ptr_eq(&service.finder_database(&db, false), &db));
+
+        let finder = service.finder_database(&db, true);
+        let kzz34 = finder.get_stations_by_call_signs(&["KZZ34"]);
+        assert_eq!(kzz34.len(), 1);
+        let stations = finder.get_stations_by_call_signs(&["KID77", "KZZ34"]);
+
+        let labels = |show, unstreamed| -> Vec<String> {
+            service
+                .build_finder_entries(&stations, show, unstreamed)
+                .into_iter()
+                .map(|e| e.label)
+                .collect()
+        };
+        assert_eq!(labels(true, false).len(), 1);
+        assert_eq!(labels(false, true).len(), 1);
+        let shown = service.build_finder_entries(&stations, true, true);
+        assert_eq!(shown.len(), 2);
+        assert!(shown[0].available);
+        assert!(!shown[1].available);
+        assert!(shown[1]
+            .label
+            .starts_with("KZZ34 - Carrollton, MO - 162.450 MHz"));
+        assert!(shown[1].label.ends_with(" - No online stream"));
+        assert_eq!(
+            shown[1].unavailable_reason.as_deref(),
+            Some(NO_ONLINE_STREAM)
+        );
+        // Telling streamed from unstreamed took only the directory request.
+        assert_eq!(http.request_log().len(), 1);
     }
 
     #[test]

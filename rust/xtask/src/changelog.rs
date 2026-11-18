@@ -1,8 +1,7 @@
 //! CHANGELOG gate for pull requests, release notes from curated
 //! `CHANGELOG.md` entries, and the nightly should-build decision.
 //!
-//! User-facing trees: `rust/crates/`, `rust/packaging/`, `soundpacks/`, and
-//! the legacy Python reference under `src/` (kept for golden generators).
+//! User-facing trees: `rust/crates/`, `rust/packaging/`, and `soundpacks/`.
 
 use std::collections::HashSet;
 use std::io::Write;
@@ -16,13 +15,7 @@ use regex::Regex;
 use crate::Result;
 
 const CHANGELOG_PATH: &str = "CHANGELOG.md";
-const USER_FACING_PATH_PREFIXES: [&str; 4] =
-    ["src/", "soundpacks/", "rust/crates/", "rust/packaging/"];
-/// Paths that ship inside the build surface but never warrant a release note.
-const EXCLUDED_PATH_PREFIXES: [&str; 1] = ["src/accessiweather/weather_gov_api_client/"];
-/// Exact paths that still count as user-facing (legacy / golden-test cases).
-const USER_FACING_PATHS: [&str; 1] = ["pyproject.toml"];
-const USER_FACING_SUFFIXES: [&str; 0] = [];
+const USER_FACING_PATH_PREFIXES: [&str; 3] = ["soundpacks/", "rust/crates/", "rust/packaging/"];
 const SKIP_CHANGELOG_MARKERS: [&str; 2] = ["changelog: none", "[skip changelog]"];
 const NIGHTLY_BUILD_MARKERS: [&str; 2] = ["nightly: build", "[nightly build]"];
 const SECTION_ORDER: [&str; 7] = [
@@ -34,8 +27,6 @@ const SECTION_ORDER: [&str; 7] = [
     "Deprecated",
     "Security",
 ];
-const PYPROJECT_METADATA_FIELDS_WITHOUT_CHANGELOG: [&str; 2] = ["version", "description"];
-const PYPROJECT_TOOLING_REQUIREMENTS_WITHOUT_CHANGELOG: [&str; 2] = ["pyright", "ruff"];
 const UNRELEASED: &str = r"^## \[?Unreleased\]?.*$";
 const STAGED_HINT: &str = "Add a bullet under ## [Unreleased] in CHANGELOG.md, or put `Changelog: none` in the commit message if nothing user-facing changed.";
 
@@ -210,22 +201,16 @@ fn check(
     if include_worktree {
         files = dedupe([files, worktree_files.clone()].concat());
     }
-    let mut user_facing = Vec::new();
-    for path in &files {
-        if git.requires_changelog_entry(path, &base, head, include_worktree)? {
-            user_facing.push(path);
-        }
-    }
+    let user_facing: Vec<_> = files
+        .iter()
+        .filter(|path| is_user_facing_path(path))
+        .collect();
     if user_facing.is_empty() {
         writeln!(out, "No user-facing paths changed.")?;
         return Ok(0);
     }
 
-    let mut worktree_user_facing = false;
-    for path in &worktree_files {
-        worktree_user_facing |=
-            git.requires_changelog_entry(path, "HEAD", "HEAD", include_worktree)?;
-    }
+    let worktree_user_facing = worktree_files.iter().any(|path| is_user_facing_path(path));
     let mut messages = git.commit_messages(&base, log_head)?;
     messages.extend(message);
     if !worktree_user_facing && messages_opt_out_of_changelog(&messages) {
@@ -371,34 +356,6 @@ impl Git<'_> {
             .unwrap_or_default()
     }
 
-    fn requires_changelog_entry(
-        &self,
-        path: &str,
-        base: &str,
-        head: &str,
-        include_worktree: bool,
-    ) -> Result<bool> {
-        let normalized = path.replace('\\', "/");
-        if normalized != "pyproject.toml" {
-            return Ok(is_user_facing_path(&normalized));
-        }
-        let mut diffs = vec![self.run(&[
-            "diff",
-            "--unified=0",
-            &format!("{base}..{head}"),
-            "--",
-            "pyproject.toml",
-        ])?];
-        if include_worktree {
-            diffs.push(self.run(&["diff", "--unified=0", "HEAD", "--", "pyproject.toml"])?);
-        }
-        let changed: Vec<String> = diffs
-            .iter()
-            .flat_map(|d| changed_lines_from_diff(d))
-            .collect();
-        Ok(pyproject_changed_lines_require_changelog(&changed))
-    }
-
     /// Curated bullets `head` adds relative to `base`: new Unreleased bullets,
     /// plus every bullet under a release heading `base` doesn't have (cutting
     /// a release is itself the curated changelog update).
@@ -451,39 +408,9 @@ fn dedupe(items: Vec<String>) -> Vec<String> {
 
 fn is_user_facing_path(path: &str) -> bool {
     let normalized = path.replace('\\', "/");
-    if EXCLUDED_PATH_PREFIXES
+    USER_FACING_PATH_PREFIXES
         .iter()
         .any(|p| normalized.starts_with(p))
-    {
-        return false;
-    }
-    USER_FACING_PATHS.contains(&normalized.as_str())
-        || USER_FACING_SUFFIXES.iter().any(|s| normalized.ends_with(s))
-        || USER_FACING_PATH_PREFIXES
-            .iter()
-            .any(|p| normalized.starts_with(p))
-}
-
-static REQUIREMENT: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"^"([A-Za-z0-9_.-]+)"#).unwrap());
-
-fn pyproject_changed_lines_require_changelog(changed_lines: &[String]) -> bool {
-    changed_lines.iter().any(|line| {
-        let tooling = REQUIREMENT.captures(line).is_some_and(|c| {
-            PYPROJECT_TOOLING_REQUIREMENTS_WITHOUT_CHANGELOG.contains(&casefold(&c[1]).as_str())
-        });
-        let field = py_strip(line.split('=').next().unwrap_or(""));
-        !tooling && !PYPROJECT_METADATA_FIELDS_WITHOUT_CHANGELOG.contains(&field)
-    })
-}
-
-fn changed_lines_from_diff(diff: &str) -> Vec<String> {
-    py_splitlines(diff)
-        .into_iter()
-        .filter(|l| !(l.starts_with("+++") || l.starts_with("---") || l.starts_with("@@")))
-        .filter_map(|l| l.strip_prefix('+').or_else(|| l.strip_prefix('-')))
-        .map(|l| py_strip(l).to_string())
-        .collect()
 }
 
 fn messages_opt_out_of_changelog(messages: &[String]) -> bool {
@@ -751,9 +678,8 @@ fn casefold(s: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    //! Golden parity with `scripts/changelog_tools.py`, recorded by
-    //! `rust/tools/golden/changelog.py`: every scenario builds the same git
-    //! repository and runs the same command line.
+    //! Recorded changelog scenarios: each builds a git repository and runs
+    //! the changelog command line.
 
     use clap::Parser;
     use serde_json::Value;
@@ -832,7 +758,7 @@ mod tests {
     }
 
     #[test]
-    fn matches_python_changelog_tools() {
+    fn matches_recorded_changelog_scenarios() {
         let path = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../testdata/golden/changelog/scenarios.json");
         let golden: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
@@ -942,12 +868,10 @@ Changelog: none"
     fn rust_edition_paths_are_user_facing() {
         assert!(is_user_facing_path("rust/crates/aw-app/src/main.rs"));
         assert!(is_user_facing_path(r"rust\packaging\macos\Info.plist"));
-        assert!(!is_user_facing_path("rust/tools/golden/changelog.py"));
-        assert!(!is_user_facing_path(
-            "src/accessiweather/weather_gov_api_client/x.py"
-        ));
-        // Python installer / PyInstaller specs are gone; they are not user-facing.
-        assert!(!is_user_facing_path("installer/x.iss"));
-        assert!(!is_user_facing_path("tools/app.spec"));
+        assert!(is_user_facing_path("soundpacks/default/pack.json"));
+        assert!(!is_user_facing_path("rust/tools/golden/scenarios.json"));
+        assert!(!is_user_facing_path("src/app.py"));
+        assert!(!is_user_facing_path("pyproject.toml"));
+        assert!(!is_user_facing_path("rust/Cargo.toml"));
     }
 }
