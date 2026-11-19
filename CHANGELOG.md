@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - Show unavailable stations in the NOAA Weather Radio finder now lists every weather.gov transmitter, so you can see which covers you, even with no stream.
 
 ### Fixed
+- VoiceOver now reads the empty-search error when you click Search in Add Location.
 - VoiceOver announcements no longer wait for automation replies on the app's main thread.
 - On iOS, the Alerts tab distinguishes a successful check with no active alerts from unavailable or unsupported alerts.
 - On macOS, errors and other spoken messages now come through VoiceOver when it's running, and the system voice reads them when it isn't.

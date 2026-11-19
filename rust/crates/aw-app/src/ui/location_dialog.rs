@@ -503,7 +503,14 @@ impl AddLocationDialog {
         text_colour(&self.status_label, is_error);
         tracing::info!("Location dialog status: {message}");
         if is_error {
-            crate::screen_reader::announce(message);
+            let message = message.to_string();
+            post_to_ui(move || {
+                if let Some(d) = open_add_dialog() {
+                    if d.status_label.get_label() == message {
+                        crate::screen_reader::announce(&message);
+                    }
+                }
+            });
         }
     }
 
