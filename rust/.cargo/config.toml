@@ -1,2 +1,7 @@
 [alias]
 xtask = "run --quiet --package xtask --"
+
+[env]
+# prism-sys 0.1.6 replaces CMake's default C++ flags without restoring /EHsc.
+# Keep MSVC exception unwinding enabled until the upstream build fix ships.
+CXXFLAGS_x86_64_pc_windows_msvc = "/EHsc"
