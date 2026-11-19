@@ -372,9 +372,7 @@ struct DailyForecastSection: View {
 
     var body: some View {
         Section {
-            // NWS returns day and night as separate periods; show roughly two per day.
-            let limit = report.sourceDescription.hasPrefix("National") ? settings.dailyForecastDays * 2 : settings.dailyForecastDays
-            let periods = Array(report.daily.prefix(max(1, limit)))
+            let periods = report.dailyForecast(days: settings.dailyForecastDays)
             if periods.isEmpty {
                 Text("No daily forecast available.")
                     .foregroundStyle(.secondary)
