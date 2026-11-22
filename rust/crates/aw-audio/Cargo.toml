@@ -10,7 +10,7 @@ aw-core.workspace = true
 aw-store.workspace = true
 base64 = "0.22"
 reqwest = { workspace = true, features = ["multipart"] }
-rodio = { version = "0.22", default-features = false, features = ["playback", "vorbis", "mp3", "flac", "wav"] }
+rodio = { version = "0.23", default-features = false, features = ["playback", "vorbis", "mp3", "flac", "wav"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 tempfile.workspace = true

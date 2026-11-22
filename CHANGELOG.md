@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - VoiceOver now reads the empty-search error when you click Search in Add Location.
+- The Weather Assistant delays its welcome so NVDA’s initial dialog focus does not interrupt it.
 - VoiceOver announcements no longer wait for automation replies on the app's main thread.
 - On iOS, the Alerts tab distinguishes a successful check with no active alerts from unavailable or unsupported alerts.
 - On macOS, errors and other spoken messages now come through VoiceOver when it's running, and the system voice reads them when it isn't.
