@@ -3,6 +3,7 @@
 
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use aw_core::countries::{country_name, known_country, COUNTRIES};
 use aw_core::Location;
@@ -243,6 +244,7 @@ fn existing_names() -> Vec<String> {
 // ---------------------------------------------------------------------------
 
 struct AddLocationDialog {
+    id: u64,
     dialog: Dialog,
     name_input: TextCtrl,
     marine_mode_checkbox: CheckBox,
@@ -256,6 +258,7 @@ struct AddLocationDialog {
     current_location_button: Button,
     results_list: ListBox,
     status_label: StaticText,
+    announcement_generation: Cell<u64>,
     search_results: RefCell<Vec<Location>>,
     selected_location: RefCell<Option<Location>>,
     /// Set while the first result is selected programmatically, so a port
@@ -272,8 +275,14 @@ thread_local! {
     static EDIT_DIALOG: RefCell<Option<Rc<EditLocationDialog>>> = const { RefCell::new(None) };
 }
 
+static NEXT_ADD_DIALOG_ID: AtomicU64 = AtomicU64::new(1);
+
 fn open_add_dialog() -> Option<Rc<AddLocationDialog>> {
     ADD_DIALOG.with(|d| d.borrow().clone())
+}
+
+fn announcement_is_current(current: Option<(u64, u64)>, dialog_id: u64, generation: u64) -> bool {
+    current == Some((dialog_id, generation))
 }
 
 /// `show_add_location_dialog`: the name of the added location, if any.
@@ -425,6 +434,7 @@ pub(crate) fn show_add_location_dialog(parent: &Frame) -> Option<String> {
     current_location_button.set_name("Use my current location");
 
     let d = Rc::new(AddLocationDialog {
+        id: NEXT_ADD_DIALOG_ID.fetch_add(1, Ordering::Relaxed),
         dialog,
         name_input,
         marine_mode_checkbox,
@@ -437,6 +447,7 @@ pub(crate) fn show_add_location_dialog(parent: &Frame) -> Option<String> {
         current_location_button,
         results_list: results,
         status_label,
+        announcement_generation: Cell::new(0),
         search_results: RefCell::new(Vec::new()),
         selected_location: RefCell::new(None),
         auto_selecting: Cell::new(false),
@@ -499,14 +510,38 @@ pub(crate) fn show_add_location_dialog(parent: &Frame) -> Option<String> {
 
 impl AddLocationDialog {
     fn update_status(&self, message: &str, is_error: bool) {
+        let generation = self.announcement_generation.get().wrapping_add(1);
+        self.announcement_generation.set(generation);
         self.status_label.set_label(message);
         text_colour(&self.status_label, is_error);
         tracing::info!("Location dialog status: {message}");
         if is_error {
             let message = message.to_string();
+            let dialog_id = self.id;
+            #[cfg(target_os = "macos")]
+            // Give VoiceOver's click and focus speech a chance to finish first.
+            crate::lifecycle::call_later(400, move || {
+                if let Some(d) = open_add_dialog().filter(|d| {
+                    announcement_is_current(
+                        Some((d.id, d.announcement_generation.get())),
+                        dialog_id,
+                        generation,
+                    )
+                }) {
+                    if d.status_label.get_label() == message {
+                        crate::screen_reader::announce_interrupt(&message);
+                    }
+                }
+            });
+            #[cfg(not(target_os = "macos"))]
             post_to_ui(move || {
                 if let Some(d) = open_add_dialog() {
-                    if d.status_label.get_label() == message {
+                    if announcement_is_current(
+                        Some((d.id, d.announcement_generation.get())),
+                        dialog_id,
+                        generation,
+                    ) && d.status_label.get_label() == message
+                    {
                         crate::screen_reader::announce(&message);
                     }
                 }
@@ -1242,6 +1277,15 @@ pub(crate) fn show_reorder_locations_dialog(parent: &Frame) -> Option<Vec<String
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn delayed_announcement_requires_the_same_dialog_and_status_generation() {
+        let current = (7, 3);
+        assert!(announcement_is_current(Some(current), 7, 3));
+        assert!(!announcement_is_current(None, 7, 3));
+        assert!(!announcement_is_current(Some((8, 3)), 7, 3));
+        assert!(!announcement_is_current(Some((7, 2)), 7, 3));
+    }
 
     #[test]
     fn initial_country_prefers_saved_then_region() {
