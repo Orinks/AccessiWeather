@@ -361,7 +361,8 @@ impl Assistant {
         self.conversation.borrow_mut().clear();
         self.history.set_value("");
         self.status.set_label("");
-        self.add_welcome_message();
+        let welcome = self.add_welcome_message();
+        announce(&welcome);
         self.input.set_focus();
     }
 
@@ -427,6 +428,12 @@ mod tests {
             let welcome = welcome_message(location);
             self.append(SPEAKER, &welcome);
             self.spoken.push(spoken(SPEAKER, &welcome));
+        }
+        fn clear(&mut self, location: Option<&str>) {
+            self.conversation.clear();
+            self.history.clear();
+            self.status.clear();
+            self.welcome(location);
         }
         fn set_generating(&mut self, generating: bool) {
             self.generating = generating;
@@ -525,12 +532,7 @@ mod tests {
                         model.error(step["error"].as_str().unwrap());
                     }
                     "copy" => model.status = COPIED.into(),
-                    "clear" => {
-                        model.conversation.clear();
-                        model.history.clear();
-                        model.status.clear();
-                        model.welcome(location);
-                    }
+                    "clear" => model.clear(location),
                     other => panic!("unknown step {other}"),
                 }
                 model.check(step);
@@ -545,6 +547,23 @@ mod tests {
         let mut model = Model::default();
         model.welcome(Some("Philadelphia"));
 
+        assert_eq!(
+            model.spoken,
+            vec![spoken(SPEAKER, &welcome_message(Some("Philadelphia")))]
+        );
+    }
+
+    #[test]
+    fn assistant_model_emits_one_welcome_after_clear() {
+        let mut model = Model::default();
+        model.append(YOU, "Previous question");
+        model.conversation.push_user("Previous question");
+        model.status = model_status("test");
+
+        model.clear(Some("Philadelphia"));
+
+        assert!(model.conversation.messages.is_empty());
+        assert_eq!(model.status, "");
         assert_eq!(
             model.spoken,
             vec![spoken(SPEAKER, &welcome_message(Some("Philadelphia")))]
