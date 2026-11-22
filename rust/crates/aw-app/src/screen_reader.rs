@@ -1,7 +1,7 @@
 //! Screen reader announcements through prism, like the Python app's
 //! `ScreenReaderAnnouncer`: the best backend is acquired once, used only when
-//! it reports `IS_SUPPORTED_AT_RUNTIME`, and text is spoken without
-//! interrupting. Everything runs on the UI thread.
+//! it reports `IS_SUPPORTED_AT_RUNTIME`, and speech follows the caller's
+//! interruption preference. Everything runs on the UI thread.
 
 use std::cell::{Cell, RefCell};
 
@@ -104,13 +104,23 @@ fn refresh() {
 
 /// Speak `text` through the screen reader. No-op when none is available.
 pub fn announce(text: &str) {
+    announce_with_interrupt(text, false);
+}
+
+/// Speak `text` through the screen reader, interrupting queued speech.
+#[cfg(target_os = "macos")]
+pub fn announce_interrupt(text: &str) {
+    announce_with_interrupt(text, true);
+}
+
+fn announce_with_interrupt(text: &str, interrupt: bool) {
     if text.trim().is_empty() {
         return;
     }
     refresh();
     BACKEND.with(|b| {
         if let Some(backend) = b.borrow().as_ref() {
-            if let Err(e) = backend.speak(text, false) {
+            if let Err(e) = backend.speak(text, interrupt) {
                 tracing::warn!("Failed to announce text: {e}");
             }
         }
