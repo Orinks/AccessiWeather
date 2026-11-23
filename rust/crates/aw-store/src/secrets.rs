@@ -429,6 +429,25 @@ mod tests {
     }
 
     #[test]
+    fn successive_encryptions_use_fresh_salts_and_decrypt() {
+        let secrets = BTreeMap::from([("pirate_weather_api_key".to_string(), "abc".to_string())]);
+        let first = encrypt_bundle(&secrets, "hunter2").unwrap();
+        let second = encrypt_bundle(&secrets, "hunter2").unwrap();
+        let first_salt = STANDARD
+            .decode(first["kdf"]["salt"].as_str().unwrap())
+            .unwrap();
+        let second_salt = STANDARD
+            .decode(second["kdf"]["salt"].as_str().unwrap())
+            .unwrap();
+
+        assert_eq!(first_salt.len(), SALT_SIZE);
+        assert_eq!(second_salt.len(), SALT_SIZE);
+        assert_ne!(first_salt, second_salt);
+        assert_eq!(decrypt_bundle(&first, "hunter2").unwrap(), secrets);
+        assert_eq!(decrypt_bundle(&second, "hunter2").unwrap(), secrets);
+    }
+
+    #[test]
     fn every_api_key_name_maps_to_a_settings_field() {
         let mut settings = AppSettings::default();
         for name in API_KEY_NAMES {
