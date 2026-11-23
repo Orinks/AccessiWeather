@@ -15,6 +15,7 @@ use aw_ai::{AiErrorKind, CancelToken};
 use aw_providers::{HttpClient, ReqwestClient};
 use chrono::{Local, Utc};
 use wxdragon::prelude::*;
+use wxdragon::timer::Timer;
 
 use super::assistant_host::AppAssistantHost;
 use super::main_window::window;
@@ -35,6 +36,7 @@ const CLOSE_LABEL: &str = "&Close";
 const THINKING: &str = "Thinking...";
 const READY: &str = "Ready";
 const COPIED: &str = "Chat copied to clipboard.";
+const WELCOME_ANNOUNCEMENT_DELAY_MS: i32 = 300;
 
 fn spoken(speaker: &str, text: &str) -> String {
     format!("{speaker}: {text}")
@@ -197,19 +199,24 @@ pub(crate) fn show_weather_assistant_dialog() {
         }
     });
 
-    assistant.add_welcome_message();
+    let welcome = assistant.add_welcome_message();
     dialog.set_size(Size::new(650, 500));
     dialog.center();
     input.set_focus();
 
+    let welcome_timer = Timer::new(&dialog);
+    welcome_timer.on_tick(move |_| announce(&welcome));
+    welcome_timer.start(WELCOME_ANNOUNCEMENT_DELAY_MS, true);
     dialog.show_modal();
+    welcome_timer.stop();
+    drop(welcome_timer);
     assistant.cancel.cancel();
     OPEN.with(|o| o.borrow_mut().take());
     dialog.destroy();
 }
 
 impl Assistant {
-    fn add_welcome_message(&self) {
+    fn add_welcome_message(&self) -> String {
         let location = with_state().and_then(|s| {
             s.borrow()
                 .config
@@ -219,7 +226,7 @@ impl Assistant {
         });
         let welcome = welcome_message(location.as_deref());
         self.append_to_display(SPEAKER, &welcome);
-        announce(&spoken(SPEAKER, &welcome));
+        spoken(SPEAKER, &welcome)
     }
 
     /// `_append_to_display`. wxMSW's `AppendText` scrolls a rich edit
@@ -354,7 +361,8 @@ impl Assistant {
         self.conversation.borrow_mut().clear();
         self.history.set_value("");
         self.status.set_label("");
-        self.add_welcome_message();
+        let welcome = self.add_welcome_message();
+        announce(&welcome);
         self.input.set_focus();
     }
 
@@ -420,6 +428,12 @@ mod tests {
             let welcome = welcome_message(location);
             self.append(SPEAKER, &welcome);
             self.spoken.push(spoken(SPEAKER, &welcome));
+        }
+        fn clear(&mut self, location: Option<&str>) {
+            self.conversation.clear();
+            self.history.clear();
+            self.status.clear();
+            self.welcome(location);
         }
         fn set_generating(&mut self, generating: bool) {
             self.generating = generating;
@@ -518,12 +532,7 @@ mod tests {
                         model.error(step["error"].as_str().unwrap());
                     }
                     "copy" => model.status = COPIED.into(),
-                    "clear" => {
-                        model.conversation.clear();
-                        model.history.clear();
-                        model.status.clear();
-                        model.welcome(location);
-                    }
+                    "clear" => model.clear(location),
                     other => panic!("unknown step {other}"),
                 }
                 model.check(step);
@@ -531,5 +540,33 @@ mod tests {
             assert!(model.conversation.messages.is_empty());
             assert_eq!(case["conversation_after_clear"], json!([]));
         }
+    }
+
+    #[test]
+    fn assistant_model_emits_one_welcome_utterance() {
+        let mut model = Model::default();
+        model.welcome(Some("Philadelphia"));
+
+        assert_eq!(
+            model.spoken,
+            vec![spoken(SPEAKER, &welcome_message(Some("Philadelphia")))]
+        );
+    }
+
+    #[test]
+    fn assistant_model_emits_one_welcome_after_clear() {
+        let mut model = Model::default();
+        model.append(YOU, "Previous question");
+        model.conversation.push_user("Previous question");
+        model.status = model_status("test");
+
+        model.clear(Some("Philadelphia"));
+
+        assert!(model.conversation.messages.is_empty());
+        assert_eq!(model.status, "");
+        assert_eq!(
+            model.spoken,
+            vec![spoken(SPEAKER, &welcome_message(Some("Philadelphia")))]
+        );
     }
 }
