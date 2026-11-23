@@ -8,7 +8,7 @@ description = "Sound playback, sound packs and community pack sharing for Access
 [dependencies]
 aw-core.workspace = true
 aw-store.workspace = true
-base64 = "0.22"
+base64 = "0.23"
 reqwest = { workspace = true, features = ["multipart"] }
 rodio = { version = "0.23", default-features = false, features = ["playback", "vorbis", "mp3", "flac", "wav"] }
 serde = { workspace = true, features = ["derive"] }

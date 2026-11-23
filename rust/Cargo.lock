@@ -332,7 +332,7 @@ version = "0.11.0"
 dependencies = [
  "aw-core",
  "aw-store",
- "base64 0.22.1",
+ "base64 0.23.1",
  "reqwest 0.12.28",
  "rodio",
  "serde",
@@ -440,7 +440,7 @@ name = "aw-store"
 version = "0.11.0"
 dependencies = [
  "aw-core",
- "base64 0.22.1",
+ "base64 0.23.1",
  "chrono",
  "chrono-tz",
  "fernet",
