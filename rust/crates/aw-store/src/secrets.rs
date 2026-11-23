@@ -132,7 +132,7 @@ pub fn encrypt_bundle(
         return Err(SecretsError::NoPassphrase);
     }
     let mut salt = [0u8; SALT_SIZE];
-    getrandom::getrandom(&mut salt).map_err(|e| SecretsError::Invalid(e.to_string()))?;
+    getrandom::fill(&mut salt).map_err(|e| SecretsError::Invalid(e.to_string()))?;
     let fernet = fernet_for(passphrase, &salt, KDF_ITERATIONS)?;
     let payload = serde_json::to_vec(secrets).map_err(|e| SecretsError::Invalid(e.to_string()))?;
     Ok(json!({
