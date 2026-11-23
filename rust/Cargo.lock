@@ -444,7 +444,7 @@ dependencies = [
  "chrono",
  "chrono-tz",
  "fernet",
- "getrandom 0.2.17",
+ "getrandom 0.4.3",
  "keyring",
  "pbkdf2",
  "serde_json",
