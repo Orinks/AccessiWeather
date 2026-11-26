@@ -16,7 +16,7 @@ flate2 = "1"
 icns = "0.5"
 image = { version = "0.25", default-features = false, features = ["png", "ico"] }
 regex = "1"
-sha2 = "0.10"
+sha2 = "0.11"
 tar = "0.4"
 zip = { version = "9.0.5", default-features = false, features = ["deflate"] }
 

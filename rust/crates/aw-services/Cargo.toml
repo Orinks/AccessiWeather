@@ -18,7 +18,7 @@ reqwest.workspace = true
 tempfile.workspace = true
 url.workspace = true
 regex = "1"
-sha2 = "0.10"
+sha2 = "0.11"
 md5 = "0.8"
 
 [target.'cfg(windows)'.dependencies]
