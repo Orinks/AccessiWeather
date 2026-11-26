@@ -14,7 +14,7 @@ chrono.workspace = true
 tracing.workspace = true
 tempfile.workspace = true
 regex = "1"
-sha2 = "0.10"
+sha2 = "0.11"
 
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.62", features = [
